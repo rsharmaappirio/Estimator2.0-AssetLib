@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>E2_AddEditDerivedEffortsController</members>
+        <members>E2_AddEditDerivedEffortsControllerTest</members>
+        <members>E2_AddEditEstimateController</members>
+        <members>E2_AddEditEstimateControllerTest</members>
+        <members>E2_AddEditScopeController</members>
+        <members>E2_AddEditScopeControllerTest</members>
+        <members>E2_AddEditScopeTemplatesController</members>
+        <members>E2_AddEditScopeTemplatesControllerTest</members>
+        <members>E2_AddNewScopeController</members>
+        <members>E2_AddNewScopeControllerTest</members>
+        <members>E2_AddNewScopeTemplateController</members>
+        <members>E2_AddNewScopeTemplateControllerTest</members>
+        <members>E2_CapacityController</members>
+        <members>E2_CapacityControllerTest</members>
+        <members>E2_Constants</members>
+        <members>E2_ConstantsTest</members>
+        <members>E2_DataUtil</members>
+        <members>E2_DataUtilTest</members>
+        <members>E2_DataUtil_WS</members>
+        <members>E2_DataUtil_WSTest</members>
+        <members>E2_EditScopeController</members>
+        <members>E2_EditScopeControllerTest</members>
+        <members>E2_EditScopeTemplateController</members>
+        <members>E2_EditScopeTemplateControllerTest</members>
+        <members>E2_Estimator_Manager</members>
+        <members>E2_Estimator_ManagerTest</members>
+        <members>E2_Estimator_WS</members>
+        <members>E2_Estimator_WSManager</members>
+        <members>E2_Estimator_WSManagerTest</members>
+        <members>E2_Estimator_WSTest</members>
+        <members>E2_ExportScopeItemsToCSVController</members>
+        <members>E2_ExportScopeItemsToCSVControllerTest</members>
+        <members>E2_ManageTemplateDerivedEffortController</members>
+        <members>E2_ManageTemplateDerivedEffortCtrTest</members>
+        <members>E2_Master</members>
+        <members>E2_MasterTest</members>
+        <members>E2_PaginationUtility</members>
+        <members>E2_PaginationUtilityTest</members>
+        <members>E2_RecordTypeClass</members>
+        <members>E2_RecordTypeClassTest</members>
+        <members>E2_ScopeWrapper</members>
+        <members>E2_ScopeWrapperTest</members>
+        <members>E2_SelectDerEffortTemplateControllerTest</members>
+        <members>E2_SelectDerivedEffortTemplateController</members>
+        <members>E2_SelectScopeTemplateController</members>
+        <members>E2_SelectScopeTemplateControllerTest</members>
+        <members>E2_Test_Utils</members>
+        <members>E2_TreeNode</members>
+        <members>E2_TreeNodeMap</members>
+        <members>E2_TreeNodeMapTest</members>
+        <members>E2_TreeNodeTest</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>E2_Header</members>
+        <members>E2_PermissionMessage</members>
+        <name>ApexComponent</name>
+    </types>
+    <types>
+        <members>E2_AddEditDerivedEfforts</members>
+        <members>E2_AddEditEstimate</members>
+        <members>E2_AddEditScope</members>
+        <members>E2_AddEditScopeTemplates</members>
+        <members>E2_AddNewScope</members>
+        <members>E2_AddNewScopeTemplate</members>
+        <members>E2_Capacity</members>
+        <members>E2_Dashboard</members>
+        <members>E2_EditScope</members>
+        <members>E2_EditScopeTemplate</members>
+        <members>E2_ExportScopeItemsToCSV</members>
+        <members>E2_ExportScopeItemstoXLS</members>
+        <members>E2_ManageTemplateDerivedEffort</members>
+        <members>E2_SelectDerivedEffortTemplate</members>
+        <members>E2_SelectScopeTemplate</members>
+        <members>E2_SelectScopeTemplateTmpmgr</members>
+        <members>E2_Template</members>
+        <name>ApexPage</name>
+    </types>
+    <types>
+        <members>CMC_Presales_LOE__c.E2_AE__c</members>
+        <members>CMC_Presales_LOE__c.E2_Date_Scoped__c</members>
+        <members>CMC_Presales_LOE__c.E2_Derived_Effort_Template__c</members>
+        <members>CMC_Presales_LOE__c.E2_Is_Primary__c</members>
+        <members>CMC_Presales_LOE__c.E2_Last_Build_Datetime__c</members>
+        <members>CMC_Presales_LOE__c.E2_Last_Build_Datetime__c</members>
+        <members>CMC_Presales_LOE__c.E2_Reviewer__c</members>
+        <members>CMC_Presales_LOE__c.E2_SA__c</members>
+        <members>CMC_Presales_LOE__c.E2_Total_Architect_Hrs__c</members>
+        <members>CMC_Presales_LOE__c.E2_Total_Build_Hrs__c</members>
+        <members>CMC_Presales_LOE__c.E2_Total_Deploy_Thrive_Hrs__c</members>
+        <members>CMC_Presales_LOE__c.E2_Total_Hrs__c</members>
+        <members>CMC_Presales_LOE__c.E2_Total_Plan_Hrs__c</members>
+        <members>CMC_Presales_LOE__c.E2_Total_Strategy_Hrs__c</members>
+        <members>CMC_Presales_LOE__c.E2_Total_Test_Hrs__c</members>
+        <members>CMC_Presales_LOE__c.E2_Version_Notes__c</members>
+        <name>CustomField</name>
+    </types>
+    <types>
+        <members>E2_Required_Field_Error_Message</members>
+        <members>E2_Scope_is_Required</members>
+        <name>CustomLabel</name>
+    </types>
+    <types>
+        <members>E2_Capacity__c</members>
+        <members>E2_DashboardSettings__c</members>
+        <members>E2_Derived_Effort_Group__c</members>
+        <members>E2_Derived_Effort__c</members>
+        <members>E2_Effort__c</members>
+        <members>E2_Scope_Group__c</members>
+        <members>E2_Scope__c</members>
+        <name>CustomObject</name>
+    </types>
+    <types>
+        <members>E2_Derived_Effort_Group__c</members>
+        <members>E2_Derived_Effort__c</members>
+        <members>E2_Scope_Group__c</members>
+        <members>E2_Scope__c</members>
+        <name>CustomTab</name>
+    </types>
+    <types>
+        <members>E2_Complexity</members>
+        <members>E2_Phases</members>
+        <members>E2_Role</members>
+        <name>GlobalPicklist</name>
+    </types>
+    <types>
+        <members>E2_Capacity__c-E2 Capacity Layout</members>
+        <members>E2_Derived_Effort_Group__c-E2 Derived Effort Group Layout</members>
+        <members>E2_Derived_Effort__c-Derived Effort Layout</members>
+        <members>E2_Effort__c-Effort Item Layout</members>
+        <members>E2_Scope_Group__c-E2 Scope Group Layout</members>
+        <members>E2_Scope__c-Estimator Scope Layout</members>
+        <members>E2_Scope__c-Estimator Scope Template Layout</members>
+        <name>Layout</name>
+    </types>
+    <types>
+        <members>Derived_Effort_Template_Manager</members>
+        <members>Scope_Template_manager</members>
+        <name>PermissionSet</name>
+    </types>
+    <types>
+        <members>Admin</members>
+        <members>Appirio API User</members>
+        <members>Appirio Account Executive</members>
+        <members>Appirio Consulting Manager</members>
+        <members>Appirio Consulting Ops</members>
+        <members>Appirio Deployment User</members>
+        <members>Appirio EM&apos;s, CP&apos;s, SA&apos;s, TA&apos;s, PM&apos;s</members>
+        <members>Appirio Employee</members>
+        <members>Appirio Finance</members>
+        <members>Appirio HR</members>
+        <members>Appirio Products</members>
+        <members>Appirio Sales VP</members>
+        <name>Profile</name>
+    </types>
+    <types>
+        <members>unfiled$public/E2_Phases_Roles_Matrix</members>
+        <members>unfiled$public/E2_Role_Matrix</members>
+        <members>unfiled$public/E2_Role_Phase_matrix</members>
+        <name>Report</name>
+    </types>
+    <types>
+        <members>E2_AddEditDerivedEffortsJS</members>
+        <members>E2_AddEditEstimateJS</members>
+        <members>E2_AddEditScopeBranchJS</members>
+        <members>E2_AddEditScopeJS</members>
+        <members>E2_AddEditScopeTemplatesJS</members>
+        <members>E2_AddNewScopeJS</members>
+        <members>E2_AddNewScopeTemplateJS</members>
+        <members>E2_CapacityJS</members>
+        <members>E2_DashboardJS</members>
+        <members>E2_EditScopeJS</members>
+        <members>E2_EditScopeTemplateJS</members>
+        <members>E2_Resources</members>
+        <members>E2_SLDS1</members>
+        <members>E2_SelectDerivedEffortTemplateJS</members>
+        <members>E2_SelectScopeTemplateJS</members>
+        <members>cloneany</members>
+        <members>e2_bootstrapmultiselect</members>
+        <name>StaticResource</name>
+    </types>
+    <types>
+        <members>CMC_Presales_LOE__c.Create_E2_Estimate</members>
+        <members>CMC_Presales_LOE__c.E2_Edit_E2_Estimate</members>
+        <name>WebLink</name>
+    </types>
+    <types>
+        <members>E2_Scope__c</members>
+        <name>Workflow</name>
+    </types>
+    <version>36.0</version>
+</Package>

@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <enableEnhancedLookup>false</enableEnhancedLookup>
+    <fields>
+        <fullName>E2_AE__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <externalId>false</externalId>
+        <inlineHelpText>Account Executive</inlineHelpText>
+        <label>Account Executive</label>
+        <referenceTo>User</referenceTo>
+        <relationshipName>Presales_LOEs</relationshipName>
+        <required>false</required>
+        <trackFeedHistory>false</trackFeedHistory>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>E2_Date_Scoped__c</fullName>
+        <description>Date Scoped</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Date Scoped</inlineHelpText>
+        <label>Date Scoped</label>
+        <required>false</required>
+        <trackFeedHistory>false</trackFeedHistory>
+        <trackTrending>false</trackTrending>
+        <type>Date</type>
+    </fields>
+    <fields>
+        <fullName>E2_Derived_Effort_Template__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <description>Points to the Derived effort group whose derived efforts templates are used in the estimate.</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Points to the Derived effort group whose derived efforts templates are used in the estimate.</inlineHelpText>
+        <label>Derived Effort Template</label>
+        <referenceTo>E2_Derived_Effort_Group__c</referenceTo>
+        <relationshipLabel>Presales LOEs</relationshipLabel>
+        <relationshipName>Presales_LOEs</relationshipName>
+        <required>false</required>
+        <trackFeedHistory>false</trackFeedHistory>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>E2_Is_Primary__c</fullName>
+        <defaultValue>true</defaultValue>
+        <description>Primary Estimate out of other estimates.</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Is this estimate a primary estimate</inlineHelpText>
+        <label>Is Primary</label>
+        <trackFeedHistory>false</trackFeedHistory>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>E2_Last_Build_Datetime__c</fullName>
+        <externalId>false</externalId>
+        <label>Last Build Datetime</label>
+        <required>false</required>
+        <trackFeedHistory>false</trackFeedHistory>
+        <trackTrending>false</trackTrending>
+        <type>DateTime</type>
+    </fields>
+    <fields>
+        <fullName>E2_Reviewer__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <description>Reviewer</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Reviewer</inlineHelpText>
+        <label>Delivery Reviewer</label>
+        <referenceTo>User</referenceTo>
+        <relationshipName>Presales_LOEs2</relationshipName>
+        <required>false</required>
+        <trackFeedHistory>false</trackFeedHistory>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>E2_SA__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <description>Solution Architect</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Solution Architect</inlineHelpText>
+        <label>Solution Architect</label>
+        <referenceTo>User</referenceTo>
+        <relationshipName>Presales_LOEs1</relationshipName>
+        <required>false</required>
+        <trackFeedHistory>false</trackFeedHistory>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>E2_Total_Architect_Hrs__c</fullName>
+        <externalId>false</externalId>
+        <label>Total Architect Hrs</label>
+        <summarizedField>E2_Capacity__c.Hours__c</summarizedField>
+        <summaryFilterItems>
+            <field>E2_Capacity__c.Phase__c</field>
+            <operation>equals</operation>
+            <value>Architect</value>
+        </summaryFilterItems>
+        <summaryForeignKey>E2_Capacity__c.Estimator__c</summaryForeignKey>
+        <summaryOperation>sum</summaryOperation>
+        <trackTrending>false</trackTrending>
+        <type>Summary</type>
+    </fields>
+    <fields>
+        <fullName>E2_Total_Build_Hrs__c</fullName>
+        <externalId>false</externalId>
+        <label>Total Build Hrs</label>
+        <summarizedField>E2_Capacity__c.Hours__c</summarizedField>
+        <summaryFilterItems>
+            <field>E2_Capacity__c.Phase__c</field>
+            <operation>equals</operation>
+            <value>Build</value>
+        </summaryFilterItems>
+        <summaryForeignKey>E2_Capacity__c.Estimator__c</summaryForeignKey>
+        <summaryOperation>sum</summaryOperation>
+        <trackTrending>false</trackTrending>
+        <type>Summary</type>
+    </fields>
+    <fields>
+        <fullName>E2_Total_Deploy_Thrive_Hrs__c</fullName>
+        <externalId>false</externalId>
+        <label>Total Deploy &amp; Thrive Hrs</label>
+        <summarizedField>E2_Capacity__c.Hours__c</summarizedField>
+        <summaryFilterItems>
+            <field>E2_Capacity__c.Phase__c</field>
+            <operation>equals</operation>
+            <value>Deploy &amp; Thrive</value>
+        </summaryFilterItems>
+        <summaryForeignKey>E2_Capacity__c.Estimator__c</summaryForeignKey>
+        <summaryOperation>sum</summaryOperation>
+        <trackTrending>false</trackTrending>
+        <type>Summary</type>
+    </fields>
+    <fields>
+        <fullName>E2_Total_Hrs__c</fullName>
+        <externalId>false</externalId>
+        <formula>E2_Total_Architect_Hrs__c +  E2_Total_Build_Hrs__c  +  E2_Total_Plan_Hrs__c +  E2_Total_Test_Hrs__c +  E2_Total_Deploy_Thrive_Hrs__c +  E2_Total_Strategy_Hrs__c</formula>
+        <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+        <label>E2 Total Hrs</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>0</scale>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>E2_Total_Plan_Hrs__c</fullName>
+        <externalId>false</externalId>
+        <label>Total Plan Hrs</label>
+        <summarizedField>E2_Capacity__c.Hours__c</summarizedField>
+        <summaryFilterItems>
+            <field>E2_Capacity__c.Phase__c</field>
+            <operation>equals</operation>
+            <value>Plan</value>
+        </summaryFilterItems>
+        <summaryForeignKey>E2_Capacity__c.Estimator__c</summaryForeignKey>
+        <summaryOperation>sum</summaryOperation>
+        <trackTrending>false</trackTrending>
+        <type>Summary</type>
+    </fields>
+    <fields>
+        <fullName>E2_Total_Strategy_Hrs__c</fullName>
+        <externalId>false</externalId>
+        <label>Total Strategy Hrs</label>
+        <summarizedField>E2_Capacity__c.Hours__c</summarizedField>
+        <summaryFilterItems>
+            <field>E2_Capacity__c.Phase__c</field>
+            <operation>equals</operation>
+            <value>Strategy</value>
+        </summaryFilterItems>
+        <summaryForeignKey>E2_Capacity__c.Estimator__c</summaryForeignKey>
+        <summaryOperation>sum</summaryOperation>
+        <trackTrending>false</trackTrending>
+        <type>Summary</type>
+    </fields>
+    <fields>
+        <fullName>E2_Total_Test_Hrs__c</fullName>
+        <description>Sum up all test phase hrs from capacity</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Sum up all test phase hrs from capacity</inlineHelpText>
+        <label>Total Test Hrs</label>
+        <summarizedField>E2_Capacity__c.Hours__c</summarizedField>
+        <summaryFilterItems>
+            <field>E2_Capacity__c.Phase__c</field>
+            <operation>equals</operation>
+            <value>Test</value>
+        </summaryFilterItems>
+        <summaryForeignKey>E2_Capacity__c.Estimator__c</summaryForeignKey>
+        <summaryOperation>sum</summaryOperation>
+        <trackTrending>false</trackTrending>
+        <type>Summary</type>
+    </fields>
+    <fields>
+        <fullName>E2_Version_Notes__c</fullName>
+        <description>Version notes</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Version notes</inlineHelpText>
+        <label>Version Notes</label>
+        <required>false</required>
+        <trackFeedHistory>false</trackFeedHistory>
+        <trackTrending>false</trackTrending>
+        <type>TextArea</type>
+    </fields>
+    <webLinks>
+        <fullName>Create_E2_Estimate</fullName>
+        <availability>online</availability>
+        <description>This button will redirect the user to estimator 2.0 screen and allows the user to create an E2 estimate</description>
+        <displayType>massActionButton</displayType>
+        <linkType>javascript</linkType>
+        <masterLabel>Create E2 Estimate</masterLabel>
+        <openType>onClickJavaScript</openType>
+        <protected>false</protected>
+        <requireRowSelection>false</requireRowSelection>
+        <url>window.location.href = &apos;/apex/E2_AddEditEstimate?psr_id=&apos; + &apos;{!Presales_Request__c.Id}&apos;;</url>
+    </webLinks>
+    <webLinks>
+        <fullName>E2_Edit_E2_Estimate</fullName>
+        <availability>online</availability>
+        <description>This button will be used to edit a particular e2 estimate. We will be using this button until E1 doesn&apos;t get deprecate completely</description>
+        <displayType>massActionButton</displayType>
+        <linkType>javascript</linkType>
+        <masterLabel>Edit E2 Estimate</masterLabel>
+        <openType>onClickJavaScript</openType>
+        <protected>false</protected>
+        <requireRowSelection>true</requireRowSelection>
+        <url>{!REQUIRESCRIPT(&quot;/soap/ajax/36.0/connection.js&quot;)}
+
+
+//get the records selected
+var records = {!GETRECORDIDS($ObjectType.CMC_Presales_LOE__c)};
+var newRecords = [];
+
+
+if(records.length &gt; 1 || records.length == 0) {
+alert(&quot;Please select 1 record to edit at a time&quot;);
+}
+else { //process if only 1 record is selected
+
+//find the old default record(s)
+var presalesId = &apos;{!Presales_Request__c.Id}&apos;;
+var estimateId = records[0];
+window.location.href = &apos;/apex/E2_AddEditEstimate?id=&apos; + estimateId;
+
+}</url>
+    </webLinks>
+</CustomObject>

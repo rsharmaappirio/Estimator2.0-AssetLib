@@ -1,0 +1,300 @@
+<apex:page standardController="CMC_Presales_LOE__c" extensions="E2_AddEditScopeController" action="{!pageAction}"
+   showHeader="false" standardStylesheets="true" sidebar="false" applyHtmlTag="false" applyBodyTag="false">
+   <apex:composition template="E2_Template">
+      <apex:define name="title">Add/Edit Scope</apex:define>
+      <apex:define name="header">
+         <c:E2_PermissionMessage rendered="{!NOT(isEditable)}"/>
+         <c:E2_Header psr_id="{!psrId}" step="2"/>
+      </apex:define>
+      <apex:define name="body">
+         <div xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+            <div class="slds-page-header" role="banner">
+               <div class="slds-grid">
+                  <div class="slds-col slds-has-flexi-truncate">
+                     <div class="slds-media">
+                        <div class="slds-media__figure slds-icon slds-icon--large slds-icon-standard-note">
+                                <apex:image value="{!URLFOR($Resource.E2_SLDS1, '/assets/icons/standard/note_60.png')}" width="48" height="48"/>
+                        </div>
+                        <div class="slds-media__body">
+                           <p class="slds-text-heading--label">Add/Edit Scope for</p>
+                           <div class="slds-grid">
+                              <h1 class="slds-page-header__title slds-m-right--small slds-truncate slds-align-middle" title="{!estimate.name}">{!estimate.name}</h1>
+                              <div class="slds-media__figure slds-icon slds-icon-standard-user" style="height:20px;width:20px;margin-top: 5px;">
+                                <a href="javascript:void(0);" onclick="$('.custom_header').slideToggle('slow');"><apex:image value="{!URLFOR($Resource.E2_SLDS1, '/assets/icons/action/more_60.png')}" width="20" height="20"/></a>
+                              </div>
+                           </div>
+                           
+                           
+                        </div>
+                     </div>
+                  </div>
+                  <apex:form >
+                  <div class="slds-col slds-no-flex slds-align-bottom">
+                     <div class="slds-button-group" role="group">
+                        <!--button class="slds-button slds-button--neutral" onclick="return false;">Help</button-->
+ 
+                        <apex:commandButton rendered="{!isEditable}" styleClass="slds-button slds-button--neutral" title="Add Scope From Library" value="Add Scope from Library" onclick="return AddEditScope.addfromtemplate_click(this);"/>
+                        <apex:commandButton rendered="{!isEditable}" styleClass="slds-button slds-button--neutral" title="Add New Scope" value="Add New Scope" onclick="return AddEditScope.addnew_click(this);"/>
+                        <apex:commandButton rendered="{!isEditable}" styleClass="slds-button slds-button--neutral slds-button--brand" title="Build Capacity" value="Build Capacity" action="{!buildCapacity}"/>
+ 
+                     </div>
+                  </div>
+                  </apex:form>
+               </div>
+               <ul class="slds-grid slds-page-header__detail-row custom_header" style="display:none;">
+                  <li class="slds-col--padded slds-size--1-of-2">
+                     <p class="slds-text-heading--label slds-truncate" title="Description">Description</p>
+                     <p class="slds-text-body--regular" title="{!estimate.Description__c}">
+                        {!estimate.Description__c}
+                     </p>
+                     <p class="slds-text-heading--label slds-truncate" title="Version Notes">Version Notes        
+                     </p>
+                     <p class="slds-text-body--regular" title="{!estimate.E2_Version_Notes__c}">
+                        {!estimate.E2_Version_Notes__c}
+                     </p>
+                  </li>
+                  <li class="slds-col--padded slds-size--1-of-2">
+                     <p class="slds-text-heading--label slds-truncate" title="Presales Request">Presales Request</p>
+                     <p class="slds-text-heading--label">
+                        <apex:outputField value="{!estimate.Presales_Request__c}"/>
+                     </p>
+                      <p class="slds-text-heading--label slds-truncate" title="Opportunity">Opportunity</p>
+                     <p><apex:outputLink value="/{!estimate.Presales_Request__r.Opportunity__c}">{!estimate.Opportunity_Name__c}</apex:outputLink> </p>
+                      <p class="slds-text-heading--label slds-truncate" title="Account">Account</p>
+                     <p><apex:outputLink value="/{!estimate.Presales_Request__r.Opportunity__r.AccountId}">{!estimate.Account_Name__c}</apex:outputLink></p>
+                  </li>
+                 
+               </ul>
+            </div>
+         </div>
+         <div class="slds-notify_container" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+            style = "display:none;">
+            <div class="slds-notify slds-notify--toast slds-theme--success" id="sldsalertdiv" role="alert">
+               <span class="slds-assistive-text">Success</span>
+               <button class="slds-button slds-button--icon-inverse slds-notify__close">
+                  <svg aria-hidden="true" class="slds-button__icon slds-button__icon--large">
+                     <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!$Resource.E2_SLDS1}/assets/icons/utility-sprite/svg/symbols.svg#close"></use>
+                  </svg>
+                  <span class="slds-assistive-text">Close</span>
+               </button>
+               <div class="notify__content slds-grid">
+                  <svg aria-hidden="true" class="slds-icon slds-icon--small slds-m-right--small slds-col slds-no-flex">
+                     <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!$Resource.E2_SLDS1}/assets/icons/utility-sprite/svg/symbols.svg#notification"></use>
+                  </svg>
+                  <div class="slds-col slds-align-middle">
+                     <h2 class="slds-text-heading--small "></h2>
+                  </div>
+               </div>
+            </div>
+         </div>
+         <apex:outputPanel layout="block" style="min-height:400px;">
+            
+               <table class="slds-table slds-no-row-hover slds-max-medium-table--stacked">                        
+                       <tbody>
+                         <tr class="slds-hint-parent">
+                                    <td class="slds-truncate slds-size--1-of-3" style="vertical-align:top;padding-left:0px;">
+                                      <div class="slds-page-header slds-card" role="banner">
+                                         <div class="slds-grid">
+                                            <div class="slds-col slds-has-flexi-truncate">
+                                               <div class="slds-media">
+                                                  <div class="slds-media__body">
+                                                     <p class="slds-text-heading--label"></p>
+                                                     <div class="slds-grid">
+                                                        <h1 class="slds-page-header__title slds-m-right--small slds-truncate slds-align-middle" title="Record Title">Scope Hierarchy</h1>
+                                                     </div>
+                                                  </div>
+                                               </div>
+                                            </div>
+                                            <div class="slds-col slds-no-flex slds-align-bottom">
+                                               <div class="slds-button-group" role="group">&nbsp;</div>
+                                            </div>
+                                         </div>
+                                      </div>                                    
+                                      <div class="slds-form-element" id="relationShipTree"></div>
+                                    </td>
+                                    <td class="slds-truncate" style="vertical-align:top;padding-right:0px;">
+                                        <div id="tabpanel">
+                                            <ul class="slds-tabs--default__nav" role="tablist">
+                                                <li class="slds-tabs--default__item slds-text-heading--label" title="Scope Detail" role="presentation">
+                                                    <a class="slds-tabs--default__link" href="javascript:void(0);" role="tab" tabindex="-1" aria-selected="true" aria-controls="tab-default-1" id="tab-default-1__item">Detail&nbsp;</a>
+                                                </li>
+                                                <li class="slds-tabs--default__item slds-text-heading--label slds-active" title="Feed" role="presentation">
+                                                    <a class="slds-tabs--default__link" href="javascript:void(0);" role="tab" tabindex="0" aria-selected="false" aria-controls="tab-default-2" id="tab-default-2__item">Feed&nbsp;</a>
+                                                </li>                                                                       
+                                            </ul>
+                                            <div id="tab-default-1" style="padding:0px" class="slds-tabs--default__content slds-hide paddingTopZero" role="tabpanel" aria-labelledby="tab-default-1__item">
+                                                <div id="edit_scope_div"></div>
+                                            </div>
+                                            <div id="tab-default-2" style="padding:0px" class="slds-tabs--default__content slds-show paddingTopZero" role="tabpanel" aria-labelledby="tab-default-2__item">
+                                               <chatter:feed entityId="{!estimate.id}" showPublisher="true" onComplete="custom_chatter.oncomplete();" />
+                                               <!-- CHATTER - tab-default-2 ; please make sure that chatter feedtracking is enabled through setup for this object -->                   
+                                            </div>
+                                        </div>  
+                                                   
+                                    </td>
+                           </tr>      
+                       </tbody>    
+               </table>
+            
+         </apex:outputPanel>
+         <!-- PLEASE DONOT REMOVE: This section is important while using standard controller -->
+         <input type="hidden" value="{!CMC_Presales_LOE__c.Name}"/> 
+         <input type="hidden" value="{!CMC_Presales_LOE__c.Presales_Request__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.Presales_Request__r.Opportunity__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.Presales_Request__r.Opportunity__r.AccountId}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.Type__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.Account_Executive__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.Solution_Architect__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.Delivery_Reviewer__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.Date_Scoped__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.Account_Name__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.Description__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.Presales_Request__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.Product__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Version_Notes__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.Opportunity_Name__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Date_Scoped__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Reviewer__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.E2_SA__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.E2_AE__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Is_Primary__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Total_Hrs__c}"/>  
+         <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Derived_Effort_Template__c}"/>    
+         <div id="helpModal" class="slds-modal slds-fade-in-open" role="dialog" style="display: none !important;">
+            <div class="slds-modal__container" style="max-width:100%; width:95%;max-height:2400px; height:700px">
+               <div class="slds-modal__header">
+                  <button class="slds-button slds-button--icon-inverse slds-modal__close slds-modal__close-custom" onclick="AddEditScope.hideAddFromTemplateModal(); return false;">                  
+                  <span class="slds-assistive-text">Close</span>
+                  </button>
+                  <h2 class="slds-text-heading--medium">Add From Library</h2>
+               </div>
+               <div class="slds-modal__content">
+                  <div class="slds-text-longform">
+                     <apex:iframe src="about:blank" width="100%" scrolling="true" id="theIframeTemplate"/>
+                  </div>
+               </div>
+               <div class="slds-modal__footer">     
+                  <button class="slds-button slds-button--neutral" onclick="AddEditScope.addScopeTemplate(); return false;">Done</button>
+                  <button class="slds-button slds-button--neutral" onclick="AddEditScope.hideAddFromTemplateModal(); return false;">Cancel</button>
+               </div>
+            </div>
+         </div>
+         <div id="helpBackdrop" class="slds-backdrop slds-backdrop--open" style="display: none !important;"></div>
+         <div id="helpModal1" class="slds-modal slds-fade-in-open" role="dialog" style="display: none !important;">
+            <div class="slds-modal__container" style="max-width:100%; width:95%;max-height:2600px; height:700px">
+               <div class="slds-modal__header">
+                  <button class="slds-button slds-button--icon-inverse slds-modal__close slds-modal__close-custom" onclick="AddEditScope.hideAddNewModal(); return false;">               
+                  <span class="slds-assistive-text">Close</span>
+                  </button>
+                  <h2 class="slds-text-heading--medium custom-new-header">Add New/Edit Child Scope(s)</h2>
+               </div>
+               <div class="slds-modal__content">
+                  <div class="slds-text-longform">
+                     <apex:iframe src="about:blank" width="100%"  scrolling="true" id="theIframe1"/>
+                  </div>
+               </div>
+               <div class="slds-modal__footer">
+                  <button id="addupdatescopebutton" class="slds-button slds-button--neutral" onclick="AddEditScope.addNewScope(); return false;">Add</button>
+                  <button class="slds-button slds-button--neutral" onclick="AddEditScope.hideAddNewModal(); return false;">Cancel</button>
+               </div>
+            </div>
+         </div>
+         <div id="helpBackdrop1" class="slds-backdrop slds-backdrop--open" style="display: none !important;"></div>
+         <div id="helpModal2" class="slds-modal slds-fade-in-open" role="dialog" style="display: none !important;">
+            <div class="slds-modal__container" style="max-width:100%; width:95%;max-height:2600px; height:700px">
+               <div class="slds-modal__header">
+                  <button class="slds-button slds-button--icon-inverse slds-modal__close slds-modal__close-custom" onclick="AddEditScope.hideEditScopeModal(); return false;">                
+                  <span class="slds-assistive-text">Close</span>
+                  </button>
+                  <h2 class="slds-text-heading--medium">Edit Scope</h2>
+               </div>
+               <div class="slds-modal__content">
+                  <div class="slds-text-longform">
+                     <apex:iframe src="about:blank" width="100%"  scrolling="true" id="theIframe2"/>
+                  </div>
+               </div>
+               <div class="slds-modal__footer">
+                  <button class="slds-button slds-button--neutral" onclick="AddEditScope.editScope(); return false;">Update</button>
+                  <button class="slds-button slds-button--neutral" onclick="AddEditScope.hideEditScopeModal(); return false;">Cancel</button>
+               </div>
+            </div>
+         </div>
+         <div id="helpBackdrop2" class="slds-backdrop slds-backdrop--open" style="display: none !important;"></div>
+         <div id="loadingSpinner" class="slds-spinner_container" style="display: none !important;">
+            <div class="slds-spinner--brand slds-spinner slds-spinner--large" aria-hidden="false" role="alert">
+               <div class="slds-spinner__dot-a"></div>
+               <div class="slds-spinner__dot-b"></div>
+            </div>
+         </div>
+         <br/>
+      </apex:define>
+      <apex:define name="footer">
+         <!--   <div style="text-align:right;"> -->
+         <!--            <apex:commandButton rendered="{!isEditable}" styleClass="slds-button slds-button--neutral slds-button--brand" title="Back" value="Back" onclick="window.location.href='/apex/E2_AddEditEstimate?id={!$CurrentPage.parameters.id}';return false;"/> -->
+         <!--            <apex:commandButton rendered="{!isEditable}" styleClass="slds-button slds-button--neutral slds-button--brand" title="Next" value="Next" onclick="window.location.href='/apex/E2_AddEditDerivedEfforts?id={!$CurrentPage.parameters.id}';return false;"/> -->
+         <!--   </div>   -->
+         <style>
+            .slds .slds-badge-custom {
+            background-color: transparent!important;
+            border-collapse: collapse!important;    
+            border-style: solid!important;
+            border-width: 0.01px !important;
+            padding-bottom: 0.01px;
+            padding-top: 0.01px;   
+            }
+            .slds .slds-modal__close-custom {    
+            float: right;
+            height: 48px;
+            position: relative;
+            width: 48px;
+            background: #eee url({!$Resource.E2_SLDS1}/assets/icons/action/close_60.png) no-repeat scroll center center / 25px 25px;
+            right: 0px;
+            top: 0px;
+            }
+            .node_is_active {
+                color: rgba(51, 51, 51, 0.41);
+                font-style: italic;
+            }
+            .flag {
+                display: inline-block;
+                height: 10px;
+                width: 10px;
+                border-collapse: collapse!important;    
+                border-style: solid!important;
+                border-width: 0.01px !important;
+                padding-bottom: 0.01px;
+                padding-top: 0.01px; 
+                margin-top:-14px;
+            }
+            
+            .flagRed {
+                /**background: url({!$Site.CurrentSiteUrl}/img/samples/flag_red.gif) no-repeat scroll center center / 16px 16px;**/
+                background-color : #990000 !important;
+            }
+            .flagGreen {
+                /**background: url({!$Site.CurrentSiteUrl}/img/samples/flag_green.gif) no-repeat scroll center center / 16px 16px;**/
+                background-color : #009900 !important;
+            }
+            .flagYellow {
+                /**background: url({!$Site.CurrentSiteUrl}/img/samples/flag_yellow.gif) no-repeat scroll center center / 16px 16px;**/
+                background-color : #ffbf00 !important;
+            }
+            
+            .zen .publisherTypeOverflow.zen-open .zen-options li {
+                height: 30px!important;
+            }
+            .publishercontainer .bottomBar {
+               height: 45px!important;
+            } 
+               
+         </style>
+      </apex:define>
+      <apex:define name="javascript">
+         <script type="text/javascript">
+            var estimateId = '{!estimate.id}';
+            var global_scopeId = '{!$CurrentPage.parameters.scopeid}';
+         </script>
+         <apex:includescript value="{!$Resource.E2_AddEditScopeJS}"/>
+      </apex:define>
+   </apex:composition>
+</apex:page>

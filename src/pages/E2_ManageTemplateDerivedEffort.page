@@ -1,0 +1,252 @@
+<apex:page standardController="E2_Derived_Effort_Group__c" extensions="E2_ManageTemplateDerivedEffortController" action="{!pageAction}"
+   showHeader="true" standardStylesheets="true" sidebar="false">
+   
+   <input type="hidden" value="{!E2_Derived_Effort_Group__c.Name}"/> 
+    <input type="hidden" value="{!E2_Derived_Effort_Group__c.Description__c}"/>    
+    <apex:stylesheet value="{!URLFOR($Resource.E2_SLDS1, '/assets/styles/salesforce-lightning-design-system-vf.css')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.cloneany, '/libs/jquery.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.e2_bootstrapmultiselect, '/js/bootstrap-3.3.2.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.e2_bootstrapmultiselect, '/js/prettify.js')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.e2_bootstrapmultiselect, '/css/bootstrap-3.3.2.min.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.e2_bootstrapmultiselect, '/css/prettify.css')}" />
+    <apex:includeScript value="{!URLFOR($Resource.e2_bootstrapmultiselect, '/dist/js/bootstrap-multiselect.js')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.e2_bootstrapmultiselect, '/dist/css/bootstrap-multiselect.css')}" />
+    <style>
+			table tbody tr td input[type="text"], table tbody tr td select{
+			  width:80%;
+			}			
+			.errorBody{
+			  border-color: red!important;
+			}
+			td.group-edit{
+	            background: url({!$Resource.E2_SLDS1}/assets/icons/utility/edit_60.png) no-repeat scroll 95% 24px / 15px 15px;
+            }
+            td.group-edit:hover{
+    	        background: url({!$Resource.E2_SLDS1}/assets/icons/utility/edit_60.png) no-repeat scroll 95% 24px / 15px 15px;
+        	    background-color: #faffbd!important;
+            }
+            th.is_active{
+	            background: transparent url({!$Resource.E2_SLDS1}/assets/icons/utility/package_org_60.png) no-repeat scroll center center / 25px 25px;
+	            padding-left: 0 !important;
+	            padding-right: 0 !important;
+	            width: 25px;
+            }
+            td.is_active {
+            	text-align: center;
+            }
+            .blankSpace {
+            	white-space: normal;
+			    display: block;
+			    width: 100%;
+			    min-height: 30px;
+            }
+            a.delete_button{
+	            background: transparent url({!$Resource.E2_SLDS1}/assets/icons/utility/delete_60.png) no-repeat scroll center center / 25px 25px;	            
+	            height: 25px;
+	            width: 25px;
+	            float:right;
+            }
+            table tbody tr{
+            vertical-align: top;
+            }
+            .InputBorder {            	
+                border-color : #d8dde6!important;
+            }
+            .bootstrapselectbutton {
+                white-space: nowrap!important;
+                color : #16325c!important;
+                min-width:100px!important;
+             }
+             .bootstrapselectbutton > span {
+             	    white-space: normal!important;
+    				line-height: 23px;
+             }
+		</style>
+         <apex:form id="frm">         
+		<script type="text/javascript">
+			var showhideField = {
+				effortsIncludeWhen : function(element) {
+					var id = $(element).attr('id');
+					id = id.replace('includeWhen', 'efforthoursincludeWhen');
+					if($(element).val()!='' && $(element).val()!='always')	{						
+						$(document.getElementById(id)).show(); 
+					} else {
+						$(document.getElementById(id)).hide();
+					}
+				}
+			}
+			var markError  = {
+			   toPhase : function() {
+			   		$('[Id$=tophase]').each(function() {							
+						if($(this).val() == null || $(this).val() == 'null') {
+							var div = $(this).next();
+							div.children("button").removeClass("InputBorder").addClass("errorBody");
+						}						
+					});
+			 	}
+			}
+			var spinner = {
+		      show: function(){
+		         $('#loadingSpinner').show();
+		         return false;
+		      },
+		      hide: function(){
+		         $('#loadingSpinner').hide();
+		        return false;
+		      }
+		    }	    	
+		</script>
+            <div class="slds">
+				<apex:outputPanel id="derivedEffortTemplatePanel"> 
+				<apex:outputPanel rendered="{!hasErrorEffort}">  
+				<div>
+				  <div class="slds-notify slds-notify--alert slds-theme--error slds-theme--alert-texture" role="alert">
+				    <span class="slds-assistive-text">Error</span>
+				    <h2>{!errorString}</h2>
+				  </div>
+				</div>
+				</apex:outputPanel>
+				<script type="text/javascript">
+					$(function() {
+						$('[Id$=ofphase]').multiselect();
+						$('[Id$=tophase]').multiselect();
+						$("button").each(function() {
+							if($(this).hasClass("multiselect")){
+								$(this).addClass("slds-button slds-button--neutral bootstrapselectbutton InputBorder");
+							}
+						});
+						if({!!hasNewEffort}){
+							markError.toPhase();
+						}						
+			    	});	    	
+				</script>
+
+				<apex:outputpanel rendered="{!selectedGroup != NULL}" layout="none">			
+						<div class="slds-card">
+							<div class="slds-card__header slds-grid" >
+							    <div class="slds-media slds-media--center slds-has-flexi-truncate">
+							      <div class="slds-media__body">
+							        <h2 class="slds-text-heading--small slds-truncate">Derived Effort</h2>
+							      </div>
+							    </div>
+							    <div class="slds-col slds-no-flex slds-align-bottom">
+									<div class="slds-button-group" role="group" style="text-align:right;">
+										<apex:commandButton id="changeseffortbutton1" onclick="spinner.show();" oncomplete="spinner.hide();" rerender="derivedEffortTemplatePanel" styleClass="slds-button slds-button--neutral slds-button--brand" title="Save Changes" value="Save Changes" action="{!updateEfforts}" rendered="{!derivedEffortTemplates.size>0}"/>
+										<apex:commandButton rerender="derivedEffortTemplatePanel" onclick="spinner.show();" oncomplete="spinner.hide();" styleClass="slds-button slds-button--neutral slds-button--small" title="Add Derived Effort" value="Add Derived Effort" action="{!addNewEffort}"/>
+									</div>
+								</div>
+							  </div>
+							  <apex:outputpanel rendered="{!derivedEffortTemplates.size == 0}" layout="none">
+							  	<div class="slds-card__body">
+							  		<div>
+									  <div class="slds-notify slds-notify--alert slds-theme--info slds-theme--alert-texture" role="alert">
+									    <span class="slds-assistive-text">Info</span>
+									    <h2>No derived effort records found.</h2>
+									  </div>
+									</div>
+							  	</div>
+							  </apex:outputpanel>
+							<apex:outputpanel rendered="{!derivedEffortTemplates.size>0}" layout="none">
+							<div class="slds-card__body">
+								<table
+									class="slds-table slds-table--bordered slds-max-medium-table--stacked-horizontal slds-no-row-hover">
+									<thead>
+				                      <tr>
+				                        <th class="slds-text-heading--label slds-size--1-of-10" scope="col">Derived Effort Name</th>
+				                        <th class="slds-text-heading--label slds-size--1-of-10" scope="col">%</th>
+				                        <th class="slds-text-heading--label slds-size--1-of-10" scope="col">Of Role</th>
+				                        <th class="slds-text-heading--label slds-size--1-of-10" scope="col">In Phase</th>
+				                        <th class="slds-text-heading--label slds-size--1-of-10" scope="col">To Role</th>
+				                        <th class="slds-text-heading--label slds-size--1-of-10" scope="col">In Phase</th>
+				                        <th class="slds-text-heading--label slds-size--1-of-10" scope="col">Include When</th>
+				                        <th class="slds-text-heading--label slds-size--1-of-10" scope="col">Min %</th>
+				                        <th class="slds-text-heading--label slds-size--1-of-10 is_active" scope="col" title="Active?"></th>
+				                        <th class="slds-text-heading--label slds-size--1-of-10" scope="col"></th>                        
+				                      </tr>
+				                    </thead>
+									<tbody>
+				                      <apex:repeat value="{!derivedEffortTemplates}" var="derivedEffort">
+				                      <apex:outputText rendered="{!!derivedEffort.isDelete}">
+				                      <tr class="slds-hint-parent">
+				                        <td class="slds-size--1-of-10" data-label="Name">
+				                        	<apex:inputText html-placeholder="Derived Effort Name" value="{!derivedEffort.name}" styleClass="slds-input{!IF(AND(derivedEffort.hasError,OR(derivedEffort.name == NULL,derivedEffort.name == '')), ' errorBody', '')}"/>
+				                        </td> 
+				                        <td class="slds-size--1-of-10" data-label="Allocation (%)">
+				                        	<apex:inputText html-placeholder="%" title="Allocation (%)" value="{!derivedEffort.allocation}" styleClass="slds-input{!IF(AND(derivedEffort.hasError,derivedEffort.allocation <= 0), ' errorBody', '')}" style="width:77px!important;"/>
+				                        </td>
+				                        <td class="slds-size--1-of-10" data-label="Of Role">
+				                        	<apex:selectList styleClass="slds-select" id="ofrole" value="{!derivedEffort.ofRole}"
+				                                     multiselect="false" size="1">
+				                              <apex:selectOption itemValue="" itemLabel="-None-"/>
+				                              <apex:selectOptions value="{!rolePicklist}"/>
+				                            </apex:selectList>
+				                        </td>
+				                        <td class="slds-size--1-of-10" data-label="Of Phase">
+				                           
+				                        	<apex:selectList styleClass="form-control slds-select" id="ofphase" value="{!derivedEffort.ofPhase}"
+				                                     multiselect="true" size="7">
+				                              <apex:selectOptions value="{!phasePicklist}"/>
+				                            </apex:selectList>
+				                           
+				                          </td>
+				                        <td class="slds-size--1-of-10" data-label="Role">
+				                        	<apex:selectList styleClass="slds-select{!IF(AND(derivedEffort.hasError,ISBLANK(derivedEffort.toRole)), ' errorBody', '')}" id="torole" value="{!derivedEffort.toRole}"
+				                                     multiselect="false" size="1">
+				                              <apex:selectOption itemValue="" itemLabel="-None-"/>
+				                              <apex:selectOptions value="{!rolePicklist}"/>
+				                            </apex:selectList>
+				                        </td>                        
+				                        <td class="slds-size--1-of-10" data-label="To Phase">
+				                        	<apex:selectList styleClass="form-control slds-select{!IF(AND(derivedEffort.hasError,derivedEffort.toPhase.size>0), ' errorBody', '')}" id="tophase" value="{!derivedEffort.toPhase}"
+				                                     multiselect="true" size="7">
+				                              <apex:selectOptions value="{!phasePicklist}"/>
+				                            </apex:selectList>
+				                        </td>
+				                        <td class="slds-size--1-of-10" data-label="Include When">
+				                        	<apex:selectList styleClass="slds-select{!IF(AND(derivedEffort.hasError,ISBLANK(derivedEffort.includeWhen)), ' errorBody', '')}" id="includeWhen" value="{!derivedEffort.includeWhen}"
+				                                     multiselect="false" size="1" required="true" onchange="showhideField.effortsIncludeWhen(this);">
+				                              <apex:selectOptions value="{!includeWhenPicklist}"/>				                              
+				                            </apex:selectList><br/>
+				                        	<apex:inputText id="efforthoursincludeWhen" html-placeholder="Include When Hours" value="{!derivedEffort.includeWhenHrs}" styleClass="slds-input{!IF(AND(derivedEffort.hasError,derivedEffort.includeWhenHrs <= 0), ' errorBody', '')}" style="margin-top:5px;{!IF(OR(ISBLANK(derivedEffort.includeWhen),derivedEffort.includeWhen == 'always'),'display:none;','')}{!IF(AND(derivedEffort.hasError,ISBLANK(derivedEffort.includeWhenHrs)), 'border-color: red;', '')}"/>
+				                        </td>
+				                        <td class="slds-size--1-of-10" data-label="Allocation Min (%)">
+				                        	<apex:inputText html-placeholder="%" title="Allocation Min (%)" value="{!derivedEffort.allocationMin}" styleClass="slds-input" style="width:77px!important;"/>
+				                        </td>
+				                        <td class="slds-size--1-of-10 is_active" data-label="Is Active">
+				                        	<label class="slds-checkbox">
+			                                	<apex:inputCheckbox styleclass="slds-checkbox" value="{!derivedEffort.isActive}" />
+						                        <span class="slds-checkbox--faux"></span>
+						                        <span class="slds-assistive-text">Set Active</span>
+						                    </label>
+				                        </td>
+				                        <td class="slds-size--1-of-10">
+				                        	<apex:commandlink onclick="spinner.show();" oncomplete="spinner.hide();" immediate="true" rerender="derivedEffortTemplatePanel" styleClass="delete_button" value="" action="{!derivedEffort.remove}"/>
+				                        </td>
+				                      </tr>
+				                      </apex:outputText>
+				                      </apex:repeat>                      
+				                    </tbody>
+								</table>
+							</div>
+							</apex:outputpanel>
+							<div class="slds-card__footer">
+								 <div class="slds-col slds-no-flex slds-align-bottom">
+									<div class="slds-button-group" role="group" style="text-align:right;">
+										<apex:commandButton id="changeseffortbutton" onclick="spinner.show();" oncomplete="spinner.hide();" rerender="derivedEffortTemplatePanel" styleClass="slds-button slds-button--neutral slds-button--brand" title="Save Changes" value="Save Changes" action="{!updateEfforts}" rendered="{!derivedEffortTemplates.size>0}"/>
+									</div>
+								</div>
+							</div>
+						</div>
+					</apex:outputpanel>
+				</apex:outputPanel>
+				<!-- LOAD SPINNER -->
+               <div id="loadingSpinner" class="slds-spinner_container" style="display: none !important;">
+                  <div class="slds-spinner--brand slds-spinner slds-spinner--large" aria-hidden="false" role="alert">
+                     <div class="slds-spinner__dot-a"></div>
+                     <div class="slds-spinner__dot-b"></div>
+                  </div>
+               </div>
+               <!-- LOAD SPINNER END-->
+            </div>
+         </apex:form>
+</apex:page>

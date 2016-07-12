@@ -1,0 +1,12 @@
+<apex:component >
+<div>
+<div class="slds-notify_container">
+    <div class="slds-notify slds-notify--toast slds-theme--warning" role="alert">
+      <span class="slds-assistive-text">Warning</span>      
+      <div class="notify__content">
+        <h2 class="slds-text-heading--small">Oops, you'are only allowed to view this estimate, as per permissions only owner of an estimate is allowed to edit!!!</h2>
+      </div>
+    </div>
+  </div>
+</div>  
+</apex:component>

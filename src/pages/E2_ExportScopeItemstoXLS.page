@@ -1,0 +1,18 @@
+<apex:page StandardController="CMC_Presales_LOE__c" extensions="E2_ExportScopeItemsToCSVController" action="{!pageAction}" readOnly="true" contentType="application/vnd.ms-excel#{!SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(CMC_Presales_LOE__c.Name,' ','_'),',',''),';',''),'#','')}.xls">
+<table border="1">
+<apex:outputText escape="true">
+{!headerXLS}
+</apex:outputText>
+<apex:repeat value="{!lstScopeWrapper}" var="scope">
+<tr>
+	<td>{!scope.scopeName}</td>
+	<td>{!scope.parentScope}</td>
+	<td>{!scope.complexity}</td>
+	<td>{!scope.scopeItemtype}</td>
+	<td>{!scope.description}</td>
+	<td>{!scope.assumption}</td>
+	<td>{!scope.loeHrs}</td>
+</tr>
+</apex:repeat>
+</table>
+</apex:page>

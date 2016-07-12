@@ -1,0 +1,386 @@
+<apex:page standardController="CMC_Presales_LOE__c" extensions="E2_AddEditEstimateController" action="{!pageAction}"
+   showHeader="false" standardStylesheets="true" sidebar="false" applyHtmlTag="false" applyBodyTag="false">
+   <apex:composition template="E2_Template">
+      <apex:define name="title">Create Estimate</apex:define>
+      <apex:define name="header">
+         <c:E2_PermissionMessage rendered="{!NOT(isEditable)}"/>
+         <c:E2_Header psr_id="{!psrId}" step="1"/>
+      </apex:define>
+      <apex:define name="body">
+         <apex:form >
+         <div xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+            <apex:outputPanel rendered="{!hasMessages}">
+               <div class="slds-notify_container" style="position:static">
+                  <div class="slds-notify slds-notify--alert slds-theme--error slds-theme--alert-texture" role="alert">
+                     <h2>
+                        <svg aria-hidden="true" class="slds-icon icon-text-email slds-icon--small slds-m-right--x-small">
+                           <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!$Resource.E2_SLDS1}/assets/icons/utility-sprite/svg/symbols.svg#ban"></use>
+                        </svg>
+                        <apex:pageMessages ></apex:pageMessages>
+                     </h2>
+                  </div>
+               </div>
+            </apex:outputPanel>
+         </div>
+         <div id="savePanel" class="slds-notify_container" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+            style = "display:none;">
+            <div class="slds-notify slds-notify--toast slds-theme--success" role="alert">
+               <span class="slds-assistive-text">Success</span>
+               <button class="slds-button slds-button--icon-inverse slds-notify__close">
+                  <svg aria-hidden="true" class="slds-button__icon slds-button__icon--large">
+                     <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!$Resource.E2_SLDS1}/assets/icons/utility-sprite/svg/symbols.svg#close"></use>
+                  </svg>
+                  <span class="slds-assistive-text">Close</span>
+               </button>
+               <div class="notify__content slds-grid">
+                  <svg aria-hidden="true" class="slds-icon slds-icon--small slds-m-right--small slds-col slds-no-flex">
+                     <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!$Resource.E2_SLDS1}/assets/icons/utility-sprite/svg/symbols.svg#notification"></use>
+                  </svg>
+                  <div class="slds-col slds-align-middle">
+                     <h2 class="slds-text-heading--small "></h2>
+                  </div>
+               </div>
+            </div>
+         </div>
+         <div xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+            <div class="slds-page-header" role="banner">
+               <div class="slds-grid">
+                  <div class="slds-col slds-has-flexi-truncate">
+                     <div class="slds-media">
+                       
+                            <div class="slds-media__figure slds-icon slds-icon--large slds-icon-standard-note">
+                                <apex:image value="{!URLFOR($Resource.E2_SLDS1, '/assets/icons/standard/note_60.png')}" width="48" height="48"/>
+                            </div>
+                       
+                        <div class="slds-media__body">
+                           <p class="slds-text-heading--label">Estimate</p>
+                           <div class="slds-grid">
+                              <h1 class="slds-page-header__title slds-m-right--small slds-truncate slds-align-middle" title="Record Title">Create Estimate</h1>
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+                  <div class="slds-col slds-no-flex slds-align-bottom">
+                     <div class="slds-button-group" role="group">
+                        <!--button class="slds-button slds-button--neutral" onclick="return false;">Help</button-->
+                        <apex:commandButton rendered="{!isEditable}" styleClass="slds-button slds-button--neutral" title="Save" value="Save" action="{!save}"/>
+                        <apex:commandButton rendered="{!isEditable}" styleClass="slds-button slds-button--neutral" title="Cancel" value="Cancel"  action="{!cancel}" />
+                        <!--                   <apex:commandButton styleClass="slds-button slds-button--neutral" title="Next" rendered="{!IF($CurrentPage.parameters.id = null, false, IF(isEditable = true, true, false))}" value="Next" action="{!saveAndNext}"/> -->
+                        <apex:commandButton rendered="{!AND(isEditable,$CurrentPage.parameters.id != null)}" styleClass="slds-button slds-button--neutral slds-button--brand" title="Build Capacity" value="Build Capacity" action="{!buildCapacity}"/>
+                     </div>
+                  </div>
+               </div>
+            </div>
+         </div>
+         <!-- Build Capacity section start -->
+         <apex:outputPanel style="padding:1%;display:block;" rendered="{!estimate.E2_Last_Build_Datetime__c!=null}">
+            <div class="slds-media__body">
+               <fieldset class="slds-box slds-theme--default">
+                  <legend class="slds-text-heading--medium slds-p-vertical--medium" style="line-height: 0;">Capacity Needs</legend>
+                  <apex:iframe src="/apex/E2_Dashboard?id={!estimate.Id}" height="300px" width="100%" id="theIframeDashboard"/>
+               </fieldset>
+            </div>
+         </apex:outputPanel>
+         
+         
+         <table class="slds-table slds-no-row-hover slds-max-medium-table--stacked scope-table">
+          <tbody>
+            <tr>
+              <td class="slds-truncate" style="vertical-align: top">
+                 <div class="slds-form-element">
+                     <label class="slds-form-element__label" for="text-input-202">Presales Request</label>
+                     <div class="slds-form-element__control">
+                        <apex:outputField id="text-input-202" value="{!estimate.Presales_Request__c}"/>
+                     </div>
+                  </div>
+              </td>
+              <td class="slds-truncate" style="vertical-align: top">
+                  <div class="slds-form-element">
+                     <label class="slds-form-element__label" for="text-input-11">Account</label>
+                     <div class="slds-form-element__control">
+                        <apex:outputLink value="/{!psr.Opportunity__r.Account.Id}">{!psr.Account_Name__c}</apex:outputLink>
+                     </div>
+                  </div>
+              </td>
+              <td class="slds-truncate" style="vertical-align: top">
+                   <div class="slds-form-element">
+                     <label class="slds-form-element__label" for="text-input-101">Opportunity</label>
+                     <div class="slds-form-element__control">
+                        <apex:outputLink value="/{!psr.Opportunity__c}">{!psr.Opportunity_Name__c}</apex:outputLink>
+                     </div>
+                  </div>
+              </td>
+              <td class="slds-truncate" style="vertical-align: top">
+                <div class="slds-form-element">
+                     <label class="slds-form-element__label" for="text-input-02">Is Primary</label>
+                     <div class="slds-form-element__control">
+                        <apex:inputField id="text-input-02" value="{!estimate.E2_Is_Primary__c}"/>
+                     </div>
+                  </div>
+              </td>
+            </tr>
+            <tr>
+              <td class="slds-truncate" style="vertical-align: top">
+                 <div class="slds-form-element">
+                     <label class="slds-form-element__label" for="text-input-01">Estimate Name<abbr class="slds-required" title="required">*</abbr></label>
+                     <div class="slds-form-element__control">
+                        <apex:inputField id="text-input-01" styleClass="slds-input" html-placeholder="Estimate Name" value="{!estimate.Name}"  label="Estimate Name" required="true"/>
+                     </div>
+                  </div>
+              </td>
+              <td class="slds-truncate" style="vertical-align: top">
+                  <div class="slds-form-element" style="width: 50%">
+                     <label class="slds-form-element__label" for="text-input-09">Date Scoped<abbr class="slds-required" title="required">*</abbr></label>
+                     <div class="slds-form-element__control">
+                        <apex:inputField id="text-input-09" styleClass="slds-input" html-placeholder="Date Scoped" value="{!estimate.E2_Date_Scoped__c}" required="true"/>
+                     </div>
+                  </div>
+              </td>
+              <td class="slds-truncate" style="vertical-align: top">
+                  <div class="slds-form-element">
+                     <label class="slds-form-element__label" for="text-input-12">Version Notes</label>
+                     <div class="slds-form-element__control" >
+                        <apex:inputField id="text-input-12" styleClass="slds-textarea" style="height: 36px" html-placeholder="Version Notes" value="{!estimate.E2_Version_Notes__c}"/>
+                     </div>
+                  </div>
+               </td>
+               <td class="slds-truncate" style="vertical-align: top">
+                  <div class="slds-form-element">
+                     <label class="slds-form-element__label" for="text-input-06">Solution Architect<abbr class="slds-required" title="required">*</abbr></label>
+                     <div class="slds-form-element__control">
+                        <apex:inputfield id="text-input-06"   styleClass="slds-select-custom" html-placeholder="Solution Architect" value="{!estimate.E2_SA__c}" required="true"/>
+                     </div>
+                  </div>
+              </td>
+                         
+            </tr>  
+            <tr>
+          
+            </tr>           
+            <tr>
+               <td class="slds-truncate" colspan="4" style="vertical-align: top">
+                   <div class="slds-form-element">
+                     <label class="slds-form-element__label" for="text-input-12">Description<abbr class="slds-required" title="required">*</abbr></label>
+                     <div class="slds-form-element__control">
+                        <apex:inputTextArea id="text-input-13" styleClass="slds-textarea"  rows="10" html-placeholder="Description" value="{!estimate.Description__c}" required="true"/>
+                     </div>
+                  </div>
+               </td>
+            </tr>      
+          </tbody>
+         </table>
+         
+         
+        
+         <!-- end of 5th row of Estimate --> 
+         
+         <!-- Start of Summary Block -->
+     <!--    <apex:outputPanel style="padding:1%;display:block;">
+            <fieldset class="slds-box slds-theme--default">
+               <legend class="slds-text-heading--medium slds-p-vertical--medium">
+                  Summary
+               </legend>
+               <div class="slds-grid slds-estimate-row">
+                  <div class="slds-col">
+                     <div>
+                        <div class="slds-form-element">
+                           <label class="slds-form-element__label">Total Stratery Efforts</label>
+                           <div class="slds-form-element__control">
+                              <apex:outputText value="{0, number, 0.00}">
+                                 <apex:param value="{!IF(estimate.E2_Total_Strategy_Hrs__c = null, 0, estimate.E2_Total_Strategy_Hrs__c)}" />
+                              </apex:outputText>
+                              &nbsp;hrs  
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+                  <div class="slds-col">
+                     <div>
+                        <div class="slds-form-element">
+                           <label class="slds-form-element__label">Total Plan Efforts</label>
+                           <div class="slds-form-element__control">
+                              <apex:outputText value="{0, number, 0.00}">
+                                 <apex:param value="{!IF(estimate.E2_Total_Plan_Hrs__c = null, 0, estimate.E2_Total_Plan_Hrs__c)}" />
+                              </apex:outputText>
+                              &nbsp;hrs 
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+               </div>
+               <div class="slds-grid slds-estimate-row">
+                  <div class="slds-col">
+                     <div>
+                        <div class="slds-form-element">
+                           <label class="slds-form-element__label">Total Architect Efforts</label>
+                           <div class="slds-form-element__control">
+                              <apex:outputText value="{0, number, 0.00}">
+                                 <apex:param value="{!IF(estimate.E2_Total_Architect_Hrs__c = null, 0, estimate.E2_Total_Architect_Hrs__c)}" />
+                              </apex:outputText>
+                              &nbsp;hrs 
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+                  <div class="slds-col">
+                     <div>
+                        <div class="slds-form-element">
+                           <label class="slds-form-element__label">Total Build Efforts</label>
+                           <div class="slds-form-element__control">
+                              <apex:outputText value="{0, number, 0.00}">
+                                 <apex:param value="{!IF(estimate.E2_Total_Build_Hrs__c = null, 0, estimate.E2_Total_Build_Hrs__c)}" />
+                              </apex:outputText>
+                              &nbsp;hrs 
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+               </div>
+               <div class="slds-grid slds-estimate-row">
+                  <div class="slds-col">
+                     <div>
+                        <div class="slds-form-element">
+                           <label class="slds-form-element__label">Total Test Efforts</label>
+                           <div class="slds-form-element__control">
+                              <apex:outputText value="{0, number, 0.00}">
+                                 <apex:param value="{!IF(estimate.E2_Total_Test_Hrs__c = null, 0, estimate.E2_Total_Test_Hrs__c)}" />
+                              </apex:outputText>
+                              &nbsp;hrs 
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+                  <div class="slds-col">
+                     <div>
+                        <div class="slds-form-element">
+                           <label class="slds-form-element__label">Total Deploy And Thrive Efforts</label>
+                           <div class="slds-form-element__control">
+                              <apex:outputText value="{0, number, 0.00}">
+                                 <apex:param value="{!IF(estimate.E2_Total_Deploy_Thrive_Hrs__c = null, 0, estimate.E2_Total_Deploy_Thrive_Hrs__c)}" />
+                              </apex:outputText>
+                              &nbsp;hrs 
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+               </div>
+               <div class="slds-grid slds-estimate-row">
+                  <div class="slds-col">
+                     <div>
+                        <div class="slds-form-element">
+                           <label class="slds-form-element__label">Total Capacity</label>
+                           <div class="slds-form-element__control">
+                              <apex:outputText value="{0, number, 0.00}">
+                                 <apex:param value="{!IF(estimate.E2_Total_Hrs__c = null, 0, estimate.E2_Total_Hrs__c)}" />
+                              </apex:outputText>
+                              &nbsp;hrs 
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+               </div>
+            </fieldset>
+         </apex:outputPanel>   --> 
+         
+         <!-- PLEASE DONOT REMOVE: This section is important while using standard controller -->
+         <input type="hidden" value="{!CMC_Presales_LOE__c.Name}"/> 
+         <input type="hidden" value="{!CMC_Presales_LOE__c.Presales_Request__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.Presales_Request__r.Opportunity__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.Presales_Request__r.Opportunity__r.AccountId}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.Type__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.Account_Executive__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.Solution_Architect__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.Delivery_Reviewer__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.Date_Scoped__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.Account_Name__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.Description__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.Presales_Request__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.Product__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Version_Notes__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.Opportunity_Name__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Date_Scoped__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Reviewer__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.E2_SA__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.E2_AE__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Is_Primary__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Total_Hrs__c}"/> 
+         <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Derived_Effort_Template__c}"/>    
+         <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Total_Strategy_Hrs__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Total_Plan_Hrs__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Total_Architect_Hrs__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Total_Test_Hrs__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Total_Build_Hrs__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Total_Deploy_Thrive_Hrs__c}"/> 
+         <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Last_Build_Datetime__c}"/>
+         </apex:form>
+      </apex:define>
+      <apex:define name="footer">
+         
+         <div style="text-align:right">
+            <apex:commandButton rendered="{!isEditable}"  styleClass="slds-button slds-button--neutral slds-button--brand" title="Save" value="Save" action="{!save}"/>
+            <apex:commandButton rendered="{!isEditable}"  styleClass="slds-button slds-button--neutral slds-button--brand" title="Cancel" value="Cancel"  action="{!cancel}" />
+         </div>
+        
+      </apex:define>
+      <apex:define name="javascript"> 
+         <script type="text/javascript">
+            var is_save = '{!$CurrentPage.parameters.is_save}';
+            var has_errors = '{!hasMessages}';  
+         </script>
+         <apex:includescript value="{!$Resource.E2_AddEditEstimateJS}"/>
+         <style type="text/css">
+            .slds-grid.slds-estimate-row .slds-col{
+            width:50%;
+            padding:1%;             
+            }
+            .slds .slds-form-element__label {
+            font-size:13px;
+            font-weight:bold;
+            }
+            .blank_row {
+            height: 10px !important; 
+            background-color: #FFFFFF;
+            }
+            .tm_mode {
+            text-decoration: underline;
+            }
+            .slds-notify_container .message {
+            background-color: transparent;
+            border-style: none;
+            color: #fff;
+            font-size: 15px;
+            font-weight: normal;
+            margin-top: -2%;
+            }
+            .slds-notify_container .message .messageText, .slds-notify_container .message .messageText span h4 {
+            color:#fff;
+            }
+            .slds-notify_container .message .messageTable ul{
+            color:#fff;
+            }
+            .slds-notify_container .message .messageText span h4{
+            display:inline;
+            }
+            .slds-notify_container .msgIcon{
+            display:none;
+            }
+            .analyticsEmbeddedReportChart.width_tiny {
+            width:100%!important;
+            }
+            .slds .slds-box {   
+            padding: 7px;
+            }
+            div.slds-select-custom select, div.slds-select-custom span.lookupInput input{
+                width:45%;
+                background-color: #fff;
+                border: 1px solid #d8dde6;
+                border-radius: 4px;
+                color: #16325c;
+                height: 34px;
+                transition: border 0.1s linear 0s, background-color 0.1s linear 0s;
+               
+            }
+         </style>
+      </apex:define>
+   </apex:composition>
+</apex:page>

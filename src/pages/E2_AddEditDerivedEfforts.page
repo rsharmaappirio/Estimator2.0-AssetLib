@@ -1,0 +1,215 @@
+<apex:page standardController="CMC_Presales_LOE__c" extensions="E2_AddEditDerivedEffortsController" action="{!pageAction}"
+showHeader="false" standardStylesheets="true" sidebar="false" applyHtmlTag="false" applyBodyTag="false">
+<apex:composition template="E2_Template">
+        <apex:define name="title">Apply Derived Efforts</apex:define>
+        <apex:define name="header"><c:E2_PermissionMessage rendered="{!NOT(isEditable)}"/><c:E2_Header step="4"/></apex:define>
+        <apex:define name="body">
+<apex:form >        
+<style>
+table tbody tr td input[type="text"], table tbody tr td select{
+  width:80%;
+}
+
+.errorBody{
+  border-color: red;
+}
+.slds-hint-parent .phasetd {
+    white-space: normal!important;
+    vertical-align: top!important;
+}
+
+</style>        
+        
+<apex:pageMessages />
+<div xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<div class="slds-page-header" role="banner">
+  <div class="slds-grid">
+    <div class="slds-col slds-has-flexi-truncate">
+      <div class="slds-media">
+        <div class="slds-media__figure slds-icon slds-icon--large slds-icon-standard-note">
+            <apex:image value="{!URLFOR($Resource.E2_SLDS1, '/assets/icons/standard/note_60.png')}" width="48" height="48"/>
+        </div>
+        <div class="slds-media__body">
+          <p class="slds-text-heading--label">Apply Derived Effort Template To</p>
+          <div class="slds-grid">
+            <h1 class="slds-page-header__title slds-m-right--small slds-truncate slds-align-middle" title="{!estimate.name}">{!estimate.name}</h1>
+            <div class="slds-media__figure slds-icon slds-icon-standard-user" style="height:20px;width:20px;margin-top: 5px;">
+                <a href="javascript:void(0);" onclick="$('.custom_header').slideToggle('slow');"><apex:image value="{!URLFOR($Resource.E2_SLDS1, '/assets/icons/action/more_60.png')}" width="20" height="20"/></a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="slds-col slds-no-flex slds-align-bottom">
+      <div class="" role="group">
+        <!--button class="slds-button slds-button--neutral" onclick="return false;">Help</button-->
+        <apex:commandButton rendered="{!isEditable}" styleClass="slds-button slds-button--neutral slds-button--brand" title="Build Capacity" value="Build Capacity" action="{!buildCapacity}"/>
+      </div>
+    </div>
+  </div>
+  <ul class="slds-grid slds-page-header__detail-row custom_header" style="display:none">
+    <li class="slds-col--padded slds-size--1-of-2">
+         <p class="slds-text-heading--label slds-truncate" title="Description">Description</p>
+         <p class="slds-text-body--regular" title="{!estimate.Description__c}">
+            {!estimate.Description__c}
+         </p>
+         <p class="slds-text-heading--label slds-truncate" title="Version Notes">Version Notes        
+         </p>
+         <p class="slds-text-body--regular" title="{!estimate.E2_Version_Notes__c}">
+            {!estimate.E2_Version_Notes__c}
+         </p>
+      </li>
+      <li class="slds-col--padded slds-size--1-of-2">
+         <p class="slds-text-heading--label slds-truncate" title="Presales Request">Presales Request</p>
+         <p class="slds-text-heading--label">
+            <apex:outputField value="{!estimate.Presales_Request__c}"/>
+         </p>
+          <p class="slds-text-heading--label slds-truncate" title="Opportunity">Opportunity</p>
+         <p><apex:outputLink value="/{!estimate.Presales_Request__r.Opportunity__c}">{!estimate.Opportunity_Name__c}</apex:outputLink> </p>
+          <p class="slds-text-heading--label slds-truncate" title="Account">Account</p>
+         <p><apex:outputLink value="/{!estimate.Presales_Request__r.Opportunity__r.AccountId}">{!estimate.Account_Name__c}</apex:outputLink></p>
+      </li>
+  </ul>
+</div>
+</div>
+
+
+<apex:outputPanel id="derivedEffortPanel">
+           <apex:inputHidden value="{!deffortTemplateIds}" id="deffortTemplateId"/>
+  <apex:commandButton rendered="{!isEditable}" action="{!cloneDerivedEffort}" id="clonedEfforts" styleClass="slds-hide">
+  </apex:commandButton>
+            <fieldset class="slds-box slds-theme--default" style="width: 100%;">
+                <legend class="slds-text-heading--medium slds-p-vertical--medium">
+                    Derived Effort Template
+                </legend>
+                <apex:outputtext rendered="{!clonnedDerivedEffortList.size>0}"> 
+                <div class="slds-button-group" role="group" style="float: right;margin-top: -40px;">
+                    <apex:commandButton rendered="{!isEditable}" styleClass="slds-button slds-button--neutral" title="Remove" value="Remove" action="{!removeDerivedEffort}" />
+                    <apex:commandButton rendered="{!isEditable}" styleClass="slds-button slds-button--neutral" title="Apply Effort" value="Apply Effort" onclick="return AddEditDerivedEffort.addfromtemplate_click(this);"/>
+                </div>
+                </apex:outputtext>
+                <apex:outputpanel rendered="{!ISBLANK(deffortGroupName)}">              
+                  <div class="slds-card">
+                    <div class="slds-card__header slds-grid grid--flex-spread">
+                      <h2 class="slds-text-heading--small slds-truncate"></h2>
+                    </div>
+                    <div class="slds-card__body slds-p-horizontal--small">
+                      <div class="slds-text-align--center">
+                        <h3 class="slds-text-heading--small slds-p-top--large slds-p-bottom--large">No Derived Effort</h3>
+                        <apex:commandButton rendered="{!isEditable}" styleClass="slds-button slds-button--neutral slds-button--small slds-m-bottom--x-large" title="Select Derived Effort Template" value="Select Derived Effort Template" onclick="return AddEditDerivedEffort.addfromtemplate_click(this);"/>
+                      </div>
+                    </div>
+                  </div>
+                </apex:outputpanel>             
+                                
+                <apex:outputpanel rendered="{!!ISBLANK(deffortGroupName)}" layout="none">
+                <div class="slds-card">
+                    <div class="slds-card__header slds-grid grid--flex-spread">
+                      <h2 class="slds-text-heading--small slds-truncate">{!deffortGroupName}</h2>
+                    </div>
+                    <apex:outputpanel rendered="{!clonnedDerivedEffortList.size==0}" layout="none">
+                    <div class="slds-card__body slds-p-horizontal--small">
+                      <div class="slds-text-align--center">
+                        <h3 class="slds-text-heading--small slds-p-top--large slds-p-bottom--large"><strong>No Derived Effort For Selected Template.</strong></h3>                        
+                        <apex:commandButton rendered="{!isEditable}" styleClass="slds-button slds-button--neutral slds-button--small slds-m-bottom--x-large" title="Select Derived Effort Template" value="Select Derived Effort Template" onclick="return AddEditDerivedEffort.addfromtemplate_click(this);"/>
+                      </div>
+                    </div>
+                    </apex:outputpanel>
+                    <apex:outputpanel rendered="{!clonnedDerivedEffortList.size>0}" layout="none">
+                    <div class="slds-card__body">
+                      <table class="slds-table slds-table--bordered slds-max-medium-table--stacked-horizontal slds-no-row-hover">
+                    <thead>
+                      <tr>
+                        <th class="slds-text-heading--label slds-size--1-of-9" scope="col">Derived Effort Name</th>
+                        <th class="slds-text-heading--label slds-size--1-of-9" scope="col">Allocation (%)</th>
+                        <th class="slds-text-heading--label slds-size--1-of-9" scope="col">Of Role</th>
+                        <th class="slds-text-heading--label slds-size--1-of-9" scope="col">In Phase</th>
+                        <th class="slds-text-heading--label slds-size--1-of-9" scope="col">To Role</th>
+                        <th class="slds-text-heading--label slds-size--1-of-9" scope="col">In Phase</th>
+                        <th class="slds-text-heading--label slds-size--1-of-9" scope="col">Include When</th>
+                        <th class="slds-text-heading--label slds-size--1-of-9" scope="col">Allocation Min(%)</th>
+                        <th class="slds-text-heading--label slds-size--1-of-9" scope="col">Calculated Hrs</th>                        
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <apex:repeat value="{!clonnedDerivedEffortList}" var="derivedEffort">
+                      <tr class="slds-hint-parent">
+                        <td class="slds-size--1-of-9" data-label="Name"><apex:outputText value="{!derivedEffort.name}"/></td> 
+                        <td class="slds-size--1-of-9" data-label="Allocation (%)"><apex:outputPanel ><strong>Allocate</strong>&nbsp;&nbsp;</apex:outputPanel><apex:outputText value="{0, number, 0.00}"><apex:param value="{!derivedEffort.allocation}" /></apex:outputText>&nbsp;%</td>
+                        <td class="slds-size--1-of-9" data-label="Of Role"><apex:outputPanel rendered="{!!ISBLANK(derivedEffort.ofRole)}"><strong>Of</strong>&nbsp;&nbsp;</apex:outputPanel><apex:outputText value="{!derivedEffort.ofRole}"/></td>
+                        <td class="slds-size--1-of-9 phasetd" data-label="Of Phase"><apex:outputPanel rendered="{!AND(!ISBLANK(derivedEffort.ofPhase),derivedEffort.ofPhase != '')}"><strong>In</strong>&nbsp;&nbsp;</apex:outputPanel><apex:outputText value="{!derivedEffort.ofPhase}"/></td>
+                        <td class="slds-size--1-of-9" data-label="Role"><apex:outputPanel rendered="{!!ISBLANK(derivedEffort.toRole)}"><strong>To</strong>&nbsp;&nbsp;</apex:outputPanel><apex:outputText value="{!derivedEffort.toRole}"/></td>                        
+                        <td class="slds-size--1-of-9 phasetd" data-label="To Phase"><apex:outputPanel rendered="{!!ISBLANK(derivedEffort.toPhase)}"><strong>In</strong>&nbsp;&nbsp;</apex:outputPanel><apex:outputText value="{!derivedEffort.toPhase}"/></td>
+                        <td class="slds-size--1-of-9" data-label="Include When"><apex:outputPanel rendered="{!!ISBLANK(derivedEffort.includeWhen)}"><strong>When</strong>&nbsp;&nbsp;</apex:outputPanel><apex:outputText value="{!derivedEffort.includeWhen}"/> <apex:outputText rendered="{!AND(!ISBLANK(derivedEffort.includeWhen),derivedEffort.includeWhen!='always')}">&nbsp;<apex:outputText value="{0, number, 0}"><apex:param value="{!derivedEffort.includeWhenHrs}" /></apex:outputText></apex:outputText></td>
+                        <td class="slds-size--1-of-9" data-label="Allocation Min(%)"><apex:outputPanel rendered="{!AND(derivedEffort.allocationMin != NULL,derivedEffort.allocationMin > 0)}" layout="none"><apex:outputPanel ><strong>Minimum</strong>&nbsp;&nbsp;</apex:outputPanel><apex:outputText value="{0, number, 0.00}"><apex:param value="{!derivedEffort.allocationMin}" /></apex:outputText>&nbsp;%</apex:outputPanel></td>
+                        <td class="slds-size--1-of-9" data-label="Derived Hrs"><apex:outputText value="{0, number, 0.00}"><apex:param value="{!derivedEffort.derivedHrs}" /></apex:outputText></td>
+                      </tr>
+                      </apex:repeat>                      
+                    </tbody>
+                  </table>
+                    </div>
+                    </apex:outputpanel>
+                  </div>             
+                </apex:outputpanel>
+            </fieldset>
+</apex:outputPanel>
+
+         <br/>
+         <!-- PLEASE DONOT REMOVE: This section is important while using standard controller -->
+    <input type="hidden" value="{!CMC_Presales_LOE__c.Name}"/> 
+    <input type="hidden" value="{!CMC_Presales_LOE__c.Presales_Request__c}"/>
+    <input type="hidden" value="{!CMC_Presales_LOE__c.Presales_Request__r.Opportunity__c}"/>
+    <input type="hidden" value="{!CMC_Presales_LOE__c.Presales_Request__r.Opportunity__r.AccountId}"/>
+    <input type="hidden" value="{!CMC_Presales_LOE__c.Type__c}"/>
+    <input type="hidden" value="{!CMC_Presales_LOE__c.Account_Executive__c}"/>
+    <input type="hidden" value="{!CMC_Presales_LOE__c.Solution_Architect__c}"/>
+    <input type="hidden" value="{!CMC_Presales_LOE__c.Delivery_Reviewer__c}"/>
+    <input type="hidden" value="{!CMC_Presales_LOE__c.Date_Scoped__c}"/>
+    <input type="hidden" value="{!CMC_Presales_LOE__c.Account_Name__c}"/>
+    <input type="hidden" value="{!CMC_Presales_LOE__c.Description__c}"/>
+    <input type="hidden" value="{!CMC_Presales_LOE__c.Presales_Request__c}"/>
+    <input type="hidden" value="{!CMC_Presales_LOE__c.Product__c}"/>
+    <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Version_Notes__c}"/>
+    <input type="hidden" value="{!CMC_Presales_LOE__c.Opportunity_Name__c}"/>
+    <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Date_Scoped__c}"/>
+    <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Reviewer__c}"/>
+    <input type="hidden" value="{!CMC_Presales_LOE__c.E2_SA__c}"/>
+    <input type="hidden" value="{!CMC_Presales_LOE__c.E2_AE__c}"/>
+    <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Is_Primary__c}"/>
+    <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Total_Hrs__c}"/>
+    <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Derived_Effort_Template__c}"/>
+    <br/>       
+
+    <div id="helpModal" class="slds-modal slds-fade-in-open" role="dialog" style="display: none !important;">
+            <div class="slds-modal__container" style="max-width:100%; width:95%;max-height:2400px; height:700px">
+              <div class="slds-modal__header">
+                <h2 class="slds-text-heading--medium">Apply Derived Effort Template</h2>
+              </div>
+              <div class="slds-modal__content">
+                <div class="slds-text-longform">
+                   <apex:iframe src="about:blank" height="900px" width="100%" scrolling="true" id="theIframeTemplate"/>
+                </div>
+              </div>
+              <div class="slds-modal__footer">
+              
+                <button class="slds-button slds-button--neutral" onclick="AddEditDerivedEffort.addNewEffort();return false;">Apply</button>
+                <button class="slds-button slds-button--neutral" onclick="AddEditDerivedEffort.hideAddFromTemplateModal();return false;">Close</button>
+              </div>
+            </div>
+        </div>
+        <div id="helpBackdrop" class="slds-backdrop slds-backdrop--open" style="display: none !important;"></div>
+        </apex:form>
+        </apex:define>
+        <apex:define name="footer">
+
+        </apex:define>
+        <apex:define name="javascript">
+           <script type="text/javascript">
+              var estimateId = '{!$CurrentPage.Parameters.id}';              
+           </script>
+           <apex:includescript value="{!$Resource.E2_AddEditDerivedEffortsJS}"/>
+        </apex:define>
+        
+        
+    </apex:composition>
+</apex:page>

@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <actionOverrides>
+        <actionName>Accept</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>CancelEdit</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Clone</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Delete</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Edit</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Follow</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>List</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>New</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>SaveEdit</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Tab</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>View</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <allowInChatterGroups>false</allowInChatterGroups>
+    <compactLayoutAssignment>SYSTEM</compactLayoutAssignment>
+    <deploymentStatus>Deployed</deploymentStatus>
+    <description>Estimator 2.0</description>
+    <enableActivities>true</enableActivities>
+    <enableBulkApi>true</enableBulkApi>
+    <enableEnhancedLookup>true</enableEnhancedLookup>
+    <enableFeeds>false</enableFeeds>
+    <enableHistory>true</enableHistory>
+    <enableReports>true</enableReports>
+    <enableSearch>true</enableSearch>
+    <enableSharing>true</enableSharing>
+    <enableStreamingApi>true</enableStreamingApi>
+    <fields>
+        <fullName>Complexity_Factor_High__c</fullName>
+        <description>If no value, High or Low factors simply do not act on orignal effort (in some cases, this is logical)</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Adds this % to original LOE when Scope Complexity = High</inlineHelpText>
+        <label>Complexity Adder</label>
+        <precision>3</precision>
+        <required>false</required>
+        <scale>0</scale>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Percent</type>
+    </fields>
+    <fields>
+        <fullName>Complexity_Factor_Low__c</fullName>
+        <description>If no value, High or Low factors simply do not act on orignal effort (in some cases, this is logical)</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Subtracts this % from original LOE when Scope Complexity = Low</inlineHelpText>
+        <label>Simplification Subtractor</label>
+        <precision>3</precision>
+        <required>false</required>
+        <scale>0</scale>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Percent</type>
+    </fields>
+    <fields>
+        <fullName>Effort_Hrs__c</fullName>
+        <description>Where hours end up.The number of hours needed to implement the scope&apos;s functionality.</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Assumes &quot;Medium&quot; Complexity Effort.</inlineHelpText>
+        <label>Effort (Hrs)</label>
+        <precision>8</precision>
+        <required>true</required>
+        <scale>0</scale>
+        <trackHistory>true</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>High_Effort_Hrs__c</fullName>
+        <description>Calculated field on Efforts Hrs such as
+Effort Hours + (High% of Effort Hours)</description>
+        <externalId>false</externalId>
+        <formula>Effort_Hrs__c + (Effort_Hrs__c *  Complexity_Factor_High__c)</formula>
+        <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+        <inlineHelpText>Shows High Efforts</inlineHelpText>
+        <label>High Effort Hrs</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>0</scale>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Hrs_Override_Reason__c</fullName>
+        <description>This field stores the override reason of effort hrs in case when SA overrides the Effort Hrs of a particular effort</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Override reason for effort hrs.</inlineHelpText>
+        <label>Hrs Override Reason</label>
+        <length>255</length>
+        <required>false</required>
+        <trackHistory>true</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Is_Active__c</fullName>
+        <defaultValue>true</defaultValue>
+        <description>Is this effort active?</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Is this effort active?</inlineHelpText>
+        <label>Active?</label>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>Low_Effort_Hrs__c</fullName>
+        <description>Calculated on Effort Hrs such as
+Effort Hrs - (Low% of Effort Hours)</description>
+        <externalId>false</externalId>
+        <formula>Effort_Hrs__c - ( Effort_Hrs__c *  Complexity_Factor_Low__c )</formula>
+        <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+        <inlineHelpText>Low Effort Hours</inlineHelpText>
+        <label>Low Effort Hrs</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>0</scale>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Phase__c</fullName>
+        <description>In what Phase....</description>
+        <externalId>false</externalId>
+        <globalPicklist>E2_Phases</globalPicklist>
+        <inlineHelpText>During which Phase is this effort expended?</inlineHelpText>
+        <label>Phase</label>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Picklist</type>
+    </fields>
+    <fields>
+        <fullName>Resource_Role__c</fullName>
+        <description>Same picklist values as are available throughout the rest of our systems (Role/ResourceRole): Rate Card reference here https://appirio.my.salesforce.com/00N50000001v03g?setupid=CustomObjects</description>
+        <externalId>false</externalId>
+        <globalPicklist>E2_Role</globalPicklist>
+        <inlineHelpText>Aligned with Rate Card Roles</inlineHelpText>
+        <label>Resource Role</label>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Picklist</type>
+    </fields>
+    <fields>
+        <fullName>Scope__c</fullName>
+        <description>Parent Scope</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Parent Scope</inlineHelpText>
+        <label>Scope</label>
+        <referenceTo>E2_Scope__c</referenceTo>
+        <relationshipName>Efforts</relationshipName>
+        <relationshipOrder>0</relationshipOrder>
+        <reparentableMasterDetail>false</reparentableMasterDetail>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>MasterDetail</type>
+        <writeRequiresMasterRead>false</writeRequiresMasterRead>
+    </fields>
+    <fields>
+        <fullName>Source_Effort__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <externalId>false</externalId>
+        <label>Source Effort</label>
+        <referenceTo>E2_Effort__c</referenceTo>
+        <relationshipName>Cloned_Efforts</relationshipName>
+        <required>false</required>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>Speciality__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <description>The skill needed in particular to implement the scope details.</description>
+        <externalId>false</externalId>
+        <inlineHelpText>The skill needed in particular to implement the scope details.</inlineHelpText>
+        <label>Speciality</label>
+        <referenceTo>pse__Skill__c</referenceTo>
+        <relationshipName>E2_Efforts</relationshipName>
+        <required>false</required>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <label>Effort</label>
+    <listViews>
+        <fullName>All</fullName>
+        <filterScope>Everything</filterScope>
+        <label>All</label>
+    </listViews>
+    <nameField>
+        <label>Description</label>
+        <trackHistory>false</trackHistory>
+        <type>Text</type>
+    </nameField>
+    <pluralLabel>Efforts</pluralLabel>
+    <searchLayouts/>
+    <sharingModel>ControlledByParent</sharingModel>
+    <validationRules>
+        <fullName>MandatoryPhaseValidation</fullName>
+        <active>true</active>
+        <description>Phase field is mandatory</description>
+        <errorConditionFormula>ISPICKVAL(Phase__c, &quot;&quot;)</errorConditionFormula>
+        <errorDisplayField>Phase__c</errorDisplayField>
+        <errorMessage>Phase cannot be empty</errorMessage>
+    </validationRules>
+    <validationRules>
+        <fullName>MandatoryRoleValidation</fullName>
+        <active>true</active>
+        <description>Role selection is mandatory to save an effort item record</description>
+        <errorConditionFormula>ISPICKVAL(Resource_Role__c, &quot;&quot;)</errorConditionFormula>
+        <errorDisplayField>Resource_Role__c</errorDisplayField>
+        <errorMessage>Role cannot be empty</errorMessage>
+    </validationRules>
+</CustomObject>

@@ -1,0 +1,59 @@
+<apex:page standardController="CMC_Presales_LOE__c" showHeader="false" standardStylesheets="true" sidebar="false" 
+    applyHtmlTag="false" applyBodyTag="false">
+    <html>
+        <head>
+        <title>Capacity Needs</title>
+        <apex:stylesheet value="{!URLFOR($Resource.E2_SLDS1, '/assets/styles/salesforce-lightning-design-system-vf.css')}" />
+        <apex:includeScript value="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js" />
+        <apex:includescript value="{!$Resource.E2_DashboardJS}"/>
+        <style>
+            .slds .slds-table tr > th:first-child, .slds .slds-table tr > td:first-child {
+                padding-left : 5px!important;
+            }
+        </style>
+        </head>
+        <body>
+            <div class="slds">
+                <table class="slds-table slds-max-medium-table--stacked-horizontal slds-no-row-hover">
+                    <thead>
+                        <tr>
+                            <th class="slds-text-heading--label slds-size--1-of-3" scope="col">By Phase</th>
+                            <th class="slds-text-heading--label slds-size--1-of-3" scope="col">By Role</th>
+                            <th class="slds-text-heading--label slds-size--1-of-3" scope="col">By Phase
+                                &amp; Role</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="slds-hint-parent">
+                            <td class="slds-size--1-of-3" data-label="By Phase"><apex:outputlink onclick="return report_onclick('{!$Setup.E2_DashboardSettings__c.Report1Id__c}');">
+                                    <analytics:reportChart cacheResults="false"
+                                        reportid="{!$Setup.E2_DashboardSettings__c.Report1Id__c}"
+                                        size="small"
+                                        filter="{column:'{!$Setup.E2_DashboardSettings__c.Report1pc0__c}', operator:'equals', value:'{!CMC_Presales_LOE__c.id}'}" />
+                                </apex:outputlink></td>
+                            <td class="slds-size--1-of-3" data-label="By Role"><apex:outputlink onclick="return report_onclick('{!$Setup.E2_DashboardSettings__c.Report2Id__c}');">
+                                    <analytics:reportChart cacheResults="false"
+                                        reportid="{!$Setup.E2_DashboardSettings__c.Report2Id__c}"
+                                        size="small"
+                                        filter="{column:'{!$Setup.E2_DashboardSettings__c.Report2pc0__c}', operator:'equals', value:'{!CMC_Presales_LOE__c.id}'}" />
+                                </apex:outputlink></td>
+                            <td class="slds-size--1-of-3" data-label="By Phase & Role"><apex:outputlink onclick="return report_onclick('{!$Setup.E2_DashboardSettings__c.Report3Id__c}');">
+                                    <analytics:reportChart cacheResults="false"
+                                        reportid="{!$Setup.E2_DashboardSettings__c.Report3Id__c}"
+                                        size="small"
+                                        filter="{column:'{!$Setup.E2_DashboardSettings__c.Report3pc0__c}', operator:'equals', value:'{!CMC_Presales_LOE__c.id}'}" />
+                                </apex:outputlink></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </body>
+<!-- PLEASE DONOT REMOVE: This section is important while using standard controller -->
+<input type="hidden" value="{!CMC_Presales_LOE__c.Name}" />
+<input type="hidden" value="{!CMC_Presales_LOE__c.Presales_Request__c}" />
+<input type="hidden"
+    value="{!CMC_Presales_LOE__c.E2_Derived_Effort_Template__c}" />
+<input type="hidden"
+    value="{!CMC_Presales_LOE__c.E2_Last_Build_Datetime__c}" />
+</html>
+</apex:page>

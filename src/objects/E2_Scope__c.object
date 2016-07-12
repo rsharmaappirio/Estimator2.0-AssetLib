@@ -1,0 +1,563 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <actionOverrides>
+        <actionName>Accept</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>CancelEdit</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Clone</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Delete</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Edit</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Follow</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>List</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>New</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>SaveEdit</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Tab</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>View</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <allowInChatterGroups>false</allowInChatterGroups>
+    <compactLayoutAssignment>SYSTEM</compactLayoutAssignment>
+    <deploymentStatus>Deployed</deploymentStatus>
+    <description>Estimator 2.0</description>
+    <enableActivities>true</enableActivities>
+    <enableBulkApi>true</enableBulkApi>
+    <enableEnhancedLookup>true</enableEnhancedLookup>
+    <enableFeeds>true</enableFeeds>
+    <enableHistory>true</enableHistory>
+    <enableReports>true</enableReports>
+    <enableSearch>true</enableSearch>
+    <enableSharing>true</enableSharing>
+    <enableStreamingApi>true</enableStreamingApi>
+    <fields>
+        <fullName>Complexity__c</fullName>
+        <description>Complexity (High, Medium, Low)</description>
+        <externalId>false</externalId>
+        <globalPicklist>E2_Complexity</globalPicklist>
+        <inlineHelpText>Complexity of this scope(High, Medium, Low)</inlineHelpText>
+        <label>Complexity</label>
+        <trackFeedHistory>false</trackFeedHistory>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Picklist</type>
+    </fields>
+    <fields>
+        <fullName>Description__c</fullName>
+        <description>Description of this scope</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Description of this scope</inlineHelpText>
+        <label>Description</label>
+        <length>32768</length>
+        <trackFeedHistory>false</trackFeedHistory>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Html</type>
+        <visibleLines>10</visibleLines>
+    </fields>
+    <fields>
+        <fullName>Direct_High_Hrs__c</fullName>
+        <description>Hours calculated when the complexity selected is High.</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Hours calculated when the complexity selected is High.</inlineHelpText>
+        <label>Direct High Hrs</label>
+        <summarizedField>E2_Effort__c.High_Effort_Hrs__c</summarizedField>
+        <summaryForeignKey>E2_Effort__c.Scope__c</summaryForeignKey>
+        <summaryOperation>sum</summaryOperation>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Summary</type>
+    </fields>
+    <fields>
+        <fullName>Direct_Low_Hrs__c</fullName>
+        <description>Hours calculated when the complexity selected is Low.</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Hours calculated when the complexity selected is Low.</inlineHelpText>
+        <label>Direct Low Hrs</label>
+        <summarizedField>E2_Effort__c.Low_Effort_Hrs__c</summarizedField>
+        <summaryForeignKey>E2_Effort__c.Scope__c</summaryForeignKey>
+        <summaryOperation>sum</summaryOperation>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Summary</type>
+    </fields>
+    <fields>
+        <fullName>Direct_Medium_Hrs__c</fullName>
+        <description>Hours calculated when the complexity selected is Medium on scope.</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Hours calculated when the complexity selected is Medium on scope.</inlineHelpText>
+        <label>Direct Medium Hrs</label>
+        <summarizedField>E2_Effort__c.Effort_Hrs__c</summarizedField>
+        <summaryForeignKey>E2_Effort__c.Scope__c</summaryForeignKey>
+        <summaryOperation>sum</summaryOperation>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Summary</type>
+    </fields>
+    <fields>
+        <fullName>E2_Assumption__c</fullName>
+        <externalId>false</externalId>
+        <label>Assumption</label>
+        <length>32768</length>
+        <trackFeedHistory>false</trackFeedHistory>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Html</type>
+        <visibleLines>25</visibleLines>
+    </fields>
+    <fields>
+        <fullName>Is_Active__c</fullName>
+        <defaultValue>true</defaultValue>
+        <description>Is this scope active?</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Is this scope active?</inlineHelpText>
+        <label>Active?</label>
+        <trackFeedHistory>false</trackFeedHistory>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>Is_Favourite__c</fullName>
+        <defaultValue>false</defaultValue>
+        <description>When marked by the SA as favorite ,the SA can find the same in the &quot;My Scope&quot; section when adds a scope from template.</description>
+        <externalId>false</externalId>
+        <inlineHelpText>When marked by the SA as favorite ,the SA can find the same in the &quot;My Scope&quot; section when adds a scope from template.</inlineHelpText>
+        <label>Is Favourite</label>
+        <trackFeedHistory>false</trackFeedHistory>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>LOE_Hrs__c</fullName>
+        <description>Calculated base field for estimates depending on complexity selected.</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Calculated base field for estimates depending on complexity selected.</inlineHelpText>
+        <label>LOE Hrs</label>
+        <precision>10</precision>
+        <required>false</required>
+        <scale>0</scale>
+        <trackFeedHistory>false</trackFeedHistory>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Parent_Scope__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <description>Parent scope of this scope.</description>
+        <externalId>false</externalId>
+        <inlineHelpText>(Optional) - Parent scope of this scope.</inlineHelpText>
+        <label>Parent Scope</label>
+        <referenceTo>E2_Scope__c</referenceTo>
+        <relationshipName>Child_Scopes</relationshipName>
+        <required>false</required>
+        <trackFeedHistory>false</trackFeedHistory>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>Presales_LOE__c</fullName>
+        <deleteConstraint>Restrict</deleteConstraint>
+        <description>Relationship to Presales LOE</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Associated Estimate Record</inlineHelpText>
+        <label>Estimate</label>
+        <referenceTo>CMC_Presales_LOE__c</referenceTo>
+        <relationshipName>E2_Scopes</relationshipName>
+        <required>false</required>
+        <trackFeedHistory>false</trackFeedHistory>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>Scope_Flag__c</fullName>
+        <description>Flagging scope item : Red(question pending),yellow(review needed) and green(complete).</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Flagging scope item : Red(question pending),yellow(review needed) and green(complete).</inlineHelpText>
+        <label>Scope Flag</label>
+        <picklist>
+            <picklistValues>
+                <fullName>Red</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>Yellow</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>Green</fullName>
+                <default>false</default>
+            </picklistValues>
+            <restrictedPicklist>true</restrictedPicklist>
+            <sorted>false</sorted>
+        </picklist>
+        <trackFeedHistory>false</trackFeedHistory>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Picklist</type>
+    </fields>
+    <fields>
+        <fullName>Scope_Group__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <description>Contains the scopes relevant to the group.For eg: Sales cloud implementation with 100k records.</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Contains the scopes relevant to the group.For eg: Sales cloud implementation with 100k records.</inlineHelpText>
+        <label>Scope Group</label>
+        <referenceTo>E2_Scope_Group__c</referenceTo>
+        <relationshipName>Scopes</relationshipName>
+        <required>false</required>
+        <trackFeedHistory>false</trackFeedHistory>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>Scope_Item_Type__c</fullName>
+        <externalId>false</externalId>
+        <inlineHelpText>Optional Field that you can use to specify if a scope item should be considered as an Epic, Story or Component.  This will allow you to filter when exporting to CMC.</inlineHelpText>
+        <label>Scope Item Type</label>
+        <picklist>
+            <picklistValues>
+                <fullName>Component</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>Epic</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>Story</fullName>
+                <default>false</default>
+            </picklistValues>
+            <restrictedPicklist>true</restrictedPicklist>
+            <sorted>false</sorted>
+        </picklist>
+        <trackFeedHistory>false</trackFeedHistory>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Picklist</type>
+    </fields>
+    <fields>
+        <fullName>Source_Scope__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <description>Contains the name of the Scope template it is cloned from.</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Contains the name of the Scope template it is cloned from.</inlineHelpText>
+        <label>Source Scope</label>
+        <referenceTo>E2_Scope__c</referenceTo>
+        <relationshipName>Cloned_Scopes</relationshipName>
+        <required>false</required>
+        <trackFeedHistory>false</trackFeedHistory>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>Ultimate_Parent_Id__c</fullName>
+        <externalId>false</externalId>
+        <formula>IF( NOT( ISBLANK( Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__c )),Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__c ,
+IF( NOT(ISBLANK(Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__c)), Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__c,
+IF(NOT(ISBLANK(Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__c)),
+Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__c,
+IF(NOT(ISBLANK(Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__c)),
+Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__c,
+IF(NOT(ISBLANK(Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__c)),Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__c,
+IF(NOT(ISBLANK(Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__c)),
+Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__c,
+IF(NOT(ISBLANK(Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__c)), Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__c,
+IF(NOT(ISBLANK(Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__c)), Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__c,
+IF(NOT(ISBLANK(Parent_Scope__r.Parent_Scope__r.Parent_Scope__c)), Parent_Scope__r.Parent_Scope__r.Parent_Scope__c,
+IF(NOT(ISBLANK(Parent_Scope__r.Parent_Scope__c)),Parent_Scope__r.Parent_Scope__c,
+IF(NOT(ISBLANK(Parent_Scope__c)),Parent_Scope__c, NULL)))))))))))</formula>
+        <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+        <inlineHelpText>This ID is used by Scope LOE Hrs calculation for all its child scopes</inlineHelpText>
+        <label>Ultimate Parent Id</label>
+        <required>false</required>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Ultimate_Parent_Scope__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <description>This is the ultimate (topmost )scope that the current scope is pointing to.</description>
+        <externalId>false</externalId>
+        <inlineHelpText>This is the ultimate i.e. the topmost scope that the current scope is pointing to.</inlineHelpText>
+        <label>Ultimate Parent Scope</label>
+        <referenceTo>E2_Scope__c</referenceTo>
+        <relationshipName>E2_Scopes</relationshipName>
+        <required>false</required>
+        <trackFeedHistory>false</trackFeedHistory>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <label>Scope</label>
+    <listViews>
+        <fullName>All</fullName>
+        <columns>NAME</columns>
+        <columns>Parent_Scope__c</columns>
+        <filterScope>Everything</filterScope>
+        <label>All</label>
+    </listViews>
+    <listViews>
+        <fullName>Scope_Templates</fullName>
+        <columns>NAME</columns>
+        <columns>Is_Active__c</columns>
+        <columns>Description__c</columns>
+        <columns>Parent_Scope__c</columns>
+        <columns>RECORDTYPE</columns>
+        <columns>Scope_Group__c</columns>
+        <columns>Presales_LOE__c</columns>
+        <filterScope>Everything</filterScope>
+        <filters>
+            <field>RECORDTYPE</field>
+            <operation>equals</operation>
+            <value>E2_Scope__c.Template</value>
+        </filters>
+        <label>Scope Templates</label>
+        <language>en_US</language>
+    </listViews>
+    <listViews>
+        <fullName>Scopes</fullName>
+        <columns>NAME</columns>
+        <columns>Is_Active__c</columns>
+        <columns>Description__c</columns>
+        <columns>Parent_Scope__c</columns>
+        <columns>RECORDTYPE</columns>
+        <columns>Presales_LOE__c</columns>
+        <columns>Is_Favourite__c</columns>
+        <filterScope>Everything</filterScope>
+        <filters>
+            <field>RECORDTYPE</field>
+            <operation>equals</operation>
+            <value>E2_Scope__c.Scope</value>
+        </filters>
+        <label>Scopes</label>
+        <language>en_US</language>
+    </listViews>
+    <nameField>
+        <label>Scope Name</label>
+        <trackFeedHistory>false</trackFeedHistory>
+        <trackHistory>false</trackHistory>
+        <type>Text</type>
+    </nameField>
+    <pluralLabel>Scope</pluralLabel>
+    <recordTypeTrackFeedHistory>false</recordTypeTrackFeedHistory>
+    <recordTypeTrackHistory>false</recordTypeTrackHistory>
+    <recordTypes>
+        <fullName>Scope</fullName>
+        <active>true</active>
+        <description>Default Scope Record type. Mostly all scope should use this record type</description>
+        <label>Scope</label>
+        <picklistValues>
+            <picklist>E2_Complexity</picklist>
+            <values>
+                <fullName>High</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>Low</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>Medium</fullName>
+                <default>true</default>
+            </values>
+        </picklistValues>
+        <picklistValues>
+            <picklist>Scope_Flag__c</picklist>
+            <values>
+                <fullName>Green</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>Red</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>Yellow</fullName>
+                <default>false</default>
+            </values>
+        </picklistValues>
+        <picklistValues>
+            <picklist>Scope_Item_Type__c</picklist>
+            <values>
+                <fullName>Component</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>Epic</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>Story</fullName>
+                <default>false</default>
+            </values>
+        </picklistValues>
+    </recordTypes>
+    <recordTypes>
+        <fullName>Template</fullName>
+        <active>true</active>
+        <description>This is used by the Scope Template Managers as they are building out the template used in scoping of presales estimates.</description>
+        <label>Template</label>
+        <picklistValues>
+            <picklist>E2_Complexity</picklist>
+            <values>
+                <fullName>High</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>Low</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>Medium</fullName>
+                <default>true</default>
+            </values>
+        </picklistValues>
+        <picklistValues>
+            <picklist>Scope_Flag__c</picklist>
+            <values>
+                <fullName>Green</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>Red</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>Yellow</fullName>
+                <default>false</default>
+            </values>
+        </picklistValues>
+        <picklistValues>
+            <picklist>Scope_Item_Type__c</picklist>
+            <values>
+                <fullName>Component</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>Epic</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>Story</fullName>
+                <default>false</default>
+            </values>
+        </picklistValues>
+    </recordTypes>
+    <searchLayouts>
+        <listViewButtons>Quick_Delete</listViewButtons>
+        <searchFilterFields>NAME</searchFilterFields>
+        <searchFilterFields>RECORDTYPE</searchFilterFields>
+    </searchLayouts>
+    <sharingModel>Read</sharingModel>
+    <validationRules>
+        <fullName>MandatoryComplexity</fullName>
+        <active>true</active>
+        <description>mandate the selection of complexity</description>
+        <errorConditionFormula>ISPICKVAL(Complexity__c, &apos;&apos;)</errorConditionFormula>
+        <errorDisplayField>Complexity__c</errorDisplayField>
+        <errorMessage>Complexity selection is mandatory</errorMessage>
+    </validationRules>
+    <validationRules>
+        <fullName>MandatoryEstimateForScope_RT</fullName>
+        <active>true</active>
+        <description>It is mandatory to allocate the scope of record type &apos;Scope&apos; with an estimate.</description>
+        <errorConditionFormula>IF(RecordType.DeveloperName = &apos;Scope&apos;, 
+     IF( Presales_LOE__c = null, true, false)
+, false)</errorConditionFormula>
+        <errorDisplayField>Presales_LOE__c</errorDisplayField>
+        <errorMessage>Estimate is mandatory for scope record types</errorMessage>
+    </validationRules>
+    <validationRules>
+        <fullName>MandatoryNoEstimateForTemplate_RT</fullName>
+        <active>true</active>
+        <description>No estimate should be associated with the scope record of Template record type.</description>
+        <errorConditionFormula>IF(RecordType.DeveloperName = &apos;Template&apos;,
+IF( Presales_LOE__c = null, false, true)
+, false)</errorConditionFormula>
+        <errorMessage>Estimate cannot be associated with a &apos;Template&apos; record type scope</errorMessage>
+    </validationRules>
+    <webLinks>
+        <fullName>Quick_Delete</fullName>
+        <availability>online</availability>
+        <description>Allow you to delete multiple records at a same time on the list view</description>
+        <displayType>massActionButton</displayType>
+        <linkType>javascript</linkType>
+        <masterLabel>Quick Delete</masterLabel>
+        <openType>onClickJavaScript</openType>
+        <protected>false</protected>
+        <requireRowSelection>true</requireRowSelection>
+        <url>{!REQUIRESCRIPT(&quot;/soap/ajax/9.0/connection.js&quot;)} 
+
+var records = {!GETRECORDIDS( $ObjectType.E2_Scope__c )}; 
+//var taskRecords = {!GETRECORDIDS( $ObjectType.Task)}; 
+//records = records.concat(taskRecords); 
+
+
+if (records[0] == null) { 
+alert(&quot;Please select at least one record.&quot;) } 
+else { 
+
+var errors = []; 
+var result = sforce.connection.deleteIds(records); 
+if (result &amp;&amp; result.length){ 
+var numFailed = 0; 
+var numSucceeded = 0; 
+for (var i = 0; i &lt; result.length; i++){ 
+var res = result[i]; 
+if (res &amp;&amp; res.success == &apos;true&apos;){ 
+numSucceeded++; 
+} else { 
+var es = res.getArray(&quot;errors&quot;); 
+if (es.length &gt; 0) { 
+errors.push(es[0].message); 
+} 
+numFailed++; 
+} 
+} 
+if (numFailed &gt; 0){ 
+alert(&quot;Failed: &quot; + numFailed + &quot;\nSucceeded: &quot; + numSucceeded + &quot; \n Due to: &quot; + errors.join(&quot;\n&quot;)); 
+} else { 
+alert(&quot;Number of records deleted: &quot; + numSucceeded); 
+} 
+} 
+window.top.location.reload(); 
+}</url>
+    </webLinks>
+</CustomObject>

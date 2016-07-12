@@ -1,0 +1,108 @@
+<!-- Page: composition -->
+<!-- This page acts as the template. Create it first, then the page below.  --> 
+<apex:page showHeader="false" standardStylesheets="false" sidebar="false" applyHtmlTag="false" applyBodyTag="false">
+<html xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<head>
+    <title><apex:insert name="title"/></title>  
+    <link type="text/css" rel="stylesheet" href="{!URLFOR($Resource.cloneany, '/slds/styles/salesforce-lightning-design-system-vf.min.css')}" />
+    <link type="text/css" rel="stylesheet" href="{!URLFOR($Resource.cloneany, '/jstree/themes/proton/style.min.css')}" />
+    <apex:includeScript value="../../soap/ajax/36.0/connection.js" />
+    <apex:includeScript value="../../soap/ajax/15.0/apex.js" />
+    <apex:includeScript value="{!URLFOR($Resource.cloneany, '/libs/jquery.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.cloneany, '/jstree/jstree.min.js')}" />
+
+    <script>sforce.connection.sessionId='{!GETSESSIONID()}';</script>
+    <style>
+        .page-footer{
+            box-shadow: none !important;
+            margin-top: 16px !important;
+            border-radius: 0px !important;
+        }
+       
+        .slds-notify{
+            padding-left: 20px !important;
+            line-height: 32px !important;
+            font-size: 18px !important;
+            text-align: left !important;
+        }
+        .slds-form-element__label{
+            color: #16325c !important;
+        }
+        .jstree-anchor:focus, .jstree-anchor:hover{
+            outline: none !important;
+            text-decoration: none !important;
+        }
+        .jstree-proton .jstree-clicked {
+            color: #FFF !important;
+        }
+        .slds body, .slds:not(html) {
+            font-size: 100%!important;
+        }
+        
+        .slds .slds-modal {
+          position:absolute;
+        }
+        
+        .slds .slds-backdrop {
+          position:absolute;
+        }
+        
+        .slds-tabs--path__link {
+          flex-wrap:wrap;    
+        }
+        .slds-tabs--path__nav {
+          flex-wrap:wrap;    
+        }
+        
+    </style>
+    <style rel="stylesheet" type="text/css">
+      #deliveryWizard .progressBar .section {
+        width:25%;
+        /**font-size:12px;**/
+      }
+    </style>
+</head> 
+<body style="padding:5px;"> 
+<!-- FORM TAG NOT NEEDED HERE NOW; APPLYING THS TAG ON RESPECTIVE PAGES -->
+<!-- <apex:form > -->
+  <!-- REQUIRED SLDS WRAPPER -->
+  <div class="slds">
+     <!-- PRIMARY CONTENT WRAPPER -->
+     <div class="myapp">
+        <!-- HEADER -->
+        <div>
+           <apex:insert name="header"/>
+        </div>
+        <!-- / HEADER -->
+        <!-- BODY -->
+        <div> 
+           <apex:insert name="body"/>
+        </div>
+        <!-- / BODY -->
+        
+        
+         <!-- FOOTER -->
+            <div>
+                    <div class="slds-modal__footer page-footer">
+                            
+                            <apex:insert name="footer"/>
+                         
+                    </div>
+                    <footer role="contentinfo" class="slds-p-around--large">                         
+                      <div class="slds-grid slds-grid--align-spread">
+                        <p class="slds-col">Estimator 2.0</p>
+                        <p class="slds-col">&copy; Appirio</p>
+                      </div>                        
+                    </footer>
+            </div>
+            <!-- / FOOTER -->
+        
+     </div>
+     <!-- / PRIMARY CONTENT WRAPPER -->   
+  </div>
+  <!-- / REQUIRED SLDS WRAPPER -->
+<!-- </apex:form> -->
+<apex:insert name="javascript"/>
+</body>
+</html>
+</apex:page>

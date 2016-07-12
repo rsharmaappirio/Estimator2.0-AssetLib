@@ -1,0 +1,390 @@
+<apex:page controller="E2_SelectScopeTemplateController" showHeader="false" standardStylesheets="true" sidebar="false" 
+   applyHtmlTag="false" applyBodyTag="false">
+   <html>
+      <head>
+         <title>Select Scope Template / My Scopes</title>
+         <apex:stylesheet value="{!URLFOR($Resource.E2_SLDS1, '/assets/styles/salesforce-lightning-design-system-vf.css')}" />
+         <apex:includeScript value="{!URLFOR($Resource.cloneany, '/libs/jquery.js')}" />
+         <apex:includeScript value="../../soap/ajax/36.0/connection.js" />
+         <apex:includeScript value="../../soap/ajax/15.0/apex.js" />
+         <apex:includeScript value="{!URLFOR($Resource.cloneany, '/jstree/jstree.min.js')}" />
+         <link type="text/css" rel="stylesheet" href="{!URLFOR($Resource.cloneany, '/jstree/themes/proton/style.min.css')}" />
+         <script type="text/javascript">
+            var close_png_url = "{!URLFOR($Resource.E2_SLDS1, '/assets/icons/utility/close_60.png')}";
+            var treeId = "#relationShipTree";
+            sforce.connection.sessionId='{!GETSESSIONID()}';    
+         </script>
+         <apex:includescript value="{!$Resource.E2_SelectScopeTemplateJS}"/>
+         <style>
+            .displayNone{display:none;}
+            .paddingZero{padding:0px!important;}
+            .paddingTopZero{padding-top:0px!important;}
+             .paddingleftZero{
+                padding-left: 0px!important;;
+             }
+             .paddingrightfive{
+                padding-right: 5px!important;;
+             }
+             .paddingleft20{
+                padding-left: 10px!important;;
+             }
+            .pagination {
+            font-size: 80%;
+            }
+            .slds-select {
+                height: 36px!important;
+            }
+            .pagination a {
+            text-decoration: none;
+            border: solid 1px #AAE;
+            color: #15B;
+            }
+            .pagination a, .pagination span {
+            display: block;
+            float: left;
+            padding: 0.3em 0.5em;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            }
+            .pagination .current {
+            background: #5E82A3;
+            color: #fff;
+            border: solid 1px #AAE;
+            text-decoration:none;
+            }
+            .pagination .notPrevious, .pagination .notNext{
+            color:#999;
+            border-color:#999;
+            background:#fff;
+            text-decoration:none;
+            pointer-events: none;
+            cursor: default;
+            }
+            .next {
+            text-decoration:underline
+            }
+            .prev {
+            text-decoration:underline
+            }
+            a.addup_button{
+                background-image: url(/img/feeds/follow_sprite.png);
+                background-repeat: no-repeat;
+                background-position: 0 0;   
+                background-color: transparent!important;
+                height: 16px;
+                width: 16px;
+                float:right;
+            }
+            a.added_button {
+                background-repeat: no-repeat;
+                background-image: url(/img/feeds/follow_sprite.png);
+                background-position: 0 -27px;
+                height: 16px;
+                width: 16px;
+                float:right;
+            }
+            .node_is_active {
+                color: rgba(51, 51, 51, 0.41);
+                font-style: italic;
+            }
+            .slds-tableContent td {
+                white-space :normal!important;
+            }
+         </style>
+      </head>
+      <body>
+         <apex:form id="frm">
+            <apex:pagemessages />
+            <apex:actionFunction name="getpage" action="{!getList}" reRender="scopePanel,myScopePanel" oncomplete="AddScopeTree.destroyTree();scopesPills.markPillsChecked();">
+               <apex:param value="" assignTo="{!selectedCon}" name="selectedCon" />
+               <apex:param value="" assignTo="{!selectedPageNumber}" name="cPageNumber" />
+            </apex:actionFunction>
+            <apex:actionFunction name="getsort" action="{!sortList}" rerender="scopePanel,myScopePanel"  oncomplete="AddScopeTree.destroyTree();scopesPills.markPillsChecked();">
+               <apex:param value="ByScopeName" name="column" assignTo="{!sortExpression}"></apex:param>
+            </apex:actionFunction>
+            <apex:actionFunction name="searchScopeRecords" action="{!searchScopeRecords}" 
+               oncomplete="SelectScopeTempate.search_complete();" rerender="scopePanel,myScopePanel,templateCount,favoriteCount">
+               <apex:param value="" name="scopeName" assignTo="{!scopeName}"></apex:param>
+            </apex:actionFunction>
+            <div class="slds">
+               <div class="myapp">
+                  <div class="slds-page-header" role="banner">
+                     <div class="slds-grid">
+                        <div class="slds-col slds-has-flexi-truncate">
+                           <div class="slds-media">
+                              <div class="slds-media__body">
+                                 <p class="slds-text-heading--label">SEARCH SCOPE</p>
+                                 <div class="slds-grid">
+                                    <!--h1 class="slds-page-header__title slds-m-right--small slds-truncate slds-align-middle" title="Record Title">Scope</h1-->
+                                    <div class="slds-form-element">
+                                       <div class="slds-form-element__control">
+                                          <apex:inputText id="scopename_ele" value="{!scopeName}" styleClass="slds-input" html-placeholder="Name"/>
+                                       </div>
+                                    </div>
+                                    &nbsp;&nbsp;
+                                    <div class="slds-form-element">
+                                       <div class="slds-form-element__control">
+                                          <apex:selectList styleClass="slds-select" id="scopegroup_ele" value="{!scopeGroup}"
+                                                     multiselect="false" size="1" html-placeholder="Group">
+                                              <apex:selectOption itemValue="" itemLabel="Select Group"/>
+                                              <apex:selectOptions value="{!scopeGroups}"/>
+                                            </apex:selectList>
+                                       </div>
+                                    </div>
+                                    
+                                 </div>
+                              </div>
+                           </div>
+                        </div>
+                        <div class="slds-col slds-no-flex slds-align-bottom">
+                           <div class="slds-button-group" role="group">
+                              <apex:commandButton styleClass="slds-button slds-button--neutral slds-button--brand" title="Search" value="Search" onclick="SelectScopeTempate.search();return false;" action="{!searchScopeRecords}" />
+                              <apex:commandButton styleClass="slds-button slds-button--neutral " title="Clear" value="Clear" action="{!resetResults}" onclick="spinner.show();" oncomplete="AddScopeTree.destroyTree();" reRender="scopename_ele,scopegroup_ele,scopePanel,myScopePanel,templateCount,favoriteCount"/>
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+                  <div class="slds-pill_container" id="pillContainer" style="min-height: 36px; overflow-y: auto;background:#faffbd"></div>
+                  <div class="results-table" style="min-height:350px">
+                    <ul class="slds-tabs--default__nav" role="tablist">
+                        <li class="slds-tabs--default__item slds-text-heading--label slds-active" title="Scope Library" role="presentation">
+                            <a class="slds-tabs--default__link" href="javascript:void(0);" role="tab" tabindex="-1" aria-selected="false" aria-controls="tab-default-1" id="tab-default-1__item">Scope Library&nbsp;<apex:outputPanel id="templateCount" styleClass="slds-badge slds-badge-custom" style="padding:4px!important;">{!totalTemplate}</apex:outputPanel></a>
+                        </li>
+                        <li class="slds-tabs--default__item slds-text-heading--label" title="My Favorites" role="presentation">
+                            <a class="slds-tabs--default__link" href="javascript:void(0);" role="tab" tabindex="0" aria-selected="true" aria-controls="tab-default-2" id="tab-default-2__item">My Favorites&nbsp;<apex:outputPanel id="favoriteCount" styleClass="slds-badge slds-badge-custom" style="padding:4px!important;">{!totalMyFav}</apex:outputPanel></a>
+                        </li>                                                                       
+                    </ul>
+                    <apex:outputPanel layout="block" style="min-height:400px;">
+                        <table class="slds-table slds-no-row-hover slds-max-medium-table--stacked">                        
+                            <tbody>
+                                <tr class="slds-hint-parent">
+                                    <td class="slds-truncate slds-size--1-of-2 paddingZero" style="vertical-align:top;">
+                                        <div class="slds-tabs--default">                                  
+                                            <div id="tab-default-1" class="slds-tabs--default__content slds-show paddingTopZero" role="tabpanel" aria-labelledby="tab-default-1__item">
+                                                <div class="slds-card">
+                                                <div class="slds-card__body">
+                                                <div class="slds-page-header" role="banner" style="padding-top: 14px;">
+                                                    <div class="slds-media">
+                                                        <div class="slds-media__figure slds-icon slds-icon--large slds-icon-standard-opportunity">
+                                                            <apex:image value="{!URLFOR($Resource.E2_SLDS1, '/assets/icons/standard/pricebook_60.png')}" width="48" height="48"/>
+                                                        </div>
+                                                        <div class="slds-media__body">
+                                                            <p class="slds-page-header__title slds-truncate slds-align-middle" title="Scope Templates">Scope Library</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <apex:outputPanel id="scopePanel">
+                                                    <apex:outputPanel layout="none" rendered="{!scopeList.size>0}">
+                                                        <apex:dataTable value="{!scopeList}" var="sc1" styleClass="slds-tableContent slds-table slds-table--bordered tablesorter">
+                                                            <apex:column styleClass="slds-cell-shrink">
+                                                                <apex:facet name="header">
+                                                                    <label class="slds-checkbox"></label>
+                                                                </apex:facet>
+                                                                <apex:outputPanel layout="none">
+                                                                    <a href="javascript:void(0);" title="Add scope" onclick="scopesPills.addPillsLink('{!sc1.scope.id}','{!sc1.scope.Name}');AddScopeTree.updateTreeState();" id="{!sc1.scope.id}href" class="addup_button"></a>
+                                                                </apex:outputPanel> 
+                                                            </apex:column>
+                                                            <apex:column styleClass="slds-truncate">
+                                                                <apex:facet name="header">
+                                                                    <apex:commandLink styleClass="slds-button slds-button--icon-bare" action="{!sortList}" reRender="scopePanel" onclick="spinner.show();" oncomplete="spinner.hide();">Name&nbsp;&nbsp;
+                                                                        <apex:image value="{!URLFOR($Resource.E2_SLDS1, '/assets/icons/utility/arrowdown_60.png')}" width="12" height="12" rendered="{!AND(sortExpression=='ByScopeName',sortDirection=='ByAsc')}"/>
+                                                                        <apex:image value="{!URLFOR($Resource.E2_SLDS1, '/assets/icons/utility/arrowup_60.png')}" width="12" height="12" rendered="{!AND(sortExpression=='ByScopeName',sortDirection=='ByDesc')}"/>
+                                                                        <span class="slds-assistive-text">Sort</span>
+                                                                        <apex:param value="ByScopeName" name="column" assignTo="{!sortExpression}"></apex:param>
+                                                                        <apex:param value="0" name="column1" assignTo="{!selectedCon}"></apex:param>
+                                                                    </apex:commandLink>
+                                                                </apex:facet>
+                                                                <apex:outputPanel layout="none">
+                                                                    <apex:outputLink onclick="AddScopeTree.onScopeClick('{!sc1.scope.id}');return false;" >{!sc1.scope.Name}</apex:outputLink>
+                                                                </apex:outputPanel>
+                                                            </apex:column>
+                                                            <apex:column >
+                                                                <apex:facet name="header">
+                                                                    <apex:commandLink styleClass="slds-button slds-button--icon-bare" action="{!sortList}" reRender="scopePanel" onclick="spinner.show();" oncomplete="spinner.hide();">Complexity&nbsp;&nbsp;
+                                                                        <apex:image value="{!URLFOR($Resource.E2_SLDS1, '/assets/icons/utility/arrowdown_60.png')}" width="12" height="12" rendered="{!AND(sortExpression=='ByComplexity',sortDirection=='ByAsc')}"/>
+                                                                        <apex:image value="{!URLFOR($Resource.E2_SLDS1, '/assets/icons/utility/arrowup_60.png')}" width="12" height="12" rendered="{!AND(sortExpression=='ByComplexity',sortDirection=='ByDesc')}"/>
+                                                                        <span class="slds-assistive-text">Sort</span>
+                                                                        <apex:param value="ByComplexity" name="column" assignTo="{!sortExpression}"></apex:param>
+                                                                        <apex:param value="0" name="column1" assignTo="{!selectedCon}"></apex:param>
+                                                                    </apex:commandLink>
+                                                                </apex:facet>
+                                                                <apex:outputPanel layout="none">{!sc1.scope.Complexity__c}</apex:outputPanel>
+                                                            </apex:column>
+                                                            <apex:column >
+                                                                <apex:facet name="header">
+                                                                    <apex:commandLink styleClass="slds-button slds-button--icon-bare" action="{!sortList}" reRender="scopePanel" onclick="spinner.show();" oncomplete="spinner.hide();">Scope Group&nbsp;&nbsp;
+                                                                        <apex:image value="{!URLFOR($Resource.E2_SLDS1, '/assets/icons/utility/arrowdown_60.png')}" width="12" height="12" rendered="{!AND(sortExpression=='ByGroup',sortDirection=='ByAsc')}"/>
+                                                                        <apex:image value="{!URLFOR($Resource.E2_SLDS1, '/assets/icons/utility/arrowup_60.png')}" width="12" height="12" rendered="{!AND(sortExpression=='ByGroup',sortDirection=='ByDesc')}"/>
+                                                                        <span class="slds-assistive-text">Sort</span>
+                                                                        <apex:param value="ByGroup" name="column" assignTo="{!sortExpression}"></apex:param>
+                                                                        <apex:param value="0" name="column1" assignTo="{!selectedCon}"></apex:param>
+                                                                    </apex:commandLink>
+                                                                </apex:facet>
+                                                                <apex:outputPanel layout="none">{!sc1.scope.Scope_Group__r.Name}</apex:outputPanel>
+                                                            </apex:column>
+                                                            <apex:column >
+                                                                <apex:facet name="header">
+                                                                    <apex:commandLink styleClass="slds-button slds-button--icon-bare" action="{!sortList}" reRender="scopePanel" onclick="spinner.show();" oncomplete="spinner.hide();">Direct Efforts(LOE Hrs)&nbsp;&nbsp;
+                                                                        <apex:image value="{!URLFOR($Resource.E2_SLDS1, '/assets/icons/utility/arrowdown_60.png')}" width="12" height="12" rendered="{!AND(sortExpression=='ByEfforts',sortDirection=='ByAsc')}"/>
+                                                                        <apex:image value="{!URLFOR($Resource.E2_SLDS1, '/assets/icons/utility/arrowup_60.png')}" width="12" height="12" rendered="{!AND(sortExpression=='ByEfforts',sortDirection=='ByDesc')}"/>
+                                                                        <span class="slds-assistive-text">Sort</span>
+                                                                        <apex:param value="ByEfforts" name="column" assignTo="{!sortExpression}"></apex:param>
+                                                                        <apex:param value="0" name="column1" assignTo="{!selectedCon}"></apex:param>
+                                                                    </apex:commandLink>
+                                                                </apex:facet>
+                                                                <apex:outputPanel layout="none">{!sc1.scope.LOE_Hrs__c}</apex:outputPanel>
+                                                            </apex:column>
+                                                        </apex:dataTable>
+                                                        <apex:outputPanel layout="none" rendered="{!scopePaging.totalPage>1}">
+                                                        <table width="100%">
+                                                            <tr>
+                                                                <td style="color:#818281;font-size:16px;">&nbsp;</td>
+                                                                <td style="float: right;vertical-align: middle;font-size: 15px;">
+                                                                    <div id="PaginationUp" class="pagination">
+                                                                        <a id="first0" href="#" class="notPrevious" onClick="pagination.chrrentPage(0, '1', {!scopePaging.selectedPageNumber}, {!scopePaging.totalPage});return false;">&#60;&#60;</a>
+                                                                        <a href="#" class="notPrevious" id="previousUp0" onClick="pagination.previousPage(0, {!scopePaging.selectedPageNumber}, {!scopePaging.totalPage});return false;">&#60;</a>
+                                                                        <apex:repeat value="{!scopePaging.listOfLinks}" var="number" >
+                                                                            <span style="{!IF(number == 0,'display:inline-block;font-size: 14px;color: #5E82A3;','display:none;')}"><b>....</b></span>
+                                                                            <a href="#" style="{!IF(number == scopePaging.selectedPageNumber,'text-decoration: none;','')} {!IF(number != 0,'display:inline-block;','display:none;')}" class="{!IF(number == scopePaging.selectedPageNumber,'current','')}" onClick="pagination.chrrentPage(0, '{!number}', {!scopePaging.selectedPageNumber}, {!scopePaging.totalPage});return false;">{!number}</a>
+                                                                        </apex:repeat>
+                                                                        <a id="nextUp0" href="#" class="next" onClick="pagination.nextPage(0, {!scopePaging.selectedPageNumber}, {!scopePaging.totalPage});return false;">&#62;</a>
+                                                                        <a id="last0" href="#" class="next" onClick="pagination.chrrentPage(0, '{!scopePaging.totalPage}', {!scopePaging.selectedPageNumber}, {!scopePaging.totalPage});return false;">&#62;&#62;</a>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                        <script>pagination.paginationStyle(0, {!scopePaging.selectedPageNumber}, {!scopePaging.totalPage});</script>
+                                                        </apex:outputPanel>
+                                                    </apex:outputPanel>
+                                                    <apex:outputPanel layout="none" rendered="{!scopeList.size==0}">
+                                                        <div class="slds-comment__content slds-text-longform">
+                                                            <p>No Scope with current filter in this Category</p>
+                                                        </div>
+                                                    </apex:outputPanel>
+                                                </apex:outputPanel>
+                                                </div>
+                                                </div>
+                                            </div>
+                                            <div id="tab-default-2" class="slds-tabs--default__content slds-hide paddingTopZero" role="tabpanel" aria-labelledby="tab-default-2__item">
+                                                <div class="slds-card">
+                                                <div class="slds-card__body">
+                                                <div class="slds-page-header" role="banner" style="padding-top: 14px;">
+                                                    <div class="slds-media">
+                                                        <div class="slds-media__figure slds-icon slds-icon--large slds-icon-standard-opportunity">
+                                                            <apex:image value="{!URLFOR($Resource.E2_SLDS1, '/assets/icons/custom/custom1_60.png')}" width="48" height="48"/>
+                                                        </div>
+                                                        <div class="slds-media__body">
+                                                            <p class="slds-page-header__title slds-truncate slds-align-middle" title="My Scopes">My Favorites</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <apex:outputPanel id="myScopePanel">
+                                                    <apex:outputPanel layout="none" rendered="{!favScopeList.size>0}">
+                                                        <apex:dataTable value="{!favScopeList}" var="sc1" styleClass="slds-tableContent slds-table slds-table--bordered tablesorter" id="accsTable1">
+                                                            <apex:column styleClass="slds-cell-shrink">
+                                                                <apex:facet name="header"><label class="slds-checkbox"></label></apex:facet>
+                                                                <apex:outputPanel layout="none">                                              
+                                                                    <a href="javascript:void(0);" title="Add scope" onclick="scopesPills.addPillsLink('{!sc1.scope.id}','{!sc1.scope.Name}');AddScopeTree.updateTreeState();" id="{!sc1.scope.id}href" class="addup_button"></a>
+                                                                </apex:outputPanel>
+                                                            </apex:column>
+                                                            <apex:column styleClass="slds-truncate">
+                                                                <apex:facet name="header">
+                                                                    <apex:commandLink styleClass="slds-button slds-button--icon-bare" action="{!sortList}" reRender="myScopePanel" onclick="spinner.show();" oncomplete="spinner.hide();">Name&nbsp;&nbsp;
+                                                                        <apex:image value="{!URLFOR($Resource.E2_SLDS1, '/assets/icons/utility/arrowdown_60.png')}" width="12" height="12" rendered="{!AND(sortExpression=='ByScopeName',sortDirection=='ByAsc')}"/>
+                                                                        <apex:image value="{!URLFOR($Resource.E2_SLDS1, '/assets/icons/utility/arrowup_60.png')}" width="12" height="12" rendered="{!AND(sortExpression=='ByScopeName',sortDirection=='ByDesc')}"/>
+                                                                        <span class="slds-assistive-text">Sort</span>
+                                                                        <apex:param value="ByScopeName" name="column" assignTo="{!sortExpression}"></apex:param>
+                                                                        <apex:param value="1" name="column1" assignTo="{!selectedCon}"></apex:param>
+                                                                    </apex:commandLink>
+                                                                </apex:facet>
+                                                                <apex:outputLink onclick="AddScopeTree.onScopeClick('{!sc1.scope.id}');return false;" >{!sc1.scope.Name}</apex:outputLink>
+                                                            </apex:column>
+                                                            <apex:column >
+                                                                <apex:facet name="header">
+                                                                    <apex:commandLink styleClass="slds-button slds-button--icon-bare" action="{!sortList}" reRender="myScopePanel" onclick="spinner.show();" oncomplete="spinner.hide();">Complexity&nbsp;&nbsp;
+                                                                        <apex:image value="{!URLFOR($Resource.E2_SLDS1, '/assets/icons/utility/arrowdown_60.png')}" width="12" height="12" rendered="{!AND(sortExpression=='ByComplexity',sortDirection=='ByAsc')}"/>
+                                                                        <apex:image value="{!URLFOR($Resource.E2_SLDS1, '/assets/icons/utility/arrowup_60.png')}" width="12" height="12" rendered="{!AND(sortExpression=='ByComplexity',sortDirection=='ByDesc')}"/>
+                                                                        <span class="slds-assistive-text">Sort</span>
+                                                                        <apex:param value="ByComplexity" name="column" assignTo="{!sortExpression}"></apex:param>
+                                                                        <apex:param value="1" name="column1" assignTo="{!selectedCon}"></apex:param>
+                                                                    </apex:commandLink>
+                                                                </apex:facet>
+                                                                <apex:outputPanel layout="none">{!sc1.scope.Complexity__c}</apex:outputPanel>
+                                                            </apex:column>
+                                                            <apex:column >
+                                                                <apex:facet name="header">
+                                                                    <apex:commandLink styleClass="slds-button slds-button--icon-bare" action="{!sortList}" reRender="myScopePanel" onclick="spinner.show();" oncomplete="spinner.hide();">Direct Efforts(LOE Hrs)&nbsp;&nbsp;
+                                                                        <apex:image value="{!URLFOR($Resource.E2_SLDS1, '/assets/icons/utility/arrowdown_60.png')}" width="12" height="12" rendered="{!AND(sortExpression=='ByEfforts',sortDirection=='ByAsc')}"/>
+                                                                        <apex:image value="{!URLFOR($Resource.E2_SLDS1, '/assets/icons/utility/arrowup_60.png')}" width="12" height="12" rendered="{!AND(sortExpression=='ByEfforts',sortDirection=='ByDesc')}"/>
+                                                                        <span class="slds-assistive-text">Sort</span>
+                                                                        <apex:param value="ByEfforts" name="column" assignTo="{!sortExpression}"></apex:param>
+                                                                        <apex:param value="1" name="column1" assignTo="{!selectedCon}"></apex:param>
+                                                                    </apex:commandLink>
+                                                                </apex:facet>
+                                                                <apex:outputPanel layout="none">{!sc1.scope.LOE_Hrs__c}</apex:outputPanel>
+                                                            </apex:column>
+                                                        </apex:dataTable>
+                                                        <apex:outputPanel layout="none" rendered="{!favScopePaging.totalPage>1}">
+                                                            <table width="100%">
+                                                                <tr>
+                                                                    <td style="color:#818281;font-size:16px;">&nbsp;</td>
+                                                                    <td style="float: right;vertical-align: middle;font-size: 15px;">
+                                                                        <div id="PaginationUp" class="pagination">
+                                                                            <a id="first0" href="#" class="notPrevious" onClick="pagination.chrrentPage(1, '1', {!favScopePaging.selectedPageNumber}, {!favScopePaging.totalPage});return false;">&#60;&#60;</a>
+                                                                            <a href="#" class="notPrevious" id="previousUp0" onClick="pagination.previousPage(1, {!favScopePaging.selectedPageNumber}, {!favScopePaging.totalPage});return false;">&#60;</a>
+                                                                            <apex:repeat value="{!favScopePaging.listOfLinks}" var="number" >
+                                                                                <span style="{!IF(number == 0,'display:inline-block;font-size: 14px;color: #5E82A3;','display:none;')}"><b>....</b></span>
+                                                                                <a href="#" style="{!IF(number == favScopePaging.selectedPageNumber,'text-decoration: none;','')} {!IF(number != 0,'display:inline-block;','display:none;')}" class="{!IF(number == favScopePaging.selectedPageNumber,'current','')}" onClick="pagination.chrrentPage(1, '{!number}', {!favScopePaging.selectedPageNumber}, {!favScopePaging.totalPage});return false;">{!number}</a>
+                                                                            </apex:repeat>
+                                                                            <a id="nextUp0" href="#" class="next" onClick="pagination.nextPage(1, {!favScopePaging.selectedPageNumber}, {!favScopePaging.totalPage});return false;">&#62;</a>
+                                                                            <a id="last0" href="#" class="next" onClick="pagination.chrrentPage(1, '{!favScopePaging.totalPage}', {!favScopePaging.selectedPageNumber}, {!favScopePaging.totalPage});return false;">&#62;&#62;</a>
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                            </table>
+                                                            <script>pagination.paginationStyle(1, {!favScopePaging.selectedPageNumber}, {!favScopePaging.totalPage});</script>
+                                                        </apex:outputPanel>
+                                                    </apex:outputPanel>
+                                                    <apex:outputPanel layout="none" rendered="{!favScopeList.size==0}">
+                                                        <div class="slds-comment__content slds-text-longform">
+                                                            <p>No Scope with current filter in this Category</p>
+                                                        </div>
+                                                    </apex:outputPanel>
+                                                </apex:outputPanel>
+                                                </div>
+                                                </div>
+                                            </div>
+                                        </div>                          
+                                    </td>
+                                    <td class="slds-truncate paddingZero" style="vertical-align:top;">
+                                        <div class="slds-page-header" role="banner" >
+                                            <div class="slds-media">
+                                                <div class="slds-media__figure slds-icon slds-icon--large slds-icon-standard-opportunity">
+                                                    <apex:image value="{!URLFOR($Resource.E2_SLDS1, '/assets/icons/standard/hierarchy_60.png')}" width="48" height="48"/>
+                                                </div>
+                                                <div class="slds-media__body">
+                                                    <p class="slds-page-header__title slds-truncate slds-align-middle" title="My Scopes">Scope Hierarchy</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="slds-form-element paddingleft20" id="relationShipTree"></div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </apex:outputPanel>
+                </div>
+            </div>
+            <!-- LOAD SPINNER -->
+            <div id="loadingSpinner" class="slds-spinner_container" style="display: none !important;">
+                <div class="slds-spinner--brand slds-spinner slds-spinner--large" aria-hidden="false" role="alert">
+                    <div class="slds-spinner__dot-a"></div>
+                    <div class="slds-spinner__dot-b"></div>
+                </div>
+            </div>
+            <!-- LOAD SPINNER END-->
+        </div>
+    </apex:form>
+</body>
+</html>
+</apex:page>

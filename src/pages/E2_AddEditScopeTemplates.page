@@ -1,0 +1,225 @@
+<apex:page standardController="E2_Scope_Group__c" extensions="E2_AddEditScopeTemplatesController"
+   showHeader="false" standardStylesheets="true" sidebar="false" applyHtmlTag="false" applyBodyTag="false" docType="html-5.0">
+   <style>
+     @media (min-width:48em){.slds .slds-page-header{padding:10px 5px !important}}
+     .slds .slds-page-header {
+                    padding : 10px 5px;
+            }
+   </style>
+   <apex:composition template="E2_Template">
+      <apex:define name="title">Add/Edit Scope Template</apex:define>
+      
+      <apex:define name="body">
+      <apex:form >
+         <div xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+            <div class="slds-page-header" role="banner">
+               <div class="slds-grid">
+                  <div class="slds-col slds-has-flexi-truncate">
+                     <div class="slds-media">
+                        <div class="slds-media__figure">
+                            <div class="slds-icon slds-icon--large slds-icon-standard-user">
+                              <img src="{!$Resource.E2_SLDS1}/assets/icons/standard/hierarchy_120.png" style="width:48px;height:48px;" alt="Scope Hierarchy" />
+                            </div>
+                           
+                        </div>
+                        <div class="slds-media__body">
+                           <p class="slds-text-heading--label">Add/Edit Scope Group for</p>
+                           <div class="slds-grid">
+                              <h1 class="slds-page-header__title slds-m-right--small slds-truncate slds-align-middle" title="Record Title">{!E2_Scope_Group__c.Name}</h1>
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+                  <div class="slds-col slds-no-flex slds-align-bottom">
+                     <div class="slds-button-group" role="group">
+                        <button class="slds-button slds-button--neutral" onclick="return false;">Help</button>
+                        <apex:commandButton styleClass="slds-button slds-button--neutral" title="Add New Scope" value="Add New Scope" onclick="return AddEditScope.addnew_click(this);"/>                        
+                     </div>
+                  </div>
+               </div>
+               
+            </div>
+         </div>
+         <div class="slds-notify_container" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+            style = "display:none;">
+            <div class="slds-notify slds-notify--toast slds-theme--success" id="sldsalertdiv" role="alert">
+               <span class="slds-assistive-text">Success</span>
+               <button class="slds-button slds-button--icon-inverse slds-notify__close">
+                  <svg aria-hidden="true" class="slds-button__icon slds-button__icon--large">
+                     <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!$Resource.E2_SLDS1}/assets/icons/utility-sprite/svg/symbols.svg#close"></use>
+                  </svg>
+                  <span class="slds-assistive-text">Close</span>
+               </button>
+               <div class="notify__content slds-grid">
+                  <svg aria-hidden="true" class="slds-icon slds-icon--small slds-m-right--small slds-col slds-no-flex">
+                     <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!$Resource.E2_SLDS1}/assets/icons/utility-sprite/svg/symbols.svg#notification"></use>
+                  </svg>
+                  <div class="slds-col slds-align-middle">
+                     <h2 class="slds-text-heading--small "></h2>
+                  </div>
+               </div>
+            </div>
+         </div>
+         <apex:outputPanel layout="block" style="min-height:400px;">
+            
+               <table class="slds-table slds-no-row-hover slds-max-medium-table--stacked">                        
+                       <tbody>
+                         <tr class="slds-hint-parent">
+                                    <td class="slds-truncate slds-size--1-of-3" style="vertical-align:top;padding-left:0px;">
+                                      <div class="slds-page-header slds-card" role="banner">
+                                         <div class="slds-grid">
+                                            <div class="slds-col slds-has-flexi-truncate">
+                                               <div class="slds-media">
+                                                  <div class="slds-media__body">
+                                                     <p class="slds-text-heading--label"></p>
+                                                     <div class="slds-grid">
+                                                        <h1 class="slds-page-header__title slds-m-right--small slds-truncate slds-align-middle" title="Record Title">Scope Hierarchy</h1>
+                                                     </div>
+                                                  </div>
+                                               </div>
+                                            </div>
+                                            <div class="slds-col slds-no-flex slds-align-bottom">
+                                               <div class="slds-button-group" role="group">&nbsp;</div>
+                                            </div>
+                                         </div>
+                                      </div>                                    
+                                      <div class="slds-form-element" id="relationShipTree"></div>
+                                    </td>
+                                    <td class="slds-truncate" style="vertical-align:top;padding-right:0px;">
+                                            <div id="edit_scope_div"></div>
+                                          
+<!--                                           <div class="slds-docked_container"> -->
+<!--                                              <div class="slds-docked-composer slds-grid slds-grid--vertical slds-nowrap slds-is-open"> -->
+<!--                                                <div class="slds-docked-composer__header slds-grid slds-grid--align-spread slds-shrink-none"> -->
+<!--                                                  <div class="slds-media slds-media--center">         -->
+<!--                                                    <div class="slds-media__body">Header</div> -->
+<!--                                                  </div> -->
+<!--                                                  <div class="slds-docked-composer__actions">                 -->
+<!--                                                    <button class="slds-button slds-button--icon-inverse slds-modal__close slds-modal__close-custom" onclick="AddEditScope.hideEditScopeModal(); return false;"></button> -->
+<!--                                                  </div> -->
+<!--                                                </div> -->
+<!--                                                <div class="slds-docked-composer__body slds-col slds-grid slds-grid--vertical slds-nowrap slds-size--1-of-1"> -->
+<!--                                                   <div id="edit_scope_div"></div> -->
+                                                
+<!--                                                </div> -->
+<!--                                                <div class="slds-docked-composer__footer slds-shrink-none"> -->
+<!--                                                  <div class="slds-float--right slds-grid slds-grid--align-end slds-size--1-of-2 slds-text-align--right"> -->
+<!--                                                    <button class="slds-button slds-button--neutral" onclick="AddEditScope.editScope(); return false;">Update</button> -->
+<!--                                                  </div> -->
+<!--                                                </div> -->
+<!--                                              </div> -->
+<!--                                        </div> -->
+                                                   
+                                    </td>
+                           </tr>      
+                       </tbody>    
+               </table>
+            
+         </apex:outputPanel>
+        
+         <div id="helpModal" class="slds-modal slds-fade-in-open" role="dialog" style="display: none !important;">
+            <div class="slds-modal__container" style="max-width:100%; width:95%;max-height:2400px; height:700px">
+               <div class="slds-modal__header">
+                  <button class="slds-button slds-button--icon-inverse slds-modal__close slds-modal__close-custom" onclick="AddEditScope.hideAddFromTemplateModal(); return false;">                  
+                  <span class="slds-assistive-text">Close</span>
+                  </button>
+                  <h2 class="slds-text-heading--medium">Add From Library</h2>
+               </div>
+               <div class="slds-modal__content">
+                  <div class="slds-text-longform">
+                     <apex:iframe src="about:blank" width="100%" scrolling="true" id="theIframeTemplate"/>
+                  </div>
+               </div>
+               <div class="slds-modal__footer">     
+                  <button class="slds-button slds-button--neutral" onclick="AddEditScope.addScopeTemplate(); return false;">Done</button>
+                  <button class="slds-button slds-button--neutral" onclick="AddEditScope.hideAddFromTemplateModal(); return false;">Cancel</button>
+               </div>
+            </div>
+         </div>
+         <div id="helpBackdrop" class="slds-backdrop slds-backdrop--open" style="display: none !important;"></div>
+         <div id="helpModal1" class="slds-modal slds-fade-in-open" role="dialog" style="display: none !important;">
+            <div class="slds-modal__container" style="max-width:100%; width:95%;max-height:2600px; height:700px">
+               <div class="slds-modal__header">
+                  <button class="slds-button slds-button--icon-inverse slds-modal__close slds-modal__close-custom" onclick="AddEditScope.hideAddNewModal(); return false;">               
+                  <span class="slds-assistive-text">Close</span>
+                  </button>
+                  <h2 class="slds-text-heading--medium custom-new-header">Add/Edit Child Scope</h2>
+               </div>
+               <div class="slds-modal__content">
+                  <div class="slds-text-longform">
+                     <apex:iframe src="about:blank" width="100%"  scrolling="true" id="theIframe1"/>
+                  </div>
+               </div>
+               <div class="slds-modal__footer">
+                  <button id="addupdatescopebutton" class="slds-button slds-button--neutral" onclick="AddEditScope.addNewScope(); return false;">Add</button>
+                  <button class="slds-button slds-button--neutral" onclick="AddEditScope.hideAddNewModal(); return false;">Cancel</button>
+               </div>
+            </div>
+         </div>
+         <div id="helpBackdrop1" class="slds-backdrop slds-backdrop--open" style="display: none !important;"></div>
+         <div id="helpModal2" class="slds-modal slds-fade-in-open" role="dialog" style="display: none !important;">
+            <div class="slds-modal__container" style="max-width:100%; width:95%;max-height:2600px; height:700px">
+               <div class="slds-modal__header">
+                  <button class="slds-button slds-button--icon-inverse slds-modal__close slds-modal__close-custom" onclick="AddEditScope.hideEditScopeModal(); return false;">                
+                  <span class="slds-assistive-text">Close</span>
+                  </button>
+                  <h2 class="slds-text-heading--medium">Edit Scope</h2>
+               </div>
+               <div class="slds-modal__content">
+                  <div class="slds-text-longform">
+                     <apex:iframe src="about:blank" width="100%"  scrolling="true" id="theIframe2"/>
+                  </div>
+               </div>
+               <div class="slds-modal__footer">
+                  <button class="slds-button slds-button--neutral" onclick="AddEditScope.editScope(); return false;">Update</button>
+                  <button class="slds-button slds-button--neutral" onclick="AddEditScope.hideEditScopeModal(); return false;">Cancel</button>
+               </div>
+            </div>
+         </div>
+         <div id="helpBackdrop2" class="slds-backdrop slds-backdrop--open" style="display: none !important;"></div>
+         <div id="loadingSpinner" class="slds-spinner_container" style="display: none !important;">
+            <div class="slds-spinner--brand slds-spinner slds-spinner--large" aria-hidden="false" role="alert">
+               <div class="slds-spinner__dot-a"></div>
+               <div class="slds-spinner__dot-b"></div>
+            </div>
+         </div>
+         <br/>
+         </apex:form>
+      </apex:define>
+      <apex:define name="footer">
+         <!--   <div style="text-align:right;"> -->
+         <!--            <apex:commandButton rendered="{!isEditable}" styleClass="slds-button slds-button--neutral slds-button--brand" title="Back" value="Back" onclick="window.location.href='/apex/E2_AddEditEstimate?id={!$CurrentPage.parameters.id}';return false;"/> -->
+         <!--            <apex:commandButton rendered="{!isEditable}" styleClass="slds-button slds-button--neutral slds-button--brand" title="Next" value="Next" onclick="window.location.href='/apex/E2_AddEditDerivedEfforts?id={!$CurrentPage.parameters.id}';return false;"/> -->
+         <!--   </div>   -->
+         <style>
+            .slds .slds-badge-custom {
+            background-color: transparent!important;
+            border-collapse: collapse!important;    
+            border-style: solid!important;
+            border-width: 0.01px !important;
+            padding-bottom: 0.01px;
+            padding-top: 0.01px;   
+            }
+            .slds .slds-modal__close-custom {    
+            float: right;
+            height: 48px;
+            position: relative;
+            width: 48px;
+            background: #eee url({!$Resource.E2_SLDS1}/assets/icons/action/close_60.png) no-repeat scroll center center / 25px 25px;
+            right: 0px;
+            top: 0px;
+            }
+            .node_is_active {
+                color: rgba(51, 51, 51, 0.41);
+                font-style: italic;
+            }
+         </style>
+      </apex:define>
+      <apex:define name="javascript">
+         <script type="text/javascript">
+            var scopeGrpId = '{!scopeGroup.id}';
+         </script>
+         <apex:includescript value="{!$Resource.E2_AddEditScopeTemplatesJS}"/>
+      </apex:define>
+   </apex:composition>
+</apex:page>

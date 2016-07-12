@@ -1,0 +1,137 @@
+<apex:component >
+<apex:attribute name="step" description="This is the value for the component." type="Integer" default="0" required="false"/>
+<apex:attribute name="psr_id" description="psr id received" type="String" default="" required="false"/>
+
+
+<style type="text/css">
+  .slds .slds-tabs--path__item + .slds-is-complete::before, .slds .slds-tabs--path__item + .slds-is-current::before {
+        background-color: #e0e5ee;
+    }
+  .slds .slds-tabs--path__item:hover + .slds-is-complete::before, .slds .slds-tabs--path__item:hover + .slds-is-current::before {
+        background-color: #e0e5ee;
+  } 
+  
+  .slds-tabs--path__inactive{
+    color:#888 !important;
+    cursor:text !important;
+  }
+  .slds-tabs--path__first{
+    color:#000 !important;
+    cursor:text !important;
+  }
+</style>
+
+<script type="text/javascript">
+var goBackToPSR = function(psr_id){
+    var action = confirm('Oops, You are about to exit Estimator 2.0!!! \nHave you saved all the changes & really wanted to go back?\nClick Ok to Go to PSR else Cancel to Stop!');
+    if(action == true){
+      window.top.location.href = '/' + psr_id; 
+    }
+    return false;
+}
+
+</script>
+
+
+        
+<div xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="slds-grid">
+  <button onclick="return goBackToPSR('{!psr_id}');" class="slds-button slds-button--brand slds-button--small button--border-filled slds-path__mark-complete slds-m-horizontal--small" style="line-height: 14px;">
+    Go back to PSR
+  </button>
+  <div class="slds-tabs--path" role="application">
+    <ul class="slds-tabs--path__nav" role="tablist">
+     
+     
+    
+      <li class="slds-tabs--path__item slds-is-{!IF(step == 1, 'current', IF(step > 1, 'incomplete', 'incomplete'))}" role="presentation">
+        <a class="slds-tabs--path__link {!IF($CurrentPage.parameters.id = null, 'slds-tabs--path__inactive slds-tabs--path__first', '')} " id="tabs-path-1" aria-controls="content-path-1" aria-selected="false" tabindex="-1" role="tab" href="{!IF($CurrentPage.parameters.id = null, '#', '/apex/E2_AddEditEstimate?id=' & $CurrentPage.parameters.id)}" aria-live="assertive">
+          <span class="slds-tabs--path__stage">
+            <svg aria-hidden="true" class="slds-icon slds-icon--x-small">
+           
+              <use xlink:href="{!$Resource.E2_SLDS1}/assets/icons/utility-sprite/svg/symbols.svg#check"/>
+           
+            </svg>
+        
+          </span>
+          <span class="slds-tabs--path__title">Create Estimate</span>
+        </a>
+      </li>
+      <li class="slds-tabs--path__item slds-is-{!IF(step == 2, 'current', IF(step > 2, 'incomplete', 'incomplete'))}" role="presentation">
+        <a class="slds-tabs--path__link {!IF($CurrentPage.parameters.id = null, 'slds-tabs--path__inactive', '')}" id="tabs-path-1" aria-controls="content-path-1" aria-selected="false" tabindex="-1" role="tab" href="{!IF($CurrentPage.parameters.id = null, '#', '/apex/E2_AddEditScope?id=' & $CurrentPage.parameters.id)}" aria-live="assertive">
+          <span class="slds-tabs--path__stage">
+            <svg aria-hidden="true" class="slds-icon slds-icon--x-small">
+                       
+              <use xlink:href="{!$Resource.E2_SLDS1}/assets/icons/utility-sprite/svg/symbols.svg#check"></use>
+           
+            </svg>
+
+          </span>
+          <span class="slds-tabs--path__title">Add/Edit Scope</span>
+        </a>
+      </li>
+      <!--li class="slds-tabs--path__item slds-is-{!IF(step == 3, 'current', IF(step > 3, 'incomplete', 'incomplete'))}" role="presentation">
+        <a class="slds-tabs--path__link {!IF($CurrentPage.parameters.id = null, 'slds-tabs--path__inactive', '')}" id="tabs-path-1" aria-controls="content-path-1" aria-selected="false" tabindex="-1" role="tab" href="{!IF($CurrentPage.parameters.id = null, '#', '/apex/E2_ModifyEfforts?id=' & $CurrentPage.parameters.id)}" aria-live="assertive">
+          <span class="slds-tabs--path__stage">
+            <svg aria-hidden="true" class="slds-icon slds-icon--x-small">
+           
+              <use xlink:href="{!$Resource.E2_SLDS1}/assets/icons/utility-sprite/svg/symbols.svg#check"></use>
+           
+            </svg>
+          </span>
+          <span class="slds-tabs--path__title">Modify Efforts, Assumptions, Questions</span>
+        </a>
+      </li-->
+      
+      <li class="slds-tabs--path__item slds-is-{!IF(step == 4, 'current', IF(step > 4, 'incomplete', 'incomplete'))}" role="presentation">
+        <a class="slds-tabs--path__link {!IF($CurrentPage.parameters.id = null, 'slds-tabs--path__inactive', '')}" id="tabs-path-1" aria-controls="content-path-1" aria-selected="false" tabindex="-1" role="tab" href="{!IF($CurrentPage.parameters.id = null, '#', '/apex/E2_AddEditDerivedEfforts?id=' & $CurrentPage.parameters.id)}" aria-live="assertive">
+          <span class="slds-tabs--path__stage">
+            <svg aria-hidden="true" class="slds-icon slds-icon--x-small">
+           
+              <use xlink:href="{!$Resource.E2_SLDS1}/assets/icons/utility-sprite/svg/symbols.svg#check"></use>
+           
+            </svg>
+          </span>
+          <span class="slds-tabs--path__title">Apply Derived Effort Template</span>
+        </a>
+      </li>
+      <li class="slds-tabs--path__item slds-is-{!IF(step == 5, 'current', IF(step > 5, 'incomplete', 'incomplete'))}" role="presentation">
+        <a class="slds-tabs--path__link {!IF($CurrentPage.parameters.id = null, 'slds-tabs--path__inactive', '')}" id="tabs-path-1" aria-controls="content-path-1" aria-selected="false" tabindex="-1" role="tab" href="{!IF($CurrentPage.parameters.id = null, '#', '/apex/E2_Capacity?id=' & $CurrentPage.parameters.id)}" aria-live="assertive">
+          <span class="slds-tabs--path__stage">
+            <svg aria-hidden="true" class="slds-icon slds-icon--x-small">
+           
+              <use xlink:href="{!$Resource.E2_SLDS1}/assets/icons/utility-sprite/svg/symbols.svg#check"></use>
+           
+            </svg>
+          </span>
+          <span class="slds-tabs--path__title">Capacity</span>
+        </a>
+      </li> 
+      <!--li class="slds-tabs--path__item slds-is-{!IF(step == 6, 'current', IF(step > 6, 'incomplete', 'incomplete'))}" role="presentation">
+        <a class="slds-tabs--path__link {!IF($CurrentPage.parameters.id = null, 'slds-tabs--path__inactive', '')}" id="tabs-path-1" aria-controls="content-path-1" aria-selected="false" tabindex="-1" role="tab" href="#void" aria-live="assertive">
+          <span class="slds-tabs--path__stage">
+            <svg aria-hidden="true" class="slds-icon slds-icon--x-small">
+            
+              <use xlink:href="{!$Resource.E2_SLDS1}/assets/icons/utility-sprite/svg/symbols.svg#check"></use>
+            
+            </svg>
+          </span>
+          <span class="slds-tabs--path__title">More...</span>
+        </a>
+      </li-->
+    </ul>
+  </div>
+<!--   <button class="slds-button slds-button--brand slds-button--small button--border-filled slds-path__mark-complete slds-no-flex slds-m-horizontal--small"> -->
+<!--     <svg aria-hidden="true" class="slds-button__icon slds-button__icon--left"> -->
+    
+<!--       <use xlink:href="{!$Resource.E2_SLDS1}/assets/icons/utility-sprite/svg/symbols.svg#check"></use> -->
+    
+<!--     </svg>Mark Complete -->
+<!--   </button> -->
+</div>
+
+<br/>
+
+
+
+
+</apex:component>

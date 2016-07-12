@@ -1,0 +1,268 @@
+<apex:page standardController="CMC_Presales_LOE__c" extensions="E2_CapacityController" action="{!pageAction}"
+showHeader="false" standardStylesheets="true" sidebar="false" applyHtmlTag="false" applyBodyTag="false" docType="html-5.0">
+<apex:composition template="E2_Template">
+        <apex:define name="title">Capacity</apex:define>
+        <apex:define name="header"><c:E2_PermissionMessage rendered="{!NOT(isEditable)}"/><c:E2_Header psr_id="{!psrId}" step="5"/></apex:define>
+        <apex:define name="body">
+<apex:form >        
+<style>
+table thead tr th.slds-th{
+  background-color: #005fb2;
+  color: #fff;
+  font-weight: bold !important;
+}
+
+table tbody tr td.slds-td{
+  background-color:#CCCCCC;
+  font-weight:bold;
+}
+
+</style>        
+        
+<apex:pageMessages />
+
+
+<div xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<div class="slds-page-header" role="banner">
+  <div class="slds-grid">
+    <div class="slds-col slds-has-flexi-truncate">
+      <div class="slds-media">
+        <div class="slds-media__figure slds-icon slds-icon--large slds-icon-standard-note">
+            <apex:image value="{!URLFOR($Resource.E2_SLDS1, '/assets/icons/standard/note_60.png')}" width="48" height="48"/>
+        </div>
+        <div class="slds-media__body">
+          <p class="slds-text-heading--label">Capacity For</p>
+          <div class="slds-grid">
+            <h1 class="slds-page-header__title slds-m-right--small slds-truncate slds-align-middle" title="{!estimate.name}">{!estimate.name}</h1>
+            <div class="slds-media__figure slds-icon slds-icon-standard-user" style="height:20px;width:20px;margin-top: 5px;">
+                <a href="javascript:void(0);" onclick="$('.custom_header').slideToggle('slow');"><apex:image value="{!URLFOR($Resource.E2_SLDS1, '/assets/icons/action/more_60.png')}" width="20" height="20"/></a>
+            </div>
+            <div style="margin-top: 5px;">
+              <apex:outputPanel layout="none" rendered="{!!ISNULL(estimate.E2_Last_Build_Datetime__c)}" ><div class="slds-text-heading--label slds-truncate" title="Last Build">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Last Build:<span class="slds-badge slds-theme--inverse" style="display:inline-block;"><apex:outputField value="{!estimate.E2_Last_Build_Datetime__c}"/></span></div></apex:outputPanel>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="slds-col slds-no-flex slds-align-bottom">
+      <div class="slds-button-group" role="group">
+      <button class="slds-button slds-button--neutral" value="Export Scope Items (XLS)" onclick="window.location.href='/apex/E2_ExportScopeItemstoXLS?id={!estimate.id}';return false;">Export Scope Items (XLS)</button>
+        <button class="slds-button slds-button--neutral" value="Export Scope Items (CSV)" onclick="window.location.href='/apex/E2_ExportScopeItemsToCSV?id={!estimate.id}';return false;">Export Scope Items (CSV)</button>
+        <apex:commandButton rendered="{!isEditable}" styleClass="slds-button slds-button--neutral" title="Build Capacity" value="Build Capacity" action="{!buildCapacity}"/>
+        
+      </div>
+    </div>
+  </div>
+  <ul class="slds-grid slds-page-header__detail-row custom_header" style="display:none">
+                 <li class="slds-col--padded slds-size--1-of-2">
+                     <p class="slds-text-heading--label slds-truncate" title="Description">Description</p>
+                     <p class="slds-text-body--regular" title="{!estimate.Description__c}">
+                        {!estimate.Description__c}
+                     </p>
+                     <p class="slds-text-heading--label slds-truncate" title="Version Notes">Version Notes        
+                     </p>
+                     <p class="slds-text-body--regular" title="{!estimate.E2_Version_Notes__c}">
+                        {!estimate.E2_Version_Notes__c}
+                     </p>
+                  </li>
+                  <li class="slds-col--padded slds-size--1-of-2">
+                     <p class="slds-text-heading--label slds-truncate" title="Presales Request">Presales Request</p>
+                     <p class="slds-text-heading--label">
+                        <apex:outputField value="{!estimate.Presales_Request__c}"/>
+                     </p>
+                      <p class="slds-text-heading--label slds-truncate" title="Opportunity">Opportunity</p>
+                     <p><apex:outputLink value="/{!estimate.Presales_Request__r.Opportunity__c}">{!estimate.Opportunity_Name__c}</apex:outputLink> </p>
+                      <p class="slds-text-heading--label slds-truncate" title="Account">Account</p>
+                     <p><apex:outputLink value="/{!estimate.Presales_Request__r.Opportunity__r.AccountId}">{!estimate.Account_Name__c}</apex:outputLink></p>
+                  </li>
+  </ul>
+</div>
+</div>
+
+
+<apex:outputPanel >
+            <fieldset class="slds-box slds-theme--default" style="width: 100%;">
+                <legend class="slds-text-heading--medium slds-p-vertical--medium">
+                    Capacity Needs
+                </legend>
+                <div class="slds-card">
+                    <div class="slds-card__header slds-grid grid--flex-spread">
+                      <h2 class="slds-text-heading--small slds-truncate">Capacity Needs by Role and Phase</h2>
+                    </div>
+                    <div class="slds-card__body">
+                <table class="slds-table slds-table--bordered slds-max-medium-table--stacked-horizontal slds-no-row-hover">
+                    <thead>
+                      <tr class="slds-text-heading--label">
+                        <th class="slds-is-sortable slds-th" scope="col">
+                          <div class="slds-truncate">ROLE</div>
+                        </th>
+                        <apex:repeat value="{!phases}" var="phase">
+                        <th class="slds-is-sortable slds-th" scope="col">
+                          <div class="slds-truncate">{!phase}</div>
+                        </th>
+                        </apex:repeat>
+                        <th class="slds-cell-shrink slds-th">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                     <apex:repeat value="{!rolesToPhaseMap}" var="role">                      
+                      <tr class="slds-hint-parent">
+                        <td class="slds-truncate slds-td" scope="row" data-label="Role">{!role}</td>
+                        <apex:variable var="rowTotal" value="{!0}"/>
+                        <apex:repeat value="{!rolesToPhaseMap[role]}" var="phases1">
+                            <apex:repeat value="{!phases1}" var="p1">
+                                 <apex:variable var="c" value="{!p1 & '|' & role}" />
+                                 <td class="slds-truncate" scope="row" data-label="{!role}">
+
+                                         <apex:outputText value="{0, number, 0.00}">
+                                               <apex:param value="{!rolesPhaseToHoursMap[c]}" />
+                                         </apex:outputText>
+                                                                                 
+                                 </td>
+                                 <apex:variable var="rowValue" value="{!rolesPhaseToHoursMap[c]}"/>
+                                 <apex:variable var="rowTotal" value="{!rowTotal + rowValue}"/>
+                             </apex:repeat>
+                        </apex:repeat>
+                        <td class="slds-truncate slds-td" scope="row">
+                           <apex:outputText value="{0, number, 0.00}">
+                                               <apex:param value="{!rowTotal}" />
+                           </apex:outputText>                        
+                        </td>  
+                      </tr> 
+                      </apex:repeat>
+                      <tr>
+                        <td class="slds-truncate slds-td" scope="row">Total</td>
+                        <apex:variable var="phaseTotal" value="{!0}"/>
+                        <apex:repeat value="{!phases}" var="p1">
+                                 <apex:variable var="c" value="{!p1}|total" />
+                                 <td class="slds-truncate slds-td" scope="row" data-label="{!p1}">
+                                         <apex:outputText value="{0, number, 0.00}">
+                                               <apex:param value="{!rolesPhaseToHoursMap[c]}" />
+                                         </apex:outputText>                      
+                                 </td>
+                                 <apex:variable var="rowValue" value="{!rolesPhaseToHoursMap[c]}"/>
+                                 <apex:variable var="phaseTotal" value="{!phaseTotal + rowValue}"/>
+                             </apex:repeat>
+                        <td class="slds-truncate slds-td" scope="row">
+                            <apex:outputText value="{0, number, 0.00}">
+                                               <apex:param value="{!phaseTotal}" />
+                           </apex:outputText>                         
+                        </td>
+                      </tr>  
+                    </tbody>
+                  </table>
+                </div>
+                </div>
+                
+                <div class="slds-card">
+                    <div class="slds-card__header slds-grid grid--flex-spread">
+                      <h2 class="slds-text-heading--small slds-truncate">Role Specialty Details</h2>
+                    </div>
+                    <div class="slds-card__body">
+                <table class="slds-table slds-table--bordered slds-max-medium-table--stacked-horizontal slds-no-row-hover">
+                    <thead>
+                      <tr class="slds-text-heading--label">
+                        <th class="slds-is-sortable slds-th" scope="col">
+                          <div class="slds-truncate">Specialty</div>
+                        </th>
+                        <apex:repeat value="{!skillsPhases}" var="phase">
+                        <th class="slds-is-sortable slds-th" scope="col">
+                          <div class="slds-truncate">{!phase}</div>
+                        </th>
+                        </apex:repeat>
+                        <th class="slds-cell-shrink slds-th">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                     <apex:repeat value="{!rolesSkillToPhaseMap}" var="role">                      
+                      <tr class="slds-hint-parent">
+                        <td class="slds-truncate slds-td" scope="row" data-label="Role">{!role}</td>
+                        <apex:variable var="rowTotal" value="{!0}"/>
+                        <apex:repeat value="{!rolesSkillToPhaseMap[role]}" var="phases1">
+                            <apex:repeat value="{!phases1}" var="p1">
+                                 <apex:variable var="c" value="{!p1 & '|' & role}" />
+                                 <td class="slds-truncate" scope="row" data-label="{!role}">
+
+                                         <apex:outputText value="{0, number, 0.00}">
+                                               <apex:param value="{!rolesSkillPhaseToHoursMap[c]}" />
+                                         </apex:outputText>
+                                                                                 
+                                 </td>
+                                 <apex:variable var="rowValue" value="{!rolesSkillPhaseToHoursMap[c]}"/>
+                                 <apex:variable var="rowTotal" value="{!rowTotal + rowValue}"/>
+                             </apex:repeat>
+                        </apex:repeat>
+                        <td class="slds-truncate slds-td" scope="row">
+                           <apex:outputText value="{0, number, 0.00}">
+                                               <apex:param value="{!rowTotal}" />
+                           </apex:outputText>                        
+                        </td>  
+                      </tr> 
+                      </apex:repeat>
+                      <tr>
+                        <td class="slds-truncate slds-td" scope="row">Total</td>
+                        <apex:variable var="phaseTotal" value="{!0}"/>
+                        <apex:repeat value="{!skillsPhases}" var="p1">
+                                 <apex:variable var="c" value="{!p1}|total" />
+                                 <td class="slds-truncate slds-td" scope="row" data-label="{!p1}">
+                                         <apex:outputText value="{0, number, 0.00}">
+                                               <apex:param value="{!rolesSkillPhaseToHoursMap[c]}" />
+                                         </apex:outputText>                      
+                                 </td>
+                                 <apex:variable var="rowValue" value="{!rolesSkillPhaseToHoursMap[c]}"/>
+                                 <apex:variable var="phaseTotal" value="{!phaseTotal + rowValue}"/>
+                             </apex:repeat>
+                        <td class="slds-truncate slds-td" scope="row">
+                            <apex:outputText value="{0, number, 0.00}">
+                                               <apex:param value="{!phaseTotal}" />
+                           </apex:outputText>                         
+                        </td>
+                      </tr>  
+                    </tbody>
+                  </table>
+                </div>
+                </div>
+                        
+            </fieldset>
+</apex:outputPanel>
+
+         <br/>
+  <!-- PLEASE DONOT REMOVE: This section is important while using standard controller -->
+    <input type="hidden" value="{!CMC_Presales_LOE__c.Name}"/> 
+    <input type="hidden" value="{!CMC_Presales_LOE__c.Presales_Request__c}"/>
+    <input type="hidden" value="{!CMC_Presales_LOE__c.Presales_Request__r.Opportunity__c}"/>
+    <input type="hidden" value="{!CMC_Presales_LOE__c.Presales_Request__r.Opportunity__r.AccountId}"/>
+    <input type="hidden" value="{!CMC_Presales_LOE__c.Type__c}"/>
+    <input type="hidden" value="{!CMC_Presales_LOE__c.Account_Executive__c}"/>
+    <input type="hidden" value="{!CMC_Presales_LOE__c.Solution_Architect__c}"/>
+    <input type="hidden" value="{!CMC_Presales_LOE__c.Delivery_Reviewer__c}"/>
+    <input type="hidden" value="{!CMC_Presales_LOE__c.Date_Scoped__c}"/>
+    <input type="hidden" value="{!CMC_Presales_LOE__c.Account_Name__c}"/>
+    <input type="hidden" value="{!CMC_Presales_LOE__c.Description__c}"/>
+    <input type="hidden" value="{!CMC_Presales_LOE__c.Presales_Request__c}"/>
+    <input type="hidden" value="{!CMC_Presales_LOE__c.Product__c}"/>
+    <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Version_Notes__c}"/>
+    <input type="hidden" value="{!CMC_Presales_LOE__c.Opportunity_Name__c}"/>
+    <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Date_Scoped__c}"/>
+    <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Reviewer__c}"/>
+    <input type="hidden" value="{!CMC_Presales_LOE__c.E2_SA__c}"/>
+    <input type="hidden" value="{!CMC_Presales_LOE__c.E2_AE__c}"/>
+    <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Is_Primary__c}"/>
+    <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Total_Hrs__c}"/> 
+    <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Derived_Effort_Template__c}"/>   
+    <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Last_Build_Datetime__c}"/>
+</apex:form>               
+        </apex:define>
+        <apex:define name="footer">
+
+        </apex:define>
+        
+        <apex:define name="javascript">
+           <script type="text/javascript">
+            
+           </script>
+        </apex:define>
+        
+        
+    </apex:composition>
+</apex:page>

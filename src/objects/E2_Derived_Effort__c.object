@@ -1,0 +1,506 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <actionOverrides>
+        <actionName>Accept</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>CancelEdit</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Clone</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Delete</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Edit</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Follow</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>List</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>New</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>SaveEdit</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Tab</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>View</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <allowInChatterGroups>false</allowInChatterGroups>
+    <compactLayoutAssignment>SYSTEM</compactLayoutAssignment>
+    <deploymentStatus>Deployed</deploymentStatus>
+    <description>Estimator 2.0</description>
+    <enableActivities>true</enableActivities>
+    <enableBulkApi>true</enableBulkApi>
+    <enableEnhancedLookup>true</enableEnhancedLookup>
+    <enableFeeds>false</enableFeeds>
+    <enableHistory>true</enableHistory>
+    <enableReports>true</enableReports>
+    <enableSearch>true</enableSearch>
+    <enableSharing>true</enableSharing>
+    <enableStreamingApi>true</enableStreamingApi>
+    <fields>
+        <fullName>Allocation_Min__c</fullName>
+        <description>Minimum allocation percentage hours needed to allocate to role in phase (TDB)</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Minimum allocation percentage hours needed to allocate to role in phase (TDB)</inlineHelpText>
+        <label>Allocation Min</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Percent</type>
+    </fields>
+    <fields>
+        <fullName>Allocation__c</fullName>
+        <description>Allocation % of Role specified in the scopes .</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Allocation % of Role specified in the scopes .</inlineHelpText>
+        <label>Allocation(%)</label>
+        <precision>18</precision>
+        <required>true</required>
+        <scale>2</scale>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Percent</type>
+    </fields>
+    <fields>
+        <fullName>Cloned_From__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <externalId>false</externalId>
+        <label>Cloned From</label>
+        <referenceTo>E2_Derived_Effort__c</referenceTo>
+        <relationshipName>E2_Derived_Efforts</relationshipName>
+        <required>false</required>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>Derived_Effort_Group__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <description>Derived effort group which contains the templates related to that group.</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Derived effort group which contains the templates related to that group.</inlineHelpText>
+        <label>Derived Effort Group</label>
+        <referenceTo>E2_Derived_Effort_Group__c</referenceTo>
+        <relationshipName>E2_Derived_Efforts</relationshipName>
+        <required>false</required>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>Derived_Hrs__c</fullName>
+        <description>This field is used to store the calculated hours based on the %Allocation, Of Phase, Of Role</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Derived Hrs are calculated hrs dependent on %allocation, of phase, of role</inlineHelpText>
+        <label>Derived Hrs</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Include_When_Hours__c</fullName>
+        <externalId>false</externalId>
+        <label>Include When Hours</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Include_When__c</fullName>
+        <externalId>false</externalId>
+        <label>Include When</label>
+        <picklist>
+            <picklistValues>
+                <fullName>always</fullName>
+                <default>true</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>hours exceed or equals</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>hours are less than</fullName>
+                <default>false</default>
+            </picklistValues>
+            <restrictedPicklist>true</restrictedPicklist>
+            <sorted>false</sorted>
+        </picklist>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Picklist</type>
+    </fields>
+    <fields>
+        <fullName>Is_Active__c</fullName>
+        <defaultValue>true</defaultValue>
+        <description>Shows if the template is active for use or not.</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Shows if the template is active for use or not.</inlineHelpText>
+        <label>Is Active?</label>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>Of_Phase__c</fullName>
+        <externalId>false</externalId>
+        <globalPicklist>E2_Phases</globalPicklist>
+        <label>In Phase</label>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Picklist</type>
+    </fields>
+    <fields>
+        <fullName>Of_Role__c</fullName>
+        <externalId>false</externalId>
+        <globalPicklist>E2_Role</globalPicklist>
+        <label>Of Role</label>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Picklist</type>
+    </fields>
+    <fields>
+        <fullName>Original_Allocation_Hours__c</fullName>
+        <description>Original Allocation Hours to store % of total hours defined by template manager at the time of creation/edit</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Original Allocation Hours to store % of total hours defined by template manager at the time of creation/edit</inlineHelpText>
+        <label>Original Allocation Hours</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Percent</type>
+    </fields>
+    <fields>
+        <fullName>Presales_LOE__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <description>Relationship to Estimate object</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Relationship to Estimate object</inlineHelpText>
+        <label>Estimate</label>
+        <referenceTo>CMC_Presales_LOE__c</referenceTo>
+        <relationshipName>E2_Derived_Efforts</relationshipName>
+        <required>false</required>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>Role__c</fullName>
+        <description>Role to which the derived hours is applied.</description>
+        <externalId>false</externalId>
+        <globalPicklist>E2_Role</globalPicklist>
+        <inlineHelpText>Role to which the derived hours is applied.</inlineHelpText>
+        <label>Role</label>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Picklist</type>
+    </fields>
+    <fields>
+        <fullName>To_Phase__c</fullName>
+        <externalId>false</externalId>
+        <globalPicklist>E2_Phases</globalPicklist>
+        <label>In Phase</label>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Picklist</type>
+    </fields>
+    <fields>
+        <fullName>UniqueKey__c</fullName>
+        <externalId>false</externalId>
+        <label>UniqueKey</label>
+        <length>1000</length>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>LongTextArea</type>
+        <visibleLines>2</visibleLines>
+    </fields>
+    <label>Derived Effort</label>
+    <listViews>
+        <fullName>All</fullName>
+        <columns>CREATED_DATE</columns>
+        <columns>OBJECT_ID</columns>
+        <columns>NAME</columns>
+        <columns>Allocation__c</columns>
+        <columns>Cloned_From__c</columns>
+        <columns>Derived_Effort_Group__c</columns>
+        <columns>Derived_Hrs__c</columns>
+        <filterScope>Everything</filterScope>
+        <label>All</label>
+        <language>en_US</language>
+    </listViews>
+    <nameField>
+        <label>Derived Effort Name</label>
+        <trackHistory>false</trackHistory>
+        <type>Text</type>
+    </nameField>
+    <pluralLabel>Derived Effort</pluralLabel>
+    <recordTypeTrackHistory>false</recordTypeTrackHistory>
+    <recordTypes>
+        <fullName>Template</fullName>
+        <active>true</active>
+        <description>This is used by the Derived Effort Template Managers as they are building out the template used in calculating efforts on Estimate level.</description>
+        <label>Template</label>
+        <picklistValues>
+            <picklist>E2_Phases</picklist>
+            <values>
+                <fullName>Architect</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>Build</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>Deploy %26 Thrive</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>Plan</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>Strategy</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>Test</fullName>
+                <default>false</default>
+            </values>
+        </picklistValues>
+        <picklistValues>
+            <picklist>E2_Role</picklist>
+            <values>
+                <fullName>Account Director</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>BI Architect</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>BI Business Analyst</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>BI Consultant</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>Business Analyst</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>Business Analyst - Jaipur</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>Business Architect</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>Change Consultant</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>Change Lead</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>Cloud Management Lead</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>Community Architect</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>Community User Experience Expert</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>Configuration Consultant</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>Customer Success Manager</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>Data Architect</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>Data Consultant</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>Developer</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>Development Lead</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>Executive Sponsor</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>Financials Consultant</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>HCM Consultant</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>Instructional Designer</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>Integration Architect</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>Integration Consultant</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>Marketing Architect</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>Media Production Specialist</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>Mobile Architect</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>Partner</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>Payroll Consultant</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>Program Manager</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>Project Manager</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>Project Manager - Jaipur</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>QA Lead</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>QA Tester</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>Release Manager</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>Solution Architect</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>Strategy Consultant</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>Subject Matter Expert</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>Technical Architect</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>Technical Consultant</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>Technical Lead</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>Technical Lead - Jaipur</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>Trainer</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>UX Consultant</fullName>
+                <default>false</default>
+            </values>
+        </picklistValues>
+        <picklistValues>
+            <picklist>Include_When__c</picklist>
+            <values>
+                <fullName>always</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>hours are less than</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>hours exceed or equals</fullName>
+                <default>false</default>
+            </values>
+        </picklistValues>
+    </recordTypes>
+    <searchLayouts/>
+    <sharingModel>ReadWrite</sharingModel>
+    <validationRules>
+        <fullName>E2_Include_when_Hours</fullName>
+        <active>true</active>
+        <description>Rule for Include_When_Hours__c field required when Include_When__c field value is otherthen always</description>
+        <errorConditionFormula>AND( OR(ISBLANK(Include_When_Hours__c),Include_When_Hours__c&lt;=0), OR(ISPICKVAL( Include_When__c , &apos;hours exceed&apos;),ISPICKVAL( Include_When__c , &apos;hours are less than&apos;)))</errorConditionFormula>
+        <errorDisplayField>Include_When_Hours__c</errorDisplayField>
+        <errorMessage>Please provide required field value.</errorMessage>
+    </validationRules>
+</CustomObject>

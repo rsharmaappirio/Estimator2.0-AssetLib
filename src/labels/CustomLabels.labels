@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomLabels xmlns="http://soap.sforce.com/2006/04/metadata">
+    <labels>
+        <fullName>E2_Required_Field_Error_Message</fullName>
+        <categories>E2_AddEditDerivedEfforts</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>E2 Required Field Error Message</shortDescription>
+        <value>Required Field values missing</value>
+    </labels>
+    <labels>
+        <fullName>E2_Scope_is_Required</fullName>
+        <categories>E2_AddNewScope</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>E2 Scope is Required</shortDescription>
+        <value>Scope Name is Required</value>
+    </labels>
+</CustomLabels>

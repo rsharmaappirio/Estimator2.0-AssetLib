@@ -1,0 +1,469 @@
+<apex:page standardController="E2_Scope__c" extensions="E2_AddNewScopeTemplateController" action="{!pageAction}"
+   showHeader="false" standardStylesheets="true" sidebar="false" applyHtmlTag="false" applyBodyTag="false">
+   <html xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+      <head>
+         <title>Add New Scope Template</title>
+         <link type="text/css" rel="stylesheet" href="{!URLFOR($Resource.cloneany, '/slds/styles/salesforce-lightning-design-system-vf.min.css')}" />
+         <link type="text/css" rel="stylesheet" href="{!URLFOR($Resource.cloneany, '/jstree/themes/proton/style.min.css')}" />
+         <apex:includeScript value="{!URLFOR($Resource.cloneany, '/libs/jquery.js')}" />
+         <apex:includeScript value="{!URLFOR($Resource.cloneany, '/jstree/jstree.min.js')}" />
+         <apex:includescript value="{!$Resource.E2_AddNewScopeTemplateJS}"/>
+         <style>
+            .slds-grid.slds-estimate-row .slds-col{
+            width:50%;
+            padding:1%;             
+            }  
+            .slds-table{
+            width:100%;
+            }    
+            .slds-selection-background{
+            /**background-color:#faffbd;**/
+            background-color:#eef1f6;
+            }
+            table tbody tr td select{
+            width:100%;
+            }
+            .effort_slide, .story_slide, .assumption_slide{
+            display:block;border-radius: 25px;border-style:solid;min-width: 45px;text-align: center;
+            }
+            .slide_background-selection{
+            background:#73ad21!important;
+            color:#fff!important; 
+            }
+            table tbody tr{
+            vertical-align: top;
+            }
+            .slds-button--right--float{
+            float:right;
+            }
+            .slds-float-left{
+            float:left;
+            }
+            td.scope-description{
+            /**background: url({!$Resource.E2_SLDS1}/assets/icons/utility/edit_60.png) no-repeat scroll right center / 20px 20px;**/
+            background: url({!$Resource.E2_SLDS1}/assets/icons/utility/edit_60.png) no-repeat scroll 95% 24px / 15px 15px;
+            width:250px;
+            }
+            td.scope-description:hover{
+            background: url({!$Resource.E2_SLDS1}/assets/icons/utility/edit_60.png) no-repeat scroll 95% 24px / 15px 15px;
+            background-color: #faffbd!important;
+            }
+            th.is_favorite{
+            /**background: #eef1f6 url({!$Resource.E2_SLDS1}/assets/icons/standard/endorsement_60.png) no-repeat scroll center center / 25px 25px;**/
+            background: transparent url({!$Resource.E2_SLDS1}/assets/icons/utility/favorite_60.png) no-repeat scroll center center / 25px 25px;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+            width: 25px;
+            }
+            td.is_favorite {
+            text-align: center;vertical-align: top;
+            }
+            th.is_active{
+            /**background: #eef1f6 url({!$Resource.E2_SLDS1}/assets/icons/standard/task_60.png) no-repeat scroll center center / 25px 25px;**/
+            background: transparent url({!$Resource.E2_SLDS1}/assets/icons/utility/priority_60.png) no-repeat scroll center center / 25px 25px;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+            width: 25px;
+            }
+            td.is_active {
+            text-align: center;vertical-align: top;
+            }
+            th.is_cloned{       
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+            width: 25px;
+            }
+            td.is_cloned {
+            background: transparent url({!$Resource.E2_SLDS1}/assets/icons/utility/copy_60.png) no-repeat scroll center center / 25px 25px;
+            }
+            a.delete_button{
+            background: transparent url({!$Resource.E2_SLDS1}/assets/icons/utility/delete_60.png) no-repeat scroll center center / 25px 25px;
+            height: 25px;
+            width: 25px;
+            }
+            td.scope-description ol, td.scope-description ul {
+              list-style: inherit;
+            }
+         </style>
+      </head>
+      <body>
+         <apex:form >
+            <!-- REQUIRED SLDS WRAPPER -->
+            <div class="slds">
+               <!-- PAGE HEADER -->
+               <!-- / PAGE HEADER -->    
+               <!-- PRIMARY CONTENT WRAPPER -->
+               <div class="myapp">
+                  <apex:pageMessages />
+                  <apex:actionfunction action="{!saveScope}" name="AddOrUpdate" />
+                  <apex:actionfunction action="{!processClipboardData}" name="processClipboardData">                     
+                  </apex:actionfunction>
+                  <apex:inputhidden id="inputclipboarddata" value="{!clipboardData}"/> 
+                  <div xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+                     <div class="slds-page-header" role="banner">
+                        <div class="slds-grid">
+                           <div class="slds-col slds-has-flexi-truncate">
+                              <div class="slds-media">
+                                 <div class="slds-media__figure">
+                                    <svg aria-hidden="true" class="slds-icon slds-icon--large slds-icon-standard-user">
+                                       <use xlink:href="{!$Resource.E2_SLDS1}/assets/icons/standard-sprite/svg/symbols.svg#user"></use>
+                                    </svg>
+                                 </div>
+                                 <div class="slds-media__body">
+                                    <p class="slds-text-heading--label">Add/Edit/Delete Scope</p>
+                                    <div class="slds-grid">
+                                       <h1 class="slds-page-header__title slds-m-right--small slds-truncate slds-align-middle" title="Record Title">{!scope.Name}</h1>
+                                    </div>
+                                 </div>
+                              </div>
+                           </div>
+                           <div class="slds-col slds-no-flex slds-align-bottom">
+                              <div class="slds-button-group" role="group">
+                                 <button class="slds-button slds-button--neutral" onclick="return false;">Help</button>
+                                 <apex:commandButton onclick="return validateData();" styleClass="slds-button slds-button--neutral slds-button--small slds-button--right--float" title="Add Scope" value="Add Scope" action="{!addNewScope}"/>
+                                 <!--         <apex:commandButton onclick="return addUpdateScopes();" styleClass="slds-button slds-button--neutral" title="Add/Update" value="Add/Update" action="{!saveScope}"/> -->
+                              </div>
+                           </div>
+                        </div>
+                        <apex:outputText rendered="{!!is_New}">
+                           <ul class="slds-grid slds-page-header__detail-row">
+                              <li class="slds-col--padded slds-size--1-of-5">
+                                 <p class="slds-text-heading--label slds-truncate" title="Scope Type">Scope Type</p>
+                                 <p class="slds-text-heading--label slds-truncate">{!scope.Scope_Item_Type__c}</p>
+                              </li>
+                              <li class="slds-col--padded slds-size--1-of-5">
+                                 <p class="slds-text-heading--label slds-truncate" title="Description">Description</p>
+                                 <p class="slds-text-body--regular" title="{!scope.Description__c}">
+                                    <apex:outputtext value="{!scope.Description__c}" escape="false"/>
+                                 </p>
+                              </li>
+                              <li class="slds-col--padded slds-size--1-of-5">
+                                 <p class="slds-text-heading--label slds-truncate" title="Complexity">Complexity        
+                                 </p>
+                                 <p class="slds-text-body--regular" title="{!scope.Complexity__c}">
+                                    {!scope.Complexity__c}
+                                 </p>
+                              </li>
+                              <li class="slds-col--padded slds-size--1-of-5">
+                                 <p class="slds-text-heading--label slds-truncate" title="LOE Hours">LOE Hours</p>
+                                 <p>
+                                    <apex:outputfield value="{!scope.LOE_Hrs__c}"/>
+                                 </p>
+                              </li>
+                              <li class="slds-col--padded slds-size--1-of-5">
+                                 <p class="slds-text-heading--label slds-truncate" title="Is Favourite">Is Favourite</p>
+                                 <p>
+                                    <apex:outputfield value="{!scope.Is_Favourite__c}"/>
+                                 </p>
+                              </li>
+                              <li class="slds-col--padded slds-size--1-of-5">
+                                 <p class="slds-text-heading--label slds-truncate" title="Is Active">Is Active</p>
+                                 <p>
+                                    <apex:outputfield value="{!scope.Is_Active__c}"/>
+                                 </p>
+                              </li>
+                           </ul>
+                        </apex:outputText>
+                     </div>
+                  </div>
+                  <div>
+<!--                      <apex:commandButton onclick="return validateData();" styleClass="slds-button slds-button--neutral slds-button--small slds-button--right--float" title="Add Scope" value="Add Scope" action="{!addNewScope}"/> -->
+                     <table class="slds-table slds-max-medium-table--stacked scope-table">
+                        <thead>
+                           <tr class="slds-text-heading--label">
+                              <th class="slds-is-sortable is_cloned" scope="col">
+                                 <div class="slds-truncate"></div>
+                              </th>
+                              <th class="slds-is-sortable" scope="col">
+                                 <div class="slds-truncate">
+                                    Name
+                                 </div>
+                              </th>
+                              <th class="slds-is-sortable" scope="col">
+                                 <div class="slds-truncate">Type</div>
+                              </th>
+                              <th class="slds-is-sortable" scope="col">
+                                 <div class="slds-truncate">Description</div>
+                              </th>
+                              <th class="slds-is-sortable" scope="col">
+                                 <div class="slds-truncate">Assumptions</div>
+                              </th>
+                              <th class="slds-is-sortable" scope="col">
+                                 <div class="slds-truncate">Complexity</div>
+                              </th>
+                              <th class="slds-is-sortable" scope="col">
+                                 <div class="slds-truncate">Effort</div>
+                              </th>
+                              <!--  <th class="slds-is-sortable" scope="col">
+                                 <div class="slds-truncate">Assumptions</div>
+                                 </th> -->              
+                              <th class="slds-is-sortable is_favorite" scope="col" title="Favourite">
+                                 <div class="slds-truncate"></div>
+                              </th>
+                              <th class="slds-is-sortable is_active" scope="col" title="Active">
+                                 <div class="slds-truncate"></div>
+                              </th>
+                              <th class="slds-cell-shrink"></th>
+                           </tr>
+                        </thead>
+                        <tbody>
+                           <apex:repeat value="{!childScopes}" var="childscope">
+                              <apex:outputpanel rendered="{!!childscope.isDeleted}">
+                                 <tr class="slds-hint-parent {!IF(childscope.slider_state == '', '', 'slds-selection-background')}">
+                                    <td class="slds-truncate {!IF(childscope.isCloned = true,'is_cloned','')}" data-label="Cloned" title="{!IF(childscope.isCloned = true,'This scope is cloned','')}">
+                                    </td>
+                                    <td class="slds-truncate" data-label="Scope Name" title="{!childscope.scope.Name}">
+                                       <apex:outputpanel >
+                                          <div class="slds-form-element is-required ">
+                                             <div class="slds-form-element__control">
+                                                <apex:inputfield styleclass="slds-input scope_name" value="{!childscope.scope.Name}" />
+                                             </div>
+                                             <div class="slds-form-element__help" style="display:none">This field is required</div>
+                                          </div>
+                                       </apex:outputpanel>
+                                       <apex:inputHidden id="slider_state" value="{!childscope.slider_state}"/>
+                                    </td>
+                                    <td class="slds-truncate" data-label="Type" title="{!childscope.scope.Scope_Item_Type__c}">
+                                       <apex:inputfield id="scope-itemtype" styleclass="slds-select scope-itemtype" value="{!childscope.scope.Scope_Item_Type__c}" rendered="{!NOT(is_View)}" />
+                                       <apex:outputfield value="{!childscope.scope.Scope_Item_Type__c}" rendered="{!is_View}" />
+                                    </td>
+                                    <td data-label="Scope Description" class="scope-description">
+                                       <apex:inputTextarea id="richtext" richtext="true" cols="250" rows="8" value="{!childscope.scope.Description__c}" />
+                                       <apex:outputText id="outputtext" value="{!childscope.scope.Description__c}" escape="false" />
+                                    </td>
+                                    <td data-label="Scope Assumption" class="scope-description">
+                                       <apex:inputTextarea id="assumptionRtext" richtext="true" cols="250" rows="8" value="{!childscope.scope.E2_Assumption__c}" />
+                                       <apex:outputText id="assumptiontext" value="{!childscope.scope.E2_Assumption__c}" escape="false"  />
+                                    </td>
+                                    <td class="slds-truncate" data-label="Complexity" title="{!childscope.scope.Complexity__c}">
+                                       <apex:outputpanel >
+                                          <div class="slds-form-element is-required ">
+                                             <div class="slds-form-element__control">
+                                                <apex:inputfield id="scope-complexity" value="{!childscope.scope.Complexity__c}" styleclass="slds-select scope-complexity" rendered="{!NOT(is_View)}" >
+                                                   <apex:actionSupport event="onchange" action="{!childscope.changeComplexity}"/>
+                                                </apex:inputfield>
+                                             </div>
+                                             <div class="slds-form-element__help" style="display:none">This field is required</div>
+                                          </div>
+                                       </apex:outputpanel>
+                                       <apex:outputfield value="{!childscope.scope.Complexity__c}" rendered="{!is_View}" />
+                                    </td>
+                                    <td class="slds-truncate" data-label="Efforts">
+                                       <a href="javascript:void(0);" class="effort_slide {!IF(childscope.slider_state = 'effort', 'slide_background-selection', '')}">
+                                       {!childscope.effortsSize} 
+                                       </a>            
+                                    </td>
+                                    <!--<td class="slds-truncate" data-label="Assumptions">
+                                       <a href="javascript:void(0);" class="assumption_slide {!IF(childscope.slider_state = 'assumption', 'slide_background-selection', '')}">
+                                       {!childscope.AssumptionsSize}
+                                       </a>                    
+                                       </td>  -->
+                                    <td class="slds-truncate is_favorite" data-label="Is Favourite" title="Mark as Favorite Scope">
+                                       <label class="slds-checkbox">
+                                          <apex:inputfield styleclass="slds-checkbox" value="{!childscope.scope.Is_Favourite__c}" rendered="{!NOT(is_View)}" />
+                                          <span class="slds-checkbox--faux"></span>
+                                          <span class="slds-assistive-text">Select Favorite</span>
+                                       </label>
+                                       <apex:outputfield value="{!childscope.scope.Is_Favourite__c}" rendered="{!is_View}" />
+                                    </td>
+                                    <td class="slds-truncate is_active" data-label="Is Active" title="Mark as Active Scope">
+                                       <label class="slds-checkbox">
+                                          <apex:inputfield styleclass="slds-checkbox" value="{!childscope.scope.Is_Active__c}" rendered="{!NOT(is_View)}" />
+                                          <span class="slds-checkbox--faux"></span>
+                                          <span class="slds-assistive-text">Select Active</span>
+                                       </label>
+                                       <apex:outputfield value="{!childscope.scope.Is_Active__c}" rendered="{!is_View}" />
+                                    </td>
+                                    <td class="slds-cell-shrink" data-label="Actions">
+                                       <apex:commandlink immediate="true" styleClass="delete_button slds-button--right--float" rendered="{!NOT(is_View)}" value="" action="{!childscope.remove}"/>
+                                       <apex:commandbutton styleClass="reloadbtn" style="display:none" value="Reload" action="{!childscope.reload}"/>
+                                    </td>
+                                 </tr>
+                                 <tr class="slds-selection-background">
+                                    <td colspan="10" style="padding-top:0px;padding-bottom:0px;">
+                                       <div class="effortsdiv" style="display:{!IF(childscope.slider_state = 'effort', 'block', 'none')}">
+                                          <span class="slds-badge slds-theme--default slds-float-left">Effort</span>
+                                          <apex:commandbutton onclick="return validateData();" styleClass="slds-button slds-button--neutral slds-button--small slds-button--right--float" value="Add Effort" action="{!childscope.AddNewEffort}"/>
+                                          <table class="slds-table slds-table--bordered ">
+                                             <thead>
+                                                <tr class="slds-text-heading--label slds-truncate slds-selection-background">
+                                                   <th class="slds-is-sortable is_cloned" scope="col">
+                                                      <div class="slds-truncate"></div>
+                                                   </th>
+                                                   <th class="slds-is-sortable" scope="col">
+                                                      <div class="slds-truncate">Name<abbr class="slds-required" title="required">*</abbr></div>
+                                                   </th>
+                                                   <th class="slds-is-sortable" scope="col">
+                                                      <div class="slds-truncate">Effort Hrs<abbr class="slds-required" title="required">*</abbr></div>
+                                                   </th>
+                                                   <th class="slds-is-sortable" scope="col">
+                                                      <div class="slds-truncate">High (%)<abbr class="slds-required" title="required">*</abbr></div>
+                                                   </th>
+                                                   <th class="slds-is-sortable" scope="col">
+                                                      <div class="slds-truncate">Low (%)<abbr class="slds-required" title="required">*</abbr></div>
+                                                   </th>
+                                                   <th class="slds-is-sortable" scope="col">
+                                                      <div class="slds-truncate">Phase<abbr class="slds-required" title="required">*</abbr></div>
+                                                   </th>
+                                                   <th class="slds-is-sortable" scope="col">
+                                                      <div class="slds-truncate">Role<abbr class="slds-required" title="required">*</abbr></div>
+                                                   </th>
+                                                   <th class="slds-is-sortable" scope="col">
+                                                      <div class="slds-truncate">Speciality</div>
+                                                   </th>
+                                                   <th class="slds-is-sortable" scope="col">
+                                                      <div class="slds-truncate"></div>
+                                                   </th>
+                                                </tr>
+                                             </thead>
+                                             <tbody>
+                                                <apex:repeat value="{!childscope.efforts}" var="effort">
+                                                   <apex:outputpanel rendered="{!!effort.isDeleted}">
+                                                      <tr class="slds-hint-parent slds-selection-background">
+                                                         <td class="slds-truncate {!IF(effort.isCloned = true,'is_cloned','')}" title="{!IF(effort.isCloned = true,'This is cloned effort','')}">
+                                                         </td>
+                                                         <td class="slds-truncate" title="{!effort.effort.Name}">
+                                                            <apex:outputpanel rendered="{!NOT(effort.isCloned)}">
+                                                               <div class="slds-form-element is-required ">
+                                                                  <div class="slds-form-element__control">
+                                                                     <apex:inputfield styleclass="slds-input" value="{!effort.effort.Name}" rendered="{!NOT(effort.isCloned)}"/>
+                                                                  </div>
+                                                                  <div class="slds-form-element__help" style="display:none">This field is required</div>
+                                                               </div>
+                                                            </apex:outputpanel>
+                                                            <apex:outputfield value="{!effort.effort.Name}" rendered="{!effort.isCloned}"/>
+                                                         </td>
+                                                         <td class="slds-truncate">
+                                                            <input type="hidden" class="oldhrs" value="{!effort.oldHrs}"/>
+                                                            <div class="slds-form-element is-required ">
+                                                               <div class="slds-form-element__control">
+                                                                  <apex:inputfield styleclass="slds-input mandate-numeric" style="width:60px" value="{!effort.effort.Effort_Hrs__c}" />
+                                                               </div>
+                                                               <div class="slds-form-element__help" style="display:none">This field is required</div>
+                                                            </div>
+                                                            <apex:outputpanel rendered="{!effort.isCloned}">
+                                                               <div class="slds-form-element override-reason">
+                                                                  <label class="slds-form-element__label" for="textarea-input-01">Override Reason<abbr class="slds-required" title="required">*</abbr></label>                                   
+                                                                  <div class="slds-form-element__control">
+                                                                     <apex:inputfield styleclass="slds-textarea override-reason" value="{!effort.effort.Hrs_Override_Reason__c}"/>
+                                                                  </div>
+                                                                  <div class="slds-form-element__help" style="display:none">This field is required</div>
+                                                               </div>
+                                                            </apex:outputpanel>
+                                                         </td>
+                                                         <td class="slds-truncate">
+                                                            <apex:outputpanel rendered="{!NOT(effort.isCloned)}">
+                                                               <div class="slds-form-element is-required ">
+                                                                  <div class="slds-form-element__control">
+                                                                     <apex:inputfield style="width:60px" styleclass="slds-input mandate-numeric" value="{!effort.effort.Complexity_Factor_High__c}" />
+                                                                  </div>
+                                                                  <div class="slds-form-element__help" style="display:none">This field is required</div>
+                                                               </div>
+                                                            </apex:outputpanel>
+                                                            <apex:outputfield value="{!effort.effort.Complexity_Factor_High__c}" rendered="{!effort.isCloned}"/>
+                                                         </td>
+                                                         <td class="slds-truncate">
+                                                            <apex:outputpanel rendered="{!NOT(effort.isCloned)}">
+                                                               <div class="slds-form-element is-required ">
+                                                                  <div class="slds-form-element__control">
+                                                                     <apex:inputfield styleclass="slds-input mandate-numeric" style="width:60px" value="{!effort.effort.Complexity_Factor_Low__c}" rendered="{!NOT(effort.isCloned)}"/>
+                                                                  </div>
+                                                                  <div class="slds-form-element__help" style="display:none">This field is required</div>
+                                                               </div>
+                                                            </apex:outputpanel>
+                                                            <apex:outputfield value="{!effort.effort.Complexity_Factor_Low__c}" rendered="{!effort.isCloned}"/>
+                                                         </td>
+                                                         <td class="slds-truncate">
+                                                            <apex:outputpanel rendered="{!NOT(effort.isCloned)}">
+                                                               <div class="slds-form-element is-required">
+                                                                  <div class="slds-form-element__control">
+                                                                     <apex:inputfield styleclass="slds-select" value="{!effort.effort.Phase__c}" rendered="{!NOT(effort.isCloned)}"/>
+                                                                  </div>
+                                                                  <div class="slds-form-element__help"  style="display:none">This field is required</div>
+                                                               </div>
+                                                            </apex:outputpanel>
+                                                            <apex:outputfield value="{!effort.effort.Phase__c}" rendered="{!effort.isCloned}"/>
+                                                         </td>
+                                                         <td class="slds-truncate">
+                                                            <apex:outputpanel rendered="{!NOT(effort.isCloned)}">
+                                                               <div class="slds-form-element is-required ">
+                                                                  <div class="slds-form-element__control">
+                                                                     <apex:inputfield styleclass="slds-select" value="{!effort.effort.Resource_Role__c}" rendered="{!NOT(effort.isCloned)}"/>
+                                                                  </div>
+                                                                  <div class="slds-form-element__help" style="display:none">This field is required</div>
+                                                               </div>
+                                                            </apex:outputpanel>
+                                                            <apex:outputfield value="{!effort.effort.Resource_Role__c}" rendered="{!effort.isCloned}"/>
+                                                         </td>
+                                                         <td>
+                                                            <apex:inputfield styleclass="slds-select" style="width:80%" value="{!effort.effort.Speciality__c}" rendered="{!NOT(effort.isCloned)}"/>
+                                                            <apex:outputfield value="{!effort.effort.Speciality__c}" rendered="{!effort.isCloned}"/>
+                                                         </td>
+                                                         <td class="slds-cell-shrink" data-label="Actions">
+                                                            <apex:commandlink immediate="true" styleClass="delete_button slds-button--right--float" rendered="{!NOT(is_View)}" value="" action="{!effort.remove}"/>
+                                                         </td>
+                                                      </tr>
+                                                   </apex:outputpanel>
+                                                </apex:repeat>
+                                             </tbody>
+                                          </table>
+                                       </div>                                      
+                                    </td>
+                                 </tr>
+                              </apex:outputpanel>
+                           </apex:repeat>
+                        </tbody>
+                     </table>
+                  </div>
+               </div>
+               <!-- / PRIMARY CONTENT WRAPPER -->    
+               <br/>
+               <br/>
+               <!-- FOOTER -->
+               <div>
+                  <div class="slds-modal__footer page-footer">
+                  </div>
+                  <footer role="contentinfo" class="slds-p-around--large">
+                     <div class="slds-grid slds-grid--align-spread">
+                        <p class="slds-col">Estimator 2.0</p>
+                        <p class="slds-col">&copy; Appirio</p>
+                     </div>
+                  </footer>
+               </div>
+               <!-- / FOOTER -->     
+               <div id="loadingSpinner" class="slds-spinner_container" style="display: none !important;">
+                  <div class="slds-spinner--brand slds-spinner slds-spinner--large" aria-hidden="false" role="alert">
+                     <div class="slds-spinner__dot-a"></div>
+                     <div class="slds-spinner__dot-b"></div>
+                  </div>
+               </div>
+            </div>
+            <!-- / REQUIRED SLDS WRAPPER -->    
+            <!-- PLEASE DONOT REMOVE: This section is important while using standard controller -->
+            <input type="hidden" value="{!E2_Scope__c.Name}"/> 
+            <input type="hidden" value="{!E2_Scope__c.Complexity__c}"/>
+            <input type="hidden" value="{!E2_Scope__c.Description__c}"/>
+            <input type="hidden" value="{!E2_Scope__c.E2_Assumption__c}"/>
+            <input type="hidden" value="{!E2_Scope__c.Parent_Scope__c}"/>
+            <input type="hidden" value="{!E2_Scope__c.Scope_Group__c}"/>
+            <input type="hidden" value="{!E2_Scope__c.Is_Favourite__c}"/>
+            <input type="hidden" value="{!E2_Scope__c.Is_Active__c}"/> 
+            <input type="hidden" value="{!E2_Scope__c.LOE_Hrs__c}"/>
+            <input type="hidden" value="{!E2_Scope__c.Presales_LOE__c}"/>
+            <input type="hidden" value="{!E2_Scope__c.Scope_Item_Type__c}"/>
+         </apex:form>
+      </body>
+      <!-- JAVASCRIPT -->
+      <script type="text/javascript">
+         var msg = '{!dmlOperationMessage}'; 
+         var CHILD_SCOPE_ARAY = [];
+      </script>
+      <apex:repeat value="{!childScopes}" var="childscope">
+          <script type="text/javascript">
+            console.log('{!childscope.scope.Id}');
+            CHILD_SCOPE_ARAY.push('{!childscope.scope.Id}');  
+          </script>
+      </apex:repeat>
+      <!-- / JAVASCRIPT -->    
+   </html>
+</apex:page>
