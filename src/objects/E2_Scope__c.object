@@ -57,6 +57,7 @@
     <enableSearch>true</enableSearch>
     <enableSharing>true</enableSharing>
     <enableStreamingApi>true</enableStreamingApi>
+    <externalSharingModel>Read</externalSharingModel>
     <fields>
         <fullName>Complexity__c</fullName>
         <description>Complexity (High, Medium, Low)</description>

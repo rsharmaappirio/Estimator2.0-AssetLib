@@ -56,8 +56,8 @@ public class E2_AddEditEstimateController extends E2_Master{
             this.estimate.Name = psr.Name;
             this.estimate.Account_Name__c = psr.Account_Name__c;
             this.estimate.Opportunity_Name__c = psr.Account_Name__c;
+            this.estimate.E2_SA__c = UserInfo.getUserId();
             this.estimate.E2_Date_Scoped__c = system.today();
-            this.estimate.E2_SA__c = userinfo.getuserId();
     }
     
     if(this.estimate.Id != null && psr.id <> null){

@@ -57,6 +57,7 @@
     <enableSearch>true</enableSearch>
     <enableSharing>true</enableSharing>
     <enableStreamingApi>true</enableStreamingApi>
+    <externalSharingModel>ReadWrite</externalSharingModel>
     <fields>
         <fullName>Allocation_Min__c</fullName>
         <description>Minimum allocation percentage hours needed to allocate to role in phase (TDB)</description>

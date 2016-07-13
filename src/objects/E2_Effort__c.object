@@ -57,6 +57,7 @@
     <enableSearch>true</enableSearch>
     <enableSharing>true</enableSharing>
     <enableStreamingApi>true</enableStreamingApi>
+    <externalSharingModel>ControlledByParent</externalSharingModel>
     <fields>
         <fullName>Complexity_Factor_High__c</fullName>
         <description>If no value, High or Low factors simply do not act on orignal effort (in some cases, this is logical)</description>
@@ -219,11 +220,6 @@ Effort Hrs - (Low% of Effort Hours)</description>
         <type>Lookup</type>
     </fields>
     <label>Effort</label>
-    <listViews>
-        <fullName>All</fullName>
-        <filterScope>Everything</filterScope>
-        <label>All</label>
-    </listViews>
     <nameField>
         <label>Description</label>
         <trackHistory>false</trackHistory>

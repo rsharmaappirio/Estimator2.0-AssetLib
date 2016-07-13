@@ -111,6 +111,7 @@ var jstree_options = {
                     "separator_after": false,
                     "label": "Remove",
                     "action": function(obj) {
+
                         var ans = confirm('Are you sure you want to delete selected scope?');
                         if (ans === false) {
                             return;
@@ -664,8 +665,7 @@ var AddEditScope = {
     },
 
     addScopeTemplate_Recurring: function(parentId, sourceId) {
-        //$(loadSpinner).show().css('height', $(document).outerHeight());
-        alert(parentId + '#' + sourceId + '#' + global_scopeId);
+        //$(loadSpinner).show().css('height', $(document).outerHeight());                   
         sforce.apex.execute("E2_Estimator_WS", "getChildCloneNodes", {
             parentId: parentId,
             sourceId: sourceId,
