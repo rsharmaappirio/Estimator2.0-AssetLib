@@ -28,7 +28,7 @@ public with sharing class E2_DataUtil_WS {
    public static List<E2_Scope__c> getChildScopesOfEstimate(string estimateId){
        return [Select e.Source_Scope__c, e.Scope_Group__c, e.Parent_Scope__c, e.Name, 
                                  e.Presales_LOE__c, e.Description__c , e.LOE_Hrs__c,e.Ultimate_Parent_Id__c, 
-                                 e.Complexity__c, e.Scope_Item_Type__c, e.Is_Active__c, e.Scope_Flag__c                                  
+                                 e.Complexity__c, e.Scope_Item_Type__c, e.Is_Active__c, e.Scope_Flag__c, e.Display_Order__c                                  
                                  FROM E2_Scope__c e 
                                  WHERE e.Presales_LOE__c = : estimateId];   
    }
@@ -98,5 +98,12 @@ public with sharing class E2_DataUtil_WS {
   	return [SELECT LOE_Hrs__c,Ultimate_Parent_Id__c FROM E2_Scope__c WHERE
   			Is_Active__c = true AND Ultimate_Parent_Id__c = :ultimateScopes];
   }
+  
+  public static List<E2_Scope__c> getScopesOnTemplate(string scopeId) {
+    return [SELECT Id, Name, LOE_Hrs__c ,Complexity__c, Scope_Item_Type__c, Scope_Flag__c,
+              Is_Active__c, Is_Favourite__c 
+            FROM E2_Scope__c 
+            WHERE Id =: scopeId AND Is_Favourite__c = true];
+   }
    
 }

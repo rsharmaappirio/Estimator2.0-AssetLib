@@ -14,6 +14,8 @@ public class E2_Constants {
   public final static string COMPONENT_KEYPREFIX = 'a01';
   public final static string SCOPE_KEYPREFIX = 'a0A';
   
+  public final static decimal DEFAULT_SCOPE_DISPLAY_ORDER = 10000;
+  
   //record type of Scope
   public final static String SCOPE_RT_TEMPLATE = 'Template';
   public final static String SCOPE_RT_SCOPE = 'Scope';

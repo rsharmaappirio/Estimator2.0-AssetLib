@@ -90,6 +90,18 @@
             .slds-tableContent td {
                 white-space :normal!important;
             }
+            a.nonfavStar{
+                background-image: url({!$Resource.E2_FAV_Invisible});
+                height: 22px;
+                width: 22px;
+                float:left;
+            }
+            a.favStar{
+                background-image: url({!$Resource.E2_FAV_Visible});
+                height: 22px;
+                width: 22px;
+                float:left;
+            }
          </style>
       </head>
       <body>
@@ -106,7 +118,12 @@
                oncomplete="SelectScopeTempate.search_complete();" rerender="scopePanel,myScopePanel,templateCount,favoriteCount">
                <apex:param value="" name="scopeName" assignTo="{!scopeName}"></apex:param>
             </apex:actionFunction>
-            <div class="slds">
+            <apex:actionFunction name="addOrRemoveFavScope" action="{!addOrRemoveFavScope}" 
+               oncomplete="SelectScopeTempate.search_complete();" rerender="scopePanel,myScopePanel,templateCount,favoriteCount">
+               <apex:param value="" name="scopeId" assignTo="{!selectedScopeId}"></apex:param>
+               <apex:param value="" name="isFav" assignTo="{!isFavourite}"></apex:param>
+            </apex:actionFunction>
+            <div class="slds"> 
                <div class="myapp">
                   <div class="slds-page-header" role="banner">
                      <div class="slds-grid">
@@ -125,7 +142,7 @@
                                     <div class="slds-form-element">
                                        <div class="slds-form-element__control">
                                           <apex:selectList styleClass="slds-select" id="scopegroup_ele" value="{!scopeGroup}"
-                                                     multiselect="false" size="1" html-placeholder="Group">
+                                                     multiselect="false" size="1" html-placeholder="Group"  onchange="SelectScopeTempate.search();return false;">
                                               <apex:selectOption itemValue="" itemLabel="Select Group"/>
                                               <apex:selectOptions value="{!scopeGroups}"/>
                                             </apex:selectList>
@@ -183,6 +200,14 @@
                                                                 <apex:outputPanel layout="none">
                                                                     <a href="javascript:void(0);" title="Add scope" onclick="scopesPills.addPillsLink('{!sc1.scope.id}','{!sc1.scope.Name}');AddScopeTree.updateTreeState();" id="{!sc1.scope.id}href" class="addup_button"></a>
                                                                 </apex:outputPanel> 
+                                                            </apex:column>
+                                                            <apex:column >
+                                                                <apex:facet name="header">
+                                                                    <label class="slds-button slds-button--icon-bare"></label>
+                                                                </apex:facet>
+                                                                <apex:outputPanel layout="none"> 
+                                                                    <a href="javascript:void(0);" title="Add/Remove favorite" class="{!IF(sc1.isFavorite,'favStar','nonfavStar')}" onclick="showhideFavorite(this);" id="{!sc1.scope.id}markFav" scope-id="{!sc1.scope.id}"></a>    
+                                                                </apex:outputPanel>
                                                             </apex:column>
                                                             <apex:column styleClass="slds-truncate">
                                                                 <apex:facet name="header">
@@ -278,13 +303,21 @@
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <apex:outputPanel id="myScopePanel">
+                                                <apex:outputPanel id="myScopePanel"> 
                                                     <apex:outputPanel layout="none" rendered="{!favScopeList.size>0}">
                                                         <apex:dataTable value="{!favScopeList}" var="sc1" styleClass="slds-tableContent slds-table slds-table--bordered tablesorter" id="accsTable1">
                                                             <apex:column styleClass="slds-cell-shrink">
                                                                 <apex:facet name="header"><label class="slds-checkbox"></label></apex:facet>
                                                                 <apex:outputPanel layout="none">                                              
                                                                     <a href="javascript:void(0);" title="Add scope" onclick="scopesPills.addPillsLink('{!sc1.scope.id}','{!sc1.scope.Name}');AddScopeTree.updateTreeState();" id="{!sc1.scope.id}href" class="addup_button"></a>
+                                                                </apex:outputPanel>
+                                                            </apex:column>
+                                                            <apex:column >
+                                                                <apex:facet name="header">
+                                                                    <label class="slds-button slds-button--icon-bare"></label>
+                                                                </apex:facet>
+                                                                <apex:outputPanel layout="none"> 
+                                                                    <a href="javascript:void(0);" title="Add/Remove favorite" class="{!IF(sc1.isFavorite,'favStar','display:none')}" onclick="showhideFavorite(this);" id="{!sc1.scope.id}markFav" scope-id="{!sc1.scope.id}"></a>    
                                                                 </apex:outputPanel>
                                                             </apex:column>
                                                             <apex:column styleClass="slds-truncate">

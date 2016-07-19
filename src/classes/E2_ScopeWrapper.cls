@@ -11,6 +11,7 @@
 global class E2_ScopeWrapper implements Comparable {
     public Boolean isSelected {get; set;}
     public E2_Scope__c scope {get; set;}
+    public Boolean isFavorite {get; set;}
     
     public enum SORT_BY {
         ByScopeName,ByComplexity,ByGroup,ByEfforts,ByLastView
@@ -26,13 +27,21 @@ global class E2_ScopeWrapper implements Comparable {
 
     //constructor    
     public E2_ScopeWrapper(){
-      scope = new E2_Scope__c();
-      isSelected = false;
+      this.scope = new E2_Scope__c();
+      this.isSelected = false;
+      this.isFavorite = false;
     }
     
     public E2_ScopeWrapper(E2_Scope__c scope){
       this.scope = scope;
-      isSelected = false;
+      this.isSelected = false;
+      this.isFavorite = false;
+    }
+    
+    public E2_ScopeWrapper(E2_Scope__c scope,Boolean isFav){
+      this.scope = scope;
+      this.isSelected = false;
+      this.isFavorite = isFav;
     }
     
     global Integer compareTo(Object objToCompare) {

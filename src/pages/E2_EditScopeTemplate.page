@@ -370,8 +370,8 @@
                                                             <apex:outputfield value="{!effort.effort.Resource_Role__c}" rendered="{!effort.isCloned}"/>
                                                          </td>
                                                          <td class="slds-size--1-of-8 whitespace_normal" data-label="Speciality">
-                                                            <apex:inputfield styleclass="slds-select" style="width:80%" value="{!effort.effort.Speciality__c}" rendered="{!NOT(effort.isCloned)}"/>
-                                                             <apex:outputText value="{!effort.effort.Speciality__r.Name}" rendered="{!effort.isCloned}"/>
+                                                            <apex:inputfield styleclass="slds-select" style="width:80%" value="{!effort.effort.Speciality__c}"/>
+                                                             <!-- <apex:outputText value="{!effort.effort.Speciality__r.Name}" rendered="{!effort.isCloned}"/>-->
                                                          </td>
                                                          <td class="slds-cell-shrink" data-label="Actions">
                                                             <apex:commandlink immediate="true" styleClass="delete_button slds-button--right--float" rendered="{!NOT(is_View)}" value="" action="{!effort.remove}"/>

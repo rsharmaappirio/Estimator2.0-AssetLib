@@ -22,9 +22,10 @@ public class E2_Estimator_WSManager {
         	string scopeId = ((string)scope.Id).length() == 18 ? 
         				((string)scope.Id).substring(0, 15) : ((string)scope.Id);  
         	decimal totalhrs = scopeRollhrs.containsKey(scopeId) ? scopeRollhrs.get(scopeId) : 0;
-            nodeList.add(new E2_TreeNode(scope.id, getFormatedScopeNameForFlag(scope, totalhrs), 
+            nodeList.add(new E2_TreeNode(scope.id, scope.name, getFormatedScopeNameForFlag(scope, totalhrs), 
                              (scope.Parent_Scope__c == NULL ? E2_Constants.HASH_TAG : scope.Parent_Scope__c), 
-                             hasChildren, scope.Source_Scope__c, NODE_TYPE_SCOPE)
+                             hasChildren, scope.Source_Scope__c, NODE_TYPE_SCOPE, 
+                             (scope.Display_Order__c == NULL ? E2_Constants.DEFAULT_SCOPE_DISPLAY_ORDER : scope.Display_Order__c))
             );                                                
         }
         return nodeList;
@@ -363,5 +364,27 @@ public class E2_Estimator_WSManager {
           return 'Failed: ' + ex.getMessage();
        }
        return scopeId; 
+    }
+    
+    //Method to update display order of scopes when re-parented
+    public static string updateScopesDisplayOrder(string scopeJsonStr){
+    	List<E2_Estimator_WSManager.ScopeWrapper> lstScopesWrapper = (List<E2_Estimator_WSManager.ScopeWrapper>)JSON.deserialize(scopeJsonStr, List<E2_Estimator_WSManager.ScopeWrapper>.class);
+    	
+    	List<E2_Scope__c> lstScopes = new List<E2_Scope__c>();
+    	for(E2_Estimator_WSManager.ScopeWrapper scopeWrapper : lstScopesWrapper){
+    		lstScopes.add(new E2_Scope__c(Id= scopeWrapper.scopeId, Display_Order__c = Integer.valueOf(scopeWrapper.displayOrder)));
+    	}
+    	
+    	try{
+    		update lstScopes;
+    	}catch(Exception ex){
+          return 'Failed: ' + ex.getMessage();
+       }    	
+    	return 'success';
+    }
+    
+    public class ScopeWrapper{
+    	public string scopeId;
+    	public string displayOrder;
     }
 }

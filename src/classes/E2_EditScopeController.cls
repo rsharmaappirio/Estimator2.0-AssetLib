@@ -43,7 +43,10 @@ public with sharing class E2_EditScopeController {
         List<E2_Scope__c> scopeListToUpsert = new List<E2_Scope__c>();       
         List<E2_Effort__c> masterScope_Efforts = new List<E2_Effort__c>();        
         List<E2_Scope__c> scopeListToDelete = new List<E2_Scope__c>();       
-        List<E2_Effort__c> effortsToDelete = new List<E2_Effort__c>();        
+        List<E2_Effort__c> effortsToDelete = new List<E2_Effort__c>();
+        List<E2_Favourite_Scope__c> fscLstToInsert = new List<E2_Favourite_Scope__c>();
+        List<E2_Favourite_Scope__c> fscLstToDelete = new List<E2_Favourite_Scope__c>();  
+              
         Scope masterScope;
         this.errorMessage = E2_Constants.BLANK;        
         Id recTypeId = E2_RecordTypeClass.getId(E2_Constants.E2_SCOPE_API_NAME, E2_Constants.SCOPE_RT_SCOPE);
@@ -54,6 +57,22 @@ public with sharing class E2_EditScopeController {
         for(Scope sc : childScopes){
         	if(sc.isDeleted == false){                
                 scopeListToUpsert.add(sc.scope);
+                if(sc.scope.Is_Favourite__c == true){
+                  E2_Favourite_Scope__c favSC = new E2_Favourite_Scope__c();
+			            favSC.Scope__c = sc.scope.Id;
+			            favSC.User__c = UserInfo.getUserId();
+			            favSC.Unique_Scope_User_Id__c = favSC.Scope__c +'-'+ favSC.User__c;
+			            fscLstToInsert.add(favSC);
+                }
+                else if(sc.scope.Is_Favourite__c == false){
+				          List<E2_Favourite_Scope__c> favSCLst = [SELECT Id, Scope__c, User__c, Unique_Scope_User_Id__c 
+				                                                  FROM E2_Favourite_Scope__c WHERE Scope__c =: sc.scope.Id
+				                                                  ] ;
+				          for(E2_Favourite_Scope__c fsc : favSCLst){                                
+				            fscLstToDelete.add(fsc);
+				          }
+				           
+				        }
         	} else {
         		scopeListToDelete.add(sc.scope);
         	}
@@ -62,8 +81,16 @@ public with sharing class E2_EditScopeController {
         
         try{       
            system.debug('>>>>>SIZE>>>>' + scopeListToUpsert.size()); 
-             
+           if(!fscLstToInsert.isEmpty()){
+              insert fscLstToInsert;
+           }
+           if(!fscLstToDelete.isEmpty()){
+              delete fscLstToDelete;
+           } 
            if(!scopeListToUpsert.isEmpty()) upsert scopeListToUpsert;
+           
+		        
+		       
         }catch(Exception ex){
             Database.rollback(sp);
             resetChildScopesOnException();

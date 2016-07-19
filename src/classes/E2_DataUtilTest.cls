@@ -35,7 +35,7 @@ public class E2_DataUtilTest {
             system.assertEquals(psrs.size(), 1);
             system.assertEquals(E2_dataUtil.getEstimateDetailOnId(estimate.Id).size(), 1);
             system.assert(E2_DataUtil.getScopesOnTemplateScopeSearchTemplate('Test Scope', scopeGroup.Id, rtTemplateId) != null);
-            system.assert(E2_DataUtil.getScopesOnTemplateScopeSearchByUser('Test Scope', sysAdmin.Id, rtScopeId) != null);
+            system.assert(E2_DataUtil.getFavScopesOnTemplateScopeSearchByUser('Test Scope', sysAdmin.Id, null)!= null);
             system.assert(E2_DataUtil.getDerivedEffortGroup('Central SFDC Traditional Test') != null);
             system.assertEquals(E2_DataUtil.getDerivedEffort(derEffGroup.Id).size(), 3);
             system.assertEquals(E2_dataUtil.getScopeRecordsWithChildRecords(favScope.Id).size(), 1);

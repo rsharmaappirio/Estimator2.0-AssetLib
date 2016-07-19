@@ -159,6 +159,10 @@
         <fields>Complexity__c</fields>
         <relatedList>E2_Scope__c.Ultimate_Parent_Scope__c</relatedList>
     </relatedLists>
+    <relatedLists>
+        <fields>NAME</fields>
+        <relatedList>E2_Favourite_Scope__c.Scope__c</relatedList>
+    </relatedLists>
     <relatedObjects>Parent_Scope__c</relatedObjects>
     <relatedObjects>Scope_Group__c</relatedObjects>
     <relatedObjects>Presales_LOE__c</relatedObjects>

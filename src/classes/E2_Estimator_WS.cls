@@ -6,6 +6,7 @@
  * Created By: Rahul Jain (Appirio)
  * 
  * Date Modified      Modified By                  Description of the update
+ *  7/15/2016					Vikash Goyal								 Added method for updating display orders of scope updateScopesDisplayOrder()
 *  =====================================================================*/
 global with sharing class E2_Estimator_WS {
     
@@ -58,7 +59,12 @@ global with sharing class E2_Estimator_WS {
         return E2_Estimator_WSManager.getChildCloneNodesTemplate(parentId, sourceId, scopeGrpId);    
     }
         
-        webservice static string updateScopeFlag(string scopeId, string flagValue){
-                return E2_Estimator_WSManager.updateScopeFlag(scopeId, flagValue);
-        }
+    webservice static string updateScopeFlag(string scopeId, string flagValue){
+        return E2_Estimator_WSManager.updateScopeFlag(scopeId, flagValue);
+    }
+    
+    //Method to update display order of scopes when re-parented
+    webservice static string updateScopesDisplayOrder(string scopeJsonStr){
+        return E2_Estimator_WSManager.updateScopesDisplayOrder(scopeJsonStr);
+    }
 }

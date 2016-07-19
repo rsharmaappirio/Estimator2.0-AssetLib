@@ -123,6 +123,20 @@
         <type>Summary</type>
     </fields>
     <fields>
+        <fullName>Display_Order__c</fullName>
+        <description>This field will be used for ordering of scopes related to particular estimate.</description>
+        <externalId>false</externalId>
+        <label>Display Order</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>0</scale>
+        <trackFeedHistory>false</trackFeedHistory>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
         <fullName>E2_Assumption__c</fullName>
         <externalId>false</externalId>
         <label>Assumption</label>

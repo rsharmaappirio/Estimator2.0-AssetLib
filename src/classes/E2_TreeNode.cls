@@ -22,7 +22,8 @@ global class E2_TreeNode {
     webservice string node_type;
     webservice string complexity;
     webservice decimal loe_hrs;
-    webservice string description;
+    webservice string description;    
+    webservice decimal display_order;
     
     public E2_TreeNode(string title, boolean isFolder, boolean isLazy, string key){
         this.title = title;
@@ -52,6 +53,12 @@ global class E2_TreeNode {
     public E2_TreeNode(string id,string title, string text, string parent, boolean hasChildren, string sourceId, string node_type){
         this(id, text, parent, hasChildren, sourceId, node_type);
         this.title = title;
+    }
+    
+    public E2_TreeNode(string id,string title, string text, string parent, boolean hasChildren, string sourceId, string node_type, decimal displayOrder){
+        this(id, text, parent, hasChildren, sourceId, node_type);
+        this.title = title;
+        this.display_order = displayOrder;
     }
     
     // for efforts

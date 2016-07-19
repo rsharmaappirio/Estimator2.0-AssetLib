@@ -15,6 +15,8 @@ public class E2_TreeNodeTest {
             System.assertEquals(node5.id, 'string id');
             E2_TreeNode node6 = new E2_TreeNode('string id', 'string text', 'string parent', false, 'string sourceId', 'Medium', 40, 'string description');            
             System.assertEquals(node6.id, 'string id');
+            E2_TreeNode node7 = new E2_TreeNode('string id','string title', 'string text', 'string parent', false, 'string sourceId', 'string node_type', 3);
+            System.assertEquals(node7.display_order, 3);
         }    
     }
 }

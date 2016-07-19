@@ -33,24 +33,26 @@ public class E2_DataUtil {
   
   public static String getScopesOnTemplateScopeSearchTemplate(string scopeName, String groupId, Id recordTypeId) {  		
       String query = 'SELECT Id, RecordTypeId, LOE_Hrs__c, Scope_Item_Type__c, Complexity__c, Scope_Group__c,Scope_Group__r.Name, Source_Scope__c, '+
-                            'Presales_LOE__c, Parent_Scope__c, OwnerId, Name, Is_Favourite__c, Is_Active__c,LastViewedDate '+                         
+                            'Presales_LOE__c, Parent_Scope__c, OwnerId, Name, Is_Favourite__c, Is_Active__c '+                         
                             'FROM E2_Scope__c '+ 
                             'WHERE Is_Active__c = true '+ 
                             'AND Parent_Scope__c = null AND RecordTypeId = \''+recordTypeId+'\''
                             +(!String.isBlank(scopeName) ? ' AND Name like \'%'+String.escapeSingleQuotes(scopeName)+'%\'':'')+
                             +(!String.isBlank(groupId) ? ' AND Scope_Group__c = \''+String.escapeSingleQuotes(groupId)+'\'':'')+
-                            ' ORDER By Name, LastViewedDate ASC limit 1000'; 
+                            ' ORDER By Name ASC limit 1000'; 
       return query;                         
   }
   
-  public static String getScopesOnTemplateScopeSearchByUser(string scopeName, String userId, Id recordTypeId){
-      String query = 'SELECT Id, RecordTypeId, LOE_Hrs__c, Scope_Item_Type__c, Complexity__c, Scope_Group__c,Scope_Group__r.Name, Source_Scope__c, '+
-                            'Presales_LOE__c, Parent_Scope__c, OwnerId, Name, Is_Favourite__c, Is_Active__c,LastViewedDate '+                         
-                            'FROM E2_Scope__c '+ 
-                            'WHERE Is_Active__c = true AND Is_Favourite__c = true  AND RecordTypeId = \''+recordTypeId+'\' '+ 
-                            'AND OwnerId = \''+userId+'\''
-                            +(!String.isBlank(scopeName) ? ' AND Name like \'%'+String.escapeSingleQuotes(scopeName)+'%\' ':'')+
-                            ' ORDER By Name,LastViewedDate ASC limit 1000'; 
+  ///
+  public static String getFavScopesOnTemplateScopeSearchByUser(string scopeName, String userId, String groupId){
+      String query = 'Select Id, Name, User__c, Unique_Scope_User_Id__c, Scope__r.Id, Scope__r.Name, ' +
+					 'Scope__r.RecordTypeId, Scope__r.LOE_Hrs__c, Scope__r.Scope_Item_Type__c, Scope__r.Complexity__c, '+ 
+					 'Scope__r.Scope_Group__c, Scope__r.Scope_Group__r.Name, Scope__r.Source_Scope__c, '+ 
+					 'Scope__r.Presales_LOE__c, Scope__r.Parent_Scope__c, Scope__r.OwnerId, Scope__r.Is_Favourite__c, Scope__r.Is_Active__c '+ 
+					 'From E2_Favourite_Scope__c WHERE Scope__r.Is_Active__c = true AND User__c = \''+userId+'\''
+                     +(!String.isBlank(scopeName) ? ' AND Scope__r.Name like \'%'+String.escapeSingleQuotes(scopeName)+'%\' ':'')+
+                     +(!String.isBlank(groupId) ? ' AND Scope__r.Scope_Group__c = \''+String.escapeSingleQuotes(groupId)+'\'':'')+
+                     ' ORDER By Scope__r.Name ASC limit 1000';                      
       return query;                         
   }
   
@@ -148,5 +150,12 @@ public class E2_DataUtil {
                      FROM E2_Scope__c 
                      WHERE Is_Active__c = true AND Presales_LOE__c = : estimateId];   
   }
+  
+  public static List<E2_Scope__c> getScopesOnTemplate(string scopeId) {
+    return [SELECT Id, Name, LOE_Hrs__c ,Complexity__c, Scope_Item_Type__c, Scope_Flag__c,
+              Is_Active__c, Is_Favourite__c 
+            FROM E2_Scope__c 
+            WHERE Id =: scopeId];
+   }
   
 }

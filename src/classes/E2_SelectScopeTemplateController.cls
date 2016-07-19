@@ -15,7 +15,8 @@ public with sharing class E2_SelectScopeTemplateController {
   
   private Id rtTemplateId;
   private Id rtScopeId;
-
+  private Set<Id> scopeIDs = new Set<Id>();
+  
   public E2_PaginationUtility scopePaging {get; set;}
   public E2_PaginationUtility favScopePaging {get; set;}
   
@@ -27,9 +28,8 @@ public with sharing class E2_SelectScopeTemplateController {
   private List<E2_PaginationUtility> conList;
   
   public boolean isTemplatePage{get;set;}
-
-  //public Id selectedRecordId{get;set;}
-  //public Id selectedRecordTypeId{get;set;}
+  public Boolean isFavourite {get;set;}
+  public string selectedScopeId {get;set;}
   
   public String sortDirection = 'ByAsc'; //Sort Order
   public String sortExp = 'ByScopeName'; //initial sort field
@@ -86,6 +86,7 @@ public with sharing class E2_SelectScopeTemplateController {
     scopeList = new List<E2_ScopeWrapper>();
     favScopeList = new List<E2_ScopeWrapper>();
     isTemplatePage = false;
+    isFavourite = false;
     if(ApexPages.currentPage().getParameters().get('templatepage')!=null) {
         isTemplatePage = true;
     }
@@ -95,15 +96,16 @@ public with sharing class E2_SelectScopeTemplateController {
   //fetch last viewed scope records on load
   public void pageAction(){
     E2_ScopeWrapper.sortBy = E2_ScopeWrapper.SORT_BY.ByLastView;
+    system.debug('===isTemplatePage>>' +isTemplatePage);    
+    if(!isTemplatePage) {
+        scopeIDs.clear();
+        favScopeList.clear();
+        getMyScope(null, null);
+        favScopeList.sort();
+    }
     scopeList.clear();
     getTemplateScope(null, null);
     scopeList.sort();
-    system.debug('===isTemplatePage>>' +isTemplatePage);
-    if(!isTemplatePage) {
-        favScopeList.clear();
-        getMyScope(null);
-        favScopeList.sort();
-    }
     addPaginationOnFormList();
   }  
   
@@ -112,32 +114,37 @@ public with sharing class E2_SelectScopeTemplateController {
                                                                     rtTemplateId));
     this.totalTemplate = scopes.size();
     for(E2_Scope__c sc : scopes){
-        scopeList.add(new E2_ScopeWrapper(sc));
+       boolean fav = false;
+       if(scopeIDs.contains(sc.Id)){
+         fav = true;
+       }
+       scopeList.add(new E2_ScopeWrapper(sc,fav));
     }
   }
   
-  private void getMyScope(String scopeName) {
+  private void getMyScope(String scopeName, string groupId) {
     system.debug('===userId>>>'+UserInfo.getUserId());
-    List<E2_Scope__c> scopes = Database.query(E2_DataUtil.getScopesOnTemplateScopeSearchByUser(scopeName, 
-                                                    UserInfo.getUserId(), rtScopeId));
+    List<E2_Favourite_Scope__c> scopes = Database.query(E2_DataUtil.getFavScopesOnTemplateScopeSearchByUser(
+    										scopeName, UserInfo.getUserId(), groupId));
+                                                    
     this.totalMyFav = scopes.size();
-    system.debug('===scopes>>>'+scopes);
-    for(E2_Scope__c sc : scopes){
-        favScopeList.add(new E2_ScopeWrapper(sc));
-    }
+    for(E2_Favourite_Scope__c fsc : scopes){
+        scopeIDs.add(fsc.Scope__r.Id);
+        favScopeList.add(new E2_ScopeWrapper(fsc.Scope__r,true));
+    }    
   }
   
   //fetch existing scope records on click of 'Search' button
   public void searchScopeRecords() {
     E2_ScopeWrapper.sortBy = E2_ScopeWrapper.SORT_BY.ByScopeName;
-    scopeList.clear();
-    getTemplateScope(scopeName, scopeGroup);
     if(!isTemplatePage) {
         favScopeList.clear();
         this.totalMyFav = 0; 
-        if(String.isBlank(scopeGroup))
-            getMyScope(scopeName);
-    }    
+        //if(String.isBlank(scopeGroup))
+            getMyScope(scopeName, scopeGroup);
+    } 
+    scopeList.clear();
+    getTemplateScope(scopeName, scopeGroup);   
     addPaginationOnFormList();
   }
   
@@ -219,5 +226,35 @@ public with sharing class E2_SelectScopeTemplateController {
          favScopeList = getWrapperList(tempList);
       }
     return null;   
-  } 
+  }
+  
+  public PageReference addOrRemoveFavScope(){
+  	try{
+		if(selectedScopeId != null){
+			if(isFavourite){
+		    	E2_Favourite_Scope__c favSC = new E2_Favourite_Scope__c(Scope__c = selectedScopeId,
+		      												User__c = UserInfo.getUserId(),
+		      												Unique_Scope_User_Id__c = selectedScopeId +'-'+ UserInfo.getUserId());
+		        insert favSC;
+		 	} else {
+		    	E2_Favourite_Scope__c favSC = null;
+		        for(E2_Favourite_Scope__c fsc : [SELECT Id,Scope__r.RecordTypeId FROM E2_Favourite_Scope__c WHERE 
+		        										Scope__c =: selectedScopeId AND User__c =: UserInfo.getUserId()]){  
+		          favSC = fsc;	          
+		        }
+		        if(favSC != null) {
+		        	delete favSC;
+		        	if(favSC.Scope__r.RecordTypeId == rtScopeId) 
+		        		update (new E2_Scope__c(Id = selectedScopeId, Is_Favourite__c = false));
+		        } 
+		  	}
+	 	}  
+      	pageAction();
+      }catch(Exception ex){
+        ApexPages.addMessage(new ApexPages.Message(ApexPages.SEVERITY.Error, ex.getMessage()));
+        return null;
+      }
+      return null; 
+    }
+ 
 }

@@ -109,6 +109,7 @@
         <members>E2_Derived_Effort_Group__c</members>
         <members>E2_Derived_Effort__c</members>
         <members>E2_Effort__c</members>
+        <members>E2_Favourite_Scope__c</members>
         <members>E2_Scope_Group__c</members>
         <members>E2_Scope__c</members>
         <name>CustomObject</name>

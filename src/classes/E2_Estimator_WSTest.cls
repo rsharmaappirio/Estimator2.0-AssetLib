@@ -22,11 +22,8 @@ public class E2_Estimator_WSTest {
       treeLst = E2_Estimator_WS.retrieveAllScopeTreeNodesOnEstimateId(estimate.Id);
       System.assertEquals(treeLst.size(), 2, 'Doesnot return 2 scopes associated with the estimate');
       
-      
-      
       E2_TreeNodeMap treeMap = E2_Estimator_WS.getChildScopeDetailNodes(parentSC.Id);
       System.assertEquals(treeMap.nodeList.size(), 1, 'Doesnot return 1 scope child to parent scope');
-      
       
       treeMap = E2_Estimator_WS.getScopeDetailNodes(childSC.Id);
       System.assertEquals(childSC.Id, treeMap.scope_id, 'returns same scope id');
@@ -62,10 +59,14 @@ public class E2_Estimator_WSTest {
       
       String a_scopeId = E2_Estimator_WS.reparentScope(childSC.Id, null);
       System.assertEquals(a_scopeId, childSC.id, 'Not successfully reparenting');
+      
+      String jsonString = '[{"scopeId":"' + parentSC.id + '", "displayOrder":"1"},{"scopeId":"' + childSC.id + '", "displayOrder":"2"}]';
+      String statusStr = E2_Estimator_WS.updateScopesDisplayOrder(jsonString);
+      System.assertEquals(statusStr, 'success');
         
       String b_scopeId = E2_Estimator_WS.deleteScope(childSC.Id, parentSC.Id);
       System.assertEquals(b_scopeId, childSC.id, 'Not successfully deleting');
-        
+      
       //stop test  
     Test.stopTest();
     }

@@ -125,7 +125,7 @@
                                     <div class="slds-form-element">
                                        <div class="slds-form-element__control">
                                           <apex:selectList styleClass="slds-select" id="scopegroup_ele" value="{!scopeGroup}"
-                                                     multiselect="false" size="1" html-placeholder="Group">
+                                                     multiselect="false" size="1" html-placeholder="Group"  onchange="SelectScopeTempate.search();return false;">
                                               <apex:selectOption itemValue="" itemLabel="Select Group"/>
                                               <apex:selectOptions value="{!scopeGroups}"/>
                                             </apex:selectList>

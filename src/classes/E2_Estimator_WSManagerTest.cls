@@ -67,6 +67,11 @@ public static CMC_Presales_LOE__c estimate;
       E2_Estimator_WSManager.reparentScope(scopeGroup.Id, null);
       String a_scopeId = E2_Estimator_WSManager.reparentScope(childSC.Id, null);
       System.assertEquals(a_scopeId, childSC.id, 'Not successfully reparenting');
+      
+      String jsonString = '[{"scopeId":"' + parentSC.id + '", "displayOrder":"1"},{"scopeId":"' + childSC.id + '", "displayOrder":"2"}]';
+      String statusStr = E2_Estimator_WSManager.updateScopesDisplayOrder(jsonString);
+      System.assertEquals(statusStr, 'success');
+      
       E2_Estimator_WSManager.deleteScope(scopeGroup.Id, E2_Constants.HASH_TAG);    
       String b_scopeId = E2_Estimator_WSManager.deleteScope(childSC.Id, parentSC.Id);
       System.assertEquals(b_scopeId, childSC.id, 'Not successfully deleting');

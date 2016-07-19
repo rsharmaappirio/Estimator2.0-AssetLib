@@ -61,7 +61,7 @@ var loadSpinner = '#loadingSpinner';
 
 
 var jstree_options = {
-    "plugins": ["dnd", "contextmenu", "search"],
+    "plugins": ["dnd", "contextmenu", "search" ],//"sort"],
     'core': {
         'check_callback': true,
         'animation': 200,
@@ -72,6 +72,9 @@ var jstree_options = {
         },
         "multiple": false
     },
+    //'sort' :  function (a, b) {
+   //  return this.get_node(a).original.display_order > this.get_node(b).original.display_order ? 1 : -1;
+   // },
     'checkbox': {
         'three_state': false,
         'cascade': ''
@@ -293,7 +296,7 @@ var bindEvents = function(){
     $(treeId).on("move_node.jstree", function(e, data) {
         AddEditScope.reparent_scope(data.node.id, data.parent);
     });
-
+   
     //EVENT: JSTREE NODE BEING SELECTED
     $(treeId).bind("select_node.jstree", function (e, data) {
         //if(data && data.event && data.event.button != 2) {
@@ -535,15 +538,67 @@ var AddEditScope = {
                 
                 //to refresh scope loe we need to reload jstree
                 global_scopeId = result;
+                
+                
+                //$(loadSpinner).hide();
+                //return;
+                
+                //to handle the re-ordering of scopes (vikash goyal 7/15/2016)
+                // create a json of new order of scopes in the tree hierarchy and send this json to the 
+                // controller to update the position of all the scopes in the tree.
+                var nodes_order_json = '[';
+                $($(treeId).jstree(true).get_json('#', {flat:true})).each(function(index, value){
+                    var position = $.inArray(value.id, $(treeId).jstree().get_node(value.parent).children);
+                    nodes_order_json += '{"scopeId":"' + value.id + '", "displayOrder":"' + position + '"},';
+                });
+                nodes_order_json = nodes_order_json.slice(0, -1);
+                nodes_order_json += ']'
+                // invoke the webservice to update scopes display order 
+                sforce.apex.execute("E2_Estimator_WS", "updateScopesDisplayOrder", {
+                    scopeJsonStr: nodes_order_json
+                }, AddEditScope.updateScopeDisplayOrderCallback);
+                
                 // show success message
-                CustomAlert.show('Scope have been re-parented successfully!!!');
+                //moved to updateScopeDisplayOrderCallback function as it should execute after updating display order at backend  (vikash goyal 7/15/2016)
+                /*CustomAlert.show('Scope have been re-parented successfully!!!');
                 $(loadSpinner).show().css('height', $(document).outerHeight());
                 $(treeId).jstree('destroy');
                 $(treeId).jstree(jstree_options);
-                AddEditScope.tree_init();
+                AddEditScope.tree_init();*/
                 //$(loadSpinner).hide();
                 
             }
+        },
+        onFailure: function(error) {
+            alert(error);
+            $(loadSpinner).hide();
+        }
+    },
+    updateScopeDisplayOrderCallback : {
+        onSuccess: function(result) {
+            result = (result.length > 0 ? result[0] : result);
+            
+            if (result.indexOf('Fail') != -1) {
+                var exception = 'INSUFFICIENT_ACCESS_OR_READONLY';
+                if(result.toLowerCase().indexOf(exception.toLowerCase()) != -1){
+                  CustomAlert.showError('Re-ordering Failed: You do not have permission to re-order this scope!!! Please contact scope owner!!');    
+                }else{
+                  alert(result);
+                }
+                $(loadSpinner).hide();
+                    
+                // call the tree_init back to get the deleted node
+                $(treeId).jstree('destroy');
+                $(treeId).jstree(jstree_options);
+                AddEditScope.tree_init();
+                return;
+            }
+            
+            CustomAlert.show('Scope have been re-parented successfully!!!');
+            $(loadSpinner).show().css('height', $(document).outerHeight());
+            $(treeId).jstree('destroy');
+            $(treeId).jstree(jstree_options);
+            AddEditScope.tree_init();
         },
         onFailure: function(error) {
             alert(error);
@@ -556,6 +611,45 @@ var AddEditScope = {
             estimateId: estimateId
         }, AddEditScope.tree_init_callback);
     },
+    sort_order_new : function(data){
+        var newList = [];
+        var map = {};
+        
+        // load all the parent nodes first
+        for(var indx = data.length - 1; indx >= 0 ; indx--){
+          var node = data[indx];
+          if(node.parent == '#') {     
+        	 newList.push(node);
+        	 map[node.id] = node;
+        	 data.splice(indx, 1);
+          }	 
+        }
+        // sort the list to set the sort order of parent nodes
+        newList.sort(function(a,b) {return (parseInt(a.display_order) > parseInt(b.display_order)) ? 1 : ((parseInt(b.display_order) > parseInt(a.display_order)) ? -1 : 0);} ); 
+        // re-iterate the list for child and sub-child; 
+        /// load in the order of hierarchy.
+        while(data.length > 0){
+          var intermediateList = [];
+          // traverse the data 
+          for(var i_indx = data.length - 1; i_indx >= 0 ; i_indx--){
+             var node = data[i_indx];
+        	 if(typeof map[node.parent] != 'undefined'){
+        	    intermediateList.push(node);
+                data.splice(i_indx, 1);		
+        	 }
+          }  
+          // sort the list to sort the sort order of intermediate list
+          intermediateList.sort(function(a,b) {return (parseInt(a.display_order) > parseInt(b.display_order)) ? 1 : ((parseInt(b.display_order) > parseInt(a.display_order)) ? -1 : 0);} ); 
+          for(var j_indx = 0; j_indx <= intermediateList.length - 1 ; j_indx++){  
+             var node = intermediateList[j_indx];  
+             newList.push(node);
+        	 map[node.id] = node;
+          }
+          // clear the array
+          intermediateList = [];
+        }
+        return newList;
+    },
     sort_order: function(data) {
         var list = {};
         var newlist = [];
@@ -564,7 +658,7 @@ var AddEditScope = {
             list[data[i].id] = data[i];
             keys[i] = data[i].id;
         }
-
+        
         for (var j = keys.length - 1; j >= 0; j--) {
             if (list[keys[j]]) var parent = list[keys[j]].parent;
 
@@ -579,17 +673,23 @@ var AddEditScope = {
         }
         return newlist;
     },
-
+    
     tree_init_callback: {
         onSuccess: function(result) {
             // sort the result to move all the parents up in the list which is very required to load
             // all the child records aligned.
             //doesnt work: result.sort(function(a,b) {return (a.parent > b.parent) ? 1 : ((b.parent > a.parent) ? -1 : 0);} ); 
-            result = AddEditScope.sort_order(result);
-            $.each(result, function(indx, node) {
-                AddEditScope.create_node(node, AddEditScope.LAST);
-            });
+            //result = AddEditScope.sort_order(result);
+            //result.sort(function(a,b) {return (parseInt(a.display_order) > parseInt(b.display_order)) ? 1 : ((parseInt(b.display_order) > parseInt(a.display_order)) ? -1 : 0);} ); 
             
+            result = AddEditScope.sort_order_new(result);
+            //console.log('result====='+result);
+            $.each(result, function(indx, node) {
+                console.log('MI::::' + node.title + '-' + node.display_order);
+                AddEditScope.create_node(node, parseInt(node.display_order));
+            });
+            // clear the result
+            result = [];
             bindEvents();
             
             if(AddEditScope.SAVED_SCOPE_ID != null){

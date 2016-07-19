@@ -322,3 +322,31 @@
 	        	});
 	        	return arr;
 	    	}
+	    	var showhideFavorite = function(favoriteLink) {
+	    	    var  isFav = false;
+	    	    spinner.show();
+	    	    var scopeId = $(favoriteLink).attr('scope-id');
+	    	    if($(favoriteLink).hasClass("nonfavStar")){
+	    	        $(favoriteLink).removeClass("nonfavStar").addClass("favStar");
+	    	        isFav = true;
+	    	    }
+	    	    else{
+    	    	    $(favoriteLink).addClass("nonfavStar").removeClass("favStar");
+    	    	    isFav = false;
+	    	    }
+	    	    addOrRemoveFavScope(scopeId, isFav);
+	    	    return false;
+	    	}
+	    	var hideFavorite = function(favoriteLink) {
+	    	    var  isFav = false;
+	    	    var scopeId = $(favoriteLink).attr('scope-id');
+	    	    
+	    	    if($(favoriteLink).addClass("nonfavStar").removeClass("favStar")){
+	    	        isFav = false;
+	    	    }
+    	    	addOrRemoveFavScope(scopeId, isFav);
+	    	    resetResults();
+	    	    return false;    
+    	    	    
+	    	    }
+	    	    
