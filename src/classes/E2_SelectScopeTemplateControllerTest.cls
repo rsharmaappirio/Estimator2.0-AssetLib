@@ -6,6 +6,7 @@ public class E2_SelectScopeTemplateControllerTest {
   public static Id rtScopeId = E2_RecordTypeClass.getId('E2_Scope__c', E2_Constants.SCOPE_RT_SCOPE);
   public static E2_Scope_Group__c scopeGroup;
   public static User sysAdmin;
+  public static E2_Favourite_Scope__c favSC;
   
   public static testmethod void testSelectScope1(){
     Profile p = [SELECT id from profile where name =: E2_Constants.PROFILE_SYS_ADMIN ];
@@ -16,6 +17,7 @@ public class E2_SelectScopeTemplateControllerTest {
     
     scopeTemplate = [SELECT Id FROM E2_Scope__c WHERE RecordTypeId = :rtTemplateId];
     favScope = [SELECT Id FROM E2_Scope__c WHERE RecordTypeId = :rtScopeId];
+    favSC = [SELECT Id FROM E2_Favourite_Scope__c];
     scopeGroup = [SELECT Id, Name FROM E2_Scope_Group__c];
     System.runAs(sysAdmin){
     Test.startTest();
@@ -78,6 +80,15 @@ public class E2_SelectScopeTemplateControllerTest {
       controller.sortDirection = 'ByDesc';
       controller.sortList();
       
+      controller.selectedScopeId = scopeTemplate.Id;
+      controller.isFavourite = true;
+      controller.addOrRemoveFavScope();
+      system.assertEquals(controller.favScopeList.size(),2);
+      
+      controller.isFavourite = false;
+      controller.addOrRemoveFavScope();
+      system.assertEquals(controller.favScopeList.size(),1);
+      
       controller.resetResults();
 
       Test.stopTest(); 
@@ -108,12 +119,17 @@ public class E2_SelectScopeTemplateControllerTest {
     favScope = E2_Test_Utils.insertScope(false);
     favScope.Presales_LOE__c = estimate.Id;
     favScope.RecordTypeId = rtScopeId;
-    favScope.Is_Favourite__c = true;
+    //favScope.Is_Favourite__c = true;
     favScope.Complexity__c = 'Medium';
     favScope.OwnerId = UserInfo.getUserId();
     favScope.Scope_Group__c = scopeGroup.Id;
     insert favScope;
-    system.debug('====favScope>>' +favScope); 
+    system.debug('====favScope>>' +favScope);
+    
+    favSC = new E2_Favourite_Scope__c();
+    favSC.Scope__c = favScope.Id;
+    favSC.User__c = UserInfo.getUserId();
+    insert favSC; 
     
     
   }

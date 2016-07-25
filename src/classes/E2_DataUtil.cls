@@ -25,7 +25,7 @@ public class E2_DataUtil {
                          E2_Version_Notes__c, Product__c, E2_Reviewer__c, E2_SA__c, Type__c,E2_Last_Build_Datetime__c,
                          E2_Total_Hrs__c, E2_Derived_Effort_Template__c,
                          E2_Total_Strategy_Hrs__c, E2_Total_Plan_Hrs__c, E2_Total_Architect_Hrs__c, E2_Total_Build_Hrs__c, 
-                         E2_Total_Test_Hrs__c, E2_Total_Deploy_Thrive_Hrs__c    
+                         E2_Total_Test_Hrs__c, E2_Total_Deploy_Thrive_Hrs__c, E2_Risk__c     
                     FROM CMC_Presales_LOE__c
                     WHERE Id = :estimateId];
   
@@ -123,7 +123,7 @@ public class E2_DataUtil {
   }
   
   public static List<CMC_Presales_LOE__c> getEstimateDetailForAccess(id estimateId){
-  	return [SELECT ownerId,  Presales_Request__c 
+  	return [SELECT ownerId,  Presales_Request__c, E2_Risk__c
   	        FROM CMC_Presales_LOE__c
   	        WHERE Id = : estimateId];  	
   }
@@ -156,6 +156,21 @@ public class E2_DataUtil {
               Is_Active__c, Is_Favourite__c 
             FROM E2_Scope__c 
             WHERE Id =: scopeId];
-   }
+  }
   
+  public static List<CMC_Asset__c> getRecommendedAssetsForScope(Id scopeId){
+  	List<String> assetIds = new List<String>();
+  	List<CMC_Asset__c> lstAssets = new List<CMC_Asset__c>();
+   	for (E2_Recommended_Asset__c assetRec : [SELECT Asset__c, Scope__c FROM E2_Recommended_Asset__c 
+   																					WHERE Scope__c =: scopeId]){
+   			assetIds.add(assetRec.Asset__c);																			
+   	}
+   	if(assetIds.size() > 0){
+   		lstAssets = [SELECT Name, Short_Description__c, Technologies__c, Asset_Type__c, Asset_SubType__c, Appirio_Services_Practice__c, 
+   								 Primary_Contact_UserId__c, Number_of_Uses__c, Is_Recommended__c
+   								 FROM CMC_Asset__c
+   								 WHERE Id IN :assetIds];
+   	}
+   	return lstAssets; 
+  }
 }

@@ -199,6 +199,66 @@ public class E2_Estimator_WSManager {
         return scopeIdToNodeList;            
     }
     
+    ///
+    public static E2_TreeNodeMap getSelectedScopeNodes(string scopeIdCSV, string estimateId, string parentScopeId){
+        E2_TreeNodeMap scopeIdToNodeList;
+        List<E2_Scope__c> scopeList = new List<E2_Scope__c>();
+        List<E2_TreeNode> nodeList = new List<E2_TreeNode>();
+        parentScopeId = (parentScopeId == null || parentScopeId == E2_Constants.BLANK ? E2_Constants.HASH_TAG : parentScopeId);
+        Id recTypeId = E2_RecordTypeClass.getId(E2_Constants.E2_SCOPE_API_NAME, E2_Constants.SCOPE_RT_SCOPE);
+        boolean hasChildren = false;
+        List<String> scopeIDs = scopeIdCSV.split(',');
+        
+        Map<Id, List<E2_Scope__c>> mapParentScopeIdToChild = new Map<Id, List<E2_Scope__c>>();
+                
+        List<E2_Scope__c> scopeLst = [SELECT Id, Source_Scope__c, Scope_Group__c, Name, 
+                                        Presales_LOE__c, Description__c , LOE_Hrs__c, 
+                                        Complexity__c, Scope_Item_Type__c, Is_Active__c, Scope_Flag__c, E2_Assumption__c,
+                                        Parent_Scope__c, Parent_Scope__r.Parent_Scope__c,  Parent_Scope__r.Parent_Scope__r.Parent_Scope__c,
+                                        Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__c, 
+                                        Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__c,
+                                        (Select Id FROM Child_Scopes__r limit 5), 
+										                    (Select Id FROM Efforts__r limit 1) 
+										                    FROM E2_Scope__c 
+										                    WHERE Parent_Scope__c = :scopeIDs OR Id IN :scopeIDs];
+                                        
+        for(E2_Scope__c sc : scopeLst){
+          if (!mapParentScopeIdToChild.containsKey(sc.Parent_Scope__c)){
+            mapParentScopeIdToChild.put(sc.Id, new list<E2_Scope__c>());
+          }
+          else{
+              mapParentScopeIdToChild.get(sc.Parent_Scope__c).add(sc);
+          } 
+        }
+        system.debug('==mapParentScopeIdToChild>>' +mapParentScopeIdToChild.size()); 
+        
+        for(E2_Scope__c scope : scopeLst){
+          if(mapParentScopeIdToChild.containsKey(parentScopeId)){
+             E2_Scope__c cloneScope = scope.clone(false, true, false, false);
+	           cloneScope.Source_Scope__c = scope.id;
+	           cloneScope.Presales_LOE__c = estimateId;
+	           cloneScope.Parent_Scope__c = (parentScopeId == E2_Constants.HASH_TAG ? null : parentScopeId);
+	           cloneScope.recordTypeId = recTypeId;    
+	           cloneScope.Scope_Group__c = null;                      
+	           scopeList.add(cloneScope);
+	           if(scope.Child_Scopes__r.size() > 0 ||
+	              scope.Efforts__r.size() > 0){
+	              hasChildren = true;
+	           }                                                
+	        }
+        } 
+	        if(!scopeList.isEmpty()){
+	            insert scopeList;        
+	            for(E2_Scope__c scope : scopeList){
+	               nodeList.add(new E2_TreeNode(scope.id, getFormatedScopeNameForFlag(scope, 0), 
+	                                            parentScopeId, hasChildren, 
+	                                            scope.Source_Scope__c));   
+	            }               
+	        }
+        scopeIdToNodeList = new E2_TreeNodeMap(scopeIdCSV, nodeList);
+        return scopeIdToNodeList;												            
+    }
+    
     public static E2_TreeNodeMap getChildCloneNodes(string parentId, string sourceId, string estimateId){
         E2_TreeNodeMap scopeIdToNodeList;
         List<E2_Scope__c> scopeList = new List<E2_Scope__c>();        
@@ -381,6 +441,49 @@ public class E2_Estimator_WSManager {
           return 'Failed: ' + ex.getMessage();
        }    	
     	return 'success';
+    }
+    
+    //Method to get assets based on search string
+    public static List<E2_AssetWrapper> searchAssets(string searchStr, List<string> exisitingAssetIds){
+    	String searchQueryStr = 'FIND \'' + searchStr + '*\' IN ALL FIELDS RETURNING CMC_Asset__c (Name, Short_Description__c, Technologies__c,' +
+	  										 ' Asset_Type__c, Asset_SubType__c, Appirio_Services_Practice__c, Primary_Contact_UserId__c, Number_of_Uses__c, Is_Recommended__c' +
+	  										 ' WHERE Release_Stage__c = \'Active\'';
+	  	
+	  	if(exisitingAssetIds != null && exisitingAssetIds.size() > 0){
+	  		searchQueryStr += ' AND Id NOT IN :exisitingAssetIds';
+	  	}
+			searchQueryStr += ')';
+			
+			List<CMC_Asset__c> listAssets = new List<CMC_Asset__c>();  										 
+	  	
+	  	List<E2_AssetWrapper> lstAssetsWrapper = new List<E2_AssetWrapper>();
+	  	try{
+	  		List<List<SObject>> results = Search.query(searchQueryStr);
+	  		listAssets = (List<CMC_Asset__c>)results[0];
+	  		
+	  		Map<Id, String> mapAssetContributors = new Map<Id, String>();
+	  		
+	  		for(CMC_Asset_Contributor__c assetContibutor : [SELECT Asset__c, Contact__c, Contact__r.Name 
+	  																										FROM CMC_Asset_Contributor__c
+	  																										WHERE Asset__c IN :listAssets AND Primary_Contact__c = true]){
+	  			if(!mapAssetContributors.containsKey(assetContibutor.Asset__c)){
+	  				mapAssetContributors.put(assetContibutor.Asset__c, '');
+	  			}
+	  			String contributors = mapAssetContributors.get(assetContibutor.Asset__c) + assetContibutor.Contact__r.Name;
+	  			mapAssetContributors.put(assetContibutor.Asset__c, contributors);
+	  		}
+	  		
+	  		for(CMC_Asset__c assetRec : listAssets){
+	  			lstAssetsWrapper.add(new E2_AssetWrapper(searchStr, assetRec.Id, assetRec.Name, assetRec.Short_Description__c, 
+	  											mapAssetContributors.get(assetRec.Id), assetRec.Technologies__c, assetRec.Asset_Type__c, assetRec.Asset_SubType__c, 
+	  											assetRec.Appirio_Services_Practice__c, assetRec.Number_of_Uses__c, assetRec.Is_Recommended__c));
+	  		}
+	  		
+	  	}catch(Exception ex){
+          return null;
+      } 
+	  	
+	  	return lstAssetsWrapper;
     }
     
     public class ScopeWrapper{

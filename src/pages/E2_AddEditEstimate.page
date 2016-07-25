@@ -110,14 +110,6 @@
                      </div>
                   </div>
               </td>
-              <td class="slds-truncate" style="vertical-align: top">
-                <div class="slds-form-element">
-                     <label class="slds-form-element__label" for="text-input-02">Is Primary</label>
-                     <div class="slds-form-element__control">
-                        <apex:inputField id="text-input-02" value="{!estimate.E2_Is_Primary__c}"/>
-                     </div>
-                  </div>
-              </td>
             </tr>
             <tr>
               <td class="slds-truncate" style="vertical-align: top">
@@ -137,6 +129,16 @@
                   </div>
               </td>
               <td class="slds-truncate" style="vertical-align: top">
+                <div class="slds-form-element">
+                     <label class="slds-form-element__label" for="text-input-02">Is Primary</label>
+                     <div class="slds-form-element__control">
+                        <apex:inputField id="text-input-02" value="{!estimate.E2_Is_Primary__c}"/>
+                     </div>
+                  </div>
+              </td>
+              </tr>
+              <tr>
+              <td class="slds-truncate" style="vertical-align: top">
                   <div class="slds-form-element">
                      <label class="slds-form-element__label" for="text-input-12">Version Notes</label>
                      <div class="slds-form-element__control" >
@@ -152,10 +154,14 @@
                      </div>
                   </div>
               </td>
-                         
-            </tr>  
-            <tr>
-          
+              <td class="slds-truncate" style="vertical-align: top">
+                  <div class="slds-form-element ">
+                     <label class="slds-form-element__label" for="text-input-14">Risk %</label>
+                     <div class="slds-form-element__control">
+                        <apex:inputfield id="text-input-14"   styleClass="slds-select text-input-14" html-placeholder="Risk" value="{!estimate.E2_Risk__c}" />
+                     </div>
+                  </div>
+              </td>           
             </tr>           
             <tr>
                <td class="slds-truncate" colspan="4" style="vertical-align: top">
@@ -312,6 +318,7 @@
          <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Total_Build_Hrs__c}"/>
          <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Total_Deploy_Thrive_Hrs__c}"/> 
          <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Last_Build_Datetime__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Risk__c}"/>
          </apex:form>
       </apex:define>
       <apex:define name="footer">

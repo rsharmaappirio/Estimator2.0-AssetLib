@@ -16,7 +16,10 @@ public with sharing class E2_EditScopeController {
     public string estimateId{get;set;}
     public string dmlOperationMessage{get;set;}
     public string errorMessage{get;set;}
-
+    
+    public List<CMC_Asset__c> lstExistingAssets {get;set;}    
+    public String allAssets {get;set;}
+		public set<String> existingAssetIds {get;set;}
 
     public E2_EditScopeController(ApexPages.StandardController std) {
        // constructor for the page tied to standard controller	
@@ -25,6 +28,10 @@ public with sharing class E2_EditScopeController {
        this.is_View = false;       
        this.dmlOperationMessage = E2_Constants.DML_OPERATION_MESSAGE_FAIL;
        this.errorMessage = E2_constants.BLANK;
+       
+       allAssets = '';
+       lstExistingAssets = new List<CMC_Asset__c>();
+       existingAssetIds = new Set<String>();
     }
 
     public PageReference pageAction(){
@@ -46,10 +53,20 @@ public with sharing class E2_EditScopeController {
         List<E2_Effort__c> effortsToDelete = new List<E2_Effort__c>();
         List<E2_Favourite_Scope__c> fscLstToInsert = new List<E2_Favourite_Scope__c>();
         List<E2_Favourite_Scope__c> fscLstToDelete = new List<E2_Favourite_Scope__c>();  
-              
+        Map<String,E2_Favourite_Scope__c> favScopes = new Map<String,E2_Favourite_Scope__c>();
+        for(E2_Favourite_Scope__c favSC : [SELECT Id,Unique_Scope_User_Id__c FROM E2_Favourite_Scope__c WHERE User__c =: UserInfo.getUserId()]) {
+            favScopes.put(favSC.Unique_Scope_User_Id__c, favSC);
+        }
         Scope masterScope;
         this.errorMessage = E2_Constants.BLANK;        
         Id recTypeId = E2_RecordTypeClass.getId(E2_Constants.E2_SCOPE_API_NAME, E2_Constants.SCOPE_RT_SCOPE);
+        
+        List<E2_Recommended_Asset__c> assetsToInsert = new List<E2_Recommended_Asset__c>();
+        for(String assetId : allAssets.split(',')){
+        	if(!existingAssetIds.contains(assetId.trim())){
+        		assetsToInsert.add(new E2_Recommended_Asset__c(Scope__c = this.scope.id, Asset__c = assetId));
+        	}
+        } 
         
         // Create a savepoint 
         Savepoint sp = Database.setSavepoint();
@@ -57,22 +74,17 @@ public with sharing class E2_EditScopeController {
         for(Scope sc : childScopes){
         	if(sc.isDeleted == false){                
                 scopeListToUpsert.add(sc.scope);
-                if(sc.scope.Is_Favourite__c == true){
+                String uniqueKey = sc.scope.Id +'-'+ UserInfo.getUserId();
+                if(sc.scope.Is_Favourite__c == true && !favScopes.containsKey(uniqueKey)){
                   E2_Favourite_Scope__c favSC = new E2_Favourite_Scope__c();
-			            favSC.Scope__c = sc.scope.Id;
-			            favSC.User__c = UserInfo.getUserId();
-			            favSC.Unique_Scope_User_Id__c = favSC.Scope__c +'-'+ favSC.User__c;
-			            fscLstToInsert.add(favSC);
+			      favSC.Scope__c = sc.scope.Id;
+			      favSC.User__c = UserInfo.getUserId();
+			      favSC.Unique_Scope_User_Id__c = uniqueKey;
+			      fscLstToInsert.add(favSC);
                 }
-                else if(sc.scope.Is_Favourite__c == false){
-				          List<E2_Favourite_Scope__c> favSCLst = [SELECT Id, Scope__c, User__c, Unique_Scope_User_Id__c 
-				                                                  FROM E2_Favourite_Scope__c WHERE Scope__c =: sc.scope.Id
-				                                                  ] ;
-				          for(E2_Favourite_Scope__c fsc : favSCLst){                                
-				            fscLstToDelete.add(fsc);
-				          }
-				           
-				        }
+                else if(sc.scope.Is_Favourite__c == false && favScopes.containsKey(uniqueKey)){
+				    fscLstToDelete.add(favScopes.get(uniqueKey));
+				}
         	} else {
         		scopeListToDelete.add(sc.scope);
         	}
@@ -82,7 +94,7 @@ public with sharing class E2_EditScopeController {
         try{       
            system.debug('>>>>>SIZE>>>>' + scopeListToUpsert.size()); 
            if(!fscLstToInsert.isEmpty()){
-              insert fscLstToInsert;
+              upsert fscLstToInsert;
            }
            if(!fscLstToDelete.isEmpty()){
               delete fscLstToDelete;
@@ -128,6 +140,10 @@ public with sharing class E2_EditScopeController {
             if(!masterScope_Efforts.isEmpty()){
                 upsert masterScope_Efforts;
             }
+            
+            if(assetsToInsert.size() > 0){
+            	insert assetsToInsert;
+            }
         }catch(Exception ex){
             Database.rollback(sp);
             resetChildScopesOnException(); 
@@ -164,6 +180,15 @@ public with sharing class E2_EditScopeController {
         Id scopeId = this.scope.id;        
         for(E2_Scope__c scope : E2_DataUtil.getScopeAndChildrenOnScopeIdForEditScope(scopeId)){                
                this.childScopes.add(new Scope(scope, scope.Efforts__r));
+        }
+        
+        lstExistingAssets = E2_DataUtil.getRecommendedAssetsForScope(scopeId);
+        for(CMC_Asset__c asset : lstExistingAssets){
+        	allAssets += asset.id + ',';
+        	existingAssetIds.add(asset.Id);
+        }
+        if(allAssets != '' && allAssets.endsWith(',')){
+        	allAssets = allAssets.removeEnd(',');
         } 
     }
     

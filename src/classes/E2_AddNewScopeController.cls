@@ -105,6 +105,12 @@ public with sharing class E2_AddNewScopeController {
         List<E2_Effort__c> masterScope_Efforts = new List<E2_Effort__c>();        
         List<E2_Scope__c> scopeListToDelete = new List<E2_Scope__c>();
         List<E2_Effort__c> effortsToDelete = new List<E2_Effort__c>();
+        List<E2_Favourite_Scope__c> fscLstToInsert = new List<E2_Favourite_Scope__c>();
+        List<E2_Favourite_Scope__c> fscLstToDelete = new List<E2_Favourite_Scope__c>();  
+        Map<String,E2_Favourite_Scope__c> favScopes = new Map<String,E2_Favourite_Scope__c>();
+        for(E2_Favourite_Scope__c favSC : [SELECT Id,Unique_Scope_User_Id__c FROM E2_Favourite_Scope__c WHERE User__c =: UserInfo.getUserId()]) {
+            favScopes.put(favSC.Unique_Scope_User_Id__c, favSC);
+        }
         
         Scope masterScope;
         ApexPages.Message msg;
@@ -125,7 +131,18 @@ public with sharing class E2_AddNewScopeController {
                 sc.scope.Presales_LOE__c = estimateId;
                 if(this.scope.id <> NULL){
                     sc.scope.parent_scope__c = this.scope.id; 
-                    this.is_Edit = true;                 
+                    this.is_Edit = true; 
+                    String uniqueKey = sc.scope.Id +'-'+ UserInfo.getUserId();
+		                if(sc.scope.Is_Favourite__c == true && !favScopes.containsKey(uniqueKey)){
+		                  E2_Favourite_Scope__c favSC = new E2_Favourite_Scope__c();
+					            favSC.Scope__c = sc.scope.Id;
+					            favSC.User__c = UserInfo.getUserId();
+					            favSC.Unique_Scope_User_Id__c = uniqueKey;
+					            fscLstToInsert.add(favSC);
+		                }
+		                else if(sc.scope.Is_Favourite__c == false && favScopes.containsKey(uniqueKey)){
+						            fscLstToDelete.add(favScopes.get(uniqueKey));
+						        }                
                 }
                 if(sc.scope.Id == null ){
                     sc.scope.Is_Active__c = true;
@@ -144,7 +161,12 @@ public with sharing class E2_AddNewScopeController {
         
         try{       
            system.debug('>>>>>SIZE>>>>' + scopeListToUpsert.size()); 
-             
+           if(!fscLstToInsert.isEmpty()){
+              upsert fscLstToInsert;
+           }
+           if(!fscLstToDelete.isEmpty()){
+              delete fscLstToDelete;
+           }  
            if(!scopeListToUpsert.isEmpty()) upsert scopeListToUpsert;
         }catch(Exception ex){
             Database.rollback(sp);

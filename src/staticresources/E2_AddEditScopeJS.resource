@@ -3,6 +3,16 @@ var CustomAlert = {
     notifyCloseCssSelector: '.slds-notify__close',
     notifyMsgCssSelector: '.slds-text-heading--small',
     notifyTypeCssDiv: '#sldsalertdiv',
+    notifyEditContainer: '.slds-edit-alert',
+    notifyEditContainerbackdrop: '.slds-edit-alert-backdrop',
+    showEdit: function() {
+        $(CustomAlert.notifyEditContainerbackdrop).show();
+        $(CustomAlert.notifyEditContainer).show();
+    },
+    hideEdit: function() {
+        $(CustomAlert.notifyEditContainer).hide();
+        $(CustomAlert.notifyEditContainerbackdrop).hide();
+    },
     show: function(msg) {
         $(CustomAlert.notifyContainerCssSelector).css({
             position: 'absolute !important',
@@ -300,9 +310,15 @@ var bindEvents = function(){
     //EVENT: JSTREE NODE BEING SELECTED
     $(treeId).bind("select_node.jstree", function (e, data) {
         //if(data && data.event && data.event.button != 2) {
-        global_scopeId = data.node.id;
-        AddEditScope.edit_node(data.node, data.parent);   
-        tabpanel.showDetailTab();
+        var IFRAME_KEY = global_scopeId + AddEditScope.ENDS_WITH;
+        if(!document.getElementById(IFRAME_KEY) || !document.getElementById(IFRAME_KEY).contentWindow.mrak_page_updated.showalert()) {
+            global_scopeId = data.node.id;
+            AddEditScope.edit_node(data.node, data.parent);   
+            tabpanel.showDetailTab();
+        } else {
+            $(treeId).jstree("deselect_node", data.node.id);
+            $(treeId).jstree("select_node", global_scopeId);
+        }
         //} 
     });
 }
@@ -321,11 +337,30 @@ var AddEditScope = {
     ENDS_WITH : 'editframe', 
     SAVED_SCOPE_ID : null,
     SAVED_SCOPE_NAME : null,
+    SELECTED_NODE : '',
     reload_Scope_frame : function(result) {
         $.each(result, function(indx, scope) {
             var frame_id = '#' + scope + AddEditScope.ENDS_WITH;
             if($(frame_id).length) $(frame_id).attr("src", function(){ return $(this).attr("src")});
         });
+    },
+    show_iframe_alert : function(id) {
+        var showalert  = document.getElementById(id).contentWindow.mrak_page_updated.showalert();
+        console.log(showalert);
+        if(showalert) {
+            SELECTED_NODE = id;
+            CustomAlert.showEdit();
+        } 
+    },
+    save_edit_scope : function() {
+        $('#'+SELECTED_NODE).focus();
+        document.getElementById(SELECTED_NODE).contentWindow.mrak_page_updated.save_scope();
+        CustomAlert.hideEdit();
+    },
+    cancel_scope_save : function() {
+        $('#'+SELECTED_NODE).focus();
+        document.getElementById(SELECTED_NODE).contentWindow.mrak_page_updated.markchecked();
+        CustomAlert.hideEdit();
     },
     edit_node : function(node, parent){
 	   var endsWith = AddEditScope.ENDS_WITH;
@@ -344,7 +379,8 @@ var AddEditScope = {
 		           var doc = $(document.getElementById(frame_id_standard).contentWindow.document);
 		           //IE - check the height of content window document with an interval using setTimeout
 		           setTimeout(function(){
-		             $(frame_id).css({ 'min-height':'400px', 'width':'100%', 'margin':'0px', 'height' : doc.outerHeight()});  
+		             $(frame_id).css({ 'min-height':'400px', 'width':'100%', 'margin':'0px', 'height' : doc.outerHeight()});
+		             $(frame_id).focus();
 		           }, 500);
 		           //$(frame_id).css({ 'min-height':'400px', 'width':'100%', 'margin':'0px', 'height' : doc.outerHeight()});
 		           
@@ -353,9 +389,10 @@ var AddEditScope = {
     			   $(frame_id).show("slow", function() {
     				   // whenever element is shown again; re-set the height with the dom content
     				   $(this).css({ 'min-height':'400px',width:'100%',margin:'0px', height : $(this.contentWindow.document).height()});
+    				   $(frame_id).focus();
     			   });
-    			   
 		       }
+		       
 		   }else{
 			   $('<iframe>', {
 				   src: '/apex/E2_EditScope?estimate_id=' + estimateId + '&id=' + node.id,
@@ -365,8 +402,14 @@ var AddEditScope = {
 				   scrolling: 'no',
 				   style : 'min-height:471px;width:100%;margin:0px',
 				   class : 'slds-card'
-				   }).appendTo(containerId);			   
+				   }).appendTo(containerId);
 		   }
+		   $(document.getElementById(frame_id_standard).contentWindow).on( 'blur', function( e ) {
+			    if(e.target.document.activeElement.getAttribute("class") == null || 
+			        e.target.document.activeElement.getAttribute("class").indexOf("cke_wysiwyg_frame") == -1) {
+				    AddEditScope.show_iframe_alert(frame_id_standard);
+				}
+			});
 		   
 	   }
 	   

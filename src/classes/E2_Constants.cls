@@ -91,5 +91,6 @@ public class E2_Constants {
   public final static string SCOPE_CSV_HEADER = '"Scope Name","Parent Scope Name","Complexity","Scope Item Type","Description","Assumption","LOE Hrs"';
   public final static string SCOPE_XLS_HEADER = '<tr><td>Scope Name</td><td>Parent Scope Name</td><td>Complexity</td><td>Scope Item Type</td><td>Description</td><td>Assumption</td><td>LOE Hrs</td></tr>';
   
+  public final static string PERCENTAGE = '%';
   public void testConstantsMethod(){}
 }

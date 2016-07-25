@@ -163,6 +163,14 @@
         <fields>NAME</fields>
         <relatedList>E2_Favourite_Scope__c.Scope__c</relatedList>
     </relatedLists>
+    <relatedLists>
+        <fields>NAME</fields>
+        <relatedList>E2_Question__c.Scope__c</relatedList>
+    </relatedLists>
+    <relatedLists>
+        <fields>NAME</fields>
+        <relatedList>E2_Action_Scope__c.Scope__c</relatedList>
+    </relatedLists>
     <relatedObjects>Parent_Scope__c</relatedObjects>
     <relatedObjects>Scope_Group__c</relatedObjects>
     <relatedObjects>Presales_LOE__c</relatedObjects>

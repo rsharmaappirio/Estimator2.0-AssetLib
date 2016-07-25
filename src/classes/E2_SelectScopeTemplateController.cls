@@ -29,7 +29,7 @@ public with sharing class E2_SelectScopeTemplateController {
   
   public boolean isTemplatePage{get;set;}
   public Boolean isFavourite {get;set;}
-  public string selectedScopeId {get;set;}
+  public Id selectedScopeId {get;set;}
   
   public String sortDirection = 'ByAsc'; //Sort Order
   public String sortExp = 'ByScopeName'; //initial sort field
@@ -249,7 +249,7 @@ public with sharing class E2_SelectScopeTemplateController {
 		        } 
 		  	}
 	 	}  
-      	pageAction();
+      	searchScopeRecords();
       }catch(Exception ex){
         ApexPages.addMessage(new ApexPages.Message(ApexPages.SEVERITY.Error, ex.getMessage()));
         return null;

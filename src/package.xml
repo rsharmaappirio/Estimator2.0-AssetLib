@@ -87,6 +87,7 @@
         <members>CMC_Presales_LOE__c.E2_Last_Build_Datetime__c</members>
         <members>CMC_Presales_LOE__c.E2_Last_Build_Datetime__c</members>
         <members>CMC_Presales_LOE__c.E2_Reviewer__c</members>
+        <members>CMC_Presales_LOE__c.E2_Risk__c</members>
         <members>CMC_Presales_LOE__c.E2_SA__c</members>
         <members>CMC_Presales_LOE__c.E2_Total_Architect_Hrs__c</members>
         <members>CMC_Presales_LOE__c.E2_Total_Build_Hrs__c</members>

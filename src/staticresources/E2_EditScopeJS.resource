@@ -138,7 +138,7 @@ var ck_custom_editor = {
 		      var id = $(this).attr('id');
 		      id = id.replace('assumptiontext', 'assumptionRtext');
 		      ck_custom_editor.editorShow(id);	
-		      CKEDITOR.instances[id].focus();   
+		      //CKEDITOR.instances[id].focus();   
 		      $(this).hide();
 		    });
 	   } else {
@@ -146,10 +146,21 @@ var ck_custom_editor = {
 		      var id = $(this).attr('id');
 		      id = id.replace('outputtext', 'richtext');
 		      ck_custom_editor.editorShow(id);	
-		      CKEDITOR.instances[id].focus();   
+		      //CKEDITOR.instances[id].focus();   
 		      $(this).hide();
 		    }); 
 	    }
+	    CKEDITOR.instances[_a].on('focus',function(e){
+            if(parent && parent.AddEditScope) {
+                var frameId = scope_sfdc_id + parent.AddEditScope.ENDS_WITH;
+                if(!parent.document.getElementById(frameId).hasFocus()) {
+                    parent.document.getElementById(frameId).focus();
+                }
+              }
+        });
+	    CKEDITOR.instances[_a].on( 'change', function(e) {		    
+		    mrak_page_updated.is_updated = true;
+		});
 	 }
    }	   
   },
@@ -188,6 +199,111 @@ var flag_controller = {
     }
 }
 
+//var searchKey = '';
+var typeahead_input = {
+    searchKey : '',
+    resourceUrl : '',
+    selectedAssets : [],    
+    load : function(){
+        $('.Typeahead-input').typeahead({
+            hint: $('.Typeahead-hint'),
+            menu: $('.Typeahead-menu'),
+            highlight: true,    
+            minLength: 3,
+            classNames: {
+              open: 'is-open',
+              empty: 'is-empty',
+              cursor: 'is-active',
+              suggestion: 'Typeahead-suggestion',
+              selectable: 'Typeahead-selectable'
+            }
+        },
+        {
+            name: 'assets',
+            displayKey: 'name',
+            source: function(query, syncResults, asyncResults){
+                typeahead_input.searchKey = query;
+                sforce.apex.execute("E2_Estimator_WS", "searchAssets", {
+                    searchStr: query, exisitingAssetIds : typeahead_input.selectedAssets}, function(result){
+                        if(result.length > 0) {
+                          console.log(result);
+                          console.log(typeahead_input.searchKey+' == '+result[0].searchKey);
+                          if(typeahead_input.searchKey == result[0].searchKey) 
+                            asyncResults(result);
+                        }
+                        else{
+                        		 $('.Typeahead-spinner').hide();
+                        }
+                });
+            },
+            templates: {
+                suggestion: function(data){
+                    return typeahead_input.prepareSuggestionTemplate(data);
+                },
+                notFound : function(){
+                    console.log('===in==');
+                    return '<div class="EmptyMessage">Your search turned up 0 results.</div>';
+                }
+                
+            }
+        })
+        .on('typeahead:select', function(ev, suggestion) {
+            console.log('suggestion----', suggestion);
+            typeahead_input.addRowToTable(suggestion);
+            typeahead_input.selectedAssets.push(suggestion.id);
+            $("input[Id$='existingAssetIds']").val(typeahead_input.selectedAssets);
+        })
+        .on('typeahead:asyncrequest', function() {
+            $('.Typeahead-spinner').show();
+        })
+        .on('typeahead:asynccancel typeahead:asyncreceive', function() {        		
+            $('.Typeahead-spinner').hide();
+        });
+    },
+    
+    prepareSuggestionTemplate : function(data){
+                    //var resUrl = {!$Resource.E2_SLDS1}; 
+                    console.log(typeahead_input.resourceUrl);
+                    var returnHtmlStr = '<div class = "ProfileCard u-cf"><img class="ProfileCard-avatar" src="' + typeahead_input.resourceUrl + '/assets/icons/standard/note_60.png"/>';
+                    returnHtmlStr += '<div class="ProfileCard-details"><div class="ProfileCard-realName"><a onclick="typeahead_input.goToAssetDetailPage(event, this);" href="/' + data.id + '" target="_blank">'+ data.assetName + '</a> <span class="slds-badge">' + data.assetUsage + '</span>';
+                    returnHtmlStr += '<span style="margin-left: 5px; background-color:#FA9500;" class="slds-badge">Recommended</span></div>'; //TBD add condition
+                    returnHtmlStr += '<div class="ProfileCard-description">' + data.description + '</div></div>';
+                    returnHtmlStr += '<div class="ProfileCard-stats"><div class="ProfileCard-stat"><span class="ProfileCard-stat-label">Primary Contributor : </span>' + data.primaryContributors + '</div>';
+                    returnHtmlStr += '<div class="ProfileCard-stat"><span class="ProfileCard-stat-label">Technologies : </span>' + data.technologies + '</div></div></div>';
+                    return returnHtmlStr;
+    },
+    
+    addRowToTable : function(suggestion){
+        var tableRowStr = '<tr id="' + suggestion.id + '"><td class="slds-truncate whitespace_normal">' + suggestion.assetName + '</td>';
+        tableRowStr += '<td class="slds-truncate whitespace_normal">' + suggestion.description + '</td>';
+        tableRowStr += '<td class="slds-truncate whitespace_normal">' + suggestion.technologies + '</td>';
+        tableRowStr += '<td class="slds-cell-shrink" data-label="Actions"><a onclick="typeahead_input.removeAssetRow(\''+ suggestion.id + '\');return false" class="delete_button slds-button--right--float"/></td></tr>';    
+        $("#RecommendedAssetsTable tbody").append(tableRowStr);
+    },
+    
+    goToAssetDetailPage : function(event, element){
+    		console.log(event);
+    		console.log(element);
+    		// Don't propogate the event to the document
+	      if (event.stopPropagation) {
+	          event.stopPropagation();   // W3C model
+	      } else {
+	          event.cancelBubble = true; // IE model
+	      }  
+	      
+    },
+    
+    removeAssetRow : function(rowId){
+        console.log(rowId);
+        $('#'+rowId).remove();
+        
+        typeahead_input.selectedAssets = $.grep(typeahead_input.selectedAssets, function(value) {
+          return value != rowId;
+        });
+        
+        $("input[Id$='existingAssetIds']").val(typeahead_input.selectedAssets);
+    }
+}
 
 
 $( document ).ready(function() {
@@ -229,7 +345,8 @@ $( document ).ready(function() {
         	$(this).closest(".effortsColumn").find("div.override-reason").hide();
         }
         resetIframeHeight();
-	});    
+	});  
+	mrak_page_updated.load();
 });
 
 var resetIframeHeight = function(){
@@ -254,15 +371,19 @@ function showSpinner(){
 
 
 var addUpdateScopes = function(){
+  mrak_page_updated.save_trigged = true;
   var validate1 = validateScopes();
   var validate2 = validateData();
   if(validate1 == false || validate2 == false){
     return false;
   }
   
-  try{    
+  try{
     showSpinner();
     AddOrUpdate();
+    $(".slds-change-notification").hide();
+    mrak_page_updated.is_updated = false;
+    mrak_page_updated.message_shown = false;
   }catch(ex){
     alert(ex);
   }
@@ -442,5 +563,54 @@ var toggleActions = function(jqObj, slide){
     }
     
     //jqObj.closest('tr').prev('tr').find('input.reloadbtn').click();
+    
+}
+var mrak_page_updated = {
+    is_updated : false,
+    message_shown : false,
+    save_trigged: false,
+    
+    load : function() {
+        $("input").bind('focus',function(e){
+            if(parent && parent.AddEditScope) {
+                var frameId = scope_sfdc_id + parent.AddEditScope.ENDS_WITH;
+                if(!parent.document.getElementById(frameId).hasFocus()) {
+                    parent.document.getElementById(frameId).focus();
+                }
+              }
+        });
+        $("select").bind('focus',function(e){
+            if(parent && parent.AddEditScope) {
+                var frameId = scope_sfdc_id + parent.AddEditScope.ENDS_WITH;
+                if(!parent.document.getElementById(frameId).hasFocus()) {
+                    parent.document.getElementById(frameId).focus();
+                }
+              }
+        });
+        
+        $("input").bind('change',function(e){
+           mrak_page_updated.is_updated = true; 
+           mrak_page_updated.save_trigged = false;
+        });
+        $("select").bind('change',function(e){
+           mrak_page_updated.is_updated = true; 
+           mrak_page_updated.save_trigged = false;
+        });
+    },
+    showalert : function() {
+        if(mrak_page_updated.is_updated && !mrak_page_updated.message_shown && !mrak_page_updated.save_trigged) {
+            return true;
+        }
+        return false;
+    },
+    markchecked : function() {
+        mrak_page_updated.message_shown = true;
+        $(".slds-change-notification").show();
+    },
+    save_scope : function() {
+        mrak_page_updated.message_shown = false;
+        mrak_page_updated.is_updated = false;
+        addUpdateScopes();
+    }
     
 }

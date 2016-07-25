@@ -45,6 +45,7 @@ public class E2_DataUtilTest {
             system.assertEquals(E2_DataUtil.getEstimateDetailForAccess(estimate.Id).size(), 1);
             system.assertEquals(E2_DataUtil.getDerivedEffortGroupById(derEffGroup.Id).size(), 1);
             system.assertEquals(E2_DataUtil.getAllDerivedEffort(derEffGroup.Id).size(), 3);
+            List<E2_Derived_Effort_Group__c> derEffGrpList = E2_DataUtil.getDerivedEffortGroupById(derEffGroup.Id);
             List<E2_Scope_Group__c> scopeGrpList = E2_DataUtil.getAllScopeGroups();
             system.assertEquals(E2_DataUtil.getScopeRecordsWithChildForChildScopeIds(childScopeIds).size(), 1);
             system.assertEquals(E2_DataUtil.getEffortsOnEstimateIds(estimateIds).size(), 1);

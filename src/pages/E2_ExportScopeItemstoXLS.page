@@ -1,18 +1,62 @@
-<apex:page StandardController="CMC_Presales_LOE__c" extensions="E2_ExportScopeItemsToCSVController" action="{!pageAction}" readOnly="true" contentType="application/vnd.ms-excel#{!SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(CMC_Presales_LOE__c.Name,' ','_'),',',''),';',''),'#','')}.xls">
+<apex:page StandardController="CMC_Presales_LOE__c" extensions="E2_ExportScopeItemsToCSVController" action="{!pageAction}" 
+readOnly="true" applyHtmlTag="false" applyBodyTag="false" showHeader="false" 
+contentType="application/vnd.ms-excel#{!SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(CMC_Presales_LOE__c.Name,' ','_'),',',''),';',''),'#','')}.xls">
+<html>
+<head>
+<META http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+</head>
+<body>
 <table border="1">
-<apex:outputText escape="true">
-{!headerXLS}
-</apex:outputText>
+<thead>
+<apex:outputText escape="false" value="{!headerXLS}" />
+</thead>
+<tbody>
 <apex:repeat value="{!lstScopeWrapper}" var="scope">
 <tr>
-	<td>{!scope.scopeName}</td>
-	<td>{!scope.parentScope}</td>
-	<td>{!scope.complexity}</td>
-	<td>{!scope.scopeItemtype}</td>
-	<td>{!scope.description}</td>
-	<td>{!scope.assumption}</td>
-	<td>{!scope.loeHrs}</td>
+    <td>{!scope.scopeName}</td>
+    <td>{!scope.parentScope}</td>
+    <td>{!scope.complexity}</td>
+    <td>{!scope.scopeItemtype}</td>
+    <td><apex:outputtext escape="false" value="{!scope.description}"/></td>
+    <td><apex:outputtext escape="false" value="{!scope.assumption}"/></td>
+    <td>{!scope.loeHrs}</td>
 </tr>
 </apex:repeat>
+</tbody>
 </table>
+
+<!--
+<apex:outputText value="{!xlsHeader}"/>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:html="http://www.w3.org/TR/REC-html40">
+ <Styles>
+ <Style ss:ID="s1">
+ <Alignment/>
+ <Borders/>
+ <Font ss:Bold="1"/>
+ <Interior/>
+ <NumberFormat/>
+ <Protection/>
+ </Style>
+ </Styles>
+ <Worksheet ss:Name="Scopes">
+ <Table x:FullColumns="1" x:FullRows="1">
+ <Column ss:Width="170"/>
+ <Row>
+ <Cell ss:StyleID="s1"><Data ss:Type="String" >Account Name</Data></Cell>
+ </Row>
+ <apex:repeat value="{!lstScopeWrapper}" var="scope">
+ <Row>
+ <Cell><Data ss:Type="String">{!scope.scopeName}</Data></Cell>
+ </Row>
+ </apex:repeat>
+ </Table>
+ </Worksheet> 
+</Workbook>
+-->
+</body>
+</html>
 </apex:page>

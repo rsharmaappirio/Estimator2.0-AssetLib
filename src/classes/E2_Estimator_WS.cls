@@ -67,4 +67,9 @@ global with sharing class E2_Estimator_WS {
     webservice static string updateScopesDisplayOrder(string scopeJsonStr){
         return E2_Estimator_WSManager.updateScopesDisplayOrder(scopeJsonStr);
     }
+    
+    //Method to get asset records
+    webservice static List<E2_AssetWrapper> searchAssets(string searchStr, List<string> exisitingAssetIds){
+        return E2_Estimator_WSManager.searchAssets(searchStr, exisitingAssetIds);
+    }
 }

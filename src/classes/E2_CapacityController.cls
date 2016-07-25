@@ -60,6 +60,9 @@ public with sharing class E2_CapacityController extends E2_Master{
     calculateSpecifiedEfforts(estimate, rolePhaseCapacityMatrix);
     calculateDerivedEfforts(estimate, rolePhaseCapacityMatrix);
     if(!rolePhaseCapacityMatrix.isEmpty()) {
+    	// T-522009 : Method to add Risk Factor in total capacity
+    	addRiskFactor(estimate, rolePhaseCapacityMatrix);
+    	// T-522009 : End
         insert rolePhaseCapacityMatrix.values();
     }
     estimate.E2_Last_Build_Datetime__c = System.now();
@@ -99,7 +102,7 @@ public with sharing class E2_CapacityController extends E2_Master{
   public static void calculateDerivedEfforts(CMC_Presales_LOE__c estimate,
                                     Map<String, E2_Capacity__c> rolePhaseCapacityMatrix){
     if(estimate.E2_Derived_Effort_Template__c <> NULL) { 
-        Map<String, Decimal> roleToHrs = new Map<String, Decimal>();
+    	Map<String, Decimal> roleToHrs = new Map<String, Decimal>();
         List<E2_Derived_Effort__c> derivedEffortsTemplate = 
                                     E2_DataUtil.getDerivedEffort(estimate.E2_Derived_Effort_Template__c);
         E2_Estimator_Manager.generateDerivedHours(estimate.Id, derivedEffortsTemplate);
@@ -129,14 +132,29 @@ public with sharing class E2_CapacityController extends E2_Master{
                                                                                 Estimator__c = estimate.id,
                                                                                 Role__c = dE.Role__c, 
                                                                                 Phase__c = dE.To_Phase__c));    
+                   system.debug('==rolePhaseCapacityMatrix>>'+rolePhaseCapacityMatrix.values());                                                             
                 }
                 E2_Capacity__c capacity = rolePhaseCapacityMatrix.get(rolePhaseKey);
-                capacity.Hours__c +=  dE.Derived_Hrs__c;
+                capacity.Hours__c +=  dE.Derived_Hrs__c;  
               }
             }   
         }   
-        }
-    }
+  	}
+  }
+    
+  // T-522009 : Method to add Risk Factor in total capacity
+  public static void addRiskFactor(CMC_Presales_LOE__c estimate,
+                                    Map<String, E2_Capacity__c> rolePhaseCapacityMatrix) {
+  	if(!String.isBlank(estimate.E2_Risk__c)) {
+    	string estimaterisk = estimate.E2_Risk__c;
+        estimaterisk = estimaterisk.replace(E2_Constants.PERCENTAGE, E2_Constants.BLANK);
+        Decimal risk_percent = Decimal.valueOf(estimaterisk);
+        for(E2_Capacity__c capacity : rolePhaseCapacityMatrix.values()) {
+        	Decimal hours = capacity.Hours__c + (risk_percent/100 * capacity.Hours__c);
+            capacity.Hours__c =  hours;	
+       	}            
+   	}
+  }
   
   // Method to create Capacity matrix from E2 Capacity record
   public void calculateHours(){

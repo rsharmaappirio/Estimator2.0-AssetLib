@@ -7,7 +7,8 @@ public class E2_CapacityControllerTest {
     
     System.runAs(sysAdmin){
         Test.startTest();
-            CMC_Presales_LOE__c estimate = [SELECT Id,E2_Last_Build_Datetime__c,E2_Derived_Effort_Template__c FROM CMC_Presales_LOE__c];
+            CMC_Presales_LOE__c estimate = [SELECT Id,E2_Last_Build_Datetime__c,E2_Derived_Effort_Template__c, E2_Risk__c
+                                              FROM CMC_Presales_LOE__c];
             PageReference pageRef = Page.E2_Capacity;
             Test.setCurrentPage(pageRef);
             ApexPages.StandardController stdController = new ApexPages.StandardController(estimate);
@@ -39,7 +40,8 @@ public class E2_CapacityControllerTest {
     Opportunity opp = E2_Test_Utils.insertOpportunity(acc.Id, true);    
     Presales_Request__c psr = E2_Test_Utils.insertPresalesReq(opp.Id, 'Demo', true);
     CMC_Presales_LOE__c estimate = E2_Test_Utils.insertEstimate(psr.Id, false); 
-    estimate.E2_Derived_Effort_Template__c = derivedEffGrp.Id; 
+    estimate.E2_Derived_Effort_Template__c = derivedEffGrp.Id;
+    estimate.E2_Risk__c = '10%'; 
     insert estimate;
     E2_Scope__c scope = E2_Test_Utils.insertScope(false);
     List<E2_Scope__c> scopeLst = new List<E2_Scope__c>();

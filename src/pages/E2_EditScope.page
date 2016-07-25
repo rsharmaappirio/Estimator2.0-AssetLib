@@ -219,6 +219,12 @@
                     margin-bottom: 0;
                     margin-right: 0;
                 }
+                .slds-change-notification {
+                    color:red;
+                    font-weight:bold;
+                    margin-left: 6em;
+                    display:none;
+                }
          </style>
       </head>
       <body>
@@ -253,6 +259,9 @@
                                         <span class="dot dot-green {!If(childScopes[0].scope.Scope_Flag__c = 'Green', 'dot-active', '')}" title="Green"><span class="dot-inner"></span></span>
                                         <span class="dot {!If(ISBLANK(childScopes[0].scope.Scope_Flag__c), 'dot-active', '')}" title=""><span class="dot-inner"></span></span>
                                     </span>    
+                                    <span style="padding-top:6px;">
+                                        <span class="slds-change-notification">You have unsaved items.</span>
+                                    </span>
                                  </div>
                               </div>
                            </div>

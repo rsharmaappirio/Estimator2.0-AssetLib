@@ -153,7 +153,8 @@ public class E2_EditScopeControllerTest {
     
     E2_Scope__c scope1 =  E2_Test_Utils.insertScope(false);
     scope1.recordTypeId = recTypeId1;
-    scope1.Presales_LOE__c = estimate.id;  
+    scope1.Presales_LOE__c = estimate.id; 
+    scope1.Is_Favourite__c = true; 
     insert scope1;  
     
     E2_Effort__c source_effort = E2_Test_Utils.insertEffort(true, scope.Id);
@@ -187,7 +188,7 @@ public class E2_EditScopeControllerTest {
                
       controller.saveScope();     
       System.assertEquals([SELECT Id FROM E2_Scope__c].size(), 2, 'both scopes should not have been removed');
-      
+      system.assertEquals([SELECT Id FROM E2_Favourite_Scope__c WHERE Scope__c =:scope1.Id].size(), 0); 
       controller.childScopes.clear();  
       controller.pageAction();
       System.assertEquals(controller.childScopes.size(), 1, '1 child scope should be added in list'); 

@@ -237,6 +237,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>CMC_Presales_LOE__c.E2_Risk__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>CMC_Presales_LOE__c.E2_SA__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -413,6 +418,11 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>E2_Effort__c.Speciality__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>E2_Favourite_Scope__c.Scope__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>

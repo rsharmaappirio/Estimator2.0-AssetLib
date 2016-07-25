@@ -87,7 +87,8 @@ table tbody tr td.slds-td{
                 </legend>
                 <div class="slds-card">
                     <div class="slds-card__header slds-grid grid--flex-spread">
-                      <h2 class="slds-text-heading--small slds-truncate">Capacity Needs by Role and Phase</h2>
+                      <h2 class="slds-text-heading--small slds-truncate">Capacity Needs by Role and Phase </h2>
+                      
                     </div>
                     <div class="slds-card__body">
                 <table class="slds-table slds-table--bordered slds-max-medium-table--stacked-horizontal slds-no-row-hover">
@@ -251,6 +252,7 @@ table tbody tr td.slds-td{
     <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Total_Hrs__c}"/> 
     <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Derived_Effort_Template__c}"/>   
     <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Last_Build_Datetime__c}"/>
+    <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Risk__c}"/>
 </apex:form>               
         </apex:define>
         <apex:define name="footer">
