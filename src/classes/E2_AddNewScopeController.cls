@@ -122,7 +122,13 @@ public with sharing class E2_AddNewScopeController {
         
         for(Scope sc : childScopes){
            if(sc.isDeleted == true){
-             if(sc.scope.id <> NULL) scopeListToDelete.add(sc.scope); 
+             if(sc.scope.id <> NULL)  {
+             	scopeListToDelete.add(sc.scope); 
+             	String uniqueKey = sc.scope.Id +'-'+ UserInfo.getUserId();
+             	if(favScopes.containsKey(uniqueKey)) {
+					fscLstToDelete.add(favScopes.get(uniqueKey));
+				}
+             }
              continue;
            }
            
