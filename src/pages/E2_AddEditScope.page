@@ -87,18 +87,15 @@
                </div>
             </div>
          </div>
-          <div aria-hidden="false" aria-labelledby="prompt-heading-id" aria-describedby="prompt-message-wrapper" role="alertdialog" 
-                    class="slds-modal slds-modal--prompt slds-fade-in-open slds-edit-alert" style="display:none;">
-            <div class="slds-modal__container slds-modal--prompt" role="document" id="prompt-message-wrapper" tabindex="0">
-              <div class="slds-modal__header slds-theme--error slds-theme--alert-texture" style="padding: 16px 16px!important;">
-                <h2 class="slds-text-heading--small" id="prompt-heading-id">Save Scope</h2>
-              </div>
-              <div class="slds-modal__content slds-p-around--medium">
-                <div>
-                  <p>You have unsaved items. Do you want to save them before moving further?</p>
-                </div>
-              </div>
-              <div class="slds-modal__footer slds-theme--default">
+          <div role="dialog" class="slds-modal slds-fade-in-open slds-edit-alert" style="display:none;">
+            <div class="slds-modal__container" tabindex="0">
+              <div class="slds-modal__header" style="border-bottom:0px!important;">
+                  <h2 class="slds-text-heading--small">Save Scope</h2>
+               </div>
+              <div class="slds-modal__content">
+                     <p style="padding: 10px;">You have unsaved items. Do you want to save them before moving further?</p>
+               </div>
+               <div class="slds-modal__footer">
                 <button class="slds-button slds-button--neutral" onclick="AddEditScope.save_edit_scope();">Save</button>
                 <button class="slds-button slds-button--neutral" onclick="AddEditScope.cancel_scope_save();">Cancel</button>
               </div>

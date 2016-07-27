@@ -17,9 +17,9 @@ public with sharing class E2_EditScopeController {
     public string dmlOperationMessage{get;set;}
     public string errorMessage{get;set;}
     
-    public List<CMC_Asset__c> lstExistingAssets {get;set;}    
-    public String allAssets {get;set;}
-		public set<String> existingAssetIds {get;set;}
+    public List<E2_AssetWrapper> lstExistingAssets {get;set;}    
+    
+	public string assetsRecsJson {get;set;}
 
     public E2_EditScopeController(ApexPages.StandardController std) {
        // constructor for the page tied to standard controller	
@@ -29,9 +29,9 @@ public with sharing class E2_EditScopeController {
        this.dmlOperationMessage = E2_Constants.DML_OPERATION_MESSAGE_FAIL;
        this.errorMessage = E2_constants.BLANK;
        
-       allAssets = '';
-       lstExistingAssets = new List<CMC_Asset__c>();
-       existingAssetIds = new Set<String>();
+       lstExistingAssets = new List<E2_AssetWrapper>();
+       
+       assetsRecsJson = '';
     }
 
     public PageReference pageAction(){
@@ -62,12 +62,21 @@ public with sharing class E2_EditScopeController {
         Id recTypeId = E2_RecordTypeClass.getId(E2_Constants.E2_SCOPE_API_NAME, E2_Constants.SCOPE_RT_SCOPE);
         
         List<E2_Recommended_Asset__c> assetsToInsert = new List<E2_Recommended_Asset__c>();
-        for(String assetId : allAssets.split(',')){
-        	if(!existingAssetIds.contains(assetId.trim())){
-        		assetsToInsert.add(new E2_Recommended_Asset__c(Scope__c = this.scope.id, Asset__c = assetId));
-        	}
-        } 
+        List<E2_Recommended_Asset__c> assetsToDelete = new List<E2_Recommended_Asset__c>();
         
+        if(assetsRecsJson != '' && assetsRecsJson.length() > 0){
+            Map<String, Object> assetsMap =  (Map<String, Object>) JSON.deserializeUntyped(assetsRecsJson);
+            for(String assetId : assetsMap.keySet()){
+              Map<String, Object> obj = (Map<String, Object>)assetsMap.get(assetId);
+              if((String)obj.get('isExisting') == 'false' && (String)obj.get('isDeleted') == 'false'){
+                  assetsToInsert.add(new E2_Recommended_Asset__c(Scope__c = this.scope.id, Asset__c = assetId));
+              }
+              else if((String)obj.get('isExisting') == 'true' && (String)obj.get('isDeleted') == 'true' && (String)obj.get('recommendedAssetRecId') != null){
+                  string recId = (String)obj.get('recommendedAssetRecId');
+                  assetsToDelete.add(new E2_Recommended_Asset__c(Id = recId));
+              }
+            }
+        }
         // Create a savepoint 
         Savepoint sp = Database.setSavepoint();
         
@@ -144,6 +153,10 @@ public with sharing class E2_EditScopeController {
             if(assetsToInsert.size() > 0){
             	insert assetsToInsert;
             }
+            
+            if(assetsToDelete.size() > 0){
+            	delete assetsToDelete;
+            }
         }catch(Exception ex){
             Database.rollback(sp);
             resetChildScopesOnException(); 
@@ -155,6 +168,8 @@ public with sharing class E2_EditScopeController {
         this.dmlOperationMessage = E2_Constants.DML_OPERATION_MESSAGE_SUCCESS;
         //this.childScopes.clear();
         //populateViewRecords();
+        lstExistingAssets.clear();
+        retrieveExistingAsset();
         return null;             
     }
     
@@ -181,15 +196,24 @@ public with sharing class E2_EditScopeController {
         for(E2_Scope__c scope : E2_DataUtil.getScopeAndChildrenOnScopeIdForEditScope(scopeId)){                
                this.childScopes.add(new Scope(scope, scope.Efforts__r));
         }
-        
-        lstExistingAssets = E2_DataUtil.getRecommendedAssetsForScope(scopeId);
-        for(CMC_Asset__c asset : lstExistingAssets){
-        	allAssets += asset.id + ',';
-        	existingAssetIds.add(asset.Id);
+        retrieveExistingAsset();
+    }
+    
+    public void retrieveExistingAsset(){
+        lstExistingAssets = E2_DataUtil.getRecommendedAssetsForScope(this.scope.id);
+        if(lstExistingAssets.size() > 0){
+        	assetsRecsJson = '{';        
+	        
+	        for(E2_AssetWrapper assetWrapper : lstExistingAssets){	        	        	
+	        	assetsRecsJson += '"'+ assetWrapper.id + '" : {"recommendedAssetRecId" : "' + assetWrapper.recommendedAssetRecId + '", "id" : "' + assetWrapper.id + '", "isExisting" : "true", "isDeleted" : "false"},'; 
+	        }
+	        
+	        if(assetsRecsJson != '' && assetsRecsJson.endsWith(',')){
+	        	assetsRecsJson = assetsRecsJson.removeEnd(',');
+	        }
+	        
+	        assetsRecsJson += '}';
         }
-        if(allAssets != '' && allAssets.endsWith(',')){
-        	allAssets = allAssets.removeEnd(',');
-        } 
     }
     
     public List<E2_Effort__c> getEffortsInstanceList(){

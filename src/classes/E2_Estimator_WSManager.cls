@@ -66,7 +66,8 @@ public class E2_Estimator_WSManager {
         	decimal totalhrs = scopeRollhrs.containsKey(scopeId) ? scopeRollhrs.get(scopeId) : 0;           
             nodeList.add(new E2_TreeNode(scope.id, getFormatedScopeName(scope, totalhrs), 
                              (scope.Parent_Scope__c == NULL ? E2_Constants.HASH_TAG : scope.Parent_Scope__c), 
-                             hasChildren, scope.Source_Scope__c, NODE_TYPE_SCOPE)
+                             hasChildren, scope.Source_Scope__c, NODE_TYPE_SCOPE, 
+                             (scope.Display_Order__c == NULL ? E2_Constants.DEFAULT_SCOPE_DISPLAY_ORDER : scope.Display_Order__c)) 
             );                                                
         }
         return nodeList;
@@ -199,70 +200,89 @@ public class E2_Estimator_WSManager {
         return scopeIdToNodeList;            
     }
     
-    ///
-    public static E2_TreeNodeMap getSelectedScopeNodes(string scopeIdCSV, string estimateId, string parentScopeId){
-        E2_TreeNodeMap scopeIdToNodeList;
-        List<E2_Scope__c> scopeList = new List<E2_Scope__c>();
-        List<E2_TreeNode> nodeList = new List<E2_TreeNode>();
+    // Method to clonned scope from scope library
+    public static string getSelectedScopeNodes(string scopeIdCSV, string estimateId, string parentScopeId) {
         parentScopeId = (parentScopeId == null || parentScopeId == E2_Constants.BLANK ? E2_Constants.HASH_TAG : parentScopeId);
         Id recTypeId = E2_RecordTypeClass.getId(E2_Constants.E2_SCOPE_API_NAME, E2_Constants.SCOPE_RT_SCOPE);
-        boolean hasChildren = false;
-        List<String> scopeIDs = scopeIdCSV.split(',');
+		
+		List<E2_Scope__c> scopeList = new List<E2_Scope__c>();
+        map<string,E2_Scope__c> hasChildrenScope = new map<string,E2_Scope__c>();
+        map<string, E2_Scope__c> clonedSourceMap = new map<string, E2_Scope__c>();
         
-        Map<Id, List<E2_Scope__c>> mapParentScopeIdToChild = new Map<Id, List<E2_Scope__c>>();
-                
-        List<E2_Scope__c> scopeLst = [SELECT Id, Source_Scope__c, Scope_Group__c, Name, 
-                                        Presales_LOE__c, Description__c , LOE_Hrs__c, 
-                                        Complexity__c, Scope_Item_Type__c, Is_Active__c, Scope_Flag__c, E2_Assumption__c,
-                                        Parent_Scope__c, Parent_Scope__r.Parent_Scope__c,  Parent_Scope__r.Parent_Scope__r.Parent_Scope__c,
-                                        Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__c, 
-                                        Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__c,
-                                        (Select Id FROM Child_Scopes__r limit 5), 
-										                    (Select Id FROM Efforts__r limit 1) 
-										                    FROM E2_Scope__c 
-										                    WHERE Parent_Scope__c = :scopeIDs OR Id IN :scopeIDs];
-                                        
-        for(E2_Scope__c sc : scopeLst){
-          if (!mapParentScopeIdToChild.containsKey(sc.Parent_Scope__c)){
-            mapParentScopeIdToChild.put(sc.Id, new list<E2_Scope__c>());
-          }
-          else{
-              mapParentScopeIdToChild.get(sc.Parent_Scope__c).add(sc);
-          } 
+        List<String> scopeIDs = scopeIdCSV.split(E2_constants.COMMA);        
+        
+        for(E2_Scope__c scope : E2_DataUtil_WS.getFullScopesDetailsWithLimit(scopeIDs)){
+           E2_Scope__c cloneScope = scope.clone(false, true, false, false);
+           cloneScope.Source_Scope__c = scope.id;
+           cloneScope.Presales_LOE__c = estimateId;
+           cloneScope.Parent_Scope__c = (parentScopeId == E2_Constants.HASH_TAG ? null : parentScopeId);
+           cloneScope.recordTypeId = recTypeId;    
+           cloneScope.Scope_Group__c = null;                      
+           scopeList.add(cloneScope);
+           clonedSourceMap.put(scope.id, cloneScope);
+           if(scope.Efforts__r.size() > 0){
+              	hasChildrenScope.put(scope.id, scope);
+           }                                                
         }
-        system.debug('==mapParentScopeIdToChild>>' +mapParentScopeIdToChild.size()); 
-        
-        for(E2_Scope__c scope : scopeLst){
-          if(mapParentScopeIdToChild.containsKey(parentScopeId)){
-             E2_Scope__c cloneScope = scope.clone(false, true, false, false);
-	           cloneScope.Source_Scope__c = scope.id;
-	           cloneScope.Presales_LOE__c = estimateId;
-	           cloneScope.Parent_Scope__c = (parentScopeId == E2_Constants.HASH_TAG ? null : parentScopeId);
-	           cloneScope.recordTypeId = recTypeId;    
-	           cloneScope.Scope_Group__c = null;                      
-	           scopeList.add(cloneScope);
-	           if(scope.Child_Scopes__r.size() > 0 ||
-	              scope.Efforts__r.size() > 0){
-	              hasChildren = true;
-	           }                                                
-	        }
-        } 
-	        if(!scopeList.isEmpty()){
-	            insert scopeList;        
-	            for(E2_Scope__c scope : scopeList){
-	               nodeList.add(new E2_TreeNode(scope.id, getFormatedScopeNameForFlag(scope, 0), 
-	                                            parentScopeId, hasChildren, 
-	                                            scope.Source_Scope__c));   
-	            }               
-	        }
-        scopeIdToNodeList = new E2_TreeNodeMap(scopeIdCSV, nodeList);
-        return scopeIdToNodeList;												            
+        if(!scopeList.isEmpty()){
+            insert scopeList;   
+            cloneScopesChild(scopeList, hasChildrenScope, clonedSourceMap);   
+        }
+        return 'Success';												            
+    }
+    
+    // private method to insert scope child efforts and update parent hierarchy 
+    private static void cloneScopesChild(List<E2_Scope__c> scopeList, 
+    									map<string,E2_Scope__c> hasChildrenScope, 
+    									map<string, E2_Scope__c> clonedSourceMap) {
+    	List<E2_Effort__c> effortList = new List<E2_Effort__c>();
+        for(E2_Scope__c scope : scopeList) {
+        	if(hasChildrenScope.containsKey(scope.Source_Scope__c)) {
+            	E2_Scope__c sourceScope = hasChildrenScope.get(scope.Source_Scope__c);          
+			    for(E2_Effort__c effort : sourceScope.Efforts__r){
+			    	E2_Effort__c cloneEffort = effort.clone(false, true, false, false);
+			        cloneEffort.Scope__c = scope.Id;
+			        cloneEffort.Source_Effort__c = effort.id;
+			        effortList.add(cloneEffort);
+			    }
+            }   
+		}
+        if(!effortList.isEmpty()) {
+        	insert effortList;
+        }
+    	list<E2_Scope__c> scopesToUpdate = new list<E2_Scope__c>();
+        for(E2_Scope__c scope : E2_dataUtil_WS.getParentScopeIds(clonedSourceMap.KeySet())) {
+         	E2_Scope__c clonedScope = clonedSourceMap.get(scope.Id);
+            string parentScope = null;
+            if(scope.Parent_Scope__c != null && clonedSourceMap.containsKey(scope.Parent_Scope__c)) {
+            	parentScope = scope.Parent_Scope__c;
+            } else if(scope.Parent_Scope__r.Parent_Scope__c != null && clonedSourceMap.containsKey(scope.Parent_Scope__r.Parent_Scope__c)) {
+            	parentScope = scope.Parent_Scope__r.Parent_Scope__c;
+            } else if(scope.Parent_Scope__r.Parent_Scope__r.Parent_Scope__c != null 
+            		&& clonedSourceMap.containsKey(scope.Parent_Scope__r.Parent_Scope__r.Parent_Scope__c)) {
+            	parentScope = scope.Parent_Scope__r.Parent_Scope__r.Parent_Scope__c;
+            } else if(scope.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__c != null 
+            		&& clonedSourceMap.containsKey(scope.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__c)) {
+            	parentScope = scope.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__c;
+            } else if(scope.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__c != null 
+            		&& clonedSourceMap.containsKey(scope.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__c)) {
+            	parentScope = scope.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__c;
+            }
+            if(parentScope != null && clonedScope.Id != null) {            		
+            	E2_Scope__c scopeToUpdate = new E2_Scope__c(Id = clonedScope.Id, Parent_Scope__c = clonedSourceMap.get(parentScope).Id);
+            	scopesToUpdate.add(scopeToUpdate);
+            }
+		}
+        if(!scopesToUpdate.isEmpty()) {
+        	update scopesToUpdate;
+        }
     }
     
     public static E2_TreeNodeMap getChildCloneNodes(string parentId, string sourceId, string estimateId){
         E2_TreeNodeMap scopeIdToNodeList;
         List<E2_Scope__c> scopeList = new List<E2_Scope__c>();        
         List<E2_Effort__c> effortList = new List<E2_Effort__c>();
+        List<E2_Recommended_Asset__c> assetList = new List<E2_Recommended_Asset__c>();
         List<E2_TreeNode> nodeList = new List<E2_TreeNode>();
         Id recTypeId = E2_RecordTypeClass.getId(E2_Constants.E2_SCOPE_API_NAME, E2_Constants.SCOPE_RT_SCOPE);
         boolean hasChildren = false;
@@ -283,10 +303,19 @@ public class E2_Estimator_WSManager {
             cloneEffort.Source_Effort__c = effort.id;
             effortList.add(cloneEffort);
            }
+           for(E2_Recommended_Asset__c asset : scope.E2_Recommended_Assets__r){
+           	E2_Recommended_Asset__c clonedAsset = asset.clone(false, true, false, false);
+           	clonedAsset.Scope__c = parentId;
+           	assetList.add(clonedAsset);	
+           }
         }        
         
         if(!effortList.isEmpty()){
             insert effortList;
+        }
+        
+        if(!assetList.isEmpty()){
+        		insert assetList;
         }
         
         if(!scopeList.isEmpty()){
@@ -369,6 +398,7 @@ public class E2_Estimator_WSManager {
         E2_TreeNodeMap scopeIdToNodeList;
         List<E2_Scope__c> scopeList = new List<E2_Scope__c>();        
         List<E2_Effort__c> effortList = new List<E2_Effort__c>();
+        List<E2_Recommended_Asset__c> assetList = new List<E2_Recommended_Asset__c>();
         List<E2_TreeNode> nodeList = new List<E2_TreeNode>();
         Id recTypeId = E2_RecordTypeClass.getId(E2_Constants.E2_SCOPE_API_NAME, E2_Constants.SCOPE_RT_TEMPLATE);
         boolean hasChildren = false;
@@ -389,10 +419,19 @@ public class E2_Estimator_WSManager {
             cloneEffort.Source_Effort__c = effort.id;
             effortList.add(cloneEffort);
            }
+           for(E2_Recommended_Asset__c asset : scope.E2_Recommended_Assets__r){
+           	E2_Recommended_Asset__c clonedAsset = asset.clone(false, true, false, false);
+           	clonedAsset.Scope__c = parentId;
+           	assetList.add(clonedAsset);	
+           }
         }        
         
         if(!effortList.isEmpty()){
             insert effortList;
+        }
+        
+        if(!assetList.isEmpty()){
+            insert assetList;
         }
         
         if(!scopeList.isEmpty()){
@@ -444,28 +483,18 @@ public class E2_Estimator_WSManager {
     }
     
     //Method to get assets based on search string
-    public static List<E2_AssetWrapper> searchAssets(string searchStr, List<string> exisitingAssetIds){
-    	String searchQueryStr = 'FIND \'' + searchStr + '*\' IN ALL FIELDS RETURNING CMC_Asset__c (Name, Short_Description__c, Technologies__c,' +
-	  										 ' Asset_Type__c, Asset_SubType__c, Appirio_Services_Practice__c, Primary_Contact_UserId__c, Number_of_Uses__c, Is_Recommended__c' +
-	  										 ' WHERE Release_Stage__c = \'Active\'';
-	  	
-	  	if(exisitingAssetIds != null && exisitingAssetIds.size() > 0){
-	  		searchQueryStr += ' AND Id NOT IN :exisitingAssetIds';
-	  	}
-			searchQueryStr += ')';
-			
+    public static E2_AssetWrapperMap searchAssets(string searchStr, List<string> exisitingAssetIds){   	
+			E2_AssetWrapperMap assetWrapperMap;
 			List<CMC_Asset__c> listAssets = new List<CMC_Asset__c>();  										 
 	  	
 	  	List<E2_AssetWrapper> lstAssetsWrapper = new List<E2_AssetWrapper>();
 	  	try{
-	  		List<List<SObject>> results = Search.query(searchQueryStr);
+	  		List<List<SObject>> results = E2_DataUtil_WS.getRelatedAssets(searchStr, exisitingAssetIds);
 	  		listAssets = (List<CMC_Asset__c>)results[0];
 	  		
 	  		Map<Id, String> mapAssetContributors = new Map<Id, String>();
 	  		
-	  		for(CMC_Asset_Contributor__c assetContibutor : [SELECT Asset__c, Contact__c, Contact__r.Name 
-	  																										FROM CMC_Asset_Contributor__c
-	  																										WHERE Asset__c IN :listAssets AND Primary_Contact__c = true]){
+	  		for(CMC_Asset_Contributor__c assetContibutor : E2_DataUtil_WS.getAssetContributors(listAssets)){
 	  			if(!mapAssetContributors.containsKey(assetContibutor.Asset__c)){
 	  				mapAssetContributors.put(assetContibutor.Asset__c, '');
 	  			}
@@ -474,16 +503,17 @@ public class E2_Estimator_WSManager {
 	  		}
 	  		
 	  		for(CMC_Asset__c assetRec : listAssets){
-	  			lstAssetsWrapper.add(new E2_AssetWrapper(searchStr, assetRec.Id, assetRec.Name, assetRec.Short_Description__c, 
+	  			lstAssetsWrapper.add(new E2_AssetWrapper(assetRec.Id, assetRec.Name, assetRec.Short_Description__c, 
 	  											mapAssetContributors.get(assetRec.Id), assetRec.Technologies__c, assetRec.Asset_Type__c, assetRec.Asset_SubType__c, 
 	  											assetRec.Appirio_Services_Practice__c, assetRec.Number_of_Uses__c, assetRec.Is_Recommended__c));
 	  		}
-	  		
+	  		assetWrapperMap = new E2_AssetWrapperMap(searchStr, lstAssetsWrapper);
 	  	}catch(Exception ex){
           return null;
       } 
 	  	
-	  	return lstAssetsWrapper;
+	  	//return lstAssetsWrapper;
+	  	return assetWrapperMap;
     }
     
     public class ScopeWrapper{

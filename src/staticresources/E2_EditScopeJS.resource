@@ -199,11 +199,10 @@ var flag_controller = {
     }
 }
 
-//var searchKey = '';
 var typeahead_input = {
     searchKey : '',
     resourceUrl : '',
-    selectedAssets : [],    
+    selectedAssetsMap : {},
     load : function(){
         $('.Typeahead-input').typeahead({
             hint: $('.Typeahead-hint'),
@@ -223,35 +222,53 @@ var typeahead_input = {
             displayKey: 'name',
             source: function(query, syncResults, asyncResults){
                 typeahead_input.searchKey = query;
+                var selectedAssets = typeahead_input.getAlreadyAddedAssets();
+                //console.log(selectedAssets);
                 sforce.apex.execute("E2_Estimator_WS", "searchAssets", {
-                    searchStr: query, exisitingAssetIds : typeahead_input.selectedAssets}, function(result){
+                    searchStr: query, exisitingAssetIds : selectedAssets}, function(result){
                         if(result.length > 0) {
-                          console.log(result);
-                          console.log(typeahead_input.searchKey+' == '+result[0].searchKey);
-                          if(typeahead_input.searchKey == result[0].searchKey) 
-                            asyncResults(result);
+                          //console.log(result);
+                          if(typeahead_input.searchKey == result[0].searchKey){
+                            var assetList = [];
+                            if(typeof result[0].assetList != 'undefined'){
+                                if((result[0].assetList).constructor === Array){
+                                    assetList = result[0].assetList;
+                                }else{
+                                    assetList.push(result[0].assetList);
+                                }
+                            }
+                            asyncResults(assetList);
+                          }
                         }
                         else{
-                        		 $('.Typeahead-spinner').hide();
+                            $('.Typeahead-spinner').hide();
                         }
                 });
             },
             templates: {
                 suggestion: function(data){
+                    //console.log(data);
                     return typeahead_input.prepareSuggestionTemplate(data);
                 },
                 notFound : function(){
-                    console.log('===in==');
                     return '<div class="EmptyMessage">Your search turned up 0 results.</div>';
                 }
                 
             }
         })
         .on('typeahead:select', function(ev, suggestion) {
-            console.log('suggestion----', suggestion);
             typeahead_input.addRowToTable(suggestion);
-            typeahead_input.selectedAssets.push(suggestion.id);
-            $("input[Id$='existingAssetIds']").val(typeahead_input.selectedAssets);
+            if(typeof typeahead_input.selectedAssetsMap[suggestion.id] == 'undefined'){
+                typeahead_input.selectedAssetsMap[suggestion.id] = suggestion;
+            }
+            else{
+                typeahead_input.selectedAssetsMap[suggestion.id].isDeleted = 'false';    
+            }
+            $("input[Id$='existingAssetIds']").val(JSON.stringify(typeahead_input.selectedAssetsMap));
+        })
+        .on('typeahead:render', function(ev, suggestion, flag, dataset) {
+            var containerId = '#' + parent.AddEditScope.EDIT_SCOPE_INLINE_DIV_ID;
+            parent.AddEditScope.setHeightOfEditScopeFrame($(document).height(), window.name);
         })
         .on('typeahead:asyncrequest', function() {
             $('.Typeahead-spinner').show();
@@ -262,15 +279,16 @@ var typeahead_input = {
     },
     
     prepareSuggestionTemplate : function(data){
-                    //var resUrl = {!$Resource.E2_SLDS1}; 
-                    console.log(typeahead_input.resourceUrl);
-                    var returnHtmlStr = '<div class = "ProfileCard u-cf"><img class="ProfileCard-avatar" src="' + typeahead_input.resourceUrl + '/assets/icons/standard/note_60.png"/>';
-                    returnHtmlStr += '<div class="ProfileCard-details"><div class="ProfileCard-realName"><a onclick="typeahead_input.goToAssetDetailPage(event, this);" href="/' + data.id + '" target="_blank">'+ data.assetName + '</a> <span class="slds-badge">' + data.assetUsage + '</span>';
-                    returnHtmlStr += '<span style="margin-left: 5px; background-color:#FA9500;" class="slds-badge">Recommended</span></div>'; //TBD add condition
-                    returnHtmlStr += '<div class="ProfileCard-description">' + data.description + '</div></div>';
-                    returnHtmlStr += '<div class="ProfileCard-stats"><div class="ProfileCard-stat"><span class="ProfileCard-stat-label">Primary Contributor : </span>' + data.primaryContributors + '</div>';
-                    returnHtmlStr += '<div class="ProfileCard-stat"><span class="ProfileCard-stat-label">Technologies : </span>' + data.technologies + '</div></div></div>';
-                    return returnHtmlStr;
+        var returnHtmlStr = '<div class = "ProfileCard u-cf"><img class="ProfileCard-avatar" src="' + typeahead_input.resourceUrl + '/images/' + data.imageName + '"/>';
+        returnHtmlStr += '<div class="ProfileCard-details"><div class="ProfileCard-realName"><a onclick="typeahead_input.goToAssetDetailPage(event, this);" href="/' + data.id + '" target="_blank">'+ data.assetName + '</a> <span class="slds-badge">' + data.assetUsage + '</span>';
+        if(data.isRecommended == 'true'){
+            returnHtmlStr += '<span style="margin-left: 5px; background-color:#FA9500;" class="slds-badge">Recommended</span>';
+        }
+        returnHtmlStr += '</div>';
+        returnHtmlStr += '<div class="ProfileCard-description">' + data.description + '</div></div>';
+        returnHtmlStr += '<div class="ProfileCard-stats"><div class="ProfileCard-stat"><span class="ProfileCard-stat-label">Primary Contributor : </span>' + data.primaryContributors + '</div>';
+        returnHtmlStr += '<div class="ProfileCard-stat"><span class="ProfileCard-stat-label">Technologies : </span>' + data.technologies + '</div></div></div>';
+        return returnHtmlStr;
     },
     
     addRowToTable : function(suggestion){
@@ -282,31 +300,45 @@ var typeahead_input = {
     },
     
     goToAssetDetailPage : function(event, element){
-    		console.log(event);
-    		console.log(element);
-    		// Don't propogate the event to the document
-	      if (event.stopPropagation) {
-	          event.stopPropagation();   // W3C model
-	      } else {
-	          event.cancelBubble = true; // IE model
-	      }  
-	      
+    	// Don't propogate the event to the document
+	    if (event.stopPropagation) {
+	        event.stopPropagation();   // W3C model
+	    } else {
+	        event.cancelBubble = true; // IE model
+	    } 
     },
     
     removeAssetRow : function(rowId){
-        console.log(rowId);
         $('#'+rowId).remove();
-        
-        typeahead_input.selectedAssets = $.grep(typeahead_input.selectedAssets, function(value) {
-          return value != rowId;
+        if(typeof typeahead_input.selectedAssetsMap[rowId] != 'undefined'){
+            typeahead_input.selectedAssetsMap[rowId].isDeleted = 'true';
+        }
+        $("input[Id$='existingAssetIds']").val(JSON.stringify(typeahead_input.selectedAssetsMap));
+    },
+    
+    getAlreadyAddedAssets : function(){
+        var existingAssetIds = [];
+        $.each(typeahead_input.selectedAssetsMap, function(index, element) {
+            if(element.isDeleted == 'false'){
+                existingAssetIds.push(element.id);
+            }
         });
-        
-        $("input[Id$='existingAssetIds']").val(typeahead_input.selectedAssets);
+        return existingAssetIds;
+    },
+    
+    showTypeahead : function(){
+        $('.Typeahead').show();
+        $('#addAsset').hide();
+    },
+    
+    hideTypeahead : function(){
+        $('.Typeahead').hide();
+        $('#addAsset').show();
     }
 }
 
 
-$( document ).ready(function() {
+$(document).ready(function() {
     showSpinner();
     validations.load();
     ck_custom_editor.load();
@@ -574,16 +606,16 @@ var mrak_page_updated = {
         $("input").bind('focus',function(e){
             if(parent && parent.AddEditScope) {
                 var frameId = scope_sfdc_id + parent.AddEditScope.ENDS_WITH;
-                if(!parent.document.getElementById(frameId).hasFocus()) {
-                    parent.document.getElementById(frameId).focus();
+                if(!parent.document.getElementById(frameId).contentWindow.document.hasFocus()) {
+                    parent.document.getElementById(frameId).contentWindow.document.focus();
                 }
               }
         });
         $("select").bind('focus',function(e){
             if(parent && parent.AddEditScope) {
                 var frameId = scope_sfdc_id + parent.AddEditScope.ENDS_WITH;
-                if(!parent.document.getElementById(frameId).hasFocus()) {
-                    parent.document.getElementById(frameId).focus();
+                if(!parent.document.getElementById(frameId).contentWindow.document.hasFocus()) {
+                    parent.document.getElementById(frameId).contentWindow.document.focus();
                 }
               }
         });

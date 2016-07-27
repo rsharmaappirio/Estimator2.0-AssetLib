@@ -204,6 +204,10 @@
         <apexClass>E2_TreeNodeTest</apexClass>
         <enabled>false</enabled>
     </classAccesses>
+    <classAccesses>
+        <apexClass>RS_EditScopeController</apexClass>
+        <enabled>false</enabled>
+    </classAccesses>
     <description>The DE template manager manages the DE Templates.He can create, update and delete the templates.He has no access to VF pages.</description>
     <fieldPermissions>
         <editable>false</editable>

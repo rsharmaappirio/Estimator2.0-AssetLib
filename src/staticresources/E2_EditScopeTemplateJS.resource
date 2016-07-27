@@ -175,6 +175,143 @@ var ck_custom_editor = {
 
 }
 
+var typeahead_input = {
+    searchKey : '',
+    resourceUrl : '',
+    selectedAssetsMap : {},
+    load : function(){
+        $('.Typeahead-input').typeahead({
+            hint: $('.Typeahead-hint'),
+            menu: $('.Typeahead-menu'),
+            highlight: true,    
+            minLength: 3,
+            classNames: {
+              open: 'is-open',
+              empty: 'is-empty',
+              cursor: 'is-active',
+              suggestion: 'Typeahead-suggestion',
+              selectable: 'Typeahead-selectable'
+            }
+        },
+        {
+            name: 'assets',
+            displayKey: 'name',
+            source: function(query, syncResults, asyncResults){
+                typeahead_input.searchKey = query;
+                var selectedAssets = typeahead_input.getAlreadyAddedAssets();
+                //console.log(selectedAssets);
+                sforce.apex.execute("E2_Estimator_WS", "searchAssets", {
+                    searchStr: query, exisitingAssetIds : selectedAssets}, function(result){
+                        if(result.length > 0) {
+                          //console.log(result);
+                          if(typeahead_input.searchKey == result[0].searchKey){
+                            var assetList = [];
+                            if(typeof result[0].assetList != 'undefined'){
+                                if((result[0].assetList).constructor === Array){
+                                    assetList = result[0].assetList;
+                                }else{
+                                    assetList.push(result[0].assetList);
+                                }
+                            }
+                            asyncResults(assetList);
+                          }
+                        }
+                        else{
+                            $('.Typeahead-spinner').hide();
+                        }
+                });
+            },
+            templates: {
+                suggestion: function(data){
+                    //console.log(data);
+                    return typeahead_input.prepareSuggestionTemplate(data);
+                },
+                notFound : function(){
+                    return '<div class="EmptyMessage">Your search turned up 0 results.</div>';
+                }
+                
+            }
+        })
+        .on('typeahead:select', function(ev, suggestion) {
+            typeahead_input.addRowToTable(suggestion);
+            if(typeof typeahead_input.selectedAssetsMap[suggestion.id] == 'undefined'){
+                typeahead_input.selectedAssetsMap[suggestion.id] = suggestion;
+            }
+            else{
+                typeahead_input.selectedAssetsMap[suggestion.id].isDeleted = 'false';    
+            }
+            $("input[Id$='existingAssetIds']").val(JSON.stringify(typeahead_input.selectedAssetsMap));
+        })
+        .on('typeahead:render', function(ev, suggestion, flag, dataset) {
+            var containerId = '#' + parent.AddEditScope.EDIT_SCOPE_INLINE_DIV_ID;
+            parent.AddEditScope.setHeightOfEditScopeFrame($(document).height(), window.name);
+        })
+        .on('typeahead:asyncrequest', function() {
+            $('.Typeahead-spinner').show();
+        })
+        .on('typeahead:asynccancel typeahead:asyncreceive', function() {        		
+            $('.Typeahead-spinner').hide();
+        });
+    },
+    
+    prepareSuggestionTemplate : function(data){
+        var returnHtmlStr = '<div class = "ProfileCard u-cf"><img class="ProfileCard-avatar" src="' + typeahead_input.resourceUrl + '/images/' + data.imageName + '"/>';
+        returnHtmlStr += '<div class="ProfileCard-details"><div class="ProfileCard-realName"><a onclick="typeahead_input.goToAssetDetailPage(event, this);" href="/' + data.id + '" target="_blank">'+ data.assetName + '</a> <span class="slds-badge">' + data.assetUsage + '</span>';
+        if(data.isRecommended == 'true'){
+            returnHtmlStr += '<span style="margin-left: 5px; background-color:#FA9500;" class="slds-badge">Recommended</span>';
+        }
+        returnHtmlStr += '</div>';
+        returnHtmlStr += '<div class="ProfileCard-description">' + data.description + '</div></div>';
+        returnHtmlStr += '<div class="ProfileCard-stats"><div class="ProfileCard-stat"><span class="ProfileCard-stat-label">Primary Contributor : </span>' + data.primaryContributors + '</div>';
+        returnHtmlStr += '<div class="ProfileCard-stat"><span class="ProfileCard-stat-label">Technologies : </span>' + data.technologies + '</div></div></div>';
+        return returnHtmlStr;
+    },
+    
+    addRowToTable : function(suggestion){
+        var tableRowStr = '<tr id="' + suggestion.id + '"><td class="slds-truncate whitespace_normal">' + suggestion.assetName + '</td>';
+        tableRowStr += '<td class="slds-truncate whitespace_normal">' + suggestion.description + '</td>';
+        tableRowStr += '<td class="slds-truncate whitespace_normal">' + suggestion.technologies + '</td>';
+        tableRowStr += '<td class="slds-cell-shrink" data-label="Actions"><a onclick="typeahead_input.removeAssetRow(\''+ suggestion.id + '\');return false" class="delete_button slds-button--right--float"/></td></tr>';    
+        $("#RecommendedAssetsTable tbody").append(tableRowStr);
+    },
+    
+    goToAssetDetailPage : function(event, element){
+    	// Don't propogate the event to the document
+	    if (event.stopPropagation) {
+	        event.stopPropagation();   // W3C model
+	    } else {
+	        event.cancelBubble = true; // IE model
+	    } 
+    },
+    
+    removeAssetRow : function(rowId){
+        $('#'+rowId).remove();
+        if(typeof typeahead_input.selectedAssetsMap[rowId] != 'undefined'){
+            typeahead_input.selectedAssetsMap[rowId].isDeleted = 'true';
+        }
+        $("input[Id$='existingAssetIds']").val(JSON.stringify(typeahead_input.selectedAssetsMap));
+    },
+    
+    getAlreadyAddedAssets : function(){
+        var existingAssetIds = [];
+        $.each(typeahead_input.selectedAssetsMap, function(index, element) {
+            if(element.isDeleted == 'false'){
+                existingAssetIds.push(element.id);
+            }
+        });
+        return existingAssetIds;
+    },
+    
+    showTypeahead : function(){
+        $('.Typeahead').show();
+        $('#addAsset').hide();
+    },
+    
+    hideTypeahead : function(){
+        $('.Typeahead').hide();
+        $('#addAsset').show();
+    }
+}
 
 $( document ).ready(function() {
     showSpinner();

@@ -52,6 +52,7 @@
         <members>E2_TreeNodeMap</members>
         <members>E2_TreeNodeMapTest</members>
         <members>E2_TreeNodeTest</members>
+        <members>RS_EditScopeController</members>
         <name>ApexClass</name>
     </types>
     <types>

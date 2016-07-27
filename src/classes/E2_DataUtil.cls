@@ -158,19 +158,25 @@ public class E2_DataUtil {
             WHERE Id =: scopeId];
   }
   
-  public static List<CMC_Asset__c> getRecommendedAssetsForScope(Id scopeId){
-  	List<String> assetIds = new List<String>();
-  	List<CMC_Asset__c> lstAssets = new List<CMC_Asset__c>();
+  public static List<E2_AssetWrapper> getRecommendedAssetsForScope(Id scopeId){
+  	Map<Id, E2_Recommended_Asset__c> recommendedAssetsMap = new Map<Id, E2_Recommended_Asset__c>();
+  	List<E2_AssetWrapper> lstAssetWrapper = new List<E2_AssetWrapper>();
    	for (E2_Recommended_Asset__c assetRec : [SELECT Asset__c, Scope__c FROM E2_Recommended_Asset__c 
    																					WHERE Scope__c =: scopeId]){
-   			assetIds.add(assetRec.Asset__c);																			
+   			recommendedAssetsMap.put(assetRec.Asset__c, assetRec);																			
    	}
-   	if(assetIds.size() > 0){
-   		lstAssets = [SELECT Name, Short_Description__c, Technologies__c, Asset_Type__c, Asset_SubType__c, Appirio_Services_Practice__c, 
+   	if(recommendedAssetsMap.keySet().size() > 0){
+   		Map<Id, CMC_Asset__c> mapAssets = new Map<Id, CMC_Asset__c>([SELECT Name, Short_Description__c, Technologies__c, Asset_Type__c, 
+   		                       Asset_SubType__c, Appirio_Services_Practice__c, Total_Hours__c, Reuse_LOE__c,
    								 Primary_Contact_UserId__c, Number_of_Uses__c, Is_Recommended__c
    								 FROM CMC_Asset__c
-   								 WHERE Id IN :assetIds];
+   								 WHERE Id IN :recommendedAssetsMap.keySet()]);
+   		for(Id assetId : mapAssets.keySet()){
+   		    CMC_Asset__c assetRec = mapAssets.get(assetId);
+            lstAssetWrapper.add(new E2_AssetWrapper(recommendedAssetsMap.get(assetId).Id, assetId, assetRec.Name, assetRec.Short_Description__c, 
+                                        assetRec.Technologies__c, true, false));
+   		}
    	}
-   	return lstAssets; 
+   	return lstAssetWrapper; 
   }
 }

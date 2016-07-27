@@ -16,7 +16,6 @@ table tbody tr td.slds-td{
   background-color:#CCCCCC;
   font-weight:bold;
 }
-
 </style>        
         
 <apex:pageMessages />
@@ -86,11 +85,20 @@ table tbody tr td.slds-td{
                     Capacity Needs
                 </legend>
                 <div class="slds-card">
-                    <div class="slds-card__header slds-grid grid--flex-spread">
-                      <h2 class="slds-text-heading--small slds-truncate">Capacity Needs by Role and Phase </h2>
-                      
-                    </div>
-                    <div class="slds-card__body">
+                    <div class="slds-card__header slds-grid grid--flex-spread">                       
+                       <div class="slds-col slds-has-flexi-truncate">
+                       <h2 class="slds-text-heading--small slds-truncate">Capacity Needs by Role and Phase</h2>
+                       </div>
+                       <div class="slds-col slds-no-flex slds-align-bottom">
+                        <h3><apex:outputPanel layout="none" rendered="{!IF(OR(!!ISNULL(estimate.E2_Risk__c),estimate.E2_Risk__c == '0%'), false, true)}" >
+                        <div class="slds-text-heading--label slds-grid grid--flex-spread " title="Risk" style="color: red;">
+                         <b>Risk Factor :&nbsp;&nbsp;<apex:outputField value="{!estimate.E2_Risk__c}" /></b>
+                        </div>
+                       </apex:outputPanel></h3>
+                      </div>
+                    </div>                    
+                    
+                <div class="slds-card__body">
                 <table class="slds-table slds-table--bordered slds-max-medium-table--stacked-horizontal slds-no-row-hover">
                     <thead>
                       <tr class="slds-text-heading--label">
@@ -157,7 +165,16 @@ table tbody tr td.slds-td{
                 
                 <div class="slds-card">
                     <div class="slds-card__header slds-grid grid--flex-spread">
+                    <div class="slds-col slds-has-flexi-truncate">
                       <h2 class="slds-text-heading--small slds-truncate">Role Specialty Details</h2>
+                      </div>
+                      <div class="slds-col slds-no-flex slds-align-bottom">
+                        <h3><apex:outputPanel layout="none" rendered="{!IF(OR(!!ISNULL(estimate.E2_Risk__c),estimate.E2_Risk__c == '0%'), false, true)}" >
+                        <div class="slds-text-heading--label slds-grid grid--flex-spread " title="Risk" style="color: red;">
+                         <b>Risk Factor :&nbsp;&nbsp;<apex:outputField value="{!estimate.E2_Risk__c}" /></b>
+                        </div>
+                       </apex:outputPanel></h3>
+                      </div>
                     </div>
                     <div class="slds-card__body">
                 <table class="slds-table slds-table--bordered slds-max-medium-table--stacked-horizontal slds-no-row-hover">

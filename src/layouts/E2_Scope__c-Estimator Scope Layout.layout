@@ -181,6 +181,10 @@
         <fields>NAME</fields>
         <relatedList>E2_Action_Scope__c.Scope__c</relatedList>
     </relatedLists>
+    <relatedLists>
+        <fields>NAME</fields>
+        <relatedList>E2_Recommended_Asset__c.Scope__c</relatedList>
+    </relatedLists>
     <relatedObjects>Parent_Scope__c</relatedObjects>
     <relatedObjects>Scope_Group__c</relatedObjects>
     <relatedObjects>Presales_LOE__c</relatedObjects>

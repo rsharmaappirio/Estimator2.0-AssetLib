@@ -7,6 +7,14 @@
          <link type="text/css" rel="stylesheet" href="{!URLFOR($Resource.cloneany, '/jstree/themes/proton/style.min.css')}" />
          <apex:includeScript value="{!URLFOR($Resource.cloneany, '/libs/jquery.js')}" />
          <apex:includeScript value="{!URLFOR($Resource.cloneany, '/jstree/jstree.min.js')}" />
+         
+         <apex:includeScript value="{!URLFOR($Resource.E2_TypeaheadResources, '/js/typeahead.bundle.js')}"/>
+         <link type="text/css" rel="stylesheet" href="{!URLFOR($Resource.E2_TypeaheadResources, '/css/typeahead.css')}"/>
+         
+         <apex:includeScript value="../../soap/ajax/36.0/connection.js" />
+         <apex:includeScript value="../../soap/ajax/15.0/apex.js" />
+         <script>sforce.connection.sessionId='{!GETSESSIONID()}';</script>
+         
          <apex:includeScript value="{!$Resource.E2_EditScopeTemplateJS}" />
          <style>
             .top {
@@ -121,6 +129,15 @@
                 background: url({!$Resource.E2_SLDS1}/assets/icons/utility/edit_60.png) no-repeat scroll 90% 24px / 15px 15px;
                 background-color: #faffbd!important;
             }
+            .Typeahead {
+                    margin: 0 auto;
+                    width: 50%;
+                    min-width: 300px;
+             }
+             .ProfileCard-realName {
+							    font-weight: 600;
+							    font-size:17px;
+							}
          </style>
       </head>
       <body>
@@ -147,7 +164,7 @@
                         </div>
                         <div class="slds-col slds-no-flex slds-align-bottom">
                            <div class="slds-button-group" role="group">
-                              <button class="slds-button slds-button--neutral" onclick="return false;">Help</button>
+                              
                               <apex:commandButton onclick="parent&&parent.AddEditScope&&parent.AddEditScope.reload_frame('/apex/E2_EditScopeTemplate?scopegroup_id={!scopeGrpId}&id={!scope.id}', window.name);return false;" styleClass="slds-button slds-button--neutral" title="Cancel" value="Cancel"/>
                               <apex:commandButton onclick="return addUpdateScopes();" styleClass="slds-button slds-button--neutral slds-button--brand" title="Save" value="Save" action="{!saveScope}"/>
                            </div>
@@ -206,7 +223,7 @@
                                                 <div class="slds-form-element">
                                                   <div class="slds-form-element__control">
                                                     <label class="slds-checkbox">
-                                                      <apex:inputfield styleclass="slds-checkbox" value="{!childscope.scope.Is_Favourite__c}" rendered="{!NOT(is_View)}" />
+                                                      <apex:inputfield styleclass="slds-checkbox" value="{!childscope.scope.Is_Favourite__c}" rendered="{!(AND(NOT(is_View), NOT(showFavForSTMPermissionSet)))}" />
                                                       <span class="slds-checkbox--faux"></span>
                                                       <span class="slds-form-element__label">Favorite</span>
                                                     </label>
@@ -384,6 +401,66 @@
                                        </div>
                                     </td>
                                  </tr>
+                                 
+                                 <!-- Recommended Assets section -->
+                                 <tr><td style="border:0px;">&nbsp;</td></tr><tr><td style="border:0px;">&nbsp;</td></tr>
+                                 <tr class="slds-selection-background">
+                                    <td colspan="3" style="padding:0px;">
+                                       <div style="margin-top:5px;display:block;">
+                                          <span class="slds-badge slds-theme--default slds-float-left" style="font-weight:bold;">Recommended Assets</span>
+                                          <!--button id="addAsset" type="button" onclick="typeahead_input.showTypeahead();" class="slds-button slds-button--neutral slds-button--small slds-button--right--float">Add Recommended Assets</button-->
+                                          <div class="Typeahead">
+                                        
+                                            <div class="u-posRelative">
+                                                <input class="Typeahead-hint" type="text" readonly="" tabindex="-1" dir="ltr"/>
+                                                <input id="searchStr_ele" class="Typeahead-input" type="text" placeholder="Search and Add Assets..." name="q" autocomplete="off" spellcheck="false" dir="auto"/>
+                                                <img class="Typeahead-spinner" src="{!URLFOR($Resource.E2_SLDS1, '/assets/images/spinners/slds_spinner.gif')}" style="display: none;"/>
+                                                <!--button id="hideTypeahead" type="button" onclick="typeahead_input.hideTypeahead();" class="slds-button slds-button--neutral slds-button--small">Cancel</button-->
+                                            </div>
+                                            <div class="Typeahead-menu">
+                                            </div>
+                                            
+                                          </div>
+                                          
+                                          <table id="RecommendedAssetsTable" class="slds-table slds-table--bordered slds-no-row-hover slds-max-medium-table--stacked ">
+                                              <thead>
+                                                <tr class="slds-text-heading--label slds-truncate slds-selection-background">
+                                                    <th class="slds-is-sortable" scope="col">
+                                                        <div class="slds-truncate">Asset Name</div>
+                                                    </th>
+                                                    <th class="slds-is-sortable" scope="col">
+                                                        <div class="slds-truncate">Short Description</div>
+                                                    </th>
+                                                    <th class="slds-is-sortable" scope="col">
+                                                        <div class="slds-truncate">Technologies</div>
+                                                    </th>
+                                                    <th class="slds-is-sortable" scope="col">
+                                                        <div class="slds-truncate"></div>
+                                                    </th>
+                                                </tr>
+                                              </thead>
+                                              <tbody>
+                                                <apex:repeat value="{!lstExistingAssets}" var="assetRec">
+                                                    <tr id="{!assetRec.id}">
+                                                      <td>
+                                                        <div class="slds-truncate">{!assetRec.assetName}</div>
+                                                      </td>
+                                                      <td>
+                                                        <div class="slds-truncate">{!assetRec.description}</div>
+                                                      </td>
+                                                      <td>
+                                                        <div class="slds-truncate">{!assetRec.technologies}</div>
+                                                      </td>
+                                                      <td class="slds-cell-shrink" data-label="Actions">
+                                                       <a onclick="typeahead_input.removeAssetRow('{!assetRec.id}');return false;" class="delete_button slds-button--right--float"/>
+                                                    </td>
+                                                    </tr>
+                                                </apex:repeat>
+                                              </tbody>
+                                          </table>
+                                       </div>
+                                    </td>
+                                 </tr>
                               </apex:outputpanel>
                            </apex:repeat>
                         </tbody>
@@ -424,6 +501,7 @@
             <input type="hidden" value="{!E2_Scope__c.Presales_LOE__c}"/>
             
             <apex:inputhidden value="{!dmlOperationMessage}" id="dmlMessage" />
+            <apex:inputhidden value="{!assetsRecsJson}" id="existingAssetIds" />
          </apex:form>
       </body>
       <!-- JAVASCRIPT -->
@@ -431,6 +509,15 @@
          var msg = '{!dmlOperationMessage}'; 
          var scope_sfdc_id = '{!scope.id}';
          var scope_sfdc_name = '{!scope.name}';
+         
+         $(document).ready(function() {
+            typeahead_input.load();
+            var assetsRecsJson = '{!assetsRecsJson}';
+            typeahead_input.resourceUrl = '{!$Resource.E2_TypeaheadResources}';
+            if(assetsRecsJson != '' && assetsRecsJson.length > 0){
+                typeahead_input.selectedAssetsMap = JSON.parse(assetsRecsJson);
+            }
+         });
       </script>
       <!-- / JAVASCRIPT -->    
    </html>

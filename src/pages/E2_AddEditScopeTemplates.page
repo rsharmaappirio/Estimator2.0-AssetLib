@@ -32,7 +32,7 @@
                   </div>
                   <div class="slds-col slds-no-flex slds-align-bottom">
                      <div class="slds-button-group" role="group">
-                        <button class="slds-button slds-button--neutral" onclick="return false;">Help</button>
+                       
                         <apex:commandButton styleClass="slds-button slds-button--neutral" title="Add New Scope" value="Add New Scope" onclick="return AddEditScope.addnew_click(this);"/>                        
                      </div>
                   </div>

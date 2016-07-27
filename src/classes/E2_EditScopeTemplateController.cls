@@ -15,6 +15,11 @@ public with sharing class E2_EditScopeTemplateController {
     public boolean is_View{get;set;}
     public string scopeGrpId{get;set;}
     public string dmlOperationMessage{get;set;}
+    
+    public List<E2_AssetWrapper> lstExistingAssets {get;set;}   
+		public string assetsRecsJson {get;set;}
+		public static final string scopeTemplatePermissionSet = 'Scope_Template_manager';
+		public boolean showFavForSTMPermissionSet {get;set;}
 
 
     public E2_EditScopeTemplateController(ApexPages.StandardController std) {
@@ -23,6 +28,10 @@ public with sharing class E2_EditScopeTemplateController {
        this.childScopes = new List<Scope>();       
        this.is_View = false;       
        this.dmlOperationMessage = E2_Constants.DML_OPERATION_MESSAGE_FAIL;
+       
+       lstExistingAssets = new List<E2_AssetWrapper>();       
+       assetsRecsJson = '';
+       showFavForSTMPermissionSet = false;
     }
 
     public PageReference pageAction(){
@@ -35,6 +44,23 @@ public with sharing class E2_EditScopeTemplateController {
         }else{ 
             populateViewRecords();
         }
+        
+        //
+        List<PermissionSet> permissionSetsAllowed = [SELECT Id, Name
+			                                                 FROM PermissionSet
+			                                                 WHERE Name =: scopeTemplatePermissionSet];
+
+		    User currentUser = [SELECT Id,Profile.Name,
+		                               (SELECT Id FROM PermissionSetAssignments WHERE PermissionSetId IN: permissionSetsAllowed)
+		                          FROM User
+		                          WHERE Id = :userinfo.getUserId()];
+		      
+		      if (currentUser.PermissionSetAssignments.size() > 0) {
+		        showFavForSTMPermissionSet = true;
+		      }
+		      else {
+		        showFavForSTMPermissionSet = false;
+		      }
         return null;
     }
     
@@ -46,6 +72,23 @@ public with sharing class E2_EditScopeTemplateController {
         Scope masterScope;
         ApexPages.Message msg;        
         Id recTypeId = E2_RecordTypeClass.getId(E2_Constants.E2_SCOPE_API_NAME, E2_Constants.SCOPE_RT_TEMPLATE);
+        
+        List<E2_Recommended_Asset__c> assetsToInsert = new List<E2_Recommended_Asset__c>();
+        List<E2_Recommended_Asset__c> assetsToDelete = new List<E2_Recommended_Asset__c>();
+        
+        if(assetsRecsJson != '' && assetsRecsJson.length() > 0){
+            Map<String, Object> assetsMap =  (Map<String, Object>) JSON.deserializeUntyped(assetsRecsJson);
+            for(String assetId : assetsMap.keySet()){
+              Map<String, Object> obj = (Map<String, Object>)assetsMap.get(assetId);
+              if((String)obj.get('isExisting') == 'false' && (String)obj.get('isDeleted') == 'false'){
+                  assetsToInsert.add(new E2_Recommended_Asset__c(Scope__c = this.scope.id, Asset__c = assetId));
+              }
+              else if((String)obj.get('isExisting') == 'true' && (String)obj.get('isDeleted') == 'true' && (String)obj.get('recommendedAssetRecId') != null){
+                  string recId = (String)obj.get('recommendedAssetRecId');
+                  assetsToDelete.add(new E2_Recommended_Asset__c(Id = recId));
+              }
+            }
+        }
         
         // Create a savepoint 
         Savepoint sp = Database.setSavepoint();
@@ -99,6 +142,14 @@ public with sharing class E2_EditScopeTemplateController {
             if(!masterScope_Efforts.isEmpty()){
                 upsert masterScope_Efforts;
             }
+            
+            if(assetsToInsert.size() > 0){
+            	insert assetsToInsert;
+            }
+            
+            if(assetsToDelete.size() > 0){
+            	delete assetsToDelete;
+            }
         }catch(Exception ex){
             Database.rollback(sp);
             resetChildScopesOnException();            
@@ -107,7 +158,8 @@ public with sharing class E2_EditScopeTemplateController {
             return null;            
         }
         this.dmlOperationMessage = E2_Constants.DML_OPERATION_MESSAGE_SUCCESS;        
-           
+        lstExistingAssets.clear();
+        retrieveExistingAsset();   
         return null;             
     }
     
@@ -133,7 +185,25 @@ public with sharing class E2_EditScopeTemplateController {
         Id scopeId = this.scope.id;        
         for(E2_Scope__c scope : E2_DataUtil.getScopeAndChildrenOnScopeIdForEditScope(scopeId)){                
                this.childScopes.add(new Scope(scope, scope.Efforts__r));
-        } 
+        }
+        retrieveExistingAsset(); 
+    }
+    
+    public void retrieveExistingAsset(){
+        lstExistingAssets = E2_DataUtil.getRecommendedAssetsForScope(this.scope.id);
+        if(lstExistingAssets.size() > 0){
+        	assetsRecsJson = '{';        
+	        
+	        for(E2_AssetWrapper assetWrapper : lstExistingAssets){	        	        	
+	        	assetsRecsJson += '"'+ assetWrapper.id + '" : {"recommendedAssetRecId" : "' + assetWrapper.recommendedAssetRecId + '", "id" : "' + assetWrapper.id + '", "isExisting" : "true", "isDeleted" : "false"},'; 
+	        }
+	        
+	        if(assetsRecsJson != '' && assetsRecsJson.endsWith(',')){
+	        	assetsRecsJson = assetsRecsJson.removeEnd(',');
+	        }
+	        
+	        assetsRecsJson += '}';
+        }
     }
     
     public List<E2_Effort__c> getEffortsInstanceList(){

@@ -6,8 +6,12 @@ public static CMC_Presales_LOE__c estimate;
   
   public static testmethod void testE2_TreeNode(){
     estimate = [SELECT Id, Name FROM CMC_Presales_LOE__c];
-    parentSC = [SELECT Id, Name,Source_Scope__c FROM E2_Scope__c WHERE Parent_Scope__c = null];
-    childSC = [SELECT Id, Name, Source_Scope__c FROM E2_Scope__c WHERE Parent_Scope__c = :parentSC.Id];
+    parentSC = [SELECT Id, Name,Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c,
+                  LOE_Hrs__c, Is_Active__c
+                  FROM E2_Scope__c WHERE Parent_Scope__c = null];
+    childSC = [SELECT Id, Name, Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c,
+                  LOE_Hrs__c, Is_Active__c
+                  FROM E2_Scope__c WHERE Parent_Scope__c = :parentSC.Id];
     scopeGroup = [SELECT Id, Name FROM E2_Scope_Group__c];
     
     User sysAdmin = E2_Test_Utils.insertUser(E2_Constants.PROFILE_SYS_ADMIN, true);
@@ -63,6 +67,9 @@ public static CMC_Presales_LOE__c estimate;
       E2_Estimator_WSManager.updateScopeFlag(childSC.Id,'flagyellow');
       E2_Estimator_WSManager.updateScopeFlag(childSC.Id,'flaggreen');
       
+      String test_scope = E2_Estimator_WSManager.getFormatedScopeName(parentSC);
+      system.assert(test_Scope != null);
+      
       treeMap = E2_Estimator_WSManager.getClonedNodesTemplate(parentSC.Id, scopeGroup.Id, null);
       E2_Estimator_WSManager.reparentScope(scopeGroup.Id, null);
       String a_scopeId = E2_Estimator_WSManager.reparentScope(childSC.Id, null);
@@ -71,6 +78,9 @@ public static CMC_Presales_LOE__c estimate;
       String jsonString = '[{"scopeId":"' + parentSC.id + '", "displayOrder":"1"},{"scopeId":"' + childSC.id + '", "displayOrder":"2"}]';
       String statusStr = E2_Estimator_WSManager.updateScopesDisplayOrder(jsonString);
       System.assertEquals(statusStr, 'success');
+      
+      String test_Scope1 =  E2_Estimator_WSManager.getSelectedScopeNodes('', estimate.Id, parentSC.Id);
+      system.assert(test_Scope1 != null);
       
       E2_Estimator_WSManager.deleteScope(scopeGroup.Id, E2_Constants.HASH_TAG);    
       String b_scopeId = E2_Estimator_WSManager.deleteScope(childSC.Id, parentSC.Id);

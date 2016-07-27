@@ -71,6 +71,17 @@ global class E2_TreeNode {
         this.sourceId = sourceId;
         this.node_type = node_type;
     }
+    
+    public E2_TreeNode(string id, string text, string parent, boolean hasChildren, string sourceId, string node_type, decimal displayOrder){
+        this.parent = parent;
+        this.state = '{"disabled":false, "opened":true, "selected":false}';//new E2_State();
+        this.id = id;
+        this.text = text;
+        this.hasChildren = hasChildren;
+        this.sourceId = sourceId;
+        this.node_type = node_type;
+        this.display_order = displayOrder;
+    }
 // for details    
     public E2_TreeNode(string id, string text, string parent, boolean hasChildren, string sourceId,
                        string complexity, decimal loe_hrs, string description){

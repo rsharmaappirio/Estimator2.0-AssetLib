@@ -204,6 +204,10 @@
         <apexClass>E2_TreeNodeTest</apexClass>
         <enabled>false</enabled>
     </classAccesses>
+    <classAccesses>
+        <apexClass>RS_EditScopeController</apexClass>
+        <enabled>false</enabled>
+    </classAccesses>
     <description>Scope Template manager manages the templates for Scope object.He has the right to create ,update and delete the scope templates.</description>
     <fieldPermissions>
         <editable>false</editable>

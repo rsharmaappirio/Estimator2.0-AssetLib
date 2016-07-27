@@ -6,7 +6,7 @@ var CustomAlert = {
     notifyEditContainer: '.slds-edit-alert',
     notifyEditContainerbackdrop: '.slds-edit-alert-backdrop',
     showEdit: function() {
-        $(CustomAlert.notifyEditContainerbackdrop).show();
+        $(CustomAlert.notifyEditContainerbackdrop).show().css('height', $(document).outerHeight());
         $(CustomAlert.notifyEditContainer).show();
     },
     hideEdit: function() {

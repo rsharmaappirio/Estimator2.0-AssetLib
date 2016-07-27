@@ -69,7 +69,12 @@ global with sharing class E2_Estimator_WS {
     }
     
     //Method to get asset records
-    webservice static List<E2_AssetWrapper> searchAssets(string searchStr, List<string> exisitingAssetIds){
+    webservice static E2_AssetWrapperMap searchAssets(string searchStr, List<string> exisitingAssetIds){
         return E2_Estimator_WSManager.searchAssets(searchStr, exisitingAssetIds);
     }
+    
+    // Method to clonned scopes 
+    webservice static string getSelectedScopeNodes(string scopeIdCSV, string estimateId, string parentScopeId) {
+    	return E2_Estimator_WSManager.getSelectedScopeNodes(scopeIdCSV, estimateId, parentScopeId);
+    } 
 }
