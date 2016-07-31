@@ -169,7 +169,7 @@
                                                                     <label class="slds-checkbox"></label>
                                                                 </apex:facet>
                                                                 <apex:outputPanel layout="none">
-                                                                    <a href="javascript:void(0);" title="Add scope" onclick="scopesPills.addPillsLink('{!sc1.scope.id}','{!sc1.scope.Name}');AddScopeTree.updateTreeState();" id="{!sc1.scope.id}href" class="addup_button"></a>
+                                                                    <a href="javascript:void(0);" title="Add scope" onclick="scopesPills.addScopeFromVF('{!sc1.scope.id}','{!sc1.scope.Name}');AddScopeTree.updateTreeState();" id="{!sc1.scope.id}href" class="addup_button"></a>
                                                                 </apex:outputPanel> 
                                                             </apex:column>
                                                             <apex:column styleClass="slds-truncate">

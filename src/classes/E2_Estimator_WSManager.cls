@@ -168,7 +168,7 @@ public class E2_Estimator_WSManager {
         return nodeList;    
     }
     
-    public static E2_TreeNodeMap getClonedNodes(string scopeId, string estimateId, string parentScopeId){
+    /*public static E2_TreeNodeMap getClonedNodes(string scopeId, string estimateId, string parentScopeId){
         E2_TreeNodeMap scopeIdToNodeList;
         List<E2_Scope__c> scopeList = new List<E2_Scope__c>();
         List<E2_TreeNode> nodeList = new List<E2_TreeNode>();
@@ -198,7 +198,7 @@ public class E2_Estimator_WSManager {
         }
         scopeIdToNodeList = new E2_TreeNodeMap(scopeId, nodeList);        
         return scopeIdToNodeList;            
-    }
+    }*/
     
     // Method to clonned scope from scope library
     public static string getSelectedScopeNodes(string scopeIdCSV, string estimateId, string parentScopeId) {
@@ -220,7 +220,7 @@ public class E2_Estimator_WSManager {
            cloneScope.Scope_Group__c = null;                      
            scopeList.add(cloneScope);
            clonedSourceMap.put(scope.id, cloneScope);
-           if(scope.Efforts__r.size() > 0){
+           if(scope.Efforts__r.size() > 0 || scope.E2_Recommended_Assets__r.size() > 0){
               	hasChildrenScope.put(scope.id, scope);
            }                                                
         }
@@ -236,6 +236,7 @@ public class E2_Estimator_WSManager {
     									map<string,E2_Scope__c> hasChildrenScope, 
     									map<string, E2_Scope__c> clonedSourceMap) {
     	List<E2_Effort__c> effortList = new List<E2_Effort__c>();
+    	List<E2_Recommended_Asset__c> assetList = new List<E2_Recommended_Asset__c>();
         for(E2_Scope__c scope : scopeList) {
         	if(hasChildrenScope.containsKey(scope.Source_Scope__c)) {
             	E2_Scope__c sourceScope = hasChildrenScope.get(scope.Source_Scope__c);          
@@ -245,10 +246,18 @@ public class E2_Estimator_WSManager {
 			        cloneEffort.Source_Effort__c = effort.id;
 			        effortList.add(cloneEffort);
 			    }
+			    for(E2_Recommended_Asset__c asset : sourceScope.E2_Recommended_Assets__r) {
+		           	E2_Recommended_Asset__c clonedAsset = asset.clone(false, true, false, false);
+		           	clonedAsset.Scope__c = scope.Id;
+		           	assetList.add(clonedAsset);	
+		    	}
             }   
 		}
         if(!effortList.isEmpty()) {
         	insert effortList;
+        }
+        if(!assetList.isEmpty()) {
+        	insert assetList;
         }
     	list<E2_Scope__c> scopesToUpdate = new list<E2_Scope__c>();
         for(E2_Scope__c scope : E2_dataUtil_WS.getParentScopeIds(clonedSourceMap.KeySet())) {
@@ -278,7 +287,7 @@ public class E2_Estimator_WSManager {
         }
     }
     
-    public static E2_TreeNodeMap getChildCloneNodes(string parentId, string sourceId, string estimateId){
+    /*public static E2_TreeNodeMap getChildCloneNodes(string parentId, string sourceId, string estimateId){
         E2_TreeNodeMap scopeIdToNodeList;
         List<E2_Scope__c> scopeList = new List<E2_Scope__c>();        
         List<E2_Effort__c> effortList = new List<E2_Effort__c>();
@@ -327,7 +336,7 @@ public class E2_Estimator_WSManager {
         }
         scopeIdToNodeList = new E2_TreeNodeMap(parentId, nodeList);
         return scopeIdToNodeList;    
-    }
+    }*/
     
     
     public static E2_TreeNodeMap getChildScopeDetailNodes(string parentId) {
@@ -362,14 +371,17 @@ public class E2_Estimator_WSManager {
         return scopeIdToNodeList;            
     }
     
-    public static E2_TreeNodeMap getClonedNodesTemplate(string scopeId, string scopeGrpId, string parentScopeId){
-        E2_TreeNodeMap scopeIdToNodeList;
-        List<E2_Scope__c> scopeList = new List<E2_Scope__c>();
-        List<E2_TreeNode> nodeList = new List<E2_TreeNode>();
+    public static String getClonedNodesTemplate(string scopeId, string scopeGrpId, string parentScopeId){
         parentScopeId = (parentScopeId == null || parentScopeId == E2_Constants.BLANK ? E2_Constants.HASH_TAG : parentScopeId);
         Id recTypeId = E2_RecordTypeClass.getId(E2_Constants.E2_SCOPE_API_NAME, E2_Constants.SCOPE_RT_TEMPLATE);
-        boolean hasChildren = false;
-        for(E2_Scope__c scope : E2_DataUtil_WS.getFullScopeDetailsWithLimit(scopeId)){
+		
+		List<E2_Scope__c> scopeList = new List<E2_Scope__c>();
+        map<string,E2_Scope__c> hasChildrenScope = new map<string,E2_Scope__c>();
+        map<string, E2_Scope__c> clonedSourceMap = new map<string, E2_Scope__c>();
+        
+        List<String> scopeIDs = scopeId.split(E2_constants.COMMA);        
+        
+        for(E2_Scope__c scope : E2_DataUtil_WS.getFullScopesDetailsWithLimit(scopeIDs)){
            E2_Scope__c cloneScope = scope.clone(false, true, false, false);
            cloneScope.Source_Scope__c = scope.id;
            cloneScope.Parent_Scope__c = (parentScopeId == E2_Constants.HASH_TAG ? null : parentScopeId);
@@ -377,24 +389,19 @@ public class E2_Estimator_WSManager {
            cloneScope.Scope_Group__c = scopeGrpId;
            cloneScope.Presales_LOE__c = null;                      
            scopeList.add(cloneScope);
-           if(scope.Child_Scopes__r.size() > 0 ||
-              scope.Efforts__r.size() > 0){
-              hasChildren = true;
+           clonedSourceMap.put(scope.id, cloneScope);
+           if(scope.Efforts__r.size() > 0){
+              	hasChildrenScope.put(scope.id, scope);
            }                                                
         }
         if(!scopeList.isEmpty()){
-            insert scopeList;    
-            for(E2_Scope__c scope : scopeList){
-               nodeList.add(new E2_TreeNode(scope.id, getFormatedScopeName(scope, 0), 
-                                            parentScopeId, hasChildren, 
-                                            scope.Source_Scope__c));   
-            }               
-        }
-        scopeIdToNodeList = new E2_TreeNodeMap(scopeId, nodeList);        
-        return scopeIdToNodeList;            
+            insert scopeList;   
+            cloneScopesChild(scopeList, hasChildrenScope, clonedSourceMap);   
+        }        
+        return 'Success';            
     }
     
-    public static E2_TreeNodeMap getChildCloneNodesTemplate(string parentId, string sourceId, string scopeGrpId){
+    /*public static E2_TreeNodeMap getChildCloneNodesTemplate(string parentId, string sourceId, string scopeGrpId){
         E2_TreeNodeMap scopeIdToNodeList;
         List<E2_Scope__c> scopeList = new List<E2_Scope__c>();        
         List<E2_Effort__c> effortList = new List<E2_Effort__c>();
@@ -443,7 +450,7 @@ public class E2_Estimator_WSManager {
         }
         scopeIdToNodeList = new E2_TreeNodeMap(parentId, nodeList);
         return scopeIdToNodeList;    
-    }
+    }*/
     
     public static string updateScopeFlag(string scopeId, string flagValue){
         string flag = null;
@@ -503,9 +510,18 @@ public class E2_Estimator_WSManager {
 	  		}
 	  		
 	  		for(CMC_Asset__c assetRec : listAssets){
-	  			lstAssetsWrapper.add(new E2_AssetWrapper(assetRec.Id, assetRec.Name, assetRec.Short_Description__c, 
-	  											mapAssetContributors.get(assetRec.Id), assetRec.Technologies__c, assetRec.Asset_Type__c, assetRec.Asset_SubType__c, 
-	  											assetRec.Appirio_Services_Practice__c, assetRec.Number_of_Uses__c, assetRec.Is_Recommended__c));
+	  			lstAssetsWrapper.add(new E2_AssetWrapper(assetRec.Id, assetRec.Name, 
+	  			                    (assetRec.Short_Description__c == null ? '' : assetRec.Short_Description__c),	
+	  			                    (mapAssetContributors.get(assetRec.Id) == null ? '' : mapAssetContributors.get(assetRec.Id)), 
+	  			                    (assetRec.Technologies__c == null ? '' : assetRec.Technologies__c), 
+	  			                    (assetRec.Release_Stage__c == null ? '' : assetRec.Release_Stage__c),
+	  			                    (assetRec.Asset_Type__c == null ? '' : assetRec.Asset_Type__c), 
+	  			                    (assetRec.Asset_SubType__c == null ? '' : assetRec.Asset_SubType__c), 
+	  			                    (assetRec.Appirio_Services_Practice__c == null ? '' : assetRec.Appirio_Services_Practice__c), 
+	  			                    (assetRec.Number_of_Uses__c == null ? 0 : assetRec.Number_of_Uses__c), 
+	  			                    (assetRec.Is_Recommended__c == null ? false : assetRec.Is_Recommended__c), 
+	  			                    (assetRec.Total_Hours__c == null ? 0 : assetRec.Total_Hours__c), 
+	  			                    (assetRec.Reuse_LOE__c == null ? 0 : assetRec.Reuse_LOE__c)));
 	  		}
 	  		assetWrapperMap = new E2_AssetWrapperMap(searchStr, lstAssetsWrapper);
 	  	}catch(Exception ex){

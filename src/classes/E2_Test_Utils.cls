@@ -210,5 +210,26 @@ public with sharing class E2_Test_Utils {
   public static double randomNumber() {
     return Math.random();
   }
+  
+  //insert CMC Asset record
+  public static CMC_Asset__c insertAsset(String assetName, String shortDesc, String assetType, String assetSubtype, 
+  																			String technologies, string servicePractice, decimal reuseLoe, Boolean isInsert){
+  	CMC_Asset__c asset = new CMC_Asset__c(Name = assetName, Short_Description__c = shortDesc, Technologies__c = technologies,
+  												Asset_Type__c = assetType, Asset_SubType__c = assetSubtype, 
+  												Appirio_Services_Practice__c = servicePractice,	Reuse_LOE__c = reuseLoe);
+  	if(isInsert) {                                  
+      insert(asset);
+    }
+    return asset;
+  }
+  
+  // insert E2 Recommended Asset record
+  public static E2_Recommended_Asset__c insertRecommendedAsset(Id scopeId, Id assetId, Boolean isInsert){
+  	E2_Recommended_Asset__c recommendedAsset = new E2_Recommended_Asset__c(Scope__c = scopeId, Asset__c = assetId);
+  	if(isInsert) {                                  
+      insert(recommendedAsset);
+    }
+    return recommendedAsset;
+  }
 
 }

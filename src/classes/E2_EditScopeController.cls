@@ -16,10 +16,11 @@ public with sharing class E2_EditScopeController {
     public string estimateId{get;set;}
     public string dmlOperationMessage{get;set;}
     public string errorMessage{get;set;}
+    public boolean is_Dirty{get;set;}
     
     public List<E2_AssetWrapper> lstExistingAssets {get;set;}    
-    
-	public string assetsRecsJson {get;set;}
+    public boolean showFav {get;set;}
+	  public string assetsRecsJson {get;set;}
 
     public E2_EditScopeController(ApexPages.StandardController std) {
        // constructor for the page tied to standard controller	
@@ -28,8 +29,9 @@ public with sharing class E2_EditScopeController {
        this.is_View = false;       
        this.dmlOperationMessage = E2_Constants.DML_OPERATION_MESSAGE_FAIL;
        this.errorMessage = E2_constants.BLANK;
-       
+       this.is_Dirty = false;
        lstExistingAssets = new List<E2_AssetWrapper>();
+       showFav = true;
        
        assetsRecsJson = '';
     }
@@ -192,15 +194,37 @@ public with sharing class E2_EditScopeController {
     }
     
     public void populateViewRecords(){
-        Id scopeId = this.scope.id;        
+        Id scopeId = this.scope.id;   
+        Id currentUserId = UserInfo.getUserId();     
         for(E2_Scope__c scope : E2_DataUtil.getScopeAndChildrenOnScopeIdForEditScope(scopeId)){                
                this.childScopes.add(new Scope(scope, scope.Efforts__r));
+               if(scope.CreatedById  == currentUserId){ 
+                 showFav = true;
+               }
+               else{
+                 showFav = false;
+               }
         }
         retrieveExistingAsset();
     }
     
     public void retrieveExistingAsset(){
-        lstExistingAssets = E2_DataUtil.getRecommendedAssetsForScope(this.scope.id);
+        Map<Id, E2_Recommended_Asset__c> recommendedAssetsMap = new Map<Id, E2_Recommended_Asset__c>();
+      	for (E2_Recommended_Asset__c assetRec : E2_DataUtil.getRecommendedAssetsForScope(this.scope.id)){
+       			recommendedAssetsMap.put(assetRec.Asset__c, assetRec);																			
+       	}
+       	if(recommendedAssetsMap.keySet().size() > 0){
+       		Map<Id, CMC_Asset__c> mapAssets = E2_DataUtil.getAssetsMap(recommendedAssetsMap.keySet());
+       		for(Id assetId : mapAssets.keySet()){
+       		    CMC_Asset__c assetRec = mapAssets.get(assetId);
+                lstExistingAssets.add(new E2_AssetWrapper(recommendedAssetsMap.get(assetId).Id, assetId, assetRec.Name, 
+                                            (assetRec.Short_Description__c == null ? '' : assetRec.Short_Description__c), 
+                                            (assetRec.Technologies__c == null ? '' : assetRec.Technologies__c), 
+                                            true, false, 
+                                            (assetRec.Total_Hours__c == null ? 0 : assetRec.Total_Hours__c), 
+	  			                            (assetRec.Reuse_LOE__c == null ? 0 : assetRec.Reuse_LOE__c)));
+       		}
+       	}
         if(lstExistingAssets.size() > 0){
         	assetsRecsJson = '{';        
 	        

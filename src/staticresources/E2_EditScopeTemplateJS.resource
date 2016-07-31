@@ -268,9 +268,10 @@ var typeahead_input = {
     },
     
     addRowToTable : function(suggestion){
-        var tableRowStr = '<tr id="' + suggestion.id + '"><td class="slds-truncate whitespace_normal">' + suggestion.assetName + '</td>';
+        var tableRowStr = '<tr id="' + suggestion.id + '"><td class="slds-truncate whitespace_normal"><a href="/' + suggestion.id + '" target="_blank">' + suggestion.assetName + '</a></td>';
         tableRowStr += '<td class="slds-truncate whitespace_normal">' + suggestion.description + '</td>';
         tableRowStr += '<td class="slds-truncate whitespace_normal">' + suggestion.technologies + '</td>';
+        tableRowStr += '<td class="slds-truncate whitespace_normal">' + (suggestion.totalHours - suggestion.reuseLoe) + '</td>';
         tableRowStr += '<td class="slds-cell-shrink" data-label="Actions"><a onclick="typeahead_input.removeAssetRow(\''+ suggestion.id + '\');return false" class="delete_button slds-button--right--float"/></td></tr>';    
         $("#RecommendedAssetsTable tbody").append(tableRowStr);
     },

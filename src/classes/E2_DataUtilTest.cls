@@ -51,6 +51,9 @@ public class E2_DataUtilTest {
             system.assertEquals(E2_DataUtil.getEffortsOnEstimateIds(estimateIds).size(), 1);
             system.assertEquals(scopeGrpList.size(), 1);
             
+            List<E2_Recommended_Asset__c> lstRecommendedAssets = E2_DataUtil.getRecommendedAssetsForScope(scopeTemplate.Id);
+            system.assertEquals(lstRecommendedAssets.size(), 1);
+            system.assertNotEquals(E2_DataUtil.getAssetsMap(new Set<Id>{lstRecommendedAssets[0].Asset__c}), null);
         Test.stopTest();
     }
    }
@@ -104,6 +107,13 @@ public class E2_DataUtilTest {
         capacity.Estimator__c = estimate.Id;
         insert capacity;
         
-        
+        List<CMC_Asset__c> lstAssets = new List<CMC_Asset__c>();
+        lstAssets.add(E2_Test_Utils.insertAsset('Test Asset 1', 'Test asset record', 'Component', 'User Interface', 
+      									        'Apex', 'Salesforce;Data integration', 1, false));
+        lstAssets.add(E2_Test_Utils.insertAsset('Test Asset 2', 'Test asset record', 'Component', 'User Interface', 
+      									        'Apex', 'Salesforce;Data integration', 1, false));
+      	insert lstAssets;
+      	
+      	E2_Recommended_Asset__c recommendedAsset = E2_Test_Utils.insertRecommendedAsset(scopeTemplate.id, lstAssets[0].id, true);
     }
 }

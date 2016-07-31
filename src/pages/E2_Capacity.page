@@ -92,7 +92,7 @@ table tbody tr td.slds-td{
                        <div class="slds-col slds-no-flex slds-align-bottom">
                         <h3><apex:outputPanel layout="none" rendered="{!IF(OR(!!ISNULL(estimate.E2_Risk__c),estimate.E2_Risk__c == '0%'), false, true)}" >
                         <div class="slds-text-heading--label slds-grid grid--flex-spread " title="Risk" style="color: red;">
-                         <b>Risk Factor :&nbsp;&nbsp;<apex:outputField value="{!estimate.E2_Risk__c}" /></b>
+                         <b>Risk Factor : + <apex:outputField value="{!estimate.E2_Risk__c}" /></b>
                         </div>
                        </apex:outputPanel></h3>
                       </div>
@@ -171,7 +171,7 @@ table tbody tr td.slds-td{
                       <div class="slds-col slds-no-flex slds-align-bottom">
                         <h3><apex:outputPanel layout="none" rendered="{!IF(OR(!!ISNULL(estimate.E2_Risk__c),estimate.E2_Risk__c == '0%'), false, true)}" >
                         <div class="slds-text-heading--label slds-grid grid--flex-spread " title="Risk" style="color: red;">
-                         <b>Risk Factor :&nbsp;&nbsp;<apex:outputField value="{!estimate.E2_Risk__c}" /></b>
+                         <b>Risk Factor : +<apex:outputField value="{!estimate.E2_Risk__c}" /></b>
                         </div>
                        </apex:outputPanel></h3>
                       </div>

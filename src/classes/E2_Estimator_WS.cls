@@ -35,13 +35,13 @@ global with sharing class E2_Estimator_WS {
     }
     
     
-    webservice static E2_TreeNodeMap getClonedNodes(string scopeId, string estimateId, string parentScopeId){
+    /*webservice static E2_TreeNodeMap getClonedNodes(string scopeId, string estimateId, string parentScopeId){
         return E2_Estimator_WSManager.getClonedNodes(scopeId, estimateId, parentScopeId);        
-    }
+    }*/
     
-    webservice static E2_TreeNodeMap getChildCloneNodes(string parentId, string sourceId, string estimateId){
+    /*webservice static E2_TreeNodeMap getChildCloneNodes(string parentId, string sourceId, string estimateId){
         return E2_Estimator_WSManager.getChildCloneNodes(parentId, sourceId, estimateId);    
-    }
+    }*/
 
     webservice static E2_TreeNodeMap getScopeDetailNodes(string scopeId){
         return E2_Estimator_WSManager.getScopeDetailNodes(scopeId);        
@@ -51,13 +51,13 @@ global with sharing class E2_Estimator_WS {
         return E2_Estimator_WSManager.getChildScopeDetailNodes(parentId); 
     }
     
-    webservice static E2_TreeNodeMap getClonedNodesTemplate(string scopeId, string scopeGrpId, string parentScopeId){
+    webservice static String getClonedNodesTemplate(string scopeId, string scopeGrpId, string parentScopeId){
         return E2_Estimator_WSManager.getClonedNodesTemplate(scopeId, scopeGrpId, parentScopeId);        
     }
     
-    webservice static E2_TreeNodeMap getChildCloneNodesTemplate(string parentId, string sourceId, string scopeGrpId){
+    /*webservice static E2_TreeNodeMap getChildCloneNodesTemplate(string parentId, string sourceId, string scopeGrpId){
         return E2_Estimator_WSManager.getChildCloneNodesTemplate(parentId, sourceId, scopeGrpId);    
-    }
+    }*/
         
     webservice static string updateScopeFlag(string scopeId, string flagValue){
         return E2_Estimator_WSManager.updateScopeFlag(scopeId, flagValue);

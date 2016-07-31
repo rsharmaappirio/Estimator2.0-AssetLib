@@ -219,17 +219,21 @@
                                         
                                         <Br/>
                                         <div class="slds-grid">
+                                        <apex:outputPanel layout="none" rendered="{!showFavForSTMPermissionSet}">
                                           <div class="slds-col">
                                                 <div class="slds-form-element">
                                                   <div class="slds-form-element__control">
                                                     <label class="slds-checkbox">
-                                                      <apex:inputfield styleclass="slds-checkbox" value="{!childscope.scope.Is_Favourite__c}" rendered="{!(AND(NOT(is_View), NOT(showFavForSTMPermissionSet)))}" />
+                                                    
+                                                      <apex:inputfield styleclass="slds-checkbox" value="{!childscope.scope.Is_Favourite__c}" rendered="{!NOT(is_View)}" />
                                                       <span class="slds-checkbox--faux"></span>
                                                       <span class="slds-form-element__label">Favorite</span>
+                                                      
                                                     </label>
                                                   </div>
                                                 </div>
                                           </div>
+                                          </apex:outputPanel>
                                           <div class="slds-col">
                                              <div class="slds-form-element">
                                               <div class="slds-form-element__control">
@@ -435,6 +439,9 @@
                                                         <div class="slds-truncate">Technologies</div>
                                                     </th>
                                                     <th class="slds-is-sortable" scope="col">
+                                                        <div class="slds-truncate">Hours Saved</div>
+                                                    </th>
+                                                    <th class="slds-is-sortable" scope="col">
                                                         <div class="slds-truncate"></div>
                                                     </th>
                                                 </tr>
@@ -443,13 +450,16 @@
                                                 <apex:repeat value="{!lstExistingAssets}" var="assetRec">
                                                     <tr id="{!assetRec.id}">
                                                       <td>
-                                                        <div class="slds-truncate">{!assetRec.assetName}</div>
+                                                        <div class="slds-truncate"><a href="/{!assetRec.id}" target="_blank">{!assetRec.assetName}</a></div>
                                                       </td>
                                                       <td>
                                                         <div class="slds-truncate">{!assetRec.description}</div>
                                                       </td>
                                                       <td>
                                                         <div class="slds-truncate">{!assetRec.technologies}</div>
+                                                      </td>
+                                                      <td>
+                                                        <div class="slds-truncate">{!(assetRec.totalHours - assetRec.reuseLoe)}</div>
                                                       </td>
                                                       <td class="slds-cell-shrink" data-label="Actions">
                                                        <a onclick="typeahead_input.removeAssetRow('{!assetRec.id}');return false;" class="delete_button slds-button--right--float"/>

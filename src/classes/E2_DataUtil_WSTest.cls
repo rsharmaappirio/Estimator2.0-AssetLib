@@ -10,6 +10,7 @@ public class E2_DataUtil_WSTest {
     public static E2_Derived_Effort_Group__c derEffGroup;
     public static List<E2_Derived_Effort__c> derivedEfforts;
     public static E2_Capacity__c capacity;
+    public static E2_Recommended_Asset__c recommendedAsset;
       
   public static testmethod void testE2_TreeNode() {
     User sysAdmin = E2_Test_Utils.insertUser(E2_Constants.PROFILE_SYS_ADMIN, true);
@@ -23,6 +24,7 @@ public class E2_DataUtil_WSTest {
     derEffGroup = [SELECT Id FROM E2_Derived_Effort_Group__c];
     derivedEfforts = [SELECT Id FROM E2_Derived_Effort__c ];
     capacity = [SELECT ID FROM E2_Capacity__c];
+    recommendedAsset = [SELECT Scope__c, Asset__c FROM E2_Recommended_Asset__c];
     
     System.runAs(sysAdmin){
         Test.startTest();         
@@ -33,9 +35,10 @@ public class E2_DataUtil_WSTest {
           system.assertEquals(E2_DataUtil_WS.getScopeDetails(estimate.Id).size(), 1);
           system.assertEquals(E2_dataUtil_WS.getChildScopeByParentId(favScope.Id).size(), 1);
           system.assertEquals(E2_dataUtil_WS.getFullScopeDetails(favScope.Id).size(), 1);
-          system.assertEquals(E2_DataUtil_WS.getFullScopeDetailsWithLimit(favScope.Id).size(), 1);
+          //system.assertEquals(E2_DataUtil_WS.getFullScopeDetailsWithLimit(favScope.Id).size(), 1);
           system.assertEquals(E2_DataUtil_WS.getScopeChildList(favScope.Id).size(), 1); 
-          
+          system.assertEquals(E2_DataUtil_WS.getRelatedAssets('test', new List<String>{recommendedAsset.Asset__c}).size(), 1);
+          system.assertEquals(E2_DataUtil_WS.getAssetContributors(new List<CMC_Asset__c>()).size(), 0);
         Test.stopTest();
     }
    }
@@ -90,7 +93,14 @@ public class E2_DataUtil_WSTest {
         capacity.Estimator__c = estimate.Id;
         insert capacity;
         
-        
+        List<CMC_Asset__c> lstAssets = new List<CMC_Asset__c>();
+        lstAssets.add(E2_Test_Utils.insertAsset('Test Asset 1', 'Test asset record', 'Component', 'User Interface', 
+      									        'Apex', 'Salesforce;Data integration', 1, false));
+        lstAssets.add(E2_Test_Utils.insertAsset('Test Asset 2', 'Test asset record', 'Component', 'User Interface', 
+      									        'Apex', 'Salesforce;Data integration', 1, false));
+      	insert lstAssets;
+      	
+      	recommendedAsset = E2_Test_Utils.insertRecommendedAsset(scopeTemplate.id, lstAssets[0].id, true);
     }
 
 }

@@ -83,8 +83,8 @@ public class E2_DataUtil {
   public static List<E2_Scope__c> getScopeAndChildrenOnScopeIdForEditScope(Id scopeId) {
   	return [Select Id, Source_Scope__c, Scope_Group__c, Scope_Item_Type__c, Parent_Scope__c,Parent_Scope__r.Name, Name,
   			Presales_LOE__c,Presales_LOE__r.Name, Description__c, Is_Favourite__c, LOE_Hrs__c, Complexity__c, E2_Assumption__c, 
-            Is_Active__c, Scope_Flag__c,
-            (Select Id From Child_Scopes__r),
+            Is_Active__c, Scope_Flag__c, OwnerId, CreatedById ,
+            (Select Id, CreatedById  From Child_Scopes__r),
             (Select Id, Name, Scope__c, Complexity_Factor_High__c, Resource_Role__c, Phase__c, Effort_Hrs__c, Speciality__c, Speciality__r.Name, 
              Complexity_Factor_Low__c, Is_Active__c, Source_Effort__c, Hrs_Override_Reason__c From Efforts__r) 
             From E2_Scope__c e where e.id = : scopeId];
@@ -158,25 +158,27 @@ public class E2_DataUtil {
             WHERE Id =: scopeId];
   }
   
-  public static List<E2_AssetWrapper> getRecommendedAssetsForScope(Id scopeId){
-  	Map<Id, E2_Recommended_Asset__c> recommendedAssetsMap = new Map<Id, E2_Recommended_Asset__c>();
-  	List<E2_AssetWrapper> lstAssetWrapper = new List<E2_AssetWrapper>();
-   	for (E2_Recommended_Asset__c assetRec : [SELECT Asset__c, Scope__c FROM E2_Recommended_Asset__c 
-   																					WHERE Scope__c =: scopeId]){
-   			recommendedAssetsMap.put(assetRec.Asset__c, assetRec);																			
-   	}
-   	if(recommendedAssetsMap.keySet().size() > 0){
-   		Map<Id, CMC_Asset__c> mapAssets = new Map<Id, CMC_Asset__c>([SELECT Name, Short_Description__c, Technologies__c, Asset_Type__c, 
-   		                       Asset_SubType__c, Appirio_Services_Practice__c, Total_Hours__c, Reuse_LOE__c,
+  public static List<E2_Recommended_Asset__c> getRecommendedAssetsForScope(Id scopeId){
+      return  [SELECT Asset__c, Scope__c 
+               FROM E2_Recommended_Asset__c 
+   			   WHERE Scope__c =: scopeId];
+  }
+  
+  public static Map<Id, CMC_Asset__c> getAssetsMap(Set<Id> assetsId){
+      return new Map<Id, CMC_Asset__c>([SELECT Name, Short_Description__c, Technologies__c, Asset_Type__c, 
+   		                         Asset_SubType__c, Appirio_Services_Practice__c, Total_Hours__c, Reuse_LOE__c,
    								 Primary_Contact_UserId__c, Number_of_Uses__c, Is_Recommended__c
    								 FROM CMC_Asset__c
-   								 WHERE Id IN :recommendedAssetsMap.keySet()]);
-   		for(Id assetId : mapAssets.keySet()){
-   		    CMC_Asset__c assetRec = mapAssets.get(assetId);
-            lstAssetWrapper.add(new E2_AssetWrapper(recommendedAssetsMap.get(assetId).Id, assetId, assetRec.Name, assetRec.Short_Description__c, 
-                                        assetRec.Technologies__c, true, false));
-   		}
-   	}
-   	return lstAssetWrapper; 
+   								 WHERE Id IN :assetsId]);
+  } 
+  
+  public static List<E2_Question__c> getScopeQuestions(Id scopeId) {
+  	return [SELECT Id, Question_Text__c, Scope__c, Source_Question__c, 
+  			Type__c, Is_Active__c, Weighted_Effort_LOE__c,
+  			(SELECT Id, Answer_Text__c, Effort_LOE__c, Is_Selected__c, 
+  			  Source_Answer__c, Is_Active__c, Question__c, Action__c 
+  			 FROM Answers__r)
+  			 FROM E2_Question__c
+  			 WHERE Scope__c =: scopeId];
   }
 }

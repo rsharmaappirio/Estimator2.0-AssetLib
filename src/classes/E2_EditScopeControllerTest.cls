@@ -4,6 +4,7 @@ public class E2_EditScopeControllerTest {
   public static CMC_Presales_LOE__c estimate;
   public static List<E2_Effort__c> effortLst;  
   public static Id recTypeId1 = E2_RecordTypeClass.getId('E2_Scope__c', E2_Constants.SCOPE_RT_SCOPE);
+  public static E2_Recommended_Asset__c recommendedAsset;
   
    public static testmethod void testForNoScope(){
     estimate = [SELECT Id FROM CMC_Presales_LOE__c]; 
@@ -201,7 +202,40 @@ public class E2_EditScopeControllerTest {
     //stop test
     Test.stopTest(); 
     } 
-  }  
+  }
+  
+  public static testmethod void testEditScopeWithAssets(){
+    scope = [SELECT Id FROM E2_Scope__c];
+    estimate = [SELECT Id FROM CMC_Presales_LOE__c];
+    recommendedAsset = [SELECT Scope__c, Asset__c FROM E2_Recommended_Asset__c];
+    
+    User sysAdmin = E2_Test_Utils.insertUser(E2_Constants.PROFILE_SYS_ADMIN, true);
+      
+    System.runAs(sysAdmin){
+    
+    //start test
+    Test.startTest();
+      PageReference pageRef = Page.E2_EditScope;
+      Test.setCurrentPage(pageRef);
+      ApexPages.currentPage().getParameters().put(E2_Constants.URL_KEY_ESTIMATE_ID, estimate.Id);
+    
+      ApexPages.StandardController stdController = new ApexPages.StandardController(scope);
+      E2_EditScopeController controller = new E2_EditScopeController(stdController);
+    
+      controller.pageAction();
+      System.assertEquals(controller.lstExistingAssets.size(), 1);     
+      
+      controller.assetsRecsJson = '{"'+ recommendedAsset.Asset__c + '" : {"recommendedAssetRecId" : "' + recommendedAsset.Id + '", "id" : "' + recommendedAsset.Asset__c + '", '+
+                                '"isExisting" : "true", "isDeleted" : "true"}}'; 
+        
+      controller.saveScope();     
+      System.assertEquals(controller.lstExistingAssets.size(), 0);
+      
+        
+    //stop test
+    Test.stopTest();  
+    }
+  }
     
   //create test data
   @testSetup static void createTestData(){
@@ -237,6 +271,15 @@ public class E2_EditScopeControllerTest {
     scope1.recordTypeId = recTypeId1;
     scope1.Presales_LOE__c = estimate1.id;  
     insert scope1;
+    
+    List<CMC_Asset__c> lstAssets = new List<CMC_Asset__c>();
+    lstAssets.add(E2_Test_Utils.insertAsset('Test Asset 1', 'Test asset record', 'Component', 'User Interface', 
+     									        'Apex', 'Salesforce;Data integration', 1, false));
+    lstAssets.add(E2_Test_Utils.insertAsset('Test Asset 2', 'Test asset record', 'Component', 'User Interface', 
+      									        'Apex', 'Salesforce;Data integration', 1, false));
+    insert lstAssets;
+      	
+    recommendedAsset = E2_Test_Utils.insertRecommendedAsset(scope1.id, lstAssets[0].id, true);
 
   }
 

@@ -119,7 +119,7 @@
                <apex:param value="" name="scopeName" assignTo="{!scopeName}"></apex:param>
             </apex:actionFunction>
             <apex:actionFunction name="addOrRemoveFavScope" action="{!addOrRemoveFavScope}" 
-               oncomplete="SelectScopeTempate.search_complete();" rerender="scopePanel,myScopePanel,templateCount,favoriteCount">
+               oncomplete="SelectScopeTempate.search_complete();refreshFrame('{!selectedScopeId}');" rerender="scopePanel,myScopePanel,templateCount,favoriteCount">
                <apex:param value="" name="scopeId" assignTo="{!selectedScopeId}"></apex:param>
                <apex:param value="" name="isFav" assignTo="{!isFavourite}"></apex:param>
             </apex:actionFunction>
@@ -198,7 +198,7 @@
                                                                     <label class="slds-checkbox"></label>
                                                                 </apex:facet>
                                                                 <apex:outputPanel layout="none">
-                                                                    <a href="javascript:void(0);" title="Add scope" onclick="scopesPills.addPillsLink('{!sc1.scope.id}','{!sc1.scope.Name}');AddScopeTree.updateTreeState();" id="{!sc1.scope.id}href" class="addup_button"></a>
+                                                                    <a href="javascript:void(0);" title="Add scope" onclick="scopesPills.addScopeFromVF('{!sc1.scope.id}','{!sc1.scope.Name}');AddScopeTree.updateTreeState();" id="{!sc1.scope.id}href" class="addup_button"></a>
                                                                 </apex:outputPanel> 
                                                             </apex:column>
                                                             <apex:column >
@@ -309,7 +309,7 @@
                                                             <apex:column styleClass="slds-cell-shrink">
                                                                 <apex:facet name="header"><label class="slds-checkbox"></label></apex:facet>
                                                                 <apex:outputPanel layout="none">                                              
-                                                                    <a href="javascript:void(0);" title="Add scope" onclick="scopesPills.addPillsLink('{!sc1.scope.id}','{!sc1.scope.Name}');AddScopeTree.updateTreeState();" id="{!sc1.scope.id}href" class="addup_button"></a>
+                                                                    <a href="javascript:void(0);" title="Add scope" onclick="scopesPills.addScopeFromVF('{!sc1.scope.id}','{!sc1.scope.Name}');AddScopeTree.updateTreeState();" id="{!sc1.scope.id}href" class="addup_button"></a>
                                                                 </apex:outputPanel>
                                                             </apex:column>
                                                             <apex:column >

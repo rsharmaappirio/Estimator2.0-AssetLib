@@ -18,7 +18,6 @@ public with sharing class E2_EditScopeTemplateController {
     
     public List<E2_AssetWrapper> lstExistingAssets {get;set;}   
 		public string assetsRecsJson {get;set;}
-		public static final string scopeTemplatePermissionSet = 'Scope_Template_manager';
 		public boolean showFavForSTMPermissionSet {get;set;}
 
 
@@ -31,7 +30,7 @@ public with sharing class E2_EditScopeTemplateController {
        
        lstExistingAssets = new List<E2_AssetWrapper>();       
        assetsRecsJson = '';
-       showFavForSTMPermissionSet = false;
+       showFavForSTMPermissionSet = true;
     }
 
     public PageReference pageAction(){
@@ -45,21 +44,20 @@ public with sharing class E2_EditScopeTemplateController {
             populateViewRecords();
         }
         
-        //
+        //I-227260 : code to hide Favourite for Scope Template Manager
         List<PermissionSet> permissionSetsAllowed = [SELECT Id, Name
 			                                                 FROM PermissionSet
-			                                                 WHERE Name =: scopeTemplatePermissionSet];
-
-		    User currentUser = [SELECT Id,Profile.Name,
-		                               (SELECT Id FROM PermissionSetAssignments WHERE PermissionSetId IN: permissionSetsAllowed)
+			                                                 WHERE Name =: E2_Constants.STM_PERMISSION_SET];
+        
+		    User currentUser = [SELECT Id, Profile.Name,
+		                          (SELECT Id FROM PermissionSetAssignments WHERE PermissionSetId IN: permissionSetsAllowed)
 		                          FROM User
 		                          WHERE Id = :userinfo.getUserId()];
-		      
 		      if (currentUser.PermissionSetAssignments.size() > 0) {
-		        showFavForSTMPermissionSet = true;
+		        showFavForSTMPermissionSet = false;
 		      }
 		      else {
-		        showFavForSTMPermissionSet = false;
+		        showFavForSTMPermissionSet = true;
 		      }
         return null;
     }
@@ -190,7 +188,22 @@ public with sharing class E2_EditScopeTemplateController {
     }
     
     public void retrieveExistingAsset(){
-        lstExistingAssets = E2_DataUtil.getRecommendedAssetsForScope(this.scope.id);
+        Map<Id, E2_Recommended_Asset__c> recommendedAssetsMap = new Map<Id, E2_Recommended_Asset__c>();
+      	for (E2_Recommended_Asset__c assetRec : E2_DataUtil.getRecommendedAssetsForScope(this.scope.id)){
+       			recommendedAssetsMap.put(assetRec.Asset__c, assetRec);																			
+       	}
+       	if(recommendedAssetsMap.keySet().size() > 0){
+       		Map<Id, CMC_Asset__c> mapAssets = E2_DataUtil.getAssetsMap(recommendedAssetsMap.keySet());
+       		for(Id assetId : mapAssets.keySet()){
+       		    CMC_Asset__c assetRec = mapAssets.get(assetId);
+                lstExistingAssets.add(new E2_AssetWrapper(recommendedAssetsMap.get(assetId).Id, assetId, assetRec.Name, 
+                                            (assetRec.Short_Description__c == null ? '' : assetRec.Short_Description__c), 
+                                            (assetRec.Technologies__c == null ? '' : assetRec.Technologies__c), 
+                                            true, false, 
+                                            (assetRec.Total_Hours__c == null ? 0 : assetRec.Total_Hours__c), 
+	  			                            (assetRec.Reuse_LOE__c == null ? 0 : assetRec.Reuse_LOE__c)));
+       		}
+       	}
         if(lstExistingAssets.size() > 0){
         	assetsRecsJson = '{';        
 	        

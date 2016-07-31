@@ -125,9 +125,17 @@ var ck_custom_editor = {
         CKEDITOR.instances[_a].on( 'blur', function( e ) {
 	      ck_custom_editor.editorHide(e.editor.name);
 	      if(e.editor.name.indexOf('assumptionRtext')!=-1) {
+	            if($(document.getElementById(e.editor.name.replace('assumptionRtext', 'assumptiontext'))).html() != CKEDITOR.instances[e.editor.name].getData(false)) {
+	                mrak_page_updated.markJSDirty();
+	                mrak_page_updated.showIsDirtyWarning();
+	            } 
 		    	$(document.getElementById(e.editor.name.replace('assumptionRtext', 'assumptiontext'))).html(CKEDITOR.instances[e.editor.name].getData(false));
 	            $(document.getElementById(e.editor.name.replace('assumptionRtext', 'assumptiontext'))).show('slow', function(e){resetIframeHeight();});
 		  } else {
+		        if($(document.getElementById(e.editor.name.replace('richtext', 'outputtext'))).html() != CKEDITOR.instances[e.editor.name].getData(false)) {
+	                mrak_page_updated.markJSDirty();
+	                mrak_page_updated.showIsDirtyWarning();
+	            }
 		    	$(document.getElementById(e.editor.name.replace('richtext', 'outputtext'))).html(CKEDITOR.instances[e.editor.name].getData(false));
 	            $(document.getElementById(e.editor.name.replace('richtext', 'outputtext'))).show('slow', function(e){resetIframeHeight();});
 		  }
@@ -138,7 +146,6 @@ var ck_custom_editor = {
 		      var id = $(this).attr('id');
 		      id = id.replace('assumptiontext', 'assumptionRtext');
 		      ck_custom_editor.editorShow(id);	
-		      //CKEDITOR.instances[id].focus();   
 		      $(this).hide();
 		    });
 	   } else {
@@ -146,21 +153,9 @@ var ck_custom_editor = {
 		      var id = $(this).attr('id');
 		      id = id.replace('outputtext', 'richtext');
 		      ck_custom_editor.editorShow(id);	
-		      //CKEDITOR.instances[id].focus();   
 		      $(this).hide();
 		    }); 
 	    }
-	    CKEDITOR.instances[_a].on('focus',function(e){
-            if(parent && parent.AddEditScope) {
-                var frameId = scope_sfdc_id + parent.AddEditScope.ENDS_WITH;
-                if(!parent.document.getElementById(frameId).hasFocus()) {
-                    parent.document.getElementById(frameId).focus();
-                }
-              }
-        });
-	    CKEDITOR.instances[_a].on( 'change', function(e) {		    
-		    mrak_page_updated.is_updated = true;
-		});
 	 }
    }	   
   },
@@ -201,12 +196,26 @@ var flag_controller = {
 
 var typeahead_input = {
     searchKey : '',
+    searchinput_jQclientid : '#searchStr_ele',
+    typeaheadmenu_selector: 'div.Typeahead-menu',
+    typeaheadhint_selector: '.Typeahead-hint',
     resourceUrl : '',
     selectedAssetsMap : {},
+    resetFrameHeightWithTypeAheadEvents:function(){
+        var height = $(document.body).height();
+        var height_addr = 15;
+        var offsetHeight = $(typeahead_input.searchinput_jQclientid).offset().top 
+                                  + $(typeahead_input.searchinput_jQclientid).height() 
+                                  + $(typeahead_input.typeaheadmenu_selector).height();
+        if(offsetHeight > height){
+            height = offsetHeight;
+        }
+        parent.AddEditScope.setHeightOfEditScopeFrame(height  + height_addr, window.name);
+    },
     load : function(){
         $('.Typeahead-input').typeahead({
-            hint: $('.Typeahead-hint'),
-            menu: $('.Typeahead-menu'),
+            hint: $(typeahead_input.typeaheadhint_selector),
+            menu: $(typeahead_input.typeaheadmenu_selector),
             highlight: true,    
             minLength: 3,
             classNames: {
@@ -220,6 +229,7 @@ var typeahead_input = {
         {
             name: 'assets',
             displayKey: 'name',
+            limit: 10,
             source: function(query, syncResults, asyncResults){
                 typeahead_input.searchKey = query;
                 var selectedAssets = typeahead_input.getAlreadyAddedAssets();
@@ -267,8 +277,7 @@ var typeahead_input = {
             $("input[Id$='existingAssetIds']").val(JSON.stringify(typeahead_input.selectedAssetsMap));
         })
         .on('typeahead:render', function(ev, suggestion, flag, dataset) {
-            var containerId = '#' + parent.AddEditScope.EDIT_SCOPE_INLINE_DIV_ID;
-            parent.AddEditScope.setHeightOfEditScopeFrame($(document).height(), window.name);
+           typeahead_input.resetFrameHeightWithTypeAheadEvents(); 
         })
         .on('typeahead:asyncrequest', function() {
             $('.Typeahead-spinner').show();
@@ -279,24 +288,41 @@ var typeahead_input = {
     },
     
     prepareSuggestionTemplate : function(data){
-        var returnHtmlStr = '<div class = "ProfileCard u-cf"><img class="ProfileCard-avatar" src="' + typeahead_input.resourceUrl + '/images/' + data.imageName + '"/>';
-        returnHtmlStr += '<div class="ProfileCard-details"><div class="ProfileCard-realName"><a onclick="typeahead_input.goToAssetDetailPage(event, this);" href="/' + data.id + '" target="_blank">'+ data.assetName + '</a> <span class="slds-badge">' + data.assetUsage + '</span>';
+        var returnHtmlStr = '<div class = "ProfileCard u-cf"><img class="ProfileCard-avatar" src="{resource_url}/images/{image_name}"/>';
+        returnHtmlStr += '<div class="ProfileCard-details"><div class="ProfileCard-realName"><a onclick="typeahead_input.goToAssetDetailPage(event, this);" href="/{id}" target="_blank">{asset_name}</a>';
+        returnHtmlStr += '<img src="{resource_url}/images/{assettype_image_name}.png" title="{assettype_image_name} Asset"/>'
         if(data.isRecommended == 'true'){
             returnHtmlStr += '<span style="margin-left: 5px; background-color:#FA9500;" class="slds-badge">Recommended</span>';
         }
         returnHtmlStr += '</div>';
-        returnHtmlStr += '<div class="ProfileCard-description">' + data.description + '</div></div>';
-        returnHtmlStr += '<div class="ProfileCard-stats"><div class="ProfileCard-stat"><span class="ProfileCard-stat-label">Primary Contributor : </span>' + data.primaryContributors + '</div>';
-        returnHtmlStr += '<div class="ProfileCard-stat"><span class="ProfileCard-stat-label">Technologies : </span>' + data.technologies + '</div></div></div>';
+        returnHtmlStr += '<div><div class="ProfileCard-stat"><span class="ProfileCard-stat-label">Number of Reuses : </span>{asset_usage}</div>';
+        returnHtmlStr += '<div class="ProfileCard-stat"><span class="ProfileCard-stat-label">Release Stage : </span>{release_stage}</div></div>';
+        returnHtmlStr += '<div class="ProfileCard-description">{description}</div></div>';
+        returnHtmlStr += '<div class="ProfileCard-stats"><div class="ProfileCard-stat"><span class="ProfileCard-stat-label">Primary Contributor : </span>{primarycontributors}</div>';
+        returnHtmlStr += '<div class="ProfileCard-stat"><span class="ProfileCard-stat-label">Technologies : </span>{technologies}</div></div></div>';
+        
+        returnHtmlStr = returnHtmlStr.replace(/{resource_url}/gi, typeahead_input.resourceUrl)
+                                     .replace(/{image_name}/gi, data.imageName)
+                                     .replace(/{id}/gi, data.id)
+                                     .replace(/{asset_name}/gi, data.assetName)
+                                     .replace(/{assettype_image_name}/gi, data.assetTypeImage)
+                                     .replace(/{asset_usage}/gi, data.assetUsage)
+                                     .replace(/{release_stage}/gi, data.releaseStage)
+                                     .replace(/{description}/gi, data.description)
+                                     .replace(/{primarycontributors}/gi, data.primaryContributors)
+                                     .replace(/{technologies}/gi, data.technologies);
+        
         return returnHtmlStr;
     },
     
     addRowToTable : function(suggestion){
-        var tableRowStr = '<tr id="' + suggestion.id + '"><td class="slds-truncate whitespace_normal">' + suggestion.assetName + '</td>';
+        var tableRowStr = '<tr id="' + suggestion.id + '"><td class="slds-truncate whitespace_normal"><a href="/' + suggestion.id + '" target="_blank">' + suggestion.assetName + '</a></td>';
         tableRowStr += '<td class="slds-truncate whitespace_normal">' + suggestion.description + '</td>';
         tableRowStr += '<td class="slds-truncate whitespace_normal">' + suggestion.technologies + '</td>';
+        tableRowStr += '<td class="slds-truncate whitespace_normal">' + (suggestion.totalHours - suggestion.reuseLoe) + '</td>';
         tableRowStr += '<td class="slds-cell-shrink" data-label="Actions"><a onclick="typeahead_input.removeAssetRow(\''+ suggestion.id + '\');return false" class="delete_button slds-button--right--float"/></td></tr>';    
         $("#RecommendedAssetsTable tbody").append(tableRowStr);
+        mrak_page_updated.markJSDirty();
     },
     
     goToAssetDetailPage : function(event, element){
@@ -314,6 +340,7 @@ var typeahead_input = {
             typeahead_input.selectedAssetsMap[rowId].isDeleted = 'true';
         }
         $("input[Id$='existingAssetIds']").val(JSON.stringify(typeahead_input.selectedAssetsMap));
+        mrak_page_updated.markJSDirty();
     },
     
     getAlreadyAddedAssets : function(){
@@ -601,36 +628,60 @@ var mrak_page_updated = {
     is_updated : false,
     message_shown : false,
     save_trigged: false,
-    
+    IS_INSIDE_IFRAME: true,
+    bindIframeEvents : function() {
+        $(window).on( 'blur', function( e ) {
+                console.log(document.activeElement.nodeName);
+			    if((e.target.document.activeElement.nodeName == null ||  e.target.document.activeElement.nodeName == 'BODY')
+			       && mrak_page_updated.is_Dirty()) {
+				    parent && parent.AddEditScope && parent.AddEditScope.showIsDirtyWarning(scope_sfdc_id);
+				}
+			});
+			$(window).bind('click', function(event) { mrak_page_updated.IS_INSIDE_IFRAME = true; });
+    },
+    showIsDirtyWarning : function() {
+        if(mrak_page_updated.IS_INSIDE_IFRAME == false && 
+           (document.activeElement.nodeName == null ||  document.activeElement.nodeName == 'BODY')
+		    && mrak_page_updated.is_Dirty()) {
+		    parent && parent.AddEditScope && parent.AddEditScope.showIsDirtyWarning(scope_sfdc_id);
+		}
+		mrak_page_updated.IS_INSIDE_IFRAME = false;
+    },
     load : function() {
-        $("input").bind('focus',function(e){
-            if(parent && parent.AddEditScope) {
-                var frameId = scope_sfdc_id + parent.AddEditScope.ENDS_WITH;
-                if(!parent.document.getElementById(frameId).contentWindow.document.hasFocus()) {
-                    parent.document.getElementById(frameId).contentWindow.document.focus();
-                }
-              }
-        });
-        $("select").bind('focus',function(e){
-            if(parent && parent.AddEditScope) {
-                var frameId = scope_sfdc_id + parent.AddEditScope.ENDS_WITH;
-                if(!parent.document.getElementById(frameId).contentWindow.document.hasFocus()) {
-                    parent.document.getElementById(frameId).contentWindow.document.focus();
-                }
-              }
-        });
-        
+        mrak_page_updated.bindIframeEvents();
+        var is_Dirty = mrak_page_updated.checkIsdirty();
+        if(is_Dirty == true) {
+            mrak_page_updated.is_updated = true; 
+            mrak_page_updated.save_trigged = false;
+        }
         $("input").bind('change',function(e){
-           mrak_page_updated.is_updated = true; 
-           mrak_page_updated.save_trigged = false;
+            if($(this).attr('id') != 'searchStr_ele') {
+                mrak_page_updated.markJSDirty();
+            }
         });
         $("select").bind('change',function(e){
-           mrak_page_updated.is_updated = true; 
-           mrak_page_updated.save_trigged = false;
+           mrak_page_updated.markJSDirty();
+        });
+        $(".delete_button").bind('click',function(e){
+          mrak_page_updated.markJSDirty();
         });
     },
-    showalert : function() {
-        if(mrak_page_updated.is_updated && !mrak_page_updated.message_shown && !mrak_page_updated.save_trigged) {
+    markJSDirty : function() {
+        mrak_page_updated.is_updated = true; 
+        mrak_page_updated.save_trigged = false;
+        mrak_page_updated.markFormDirty();
+    },
+    markFormDirty : function() {
+        $("[id$=is_Dirty]").val(true);
+        return true;
+    },
+    checkIsdirty : function() {
+        return $("[id$=is_Dirty]").val();
+    },
+    is_Dirty : function() {
+        if(mrak_page_updated.is_updated == true && 
+            mrak_page_updated.message_shown == false && 
+            mrak_page_updated.save_trigged == false) {
             return true;
         }
         return false;

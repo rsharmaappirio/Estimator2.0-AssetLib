@@ -56,6 +56,14 @@
 					$( "#"+pillId+"href" ).removeClass("added_button");
 	            	resetIframeHeight();
 	        	},
+	        	addScopeFromVF : function(scopeId,scopeName) {
+	        	    if($( "#pillContainer" ).children( "#"+scopeId ).length) {
+	        	        // Do nothing
+	        	    } else {
+	        	        scopesPills.addPillsLink(scopeId,scopeName);
+	        	        AddScopeTree.onScopeClick(scopeId);
+	        	    }
+	        	},
 	        	addPillsLink : function(scopeId,scopeName) {
 	        		if($( "#pillContainer" ).children( "#"+scopeId ).length) {
 						// Do nothing
@@ -139,6 +147,8 @@
 				        "multiple": true
 				    },
 				    "checkbox" : {
+				      "cascade": "",
+				      "three_state": false,
 				      "keep_selected_style" : false
 				    }
 			};
@@ -153,6 +163,17 @@
 			    	$(treeId).jstree("destroy");			    	
 				    $(treeId).jstree(jstree_options);
 				    AddScopeTree.tree_init(scopeId);
+				    setTimeout(function(){
+		                AddScopeTree.refreshFrame();
+		            }, 4000);
+			    },
+			    refreshFrame : function() {
+			        var $node = $(treeId).jstree(true).get_node('#');
+                	    $.each($node.children_d, function(indx, id) {
+                		    var $childnode = $(treeId).jstree(true).get_node(id);
+                		    $(treeId).jstree("select_node", id); 
+                		});
+		            AddScopeTree.getselectedTreeNode();
 			    },
 				create_node: function(node, position) {
 	        		node.state = JSON.parse(node.state);
@@ -202,10 +223,10 @@
 		                   	bindEvents();
 		                   	if (AddScopeTree.addscopenode_call_register && AddScopeTree.addscopenode_call_register[scope_id]) delete AddScopeTree.addscopenode_call_register[scope_id];
 		                   	if (AddScopeTree.addscopenode_call_register && JSON.stringify(AddScopeTree.addscopenode_call_register) == '{}') {
-		                   		spinner.hide();
+		                   	   	spinner.hide();
 							}
 						} else {
-	                		spinner.hide();
+		                   	spinner.hide();
 	                	}
 					},
 			        onFailure: function(error) {
@@ -243,8 +264,8 @@
 			                if (AddScopeTree.addscopenode_call_register && JSON.stringify(AddScopeTree.addscopenode_call_register) == '{}') {
 			                   	spinner.hide();
 			                }
-						} else {        
-			            	spinner.hide();
+						} else {
+			                spinner.hide();
 			        	}
 			        },
 			        onFailure: function(error) {
@@ -258,23 +279,15 @@
 			 	},
 			 	getselectedTreeNode : function() {
 			 		var $node = $(treeId).jstree(true).get_node('#');
-		    		AddScopeTree.addscopepill_register = {};
 		    		$.each($node.children_d, function(indx, id) {
 		    			var $childnode = $(treeId).jstree(true).get_node(id);
-		    			var pillsId = $(treeId).jstree(true).get_parent($childnode.original.id);
-		    			if($childnode.state.selected && !(AddScopeTree.addscopepill_register[pillsId] || AddScopeTree.addscopepill_register['#'])) {
-		    			    AddScopeTree.addscopepill_register[$childnode.original.id] = pillsId;
+		    			scopesPills.addPillsLink($childnode.original.id,$childnode.original.title);
+		    			if($childnode.state.selected) {
 		    			    scopesPills.addPillsLink($childnode.original.id,$childnode.original.title);
-		    			    if(pillsId == '#') {
-		    			        AddScopeTree.addscopepill_register[pillsId] = '#';    
-		    			    }
 		    			}
 		    			else {
-		    			    if (AddScopeTree.addscopepill_register[pillsId])
-		    			        AddScopeTree.addscopepill_register[$childnode.original.id] = pillsId;
 		    				scopesPills.removePills($childnode.original.id);
 		    			}
-		    			console.log(AddScopeTree.addscopepill_register);
 		    		});
 			 	},
 			 	/*getselectedTreeNode : function() {
@@ -309,6 +322,11 @@
 			}
 			var bindEvents = function(){
 		    	$(treeId).on("select_node.jstree", function(e, data) {
+		    		var $node = $(treeId).jstree(true).get_node(data.node.id);
+		    		$.each($node.children_d, function(indx, id) {
+		    			var $childnode = $(treeId).jstree(true).get_node(id);
+		    			$(treeId).jstree("select_node", id); 
+		    		});
 		    		AddScopeTree.getselectedTreeNode();
 		    	});		    
 				$(treeId).on("deselect_node.jstree", function (e, data) {
@@ -337,6 +355,12 @@
 	    	    addOrRemoveFavScope(scopeId, isFav);
 	    	    return false;
 	    	}
+	    	var refreshFrame = function(scopeId) {
+	    	    if(parent && parent.AddEditScope && parent.AddEditScope.reload_Scope_frameId){	    
+    			    parent.AddEditScope.reload_Scope_frameId(scopeId);         
+    			}
+    			return false;
+	    	}
 	    	var hideFavorite = function(favoriteLink) {
 	    	    var  isFav = false;
 	    	    var scopeId = $(favoriteLink).attr('scope-id');
@@ -349,4 +373,3 @@
 	    	    return false;    
     	    	    
 	    	    }
-	    	    

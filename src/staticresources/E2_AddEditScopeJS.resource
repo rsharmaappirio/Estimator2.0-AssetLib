@@ -5,11 +5,11 @@ var CustomAlert = {
     notifyTypeCssDiv: '#sldsalertdiv',
     notifyEditContainer: '.slds-edit-alert',
     notifyEditContainerbackdrop: '.slds-edit-alert-backdrop',
-    showEdit: function() {
+    showIsDirtyWarning: function() {
         $(CustomAlert.notifyEditContainerbackdrop).show().css('height', $(document).outerHeight());
         $(CustomAlert.notifyEditContainer).show();
     },
-    hideEdit: function() {
+    hideIsDirtyWarning: function() {
         $(CustomAlert.notifyEditContainer).hide();
         $(CustomAlert.notifyEditContainerbackdrop).hide();
     },
@@ -311,7 +311,7 @@ var bindEvents = function(){
     $(treeId).bind("select_node.jstree", function (e, data) {
         //if(data && data.event && data.event.button != 2) {
         var IFRAME_KEY = global_scopeId + AddEditScope.ENDS_WITH;
-        if(!document.getElementById(IFRAME_KEY) || !document.getElementById(IFRAME_KEY).contentWindow.mrak_page_updated.showalert()) {
+        if(!document.getElementById(IFRAME_KEY) || !document.getElementById(IFRAME_KEY).contentWindow.mrak_page_updated.is_Dirty()) {
             global_scopeId = data.node.id;
             AddEditScope.edit_node(data.node, data.parent);   
             tabpanel.showDetailTab();
@@ -344,23 +344,23 @@ var AddEditScope = {
             if($(frame_id).length) $(frame_id).attr("src", function(){ return $(this).attr("src")});
         });
     },
-    show_iframe_alert : function(id) {
-        var showalert  = document.getElementById(id).contentWindow.mrak_page_updated.showalert();
-        console.log(showalert);
-        if(showalert) {
-            SELECTED_NODE = id;
-            CustomAlert.showEdit();
-        } 
+    reload_Scope_frameId : function(scope) {
+            var frame_id = '#' + scope + AddEditScope.ENDS_WITH;
+            if($(frame_id).length) $(frame_id).attr("src", function(){ return $(this).attr("src")});
+    },
+    showIsDirtyWarning : function(id) {
+            SELECTED_NODE = id + parent.AddEditScope.ENDS_WITH;
+            CustomAlert.showIsDirtyWarning();
     },
     save_edit_scope : function() {
         $('#'+SELECTED_NODE).focus();
         document.getElementById(SELECTED_NODE).contentWindow.mrak_page_updated.save_scope();
-        CustomAlert.hideEdit();
+        CustomAlert.hideIsDirtyWarning();
     },
     cancel_scope_save : function() {
         $('#'+SELECTED_NODE).focus();
         document.getElementById(SELECTED_NODE).contentWindow.mrak_page_updated.markchecked();
-        CustomAlert.hideEdit();
+        CustomAlert.hideIsDirtyWarning();
     },
     edit_node : function(node, parent){
 	   var endsWith = AddEditScope.ENDS_WITH;
@@ -404,12 +404,7 @@ var AddEditScope = {
 				   class : 'slds-card'
 				   }).appendTo(containerId);
 		   }
-		   $(document.getElementById(frame_id_standard).contentWindow).on( 'blur', function( e ) {
-			    if(e.target.document.activeElement.getAttribute("class") == null || 
-			        e.target.document.activeElement.getAttribute("class").indexOf("cke_wysiwyg_frame") == -1) {
-				    AddEditScope.show_iframe_alert(frame_id_standard);
-				}
-			});
+		   
 		   
 	   }
 	   
@@ -623,6 +618,7 @@ var AddEditScope = {
             
             if (result.indexOf('Fail') != -1) {
                 var exception = 'INSUFFICIENT_ACCESS_OR_READONLY';
+                
                 if(result.toLowerCase().indexOf(exception.toLowerCase()) != -1){
                   CustomAlert.showError('Re-ordering Failed: You do not have permission to re-order this scope!!! Please contact scope owner!!');    
                 }else{
@@ -693,7 +689,7 @@ var AddEditScope = {
         }
         return newList;
     },
-    sort_order: function(data) {
+    /*sort_order: function(data) {
         var list = {};
         var newlist = [];
         var keys = [];
@@ -715,7 +711,7 @@ var AddEditScope = {
             }
         }
         return newlist;
-    },
+    },*/
     
     tree_init_callback: {
         onSuccess: function(result) {
@@ -763,7 +759,7 @@ var AddEditScope = {
             $(loadSpinner).hide();
         }
     },
-    addScopeTemplate_RecurringCallBack: {
+    /*addScopeTemplate_RecurringCallBack: {
         onSuccess: function(result) {
             var hasChildren = false;
             if (result.length > 0) {
@@ -814,15 +810,15 @@ var AddEditScope = {
             sourceId: sourceId,
             estimateId: estimateId
         }, AddEditScope.addScopeTemplate_RecurringCallBack);
-    },
+    },*/
 
-    addscopetemplate_call_register: {},
+    //addscopetemplate_call_register: {},
 
     addScopeTemplate_initCallBack: {
         onSuccess: function(result) {
             var hasChildren = false;
             if (result.length > 0) {
-                var scope_id = result[0].scope_id;
+                /*var scope_id = result[0].scope_id;
                 var node = result[0].nodeList;
                 AddEditScope.create_node(node, AddEditScope.LAST);
                 if (node.hasChildren == true || node.hasChildren == 'true') {
@@ -833,7 +829,7 @@ var AddEditScope = {
 
                 if (AddEditScope.addscopetemplate_call_register && AddEditScope.addscopetemplate_call_register[scope_id]) delete AddEditScope.addscopetemplate_call_register[scope_id];
                 if (AddEditScope.addscopetemplate_call_register && JSON.stringify(AddEditScope.addscopetemplate_call_register) == '{}') {
-                    //to refresh scope loe we need to reload jstree
+                  */  //to refresh scope loe we need to reload jstree
                     $(treeId).jstree('destroy');
                     $(treeId).jstree(jstree_options);
                     AddEditScope.tree_init();
@@ -841,7 +837,7 @@ var AddEditScope = {
                     $(loadSpinner).hide();
                     CustomAlert.show('Scope has been cloned successfully!!!');
                     
-                }
+                //}
 
             } else {
                 $(loadSpinner).hide();
@@ -855,18 +851,16 @@ var AddEditScope = {
     },
 
     addScopeTemplate_init: function(scopeId) {
-        AddEditScope.addscopetemplate_call_register[scopeId] = '#';
-        sforce.apex.execute("E2_Estimator_WS", "getClonedNodes", {
-            scopeId: scopeId,
+        sforce.apex.execute("E2_Estimator_WS", "getSelectedScopeNodes", {
+            scopeIdCSV: scopeId,
             estimateId: estimateId,
             parentScopeId: '#'
         }, AddEditScope.addScopeTemplate_initCallBack);
     },
 
     addScopeTemplateWithParent_init: function(scopeId, parentScopeId) {
-        AddEditScope.addscopetemplate_call_register[scopeId] = parentScopeId;
-        sforce.apex.execute("E2_Estimator_WS", "getClonedNodes", {
-            scopeId: scopeId,
+        sforce.apex.execute("E2_Estimator_WS", "getSelectedScopeNodes", {
+            scopeIdCSV: scopeId,
             estimateId: estimateId,
             parentScopeId: parentScopeId
         }, AddEditScope.addScopeTemplate_initCallBack);
@@ -888,17 +882,19 @@ var AddEditScope = {
         var result = selectedIds;
         //var result = ['a5wR00000004EdD', 'a5wR0000000Ce2Q', 'a5wR0000000Cdg0'];
         if (AddEditScope.ADD_FROM_TEMPLATE_PARENT_ID && AddEditScope.ADD_FROM_TEMPLATE_PARENT_ID != null) {
-
-            $.each(result, function(indx, node) {
+            $(loadSpinner).show().css('height', $(document).outerHeight());
+            AddEditScope.addScopeTemplateWithParent_init(result.toString(), AddEditScope.ADD_FROM_TEMPLATE_PARENT_ID);
+            /*$.each(result, function(indx, node) {
                 $(loadSpinner).show().css('height', $(document).outerHeight());
                 AddEditScope.addScopeTemplateWithParent_init(node, AddEditScope.ADD_FROM_TEMPLATE_PARENT_ID);
-            });
+            });*/
         } else {
-
-            $.each(result, function(indx, node) {
+            $(loadSpinner).show().css('height', $(document).outerHeight());
+            AddEditScope.addScopeTemplate_init(result.toString());
+            /*$.each(result, function(indx, node) {
                 $(loadSpinner).show().css('height', $(document).outerHeight());
                 AddEditScope.addScopeTemplate_init(node);
-            });
+            });*/
         }
         AddEditScope.hideAddFromTemplateModal();
     },

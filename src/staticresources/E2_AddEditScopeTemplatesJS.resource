@@ -467,7 +467,7 @@ var AddEditScope = {
             scopeGrpId: scopeGrpId
         }, AddEditScope.tree_init_callback);
     },
-    sort_order: function(data) {
+    /*sort_order: function(data) {
         var list = {};
         var newlist = [];
         var keys = [];
@@ -489,7 +489,7 @@ var AddEditScope = {
             }
         }
         return newlist;
-    },
+    },*/
     sort_order_new : function(data){
         var newList = [];
         var map = {};
@@ -559,7 +559,7 @@ var AddEditScope = {
             alert(error);
         }
     },
-    addScopeTemplate_RecurringCallBack: {
+    /*addScopeTemplate_RecurringCallBack: {
         onSuccess: function(result) {
             var hasChildren = false;
             if (result.length > 0) {
@@ -613,12 +613,12 @@ var AddEditScope = {
     },
 
     addscopetemplate_call_register: {},
-
+*/
     addScopeTemplate_initCallBack: {
         onSuccess: function(result) {
             var hasChildren = false;
             if (result.length > 0) {
-                var scope_id = result[0].scope_id;
+                /*var scope_id = result[0].scope_id;
                 var node = result[0].nodeList;
                 AddEditScope.create_node(node, AddEditScope.LAST);
                 if (node.hasChildren == true || node.hasChildren == 'true') {
@@ -629,14 +629,14 @@ var AddEditScope = {
 
                 if (AddEditScope.addscopetemplate_call_register && AddEditScope.addscopetemplate_call_register[scope_id]) delete AddEditScope.addscopetemplate_call_register[scope_id];
                 if (AddEditScope.addscopetemplate_call_register && JSON.stringify(AddEditScope.addscopetemplate_call_register) == '{}') {
-                    //to refresh scope loe we need to reload jstree
+                  */  //to refresh scope loe we need to reload jstree
                     $(treeId).jstree('destroy');
                     $(treeId).jstree(jstree_options);
                     AddEditScope.tree_init();
                     // End
                     $(loadSpinner).hide();
                     CustomAlert.show('Scope has been cloned successfully!!!');
-                }
+                //}
 
             } else {
                 $(loadSpinner).hide();
@@ -650,7 +650,7 @@ var AddEditScope = {
     },
 
     addScopeTemplate_init: function(scopeId) {
-        AddEditScope.addscopetemplate_call_register[scopeId] = '#';
+        //AddEditScope.addscopetemplate_call_register[scopeId] = '#';
         sforce.apex.execute("E2_Estimator_WS", "getClonedNodesTemplate", {
             scopeId: scopeId,
             scopeGrpId: scopeGrpId,
@@ -659,7 +659,7 @@ var AddEditScope = {
     },
 
     addScopeTemplateWithParent_init: function(scopeId, parentScopeId) {
-        AddEditScope.addscopetemplate_call_register[scopeId] = parentScopeId;
+        //AddEditScope.addscopetemplate_call_register[scopeId] = parentScopeId;
         sforce.apex.execute("E2_Estimator_WS", "getClonedNodesTemplate", {
             scopeId: scopeId,
             scopeGrpId: scopeGrpId,
@@ -683,17 +683,19 @@ var AddEditScope = {
         var result = selectedIds;
         //var result = ['a5wR00000004EdD', 'a5wR0000000Ce2Q', 'a5wR0000000Cdg0'];
         if (AddEditScope.ADD_FROM_TEMPLATE_PARENT_ID && AddEditScope.ADD_FROM_TEMPLATE_PARENT_ID != null) {
-
-            $.each(result, function(indx, node) {
+            $(loadSpinner).show().css('height', $(document).outerHeight());
+            AddEditScope.addScopeTemplateWithParent_init(result.toString(), AddEditScope.ADD_FROM_TEMPLATE_PARENT_ID);
+            /*$.each(result, function(indx, node) {
                 $(loadSpinner).show().css('height', $(document).outerHeight());
                 AddEditScope.addScopeTemplateWithParent_init(node, AddEditScope.ADD_FROM_TEMPLATE_PARENT_ID);
-            });
+            });*/
         } else {
-
-            $.each(result, function(indx, node) {
+            $(loadSpinner).show().css('height', $(document).outerHeight());
+            AddEditScope.addScopeTemplate_init(result.toString());
+            /*$.each(result, function(indx, node) {
                 $(loadSpinner).show().css('height', $(document).outerHeight());
                 AddEditScope.addScopeTemplate_init(node);
-            });
+            });*/
         }
         AddEditScope.hideAddFromTemplateModal();
     },

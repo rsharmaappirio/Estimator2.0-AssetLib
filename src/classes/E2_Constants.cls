@@ -92,5 +92,11 @@ public class E2_Constants {
   public final static string SCOPE_XLS_HEADER = '<tr><td>Scope Name</td><td>Parent Scope Name</td><td>Complexity</td><td>Scope Item Type</td><td>Description</td><td>Assumption</td><td>LOE Hrs</td></tr>';
   
   public final static string PERCENTAGE = '%';
+  public final static string STM_PERMISSION_SET = 'Scope_Template_manager';
+  
+  public final static string ASSET_MULTIPLE_PRACTICE_IMAGE = 'multiple-practice.png';
+  public final static string ASSET_NO_PRACTICE_IMAGE = 'no-practice.png';
+  public final static string ASSET_PRACTICE_IMAGE_SUFFIX = '-practice.png';
+  
   public void testConstantsMethod(){}
 }
