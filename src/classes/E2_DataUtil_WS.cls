@@ -148,5 +148,19 @@ public with sharing class E2_DataUtil_WS {
 	  				FROM CMC_Asset_Contributor__c
 	  				WHERE Asset__c IN :listAssets AND Primary_Contact__c = true];
   }
+  
+  public static List<E2_Recommended_Asset__c> getRecommendedAssetsForScope(String scopeId){
+      return  [SELECT Asset__c, Scope__c 
+               FROM E2_Recommended_Asset__c 
+   			   WHERE Scope__c =: scopeId];
+  }
+  
+  public static Map<String, CMC_Asset__c> getAssetsMap(Set<Id> assetsId){
+      return new Map<String, CMC_Asset__c>([SELECT Name, Short_Description__c, Technologies__c, Asset_Type__c, 
+   		                         Asset_SubType__c, Appirio_Services_Practice__c, Total_Hours__c, Reuse_LOE__c,
+   								 Primary_Contact_UserId__c, Number_of_Uses__c, Is_Recommended__c, Release_Stage__c
+   								 FROM CMC_Asset__c
+   								 WHERE Id IN :assetsId]);
+  }
    
 }

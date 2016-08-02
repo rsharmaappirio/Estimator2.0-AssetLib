@@ -121,35 +121,43 @@ var ck_custom_editor = {
 		});
        
         
-      
         CKEDITOR.instances[_a].on( 'blur', function( e ) {
+          
+          // mark global is-dirty to true for save warning in case any
+          // changes applied manually to the rte of assumptions and description
+          // can't use with change event as event will be triggered with every keyup
+          TrackScopeUpdates.IS_INSIDE_CURRENT_WINDOW = false;
+            if(CKEDITOR.instances[e.editor.name].checkDirty()){
+    	        TrackScopeUpdates.markJSDirty();
+    	        TrackScopeUpdates.showIsDirtyWarning();
+    	    }      
+	      // Hide the editor
 	      ck_custom_editor.editorHide(e.editor.name);
-	      if(e.editor.name.indexOf('assumptionRtext')!=-1) {
-	            if($(document.getElementById(e.editor.name.replace('assumptionRtext', 'assumptiontext'))).html() != CKEDITOR.instances[e.editor.name].getData(false)) {
-	                mrak_page_updated.markJSDirty();
-	                mrak_page_updated.showIsDirtyWarning();
-	            } 
-		    	$(document.getElementById(e.editor.name.replace('assumptionRtext', 'assumptiontext'))).html(CKEDITOR.instances[e.editor.name].getData(false));
-	            $(document.getElementById(e.editor.name.replace('assumptionRtext', 'assumptiontext'))).show('slow', function(e){resetIframeHeight();});
+	      
+	      if(e.editor.name.indexOf('assumptionRtext') != -1) {
+	            var assumptionsRTE_jq = $(document.getElementById(e.editor.name.replace('assumptionRtext', 'assumptiontext')));
+	            assumptionsRTE_jq.html(CKEDITOR.instances[e.editor.name].getData(false));
+	            assumptionsRTE_jq.show('slow', function(e){resetIframeHeight();});
 		  } else {
-		        if($(document.getElementById(e.editor.name.replace('richtext', 'outputtext'))).html() != CKEDITOR.instances[e.editor.name].getData(false)) {
-	                mrak_page_updated.markJSDirty();
-	                mrak_page_updated.showIsDirtyWarning();
-	            }
-		    	$(document.getElementById(e.editor.name.replace('richtext', 'outputtext'))).html(CKEDITOR.instances[e.editor.name].getData(false));
-	            $(document.getElementById(e.editor.name.replace('richtext', 'outputtext'))).show('slow', function(e){resetIframeHeight();});
+		        var descriptionRTE_jq = $(document.getElementById(e.editor.name.replace('richtext', 'outputtext')));
+		        descriptionRTE_jq.html(CKEDITOR.instances[e.editor.name].getData(false));
+	            descriptionRTE_jq.show('slow', function(e){resetIframeHeight();});
 		  }
+		 
 		  
-	    } );
-	   if(_a.indexOf('assumptionRtext')!=-1) {
-	   		$(document.getElementById(_a.replace('assumptionRtext', 'assumptiontext'))).on('dblclick', function(e){	   
+	   });
+	    
+	   if(_a.indexOf('assumptionRtext') != -1) {
+	       var assumptionsRTE_A_jq = $(document.getElementById(_a.replace('assumptionRtext', 'assumptiontext')));
+	   		assumptionsRTE_A_jq.on('dblclick', function(e){	   
 		      var id = $(this).attr('id');
 		      id = id.replace('assumptiontext', 'assumptionRtext');
 		      ck_custom_editor.editorShow(id);	
 		      $(this).hide();
 		    });
 	   } else {
-		   $(document.getElementById(_a.replace('richtext', 'outputtext'))).on('dblclick', function(e){	   
+	       var descriptionRTE_A_jq = $(document.getElementById(_a.replace('richtext', 'outputtext')));
+		   descriptionRTE_A_jq.on('dblclick', function(e){	   
 		      var id = $(this).attr('id');
 		      id = id.replace('outputtext', 'richtext');
 		      ck_custom_editor.editorShow(id);	
@@ -162,14 +170,18 @@ var ck_custom_editor = {
   
   editorShow : function(id){
     var editor_id = 'cke_' + id;
-    $(document.getElementById(editor_id)).show('slow', function(e){resetIframeHeight();});
-    resetIframeHeight();
+    TrackScopeUpdates.IS_INSIDE_CURRENT_WINDOW = true;
+    $(document.getElementById(editor_id)).show('slow', function(e){
+         CKEDITOR.instances[$(this).attr('id').replace('cke_', '')].focus(); 
+         resetIframeHeight();
+    });
   },
 
   editorHide : function(id){
     var editor_id = 'cke_' + id;
     //debugger;
     $(document.getElementById(editor_id)).hide('slow', function(e){resetIframeHeight();});
+    TrackScopeUpdates.IS_INSIDE_CURRENT_WINDOW = false;
   },
   
   editorHideWithoutEffect : function(id){
@@ -177,6 +189,7 @@ var ck_custom_editor = {
     //debugger;
     $(document.getElementById(editor_id)).hide();
     resetIframeHeight();
+    TrackScopeUpdates.IS_INSIDE_CURRENT_WINDOW = false;
   } 
 
 
@@ -274,7 +287,9 @@ var typeahead_input = {
             else{
                 typeahead_input.selectedAssetsMap[suggestion.id].isDeleted = 'false';    
             }
-            $("input[Id$='existingAssetIds']").val(JSON.stringify(typeahead_input.selectedAssetsMap));
+            $("input[Id$='existingAssetRecs']").val(JSON.stringify(typeahead_input.selectedAssetsMap));
+            typeahead_input.resetFrameHeightWithTypeAheadEvents();
+            TrackScopeUpdates.markJSDirty();
         })
         .on('typeahead:render', function(ev, suggestion, flag, dataset) {
            typeahead_input.resetFrameHeightWithTypeAheadEvents(); 
@@ -290,7 +305,7 @@ var typeahead_input = {
     prepareSuggestionTemplate : function(data){
         var returnHtmlStr = '<div class = "ProfileCard u-cf"><img class="ProfileCard-avatar" src="{resource_url}/images/{image_name}"/>';
         returnHtmlStr += '<div class="ProfileCard-details"><div class="ProfileCard-realName"><a onclick="typeahead_input.goToAssetDetailPage(event, this);" href="/{id}" target="_blank">{asset_name}</a>';
-        returnHtmlStr += '<img src="{resource_url}/images/{assettype_image_name}.png" title="{assettype_image_name} Asset"/>'
+        returnHtmlStr += '<img src="{resource_url}/images/{assettype_image_name}.png" title="{assettype_image_name} Asset" style="padding-left:10px;"/>'
         if(data.isRecommended == 'true'){
             returnHtmlStr += '<span style="margin-left: 5px; background-color:#FA9500;" class="slds-badge">Recommended</span>';
         }
@@ -316,13 +331,22 @@ var typeahead_input = {
     },
     
     addRowToTable : function(suggestion){
-        var tableRowStr = '<tr id="' + suggestion.id + '"><td class="slds-truncate whitespace_normal"><a href="/' + suggestion.id + '" target="_blank">' + suggestion.assetName + '</a></td>';
-        tableRowStr += '<td class="slds-truncate whitespace_normal">' + suggestion.description + '</td>';
-        tableRowStr += '<td class="slds-truncate whitespace_normal">' + suggestion.technologies + '</td>';
-        tableRowStr += '<td class="slds-truncate whitespace_normal">' + (suggestion.totalHours - suggestion.reuseLoe) + '</td>';
-        tableRowStr += '<td class="slds-cell-shrink" data-label="Actions"><a onclick="typeahead_input.removeAssetRow(\''+ suggestion.id + '\');return false" class="delete_button slds-button--right--float"/></td></tr>';    
+        var tableRowStr = '<tr id="{asset_id}"><td class="slds-truncate whitespace_normal"><a href="/{asset_id}" target="_blank">{asset_name}</a></td>';
+        tableRowStr += '<td class="slds-truncate whitespace_normal">{description}</td>';
+        //tableRowStr += '<td class="slds-truncate whitespace_normal">{technologies}</td>';
+        tableRowStr += '<td class="slds-truncate whitespace_normal">{reuse_loe}</td>';
+        tableRowStr += '<td class="slds-truncate whitespace_normal">{release_stage}</td>';
+        tableRowStr += '<td class="slds-cell-shrink" data-label="Actions"><a onclick="typeahead_input.removeAssetRow(\'{asset_id}\');return false" class="delete_button slds-button--right--float"/></td></tr>';
+        
+        tableRowStr = tableRowStr.replace(/{asset_id}/gi, suggestion.id)
+                                 .replace(/{asset_name}/gi, suggestion.assetName)
+                                 .replace(/{description}/gi, suggestion.description)
+                                 //.replace(/{technologies}/gi, suggestion.technologies)
+                                 .replace(/{reuse_loe}/gi, (suggestion.totalHours - suggestion.reuseLoe))
+                                 .replace(/{release_stage}/gi, suggestion.releaseStage);
+        
         $("#RecommendedAssetsTable tbody").append(tableRowStr);
-        mrak_page_updated.markJSDirty();
+        //typeahead_input.resetFrameHeightWithTypeAheadEvents();
     },
     
     goToAssetDetailPage : function(event, element){
@@ -339,8 +363,9 @@ var typeahead_input = {
         if(typeof typeahead_input.selectedAssetsMap[rowId] != 'undefined'){
             typeahead_input.selectedAssetsMap[rowId].isDeleted = 'true';
         }
-        $("input[Id$='existingAssetIds']").val(JSON.stringify(typeahead_input.selectedAssetsMap));
-        mrak_page_updated.markJSDirty();
+        $("input[Id$='existingAssetRecs']").val(JSON.stringify(typeahead_input.selectedAssetsMap));
+        typeahead_input.resetFrameHeightWithTypeAheadEvents();
+        TrackScopeUpdates.markJSDirty();
     },
     
     getAlreadyAddedAssets : function(){
@@ -369,9 +394,13 @@ $(document).ready(function() {
     showSpinner();
     validations.load();
     ck_custom_editor.load();
+    // save warning initiation
+    TrackScopeUpdates.load();
     bindSliders();
     hideSpinner();
     flag_controller.load();
+    
+    
     if(msg.toLowerCase() == 'success'){
        parent&&parent.AddEditScope&&parent.AddEditScope.closeEditScopeModelPopup&&parent.AddEditScope.closeEditScopeModelPopup();
        if($("input[id$='dmlMessage']").length) $("input[id$='dmlMessage']").val('Fail');
@@ -379,23 +408,23 @@ $(document).ready(function() {
     }else{     
       resetIframeHeight();
     }
+    
     $("input:text, textarea").first().focus();
     
-    
     $('input:text').keydown(function(event){
-    if(event.keyCode == 13) {
+    if(event.keyCode == 13 && $(this).attr('id') != 'searchStr_ele') {
       event.preventDefault();
       $('.save-button-custom').click();
       return false;
     }
     });
     
-    $( window ).resize(function() {
-         if ($(this).width() < 767) { 
+    //$( window ).resize(function() {
+    //     if ($(this).width() < 767) { 
            //resetIframeHeight();
            //console.log('in am in');
-         }
-    });
+    //     }
+    //});
 	
 	$("[id$=allocationHrs]").change(function(){
         if($(this).val() != $(this).closest(".effortsColumn").find('input.oldhrs').val()) {
@@ -405,7 +434,7 @@ $(document).ready(function() {
         }
         resetIframeHeight();
 	});  
-	mrak_page_updated.load();
+	
 });
 
 var resetIframeHeight = function(){
@@ -430,7 +459,7 @@ function showSpinner(){
 
 
 var addUpdateScopes = function(){
-  mrak_page_updated.save_trigged = true;
+  TrackScopeUpdates.save_trigged = true;
   var validate1 = validateScopes();
   var validate2 = validateData();
   if(validate1 == false || validate2 == false){
@@ -441,8 +470,8 @@ var addUpdateScopes = function(){
     showSpinner();
     AddOrUpdate();
     $(".slds-change-notification").hide();
-    mrak_page_updated.is_updated = false;
-    mrak_page_updated.message_shown = false;
+    TrackScopeUpdates.is_updated = false;
+    TrackScopeUpdates.message_shown = false;
   }catch(ex){
     alert(ex);
   }
@@ -624,52 +653,49 @@ var toggleActions = function(jqObj, slide){
     //jqObj.closest('tr').prev('tr').find('input.reloadbtn').click();
     
 }
-var mrak_page_updated = {
+// trace scope form for any changes and mark page for 
+// unsaved changes
+var TrackScopeUpdates = {
     is_updated : false,
     message_shown : false,
     save_trigged: false,
-    IS_INSIDE_IFRAME: true,
+    IS_INSIDE_CURRENT_WINDOW: true,
+    assets_search_input_client_id : '#searchStr_ele',
     bindIframeEvents : function() {
-        $(window).on( 'blur', function( e ) {
-                console.log(document.activeElement.nodeName);
-			    if((e.target.document.activeElement.nodeName == null ||  e.target.document.activeElement.nodeName == 'BODY')
-			       && mrak_page_updated.is_Dirty()) {
-				    parent && parent.AddEditScope && parent.AddEditScope.showIsDirtyWarning(scope_sfdc_id);
-				}
-			});
-			$(window).bind('click', function(event) { mrak_page_updated.IS_INSIDE_IFRAME = true; });
+         $(window).on( 'blur', function( e ) {
+             TrackScopeUpdates.showIsDirtyWarning();
+	     });
     },
     showIsDirtyWarning : function() {
-        if(mrak_page_updated.IS_INSIDE_IFRAME == false && 
-           (document.activeElement.nodeName == null ||  document.activeElement.nodeName == 'BODY')
-		    && mrak_page_updated.is_Dirty()) {
-		    parent && parent.AddEditScope && parent.AddEditScope.showIsDirtyWarning(scope_sfdc_id);
+        if(TrackScopeUpdates.IS_INSIDE_CURRENT_WINDOW == false && TrackScopeUpdates.is_Dirty()) {
+		    parent&&parent.AddEditScope&&parent.AddEditScope.showIsDirtyWarning&&parent.AddEditScope.showIsDirtyWarning(scope_sfdc_id);
 		}
-		mrak_page_updated.IS_INSIDE_IFRAME = false;
+		TrackScopeUpdates.IS_INSIDE_CURRENT_WINDOW = false;
     },
     load : function() {
-        mrak_page_updated.bindIframeEvents();
-        var is_Dirty = mrak_page_updated.checkIsdirty();
+        TrackScopeUpdates.bindIframeEvents();
+        var is_Dirty = TrackScopeUpdates.checkIsdirty();
         if(is_Dirty == true) {
-            mrak_page_updated.is_updated = true; 
-            mrak_page_updated.save_trigged = false;
+            TrackScopeUpdates.is_updated = true; 
+            TrackScopeUpdates.save_trigged = false;
         }
-        $("input").bind('change',function(e){
-            if($(this).attr('id') != 'searchStr_ele') {
-                mrak_page_updated.markJSDirty();
-            }
+        
+        // attach change event handler to all input fields except the assets search input.
+        $("input, select").not(TrackScopeUpdates.assets_search_input_client_id).bind('change',function(e){
+                TrackScopeUpdates.markJSDirty();
         });
-        $("select").bind('change',function(e){
-           mrak_page_updated.markJSDirty();
-        });
+        
         $(".delete_button").bind('click',function(e){
-          mrak_page_updated.markJSDirty();
+          TrackScopeUpdates.markJSDirty();
+        });
+        $("a.slds-select").bind('click',function(e){
+          TrackScopeUpdates.IS_INSIDE_CURRENT_WINDOW = true;
         });
     },
     markJSDirty : function() {
-        mrak_page_updated.is_updated = true; 
-        mrak_page_updated.save_trigged = false;
-        mrak_page_updated.markFormDirty();
+        TrackScopeUpdates.is_updated = true; 
+        TrackScopeUpdates.save_trigged = false;
+        TrackScopeUpdates.markFormDirty();
     },
     markFormDirty : function() {
         $("[id$=is_Dirty]").val(true);
@@ -679,21 +705,20 @@ var mrak_page_updated = {
         return $("[id$=is_Dirty]").val();
     },
     is_Dirty : function() {
-        if(mrak_page_updated.is_updated == true && 
-            mrak_page_updated.message_shown == false && 
-            mrak_page_updated.save_trigged == false) {
+        if(TrackScopeUpdates.is_updated == true && 
+            TrackScopeUpdates.message_shown == false && 
+            TrackScopeUpdates.save_trigged == false) {
             return true;
         }
         return false;
     },
     markchecked : function() {
-        mrak_page_updated.message_shown = true;
+        TrackScopeUpdates.message_shown = true;
         $(".slds-change-notification").show();
     },
     save_scope : function() {
-        mrak_page_updated.message_shown = false;
-        mrak_page_updated.is_updated = false;
+        TrackScopeUpdates.message_shown = false;
+        TrackScopeUpdates.is_updated = false;
         addUpdateScopes();
     }
-    
 }

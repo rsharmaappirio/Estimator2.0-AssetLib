@@ -1,3 +1,19 @@
+// jstree conditional select node
+(function ($, undefined) {
+  "use strict";
+  $.jstree.defaults.conditionalselect = function () { return true; };
+
+  $.jstree.plugins.conditionalselect = function (options, parent) {
+    // own function
+    this.select_node = function (obj, supress_event, prevent_open) {
+      if(this.settings.conditionalselect.call(this, this.get_node(obj))) {
+        parent.select_node.call(this, obj, supress_event, prevent_open);
+      }
+    };
+  };
+})(jQuery);
+
+
 var CustomAlert = {
     notifyContainerCssSelector: '.slds-notify_container',
     notifyCloseCssSelector: '.slds-notify__close',
@@ -71,7 +87,17 @@ var loadSpinner = '#loadingSpinner';
 
 
 var jstree_options = {
-    "plugins": ["dnd", "contextmenu", "search" ],//"sort"],
+    "plugins": ["dnd", "contextmenu", "search", "conditionalselect" ],//"sort"],
+    'conditionalselect' : function (node) {
+         // this method is used to validate if the scope detail is dirty than don't progress and show the save warning
+         var IFRAME_KEY = global_scopeId + AddEditScope.ENDS_WITH;
+         var scope_detail_obj = document.getElementById(IFRAME_KEY);
+         if(scope_detail_obj && scope_detail_obj.contentWindow.TrackScopeUpdates.is_Dirty()) {
+           AddEditScope.showIsDirtyWarning(global_scopeId);
+           return false;
+         }        
+         return true;
+     },
     'core': {
         'check_callback': true,
         'animation': 200,
@@ -306,20 +332,12 @@ var bindEvents = function(){
     $(treeId).on("move_node.jstree", function(e, data) {
         AddEditScope.reparent_scope(data.node.id, data.parent);
     });
-   
+    
     //EVENT: JSTREE NODE BEING SELECTED
     $(treeId).bind("select_node.jstree", function (e, data) {
-        //if(data && data.event && data.event.button != 2) {
-        var IFRAME_KEY = global_scopeId + AddEditScope.ENDS_WITH;
-        if(!document.getElementById(IFRAME_KEY) || !document.getElementById(IFRAME_KEY).contentWindow.mrak_page_updated.is_Dirty()) {
-            global_scopeId = data.node.id;
-            AddEditScope.edit_node(data.node, data.parent);   
-            tabpanel.showDetailTab();
-        } else {
-            $(treeId).jstree("deselect_node", data.node.id);
-            $(treeId).jstree("select_node", global_scopeId);
-        }
-        //} 
+          global_scopeId = data.node.id;
+          AddEditScope.edit_node(data.node, data.parent);   
+          tabpanel.showDetailTab();
     });
 }
 
@@ -354,13 +372,15 @@ var AddEditScope = {
     },
     save_edit_scope : function() {
         $('#'+SELECTED_NODE).focus();
-        document.getElementById(SELECTED_NODE).contentWindow.mrak_page_updated.save_scope();
+        document.getElementById(SELECTED_NODE).contentWindow.TrackScopeUpdates.save_scope();
         CustomAlert.hideIsDirtyWarning();
+        $(treeId).jstree(true).select_node(global_scopeId);
     },
     cancel_scope_save : function() {
         $('#'+SELECTED_NODE).focus();
-        document.getElementById(SELECTED_NODE).contentWindow.mrak_page_updated.markchecked();
+        document.getElementById(SELECTED_NODE).contentWindow.TrackScopeUpdates.markchecked();
         CustomAlert.hideIsDirtyWarning();
+        $(treeId).jstree(true).select_node(global_scopeId);
     },
     edit_node : function(node, parent){
 	   var endsWith = AddEditScope.ENDS_WITH;
@@ -577,10 +597,6 @@ var AddEditScope = {
                 //to refresh scope loe we need to reload jstree
                 global_scopeId = result;
                 
-                
-                //$(loadSpinner).hide();
-                //return;
-                
                 //to handle the re-ordering of scopes (vikash goyal 7/15/2016)
                 // create a json of new order of scopes in the tree hierarchy and send this json to the 
                 // controller to update the position of all the scopes in the tree.
@@ -595,16 +611,6 @@ var AddEditScope = {
                 sforce.apex.execute("E2_Estimator_WS", "updateScopesDisplayOrder", {
                     scopeJsonStr: nodes_order_json
                 }, AddEditScope.updateScopeDisplayOrderCallback);
-                
-                // show success message
-                //moved to updateScopeDisplayOrderCallback function as it should execute after updating display order at backend  (vikash goyal 7/15/2016)
-                /*CustomAlert.show('Scope have been re-parented successfully!!!');
-                $(loadSpinner).show().css('height', $(document).outerHeight());
-                $(treeId).jstree('destroy');
-                $(treeId).jstree(jstree_options);
-                AddEditScope.tree_init();*/
-                //$(loadSpinner).hide();
-                
             }
         },
         onFailure: function(error) {
@@ -689,40 +695,10 @@ var AddEditScope = {
         }
         return newList;
     },
-    /*sort_order: function(data) {
-        var list = {};
-        var newlist = [];
-        var keys = [];
-        for (var i = 0; i < data.length; i++) {
-            list[data[i].id] = data[i];
-            keys[i] = data[i].id;
-        }
-        
-        for (var j = keys.length - 1; j >= 0; j--) {
-            if (list[keys[j]]) var parent = list[keys[j]].parent;
-
-            if (parent == '#' || typeof list[parent] == 'undefined') {
-                console.log(list[keys[j]].id + ':' + list[keys[j]].parent);
-                newlist.push(list[keys[j]]);
-                delete list[keys[j]];
-                keys.splice(j, 1);
-
-                j = keys.length;
-            }
-        }
-        return newlist;
-    },*/
     
     tree_init_callback: {
         onSuccess: function(result) {
-            // sort the result to move all the parents up in the list which is very required to load
-            // all the child records aligned.
-            //doesnt work: result.sort(function(a,b) {return (a.parent > b.parent) ? 1 : ((b.parent > a.parent) ? -1 : 0);} ); 
-            //result = AddEditScope.sort_order(result);
-            //result.sort(function(a,b) {return (parseInt(a.display_order) > parseInt(b.display_order)) ? 1 : ((parseInt(b.display_order) > parseInt(a.display_order)) ? -1 : 0);} ); 
-            
             result = AddEditScope.sort_order_new(result);
-            //console.log('result====='+result);
             $.each(result, function(indx, node) {
                 console.log('MI::::' + node.title + '-' + node.display_order);
                 AddEditScope.create_node(node, parseInt(node.display_order));
@@ -759,90 +735,20 @@ var AddEditScope = {
             $(loadSpinner).hide();
         }
     },
-    /*addScopeTemplate_RecurringCallBack: {
-        onSuccess: function(result) {
-            var hasChildren = false;
-            if (result.length > 0) {
-                var scope_id = result[0].scope_id;
-                if (result[0].nodeList && result[0].nodeList.length) {
-                    $.each(result[0].nodeList, function(indx, node) {
-                        AddEditScope.create_node(node, AddEditScope.LAST);
-                        if (node.hasChildren == true || node.hasChildren == 'true') {
-                            hasChildren = true;
-                            AddEditScope.addscopetemplate_call_register[node.id] = scope_id;
-                            AddEditScope.addScopeTemplate_Recurring(node.id, node.sourceId);
-                        }
-                    });
-                } else if (result[0].nodeList) {
-                    var node = result[0].nodeList;
-                    AddEditScope.create_node(node, AddEditScope.LAST);
-                    if (node.hasChildren == true || node.hasChildren == 'true') {
-                        hasChildren = true;
-                        AddEditScope.addscopetemplate_call_register[node.id] = scope_id;
-                        AddEditScope.addScopeTemplate_Recurring(node.id, node.sourceId);
-                    }
-                }
-                if (AddEditScope.addscopetemplate_call_register && AddEditScope.addscopetemplate_call_register[scope_id]) delete AddEditScope.addscopetemplate_call_register[scope_id];
-                if (AddEditScope.addscopetemplate_call_register && JSON.stringify(AddEditScope.addscopetemplate_call_register) == '{}') {
-                    //to refresh scope loe we need to reload jstree
-                    $(treeId).jstree('destroy');
-                    $(treeId).jstree(jstree_options);
-                    AddEditScope.tree_init();
-                    // End
-                    $(loadSpinner).hide();
-                    CustomAlert.show('Scope has been cloned successfully!!!');
-                }
-            } else {
-                $(loadSpinner).hide();
-            }
-            //if(!hasChildren) $(loadSpinner).hide();
-        },
-        onFailure: function(error) {
-            alert(error);
-            $(loadSpinner).hide();
-        }
-    },
-
-    addScopeTemplate_Recurring: function(parentId, sourceId) {
-        //$(loadSpinner).show().css('height', $(document).outerHeight());                   
-        sforce.apex.execute("E2_Estimator_WS", "getChildCloneNodes", {
-            parentId: parentId,
-            sourceId: sourceId,
-            estimateId: estimateId
-        }, AddEditScope.addScopeTemplate_RecurringCallBack);
-    },*/
-
-    //addscopetemplate_call_register: {},
-
     addScopeTemplate_initCallBack: {
         onSuccess: function(result) {
             var hasChildren = false;
             if (result.length > 0) {
-                /*var scope_id = result[0].scope_id;
-                var node = result[0].nodeList;
-                AddEditScope.create_node(node, AddEditScope.LAST);
-                if (node.hasChildren == true || node.hasChildren == 'true') {
-                    hasChildren = true;
-                    AddEditScope.addscopetemplate_call_register[node.id] = scope_id;
-                    AddEditScope.addScopeTemplate_Recurring(node.id, node.sourceId);
-                }
-
-                if (AddEditScope.addscopetemplate_call_register && AddEditScope.addscopetemplate_call_register[scope_id]) delete AddEditScope.addscopetemplate_call_register[scope_id];
-                if (AddEditScope.addscopetemplate_call_register && JSON.stringify(AddEditScope.addscopetemplate_call_register) == '{}') {
-                  */  //to refresh scope loe we need to reload jstree
-                    $(treeId).jstree('destroy');
-                    $(treeId).jstree(jstree_options);
-                    AddEditScope.tree_init();
-                    // End
-                    $(loadSpinner).hide();
-                    CustomAlert.show('Scope has been cloned successfully!!!');
-                    
-                //}
-
+                //to refresh scope loe we need to reload jstree
+                $(treeId).jstree('destroy');
+                $(treeId).jstree(jstree_options);
+                AddEditScope.tree_init();
+                // End
+                $(loadSpinner).hide();
+                CustomAlert.show('Scope has been cloned successfully!!!');
             } else {
                 $(loadSpinner).hide();
             }
-
         },
         onFailure: function(error) {
             alert(error);
@@ -874,27 +780,14 @@ var AddEditScope = {
             return;
         }
 
-        /*var ans = confirm('Are you sure you want to add selected scope(s)/Template(s)?');
-        if (ans == false) {
-            return;
-        }*/
-
         var result = selectedIds;
         //var result = ['a5wR00000004EdD', 'a5wR0000000Ce2Q', 'a5wR0000000Cdg0'];
         if (AddEditScope.ADD_FROM_TEMPLATE_PARENT_ID && AddEditScope.ADD_FROM_TEMPLATE_PARENT_ID != null) {
             $(loadSpinner).show().css('height', $(document).outerHeight());
             AddEditScope.addScopeTemplateWithParent_init(result.toString(), AddEditScope.ADD_FROM_TEMPLATE_PARENT_ID);
-            /*$.each(result, function(indx, node) {
-                $(loadSpinner).show().css('height', $(document).outerHeight());
-                AddEditScope.addScopeTemplateWithParent_init(node, AddEditScope.ADD_FROM_TEMPLATE_PARENT_ID);
-            });*/
         } else {
             $(loadSpinner).show().css('height', $(document).outerHeight());
             AddEditScope.addScopeTemplate_init(result.toString());
-            /*$.each(result, function(indx, node) {
-                $(loadSpinner).show().css('height', $(document).outerHeight());
-                AddEditScope.addScopeTemplate_init(node);
-            });*/
         }
         AddEditScope.hideAddFromTemplateModal();
     },

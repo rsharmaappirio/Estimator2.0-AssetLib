@@ -178,11 +178,29 @@ var ck_custom_editor = {
 var typeahead_input = {
     searchKey : '',
     resourceUrl : '',
+    searchinput_jQclientid : '#searchStr_ele',
+    typeaheadmenu_selector: 'div.Typeahead-menu',
+    typeaheadhint_selector: '.Typeahead-hint',
     selectedAssetsMap : {},
+    rowCount : 0,
+    resetFrameHeightWithTypeAheadEvents:function(isMenuOpen){
+        var height = $(document.body).height();
+        var height_addr = 15;
+        var offsetHeight = $(typeahead_input.searchinput_jQclientid).offset().top 
+                                  + $(typeahead_input.searchinput_jQclientid).height(); 
+                                  //+ $(typeahead_input.typeaheadmenu_selector).height();
+        if(isMenuOpen){
+            offsetHeight += $(typeahead_input.typeaheadmenu_selector).height();
+        }
+        if(offsetHeight > height){
+            height = offsetHeight;
+        }
+        parent.AddEditScope.setHeightOfEditScopeFrame(height  + height_addr, window.name);
+    },
     load : function(){
         $('.Typeahead-input').typeahead({
-            hint: $('.Typeahead-hint'),
-            menu: $('.Typeahead-menu'),
+            hint: $(typeahead_input.typeaheadhint_selector),
+            menu: $(typeahead_input.typeaheadmenu_selector),
             highlight: true,    
             minLength: 3,
             classNames: {
@@ -196,14 +214,14 @@ var typeahead_input = {
         {
             name: 'assets',
             displayKey: 'name',
+            limit: 10,
             source: function(query, syncResults, asyncResults){
                 typeahead_input.searchKey = query;
-                var selectedAssets = typeahead_input.getAlreadyAddedAssets();
+                var selectedAssets = typeahead_input.getAlreadyAddedAssetsIds();
                 //console.log(selectedAssets);
                 sforce.apex.execute("E2_Estimator_WS", "searchAssets", {
                     searchStr: query, exisitingAssetIds : selectedAssets}, function(result){
                         if(result.length > 0) {
-                          //console.log(result);
                           if(typeahead_input.searchKey == result[0].searchKey){
                             var assetList = [];
                             if(typeof result[0].assetList != 'undefined'){
@@ -223,7 +241,6 @@ var typeahead_input = {
             },
             templates: {
                 suggestion: function(data){
-                    //console.log(data);
                     return typeahead_input.prepareSuggestionTemplate(data);
                 },
                 notFound : function(){
@@ -240,11 +257,16 @@ var typeahead_input = {
             else{
                 typeahead_input.selectedAssetsMap[suggestion.id].isDeleted = 'false';    
             }
-            $("input[Id$='existingAssetIds']").val(JSON.stringify(typeahead_input.selectedAssetsMap));
+            $("input[Id$='existingAssetRecs']").val(JSON.stringify(typeahead_input.selectedAssetsMap));
         })
         .on('typeahead:render', function(ev, suggestion, flag, dataset) {
-            var containerId = '#' + parent.AddEditScope.EDIT_SCOPE_INLINE_DIV_ID;
-            parent.AddEditScope.setHeightOfEditScopeFrame($(document).height(), window.name);
+            typeahead_input.resetFrameHeightWithTypeAheadEvents(true);
+        })
+        .on('typeahead:open', function(ev, suggestion, flag, dataset) {
+            typeahead_input.resetFrameHeightWithTypeAheadEvents(true);
+        })
+        .on('typeahead:close', function(ev, suggestion, flag, dataset) {
+            typeahead_input.resetFrameHeightWithTypeAheadEvents(false);
         })
         .on('typeahead:asyncrequest', function() {
             $('.Typeahead-spinner').show();
@@ -255,25 +277,57 @@ var typeahead_input = {
     },
     
     prepareSuggestionTemplate : function(data){
-        var returnHtmlStr = '<div class = "ProfileCard u-cf"><img class="ProfileCard-avatar" src="' + typeahead_input.resourceUrl + '/images/' + data.imageName + '"/>';
-        returnHtmlStr += '<div class="ProfileCard-details"><div class="ProfileCard-realName"><a onclick="typeahead_input.goToAssetDetailPage(event, this);" href="/' + data.id + '" target="_blank">'+ data.assetName + '</a> <span class="slds-badge">' + data.assetUsage + '</span>';
+        var returnHtmlStr = '<div class = "ProfileCard u-cf"><img class="ProfileCard-avatar" src="{resource_url}/images/{image_name}"/>';
+        returnHtmlStr += '<div class="ProfileCard-details"><div class="ProfileCard-realName"><a onclick="typeahead_input.goToAssetDetailPage(event, this);" href="/{id}" target="_blank">{asset_name}</a>';
+        returnHtmlStr += '<img src="{resource_url}/images/{assettype_image_name}.png" title="{assettype_image_name} Asset" style="padding-left:10px;"/>'
         if(data.isRecommended == 'true'){
             returnHtmlStr += '<span style="margin-left: 5px; background-color:#FA9500;" class="slds-badge">Recommended</span>';
         }
         returnHtmlStr += '</div>';
-        returnHtmlStr += '<div class="ProfileCard-description">' + data.description + '</div></div>';
-        returnHtmlStr += '<div class="ProfileCard-stats"><div class="ProfileCard-stat"><span class="ProfileCard-stat-label">Primary Contributor : </span>' + data.primaryContributors + '</div>';
-        returnHtmlStr += '<div class="ProfileCard-stat"><span class="ProfileCard-stat-label">Technologies : </span>' + data.technologies + '</div></div></div>';
+        returnHtmlStr += '<div><div class="ProfileCard-stat"><span class="ProfileCard-stat-label">Number of Reuses : </span>{asset_usage}</div>';
+        returnHtmlStr += '<div class="ProfileCard-stat"><span class="ProfileCard-stat-label">Release Stage : </span>{release_stage}</div></div>';
+        returnHtmlStr += '<div class="ProfileCard-description">{description}</div></div>';
+        returnHtmlStr += '<div class="ProfileCard-stats"><div class="ProfileCard-stat"><span class="ProfileCard-stat-label">Primary Contributor : </span>{primarycontributors}</div>';
+        returnHtmlStr += '<div class="ProfileCard-stat"><span class="ProfileCard-stat-label">Technologies : </span>{technologies}</div></div></div>';
+        
+        returnHtmlStr = returnHtmlStr.replace(/{resource_url}/gi, typeahead_input.resourceUrl)
+                                     .replace(/{image_name}/gi, data.imageName)
+                                     .replace(/{id}/gi, data.id)
+                                     .replace(/{asset_name}/gi, data.assetName)
+                                     .replace(/{assettype_image_name}/gi, data.assetTypeImage)
+                                     .replace(/{asset_usage}/gi, data.assetUsage)
+                                     .replace(/{release_stage}/gi, data.releaseStage)
+                                     .replace(/{description}/gi, data.description)
+                                     .replace(/{primarycontributors}/gi, data.primaryContributors)
+                                     .replace(/{technologies}/gi, data.technologies);
+        
         return returnHtmlStr;
     },
     
     addRowToTable : function(suggestion){
-        var tableRowStr = '<tr id="' + suggestion.id + '"><td class="slds-truncate whitespace_normal"><a href="/' + suggestion.id + '" target="_blank">' + suggestion.assetName + '</a></td>';
-        tableRowStr += '<td class="slds-truncate whitespace_normal">' + suggestion.description + '</td>';
-        tableRowStr += '<td class="slds-truncate whitespace_normal">' + suggestion.technologies + '</td>';
-        tableRowStr += '<td class="slds-truncate whitespace_normal">' + (suggestion.totalHours - suggestion.reuseLoe) + '</td>';
-        tableRowStr += '<td class="slds-cell-shrink" data-label="Actions"><a onclick="typeahead_input.removeAssetRow(\''+ suggestion.id + '\');return false" class="delete_button slds-button--right--float"/></td></tr>';    
+        var tableRowStr = '<tr id="{asset_id}"><td class="slds-truncate whitespace_normal"><a href="/{asset_id}" target="_blank">{asset_name}</a></td>';
+        tableRowStr += '<td class="slds-truncate whitespace_normal">{description}</td>';
+        //tableRowStr += '<td class="slds-truncate whitespace_normal">{technologies}</td>';
+        tableRowStr += '<td class="slds-truncate whitespace_normal">{reuse_loe}</td>';
+        tableRowStr += '<td class="slds-truncate whitespace_normal">{release_stage}</td>';
+        tableRowStr += '<td class="slds-cell-shrink" data-label="Actions"><a onclick="typeahead_input.removeAssetRow(\'{asset_id}\');return false" class="delete_button slds-button--right--float"/></td></tr>';
+        
+        tableRowStr = tableRowStr.replace(/{asset_id}/gi, suggestion.id)
+                                 .replace(/{asset_name}/gi, suggestion.assetName)
+                                 .replace(/{description}/gi, suggestion.description)
+                                 //.replace(/{technologies}/gi, suggestion.technologies)
+                                 .replace(/{reuse_loe}/gi, (suggestion.totalHours - suggestion.reuseLoe))
+                                 .replace(/{release_stage}/gi, suggestion.releaseStage);
+        
+        if($('#noAssetRow') != null && $('#noAssetRow').length){
+            typeahead_input.removeNoAssetsRow();
+        }
+        
         $("#RecommendedAssetsTable tbody").append(tableRowStr);
+        
+        typeahead_input.rowCount += 1;
+        
+        typeahead_input.resetFrameHeightWithTypeAheadEvents(false);
     },
     
     goToAssetDetailPage : function(event, element){
@@ -290,10 +344,16 @@ var typeahead_input = {
         if(typeof typeahead_input.selectedAssetsMap[rowId] != 'undefined'){
             typeahead_input.selectedAssetsMap[rowId].isDeleted = 'true';
         }
-        $("input[Id$='existingAssetIds']").val(JSON.stringify(typeahead_input.selectedAssetsMap));
+        $("input[Id$='existingAssetRecs']").val(JSON.stringify(typeahead_input.selectedAssetsMap));
+        typeahead_input.rowCount -= 1;
+        
+        if(typeahead_input.rowCount === 0){
+            typeahead_input.addNoAssetsRow();
+        }
+        typeahead_input.resetFrameHeightWithTypeAheadEvents(false);
     },
     
-    getAlreadyAddedAssets : function(){
+    getAlreadyAddedAssetsIds : function(){
         var existingAssetIds = [];
         $.each(typeahead_input.selectedAssetsMap, function(index, element) {
             if(element.isDeleted == 'false'){
@@ -303,14 +363,52 @@ var typeahead_input = {
         return existingAssetIds;
     },
     
-    showTypeahead : function(){
-        $('.Typeahead').show();
-        $('#addAsset').hide();
+    retrieveExistingAssets : function(){
+        var existingAssets = $("input[Id$='existingAssetRecs']").val();
+        if(existingAssets.length == 0){
+            sforce.apex.execute("E2_Estimator_WS", "getExistingAssetsForScope", {
+                    scopeId: scope_sfdc_id}, function(result){
+                        if(result.length > 0) {
+                          var assetsRecsJson = result[0];
+                          if (assetsRecsJson != null && assetsRecsJson != '' && assetsRecsJson.length > 0) {
+                              typeahead_input.prepareExistingAssetRows(assetsRecsJson);
+                          }
+                          else{
+                              typeahead_input.addNoAssetsRow();
+                          }
+                        }
+                        else{
+                            typeahead_input.addNoAssetsRow();
+                        }
+                });
+       }
+       else{
+           typeahead_input.prepareExistingAssetRows(existingAssets);
+       }
     },
     
-    hideTypeahead : function(){
-        $('.Typeahead').hide();
-        $('#addAsset').show();
+    prepareExistingAssetRows : function(assetsRecsJson){
+        typeahead_input.selectedAssetsMap = JSON.parse(assetsRecsJson);
+        var hasValidAsset = false; 
+        $.each(typeahead_input.selectedAssetsMap, function(index, element) {
+            if(element.isDeleted == 'false'){
+                typeahead_input.addRowToTable(element);
+                hasValidAsset = true;
+            }
+        });
+        if(hasValidAsset){
+            typeahead_input.removeNoAssetsRow();
+        }
+        $("input[Id$='existingAssetRecs']").val(JSON.stringify(typeahead_input.selectedAssetsMap));
+    },
+    
+    addNoAssetsRow : function(){
+        var rowStr = '<tr id="noAssetRow"><td colspan="5">No recommended assets!!!</td></tr>';
+        $("#RecommendedAssetsTable tbody").append(rowStr);
+    },
+    
+    removeNoAssetsRow : function(){
+        $('#noAssetRow').remove();
     }
 }
 
@@ -319,6 +417,8 @@ $( document ).ready(function() {
     validations.load();
     ck_custom_editor.load();
     bindSliders();
+    typeahead_input.load();
+    typeahead_input.retrieveExistingAssets();
     hideSpinner();
     
     if(msg.toLowerCase() == 'success'){

@@ -59,7 +59,9 @@ public class E2_Estimator_WSManager {
         List<E2_TreeNode> nodeList = new List<E2_TreeNode>();
         boolean hasChildren = true;
         list<E2_Scope__c> allScopes = E2_DataUtil_WS.getChildScopesOfScopeGroup(scopeGrpId);
+        system.debug('==allScopes>>'+allScopes);
         map<String, decimal> scopeRollhrs = generateParentHoursMap(allScopes);
+        system.debug('==scopeRollhrs>>'+scopeRollhrs);
         for(E2_Scope__c scope : allScopes){
         	string scopeId = ((string)scope.Id).length() == 18 ? 
         				((string)scope.Id).substring(0, 15) : ((string)scope.Id);  
@@ -530,6 +532,58 @@ public class E2_Estimator_WSManager {
 	  	
 	  	//return lstAssetsWrapper;
 	  	return assetWrapperMap;
+    }
+    
+    public static String getExistingAssetsForScope(string scopeId){
+        String assetsRecsJson;
+        Map<Id, E2_Recommended_Asset__c> recommendedAssetsMap = new Map<Id, E2_Recommended_Asset__c>();
+      	try{
+          	for (E2_Recommended_Asset__c assetRec : E2_DataUtil_WS.getRecommendedAssetsForScope(scopeId)){
+           			recommendedAssetsMap.put(assetRec.Asset__c, assetRec);																			
+           	}
+           	
+           	List<E2_AssetWrapper> lstExistingAssets = new List<E2_AssetWrapper>();
+           	if(recommendedAssetsMap.keySet().size() > 0){
+           		Map<String, CMC_Asset__c> mapAssets = E2_DataUtil_WS.getAssetsMap(recommendedAssetsMap.keySet());
+           		for(Id assetId : mapAssets.keySet()){
+           		    CMC_Asset__c assetRec = mapAssets.get(assetId);
+                    lstExistingAssets.add(new E2_AssetWrapper(recommendedAssetsMap.get(assetId).Id, assetId, assetRec.Name, 
+                                                (assetRec.Short_Description__c == null ? '' : assetRec.Short_Description__c), 
+                                                (assetRec.Technologies__c == null ? '' : assetRec.Technologies__c),
+                                                (assetRec.Release_Stage__c == null ? '' : assetRec.Release_Stage__c),
+                                                true, false, 
+                                                (assetRec.Total_Hours__c == null ? 0 : assetRec.Total_Hours__c), 
+    	  			                            (assetRec.Reuse_LOE__c == null ? 0 : assetRec.Reuse_LOE__c)));
+           		}
+           	}
+           	
+           	if(lstExistingAssets.size() > 0){
+            	assetsRecsJson = '{';        
+    	        
+    	        for(E2_AssetWrapper assetWrapper : lstExistingAssets){	        	        	
+    	        	assetsRecsJson += '"'+ assetWrapper.id + '" : {"recommendedAssetRecId" : "' + assetWrapper.recommendedAssetRecId + '",' + 
+    	        	                                                '"id" : "' + assetWrapper.id + '", ' +
+    	        	                                                '"assetName" : "' + assetWrapper.assetName + '", ' +
+    	        	                                                '"description" : "' + (assetWrapper.description).replaceAll('"', '\\\\"').replaceAll('[\r\n]','') + '", ' +
+    	        	                                                '"technologies" : "' + assetWrapper.technologies + '", ' +
+    	        	                                                '"totalHours" : "' + assetWrapper.totalHours + '", ' +
+    	        	                                                '"reuseLoe" : "' + assetWrapper.reuseLoe + '", ' +
+    	        	                                                '"releaseStage" : "' + assetWrapper.releaseStage + '", ' +
+    	        	                                                '"isExisting" : "true", ' + 
+    	        	                                                '"isDeleted" : "false"},'; 
+    	        }
+    	        
+    	        if(assetsRecsJson != '' && assetsRecsJson.endsWith(',')){
+    	        	assetsRecsJson = assetsRecsJson.removeEnd(',');
+    	        }
+    	        
+    	        assetsRecsJson += '}';
+            }
+           	
+      	}catch(Exception ex){
+          return null;
+        }
+        return assetsRecsJson;
     }
     
     public class ScopeWrapper{

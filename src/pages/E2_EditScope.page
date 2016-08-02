@@ -356,7 +356,7 @@
 
                                                 <Br/>
                                                 <div class="slds-grid">
-                                                    <apex:outputPanel layout="none" rendered="{!showFav}">
+                                                    <apex:outputPanel layout="none" rendered="{!IF($User.Id == childscope.scope.CreatedById, true, false)}">
                                                         <div class="slds-col slds-size--1-of-3">
                                                             <div class="slds-form-element">
                                                                 <div class="slds-form-element__control">
@@ -417,7 +417,7 @@
                                             <td colspan="3" style="padding:0px;">
                                                 <div class="effortsdiv" style="margin-top:5px;display:{!IF(childscope.slider_state = 'effort', 'block', 'block')}">
                                                     <span class="slds-badge slds-theme--default slds-float-left" style="font-weight:bold;">Effort</span>
-                                                    <apex:commandbutton onclick="return validateData();" styleClass="slds-button slds-button--neutral slds-button--small slds-button--right--float" value="Add Effort" action="{!childscope.AddNewEffort}" />
+                                                    <apex:commandbutton onclick="return validateData();TrackScopeUpdates.markJSDirty();" styleClass="slds-button slds-button--neutral slds-button--small slds-button--right--float" value="Add Effort" action="{!childscope.AddNewEffort}" />
                                                     <table class="slds-table slds-table--bordered slds-no-row-hover slds-max-medium-table--stacked ">
                                                         <thead>
                                                             <tr class="slds-text-heading--label slds-truncate slds-selection-background">
@@ -539,7 +539,7 @@
 
                                                                         </td>
                                                                         <td class="slds-cell-shrink" data-label="Actions">
-                                                                            <apex:commandlink onclick="return mrak_page_updated.markFormDirty();" styleClass="delete_button slds-button--right--float" rendered="{!NOT(is_View)}" value="" action="{!effort.remove}" />
+                                                                            <apex:commandlink onclick="return TrackScopeUpdates.markFormDirty();" styleClass="delete_button slds-button--right--float" rendered="{!NOT(is_View)}" value="" action="{!effort.remove}" />
                                                                         </td>
                                                                     </tr>
                                                                 </apex:outputpanel>
@@ -581,11 +581,14 @@
                                         <th class="slds-is-sortable" scope="col">
                                             <div class="slds-truncate">Short Description</div>
                                         </th>
-                                        <th class="slds-is-sortable" scope="col">
+                                        <!--th class="slds-is-sortable" scope="col">
                                             <div class="slds-truncate">Technologies</div>
-                                        </th>
+                                        </th-->
                                         <th class="slds-is-sortable" scope="col">
                                             <div class="slds-truncate">Hours Saved</div>
+                                        </th>
+                                        <th class="slds-is-sortable" scope="col">
+                                            <div class="slds-truncate">Release Stage</div>
                                         </th>
                                         <th class="slds-is-sortable" scope="col">
                                             <div class="slds-truncate"></div>
@@ -593,25 +596,28 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <apex:repeat value="{!lstExistingAssets}" var="assetRec">
+                                    <!--apex:repeat value="{!lstExistingAssets}" var="assetRec">
                                         <tr id="{!assetRec.id}">
                                             <td data-label="Asset Name">
                                                 <div class="slds-truncate"><a href="/{!assetRec.id}" target="_blank">{!assetRec.assetName}</a></div>
                                             </td>
                                             <td data-label="Short Descripition">
                                                 <div class="slds-truncate">{!assetRec.description}</div>
-                                            </td>
-                                            <td data-label="Technologies">
+                                            </td-->
+                                            <!--td data-label="Technologies">
                                                 <div class="slds-truncate">{!assetRec.technologies}</div>
-                                            </td>
-                                            <td data-label="Hours Saved">
+                                            </td-->
+                                            <!--td data-label="Hours Saved">
                                                 <div class="slds-truncate">{!(assetRec.totalHours - assetRec.reuseLoe)}</div>
+                                            </td>
+                                            <td data-label="Release Stage">
+                                                <div class="slds-truncate">{!assetRec.releaseStage}</div>
                                             </td>
                                             <td class="slds-cell-shrink" data-label="Actions">
                                                 <a onclick="typeahead_input.removeAssetRow('{!assetRec.id}');return false;" class="delete_button slds-button--right--float" />
                                             </td>
                                         </tr>
-                                    </apex:repeat>
+                                    </apex:repeat-->
                                 </tbody>
                             </table>
                         </div>
@@ -651,7 +657,7 @@
             <input type="hidden" value="{!E2_Scope__c.CreatedBy.Name}" />
             <apex:inputhidden value="{!is_Dirty}" id="is_Dirty" />
             <apex:inputhidden value="{!dmlOperationMessage}" id="dmlMessage" />
-            <apex:inputhidden value="{!assetsRecsJson}" id="existingAssetIds" />
+            <apex:inputhidden value="{!assetsRecsJson}" id="existingAssetRecs" />
         </apex:form>
     </body>
     <!-- JAVASCRIPT -->
@@ -666,6 +672,11 @@
             typeahead_input.resourceUrl = '{!$Resource.E2_TypeaheadResources}';
             if (assetsRecsJson != '' && assetsRecsJson.length > 0) {
                 typeahead_input.selectedAssetsMap = JSON.parse(assetsRecsJson);
+                $.each(typeahead_input.selectedAssetsMap, function(index, element) {
+                    if(element.isDeleted == 'false'){
+                        typeahead_input.addRowToTable(element);
+                    }
+                });
             }
         });
     </script>

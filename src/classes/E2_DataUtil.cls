@@ -167,7 +167,7 @@ public class E2_DataUtil {
   public static Map<Id, CMC_Asset__c> getAssetsMap(Set<Id> assetsId){
       return new Map<Id, CMC_Asset__c>([SELECT Name, Short_Description__c, Technologies__c, Asset_Type__c, 
    		                         Asset_SubType__c, Appirio_Services_Practice__c, Total_Hours__c, Reuse_LOE__c,
-   								 Primary_Contact_UserId__c, Number_of_Uses__c, Is_Recommended__c
+   								 Primary_Contact_UserId__c, Number_of_Uses__c, Is_Recommended__c, Release_Stage__c
    								 FROM CMC_Asset__c
    								 WHERE Id IN :assetsId]);
   } 

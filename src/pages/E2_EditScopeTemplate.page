@@ -130,14 +130,22 @@
                 background-color: #faffbd!important;
             }
             .Typeahead {
-                    margin: 0 auto;
-                    width: 50%;
-                    min-width: 300px;
-             }
-             .ProfileCard-realName {
-							    font-weight: 600;
-							    font-size:17px;
-							}
+                margin: 0 auto;
+                width: 90%;
+                min-width: 300px;
+            }
+            
+            .Typeahead-hint{
+                border:0px!important;
+            }
+            
+            .ProfileCard-realName {
+                font-weight: 600;
+                font-size: 17px;
+            }
+            .slds-custom-badge-background-grey{
+                background-color: #eee!important;
+            }
          </style>
       </head>
       <body>
@@ -405,76 +413,82 @@
                                        </div>
                                     </td>
                                  </tr>
+                            </apex:outputpanel>
+                                </apex:repeat>
+                            </tbody>
+                        </table>
+
+                        <!-- Recommended Assets section -->
+                        <div id="recommendedAssetsDiv" style="margin-top:10px;display:block;">
+                            <span class="slds-badge slds-theme--default slds-float-left slds-custom-badge-background-grey" style="font-weight:bold;">Recommended Assets</span>
+                            <br/>
+                           
+                            <div class="Typeahead">
+
+                                <div class="u-posRelative">
+                                    <input class="Typeahead-hint" type="text" readonly="" tabindex="-1" dir="ltr" />
+                                    <input id="searchStr_ele" class="Typeahead-input" type="text" placeholder="Search and Add Assets..." name="q" autocomplete="off" spellcheck="false" dir="auto" />
+                                    <img class="Typeahead-spinner" src="{!URLFOR($Resource.E2_SLDS1, '/assets/images/spinners/slds_spinner.gif')}" style="display: none;" />
+                                    <!--button id="hideTypeahead" type="button" onclick="typeahead_input.hideTypeahead();" class="slds-button slds-button--neutral slds-button--small">Cancel</button-->
+                                </div>
+                                <div class="Typeahead-menu">
+                                </div>
+
+                            </div>
+
+                            <table id="RecommendedAssetsTable" class="slds-table slds-table--bordered slds-no-row-hover slds-max-medium-table--stacked ">
+                                <thead>
+                                    <tr class="slds-text-heading--label slds-truncate slds-selection-background">
+                                        <th class="slds-is-sortable" scope="col">
+                                            <div class="slds-truncate">Asset Name</div>
+                                        </th>
+                                        <th class="slds-is-sortable" scope="col">
+                                            <div class="slds-truncate">Short Description</div>
+                                        </th>
+                                        <!--th class="slds-is-sortable" scope="col">
+                                            <div class="slds-truncate">Technologies</div>
+                                        </th-->
+                                        <th class="slds-is-sortable" scope="col">
+                                            <div class="slds-truncate">Hours Saved</div>
+                                        </th>
+                                        <th class="slds-is-sortable" scope="col">
+                                            <div class="slds-truncate">Release Stage</div>
+                                        </th>
+                                        <th class="slds-is-sortable" scope="col">
+                                            <div class="slds-truncate"></div>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!--apex:outputpanel rendered="{!IF(assetsRecsJson == '', true, false)}">
+                                        <tr><td colspan="5">No recommended assets!!!</td></tr>                                                                                                       
+                                    </apex:outputpanel-->
+                                    <!--apex:repeat value="{!lstExistingAssets}" var="assetRec">
+                                        <tr id="{!assetRec.id}">
+                                            <td data-label="Asset Name">
+                                                <div class="slds-truncate"><a href="/{!assetRec.id}" target="_blank">{!assetRec.assetName}</a></div>
+                                            </td>
+                                            <td data-label="Short Descripition">
+                                                <div class="slds-truncate">{!assetRec.description}</div>
+                                            </td-->
+                                            <!--td data-label="Technologies">
+                                                <div class="slds-truncate">{!assetRec.technologies}</div>
+                                            </td-->
+                                            <!--td data-label="Hours Saved">
+                                                <div class="slds-truncate">{!(assetRec.totalHours - assetRec.reuseLoe)}</div>
+                                            </td>
+                                            <td data-label="Release Stage">
+                                                <div class="slds-truncate">{!assetRec.releaseStage}</div>
+                                            </td>
+                                            <td class="slds-cell-shrink" data-label="Actions">
+                                                <a onclick="typeahead_input.removeAssetRow('{!assetRec.id}');return false;" class="delete_button slds-button--right--float" />
+                                            </td>
+                                        </tr>
+                                    </apex:repeat-->
+                                </tbody>
+                            </table>
+                        </div>     
                                  
-                                 <!-- Recommended Assets section -->
-                                 <tr><td style="border:0px;">&nbsp;</td></tr><tr><td style="border:0px;">&nbsp;</td></tr>
-                                 <tr class="slds-selection-background">
-                                    <td colspan="3" style="padding:0px;">
-                                       <div style="margin-top:5px;display:block;">
-                                          <span class="slds-badge slds-theme--default slds-float-left" style="font-weight:bold;">Recommended Assets</span>
-                                          <!--button id="addAsset" type="button" onclick="typeahead_input.showTypeahead();" class="slds-button slds-button--neutral slds-button--small slds-button--right--float">Add Recommended Assets</button-->
-                                          <div class="Typeahead">
-                                        
-                                            <div class="u-posRelative">
-                                                <input class="Typeahead-hint" type="text" readonly="" tabindex="-1" dir="ltr"/>
-                                                <input id="searchStr_ele" class="Typeahead-input" type="text" placeholder="Search and Add Assets..." name="q" autocomplete="off" spellcheck="false" dir="auto"/>
-                                                <img class="Typeahead-spinner" src="{!URLFOR($Resource.E2_SLDS1, '/assets/images/spinners/slds_spinner.gif')}" style="display: none;"/>
-                                                <!--button id="hideTypeahead" type="button" onclick="typeahead_input.hideTypeahead();" class="slds-button slds-button--neutral slds-button--small">Cancel</button-->
-                                            </div>
-                                            <div class="Typeahead-menu">
-                                            </div>
-                                            
-                                          </div>
-                                          
-                                          <table id="RecommendedAssetsTable" class="slds-table slds-table--bordered slds-no-row-hover slds-max-medium-table--stacked ">
-                                              <thead>
-                                                <tr class="slds-text-heading--label slds-truncate slds-selection-background">
-                                                    <th class="slds-is-sortable" scope="col">
-                                                        <div class="slds-truncate">Asset Name</div>
-                                                    </th>
-                                                    <th class="slds-is-sortable" scope="col">
-                                                        <div class="slds-truncate">Short Description</div>
-                                                    </th>
-                                                    <th class="slds-is-sortable" scope="col">
-                                                        <div class="slds-truncate">Technologies</div>
-                                                    </th>
-                                                    <th class="slds-is-sortable" scope="col">
-                                                        <div class="slds-truncate">Hours Saved</div>
-                                                    </th>
-                                                    <th class="slds-is-sortable" scope="col">
-                                                        <div class="slds-truncate"></div>
-                                                    </th>
-                                                </tr>
-                                              </thead>
-                                              <tbody>
-                                                <apex:repeat value="{!lstExistingAssets}" var="assetRec">
-                                                    <tr id="{!assetRec.id}">
-                                                      <td>
-                                                        <div class="slds-truncate"><a href="/{!assetRec.id}" target="_blank">{!assetRec.assetName}</a></div>
-                                                      </td>
-                                                      <td>
-                                                        <div class="slds-truncate">{!assetRec.description}</div>
-                                                      </td>
-                                                      <td>
-                                                        <div class="slds-truncate">{!assetRec.technologies}</div>
-                                                      </td>
-                                                      <td>
-                                                        <div class="slds-truncate">{!(assetRec.totalHours - assetRec.reuseLoe)}</div>
-                                                      </td>
-                                                      <td class="slds-cell-shrink" data-label="Actions">
-                                                       <a onclick="typeahead_input.removeAssetRow('{!assetRec.id}');return false;" class="delete_button slds-button--right--float"/>
-                                                    </td>
-                                                    </tr>
-                                                </apex:repeat>
-                                              </tbody>
-                                          </table>
-                                       </div>
-                                    </td>
-                                 </tr>
-                              </apex:outputpanel>
-                           </apex:repeat>
-                        </tbody>
-                     </table>
                   </div>
                </div>
                <!-- / PRIMARY CONTENT WRAPPER -->    
@@ -511,23 +525,30 @@
             <input type="hidden" value="{!E2_Scope__c.Presales_LOE__c}"/>
             
             <apex:inputhidden value="{!dmlOperationMessage}" id="dmlMessage" />
-            <apex:inputhidden value="{!assetsRecsJson}" id="existingAssetIds" />
+            <apex:inputhidden value="{!assetsRecsJson}" id="existingAssetRecs" />
          </apex:form>
       </body>
       <!-- JAVASCRIPT -->
       <script type="text/javascript">
          var msg = '{!dmlOperationMessage}'; 
          var scope_sfdc_id = '{!scope.id}';
-         var scope_sfdc_name = '{!scope.name}';
+         var scope_sfdc_name = '{!JSENCODE(scope.name)}';
+         typeahead_input.resourceUrl = '{!$Resource.E2_TypeaheadResources}';
          
          $(document).ready(function() {
-            typeahead_input.load();
-            var assetsRecsJson = '{!assetsRecsJson}';
-            typeahead_input.resourceUrl = '{!$Resource.E2_TypeaheadResources}';
-            if(assetsRecsJson != '' && assetsRecsJson.length > 0){
+            //typeahead_input.load();
+            //var assetsRecsJson = '{!JSENCODE(assetsRecsJson)}';
+            //console.log(assetsRecsJson);
+            //typeahead_input.resourceUrl = '{!$Resource.E2_TypeaheadResources}';
+            /*if (assetsRecsJson != '' && assetsRecsJson.length > 0) {
                 typeahead_input.selectedAssetsMap = JSON.parse(assetsRecsJson);
-            }
-         });
+                $.each(typeahead_input.selectedAssetsMap, function(index, element) {
+                    if(element.isDeleted == 'false'){
+                        typeahead_input.addRowToTable(element);
+                    }
+                });
+            }*/
+        });
       </script>
       <!-- / JAVASCRIPT -->    
    </html>

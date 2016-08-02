@@ -16,9 +16,9 @@ public with sharing class E2_EditScopeTemplateController {
     public string scopeGrpId{get;set;}
     public string dmlOperationMessage{get;set;}
     
-    public List<E2_AssetWrapper> lstExistingAssets {get;set;}   
-		public string assetsRecsJson {get;set;}
-		public boolean showFavForSTMPermissionSet {get;set;}
+    //public List<E2_AssetWrapper> lstExistingAssets {get;set;}   
+	public string assetsRecsJson {get;set;}
+	public boolean showFavForSTMPermissionSet {get;set;}
 
 
     public E2_EditScopeTemplateController(ApexPages.StandardController std) {
@@ -28,7 +28,7 @@ public with sharing class E2_EditScopeTemplateController {
        this.is_View = false;       
        this.dmlOperationMessage = E2_Constants.DML_OPERATION_MESSAGE_FAIL;
        
-       lstExistingAssets = new List<E2_AssetWrapper>();       
+       //lstExistingAssets = new List<E2_AssetWrapper>();       
        assetsRecsJson = '';
        showFavForSTMPermissionSet = true;
     }
@@ -156,8 +156,8 @@ public with sharing class E2_EditScopeTemplateController {
             return null;            
         }
         this.dmlOperationMessage = E2_Constants.DML_OPERATION_MESSAGE_SUCCESS;        
-        lstExistingAssets.clear();
-        retrieveExistingAsset();   
+        //lstExistingAssets.clear();
+        //retrieveExistingAsset();   
         return null;             
     }
     
@@ -184,7 +184,7 @@ public with sharing class E2_EditScopeTemplateController {
         for(E2_Scope__c scope : E2_DataUtil.getScopeAndChildrenOnScopeIdForEditScope(scopeId)){                
                this.childScopes.add(new Scope(scope, scope.Efforts__r));
         }
-        retrieveExistingAsset(); 
+        //retrieveExistingAsset(); 
     }
     
     public void retrieveExistingAsset(){
@@ -192,13 +192,16 @@ public with sharing class E2_EditScopeTemplateController {
       	for (E2_Recommended_Asset__c assetRec : E2_DataUtil.getRecommendedAssetsForScope(this.scope.id)){
        			recommendedAssetsMap.put(assetRec.Asset__c, assetRec);																			
        	}
+       	
+       	List<E2_AssetWrapper> lstExistingAssets = new List<E2_AssetWrapper>();
        	if(recommendedAssetsMap.keySet().size() > 0){
        		Map<Id, CMC_Asset__c> mapAssets = E2_DataUtil.getAssetsMap(recommendedAssetsMap.keySet());
        		for(Id assetId : mapAssets.keySet()){
        		    CMC_Asset__c assetRec = mapAssets.get(assetId);
                 lstExistingAssets.add(new E2_AssetWrapper(recommendedAssetsMap.get(assetId).Id, assetId, assetRec.Name, 
                                             (assetRec.Short_Description__c == null ? '' : assetRec.Short_Description__c), 
-                                            (assetRec.Technologies__c == null ? '' : assetRec.Technologies__c), 
+                                            (assetRec.Technologies__c == null ? '' : assetRec.Technologies__c),
+                                            (assetRec.Release_Stage__c == null ? '' : assetRec.Release_Stage__c),
                                             true, false, 
                                             (assetRec.Total_Hours__c == null ? 0 : assetRec.Total_Hours__c), 
 	  			                            (assetRec.Reuse_LOE__c == null ? 0 : assetRec.Reuse_LOE__c)));
@@ -208,7 +211,16 @@ public with sharing class E2_EditScopeTemplateController {
         	assetsRecsJson = '{';        
 	        
 	        for(E2_AssetWrapper assetWrapper : lstExistingAssets){	        	        	
-	        	assetsRecsJson += '"'+ assetWrapper.id + '" : {"recommendedAssetRecId" : "' + assetWrapper.recommendedAssetRecId + '", "id" : "' + assetWrapper.id + '", "isExisting" : "true", "isDeleted" : "false"},'; 
+	        	assetsRecsJson += '"'+ assetWrapper.id + '" : {"recommendedAssetRecId" : "' + assetWrapper.recommendedAssetRecId + '",' + 
+	        	                                                '"id" : "' + assetWrapper.id + '", ' +
+	        	                                                '"assetName" : "' + assetWrapper.assetName + '", ' +
+	        	                                                '"description" : "' + (assetWrapper.description).replaceAll('"', '\\\\"').replaceAll('[\r\n]',' ') + '", ' +
+	        	                                                '"technologies" : "' + assetWrapper.technologies + '", ' +
+	        	                                                '"totalHours" : "' + assetWrapper.totalHours + '", ' +
+	        	                                                '"reuseLoe" : "' + assetWrapper.reuseLoe + '", ' +
+	        	                                                '"releaseStage" : "' + assetWrapper.releaseStage + '", ' +
+	        	                                                '"isExisting" : "true", ' + 
+	        	                                                '"isDeleted" : "false"},'; 
 	        }
 	        
 	        if(assetsRecsJson != '' && assetsRecsJson.endsWith(',')){

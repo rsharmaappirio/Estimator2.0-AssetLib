@@ -73,6 +73,11 @@ global with sharing class E2_Estimator_WS {
         return E2_Estimator_WSManager.searchAssets(searchStr, exisitingAssetIds);
     }
     
+    //Method to get existing asset records for scope
+    webservice static String getExistingAssetsForScope(string scopeId){
+        return E2_Estimator_WSManager.getExistingAssetsForScope(scopeId);
+    }
+    
     // Method to clonned scopes 
     webservice static string getSelectedScopeNodes(string scopeIdCSV, string estimateId, string parentScopeId) {
     	return E2_Estimator_WSManager.getSelectedScopeNodes(scopeIdCSV, estimateId, parentScopeId);

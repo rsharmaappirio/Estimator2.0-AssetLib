@@ -19,7 +19,6 @@ public with sharing class E2_EditScopeController {
     public boolean is_Dirty{get;set;}
     
     public List<E2_AssetWrapper> lstExistingAssets {get;set;}    
-    public boolean showFav {get;set;}
 	  public string assetsRecsJson {get;set;}
 
     public E2_EditScopeController(ApexPages.StandardController std) {
@@ -31,8 +30,7 @@ public with sharing class E2_EditScopeController {
        this.errorMessage = E2_constants.BLANK;
        this.is_Dirty = false;
        lstExistingAssets = new List<E2_AssetWrapper>();
-       showFav = true;
-       
+      
        assetsRecsJson = '';
     }
 
@@ -198,12 +196,6 @@ public with sharing class E2_EditScopeController {
         Id currentUserId = UserInfo.getUserId();     
         for(E2_Scope__c scope : E2_DataUtil.getScopeAndChildrenOnScopeIdForEditScope(scopeId)){                
                this.childScopes.add(new Scope(scope, scope.Efforts__r));
-               if(scope.CreatedById  == currentUserId){ 
-                 showFav = true;
-               }
-               else{
-                 showFav = false;
-               }
         }
         retrieveExistingAsset();
     }
