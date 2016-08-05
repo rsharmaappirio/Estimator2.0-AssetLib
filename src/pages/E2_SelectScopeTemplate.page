@@ -205,7 +205,7 @@
                                                                 <apex:facet name="header">
                                                                     <label class="slds-button slds-button--icon-bare"></label>
                                                                 </apex:facet>
-                                                                <apex:outputPanel layout="none"> 
+                                                                <apex:outputPanel layout="none">
                                                                     <a href="javascript:void(0);" title="Add/Remove favorite" class="{!IF(sc1.isFavorite,'favStar','nonfavStar')}" onclick="showhideFavorite(this);" id="{!sc1.scope.id}markFav" scope-id="{!sc1.scope.id}"></a>    
                                                                 </apex:outputPanel>
                                                             </apex:column>
@@ -316,7 +316,7 @@
                                                                 <apex:facet name="header">
                                                                     <label class="slds-button slds-button--icon-bare"></label>
                                                                 </apex:facet>
-                                                                <apex:outputPanel layout="none"> 
+                                                                <apex:outputPanel layout="none">
                                                                     <a href="javascript:void(0);" title="Add/Remove favorite" class="{!IF(sc1.isFavorite,'favStar','display:none')}" onclick="showhideFavorite(this);" id="{!sc1.scope.id}markFav" scope-id="{!sc1.scope.id}"></a>    
                                                                 </apex:outputPanel>
                                                             </apex:column>

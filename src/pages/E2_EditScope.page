@@ -277,6 +277,7 @@
                     </apex:outputPanel>
                     <apex:pageMessages />
                     <apex:actionfunction action="{!saveScope}" name="AddOrUpdate" />
+                    <apex:actionfunction action="{!updateFormStatus}" name="updateFormStatus" rerender="is_Dirty"/>
                     <div class="slds-page-header" role="banner">
                         <div class="slds-grid">
                             <div class="slds-col slds-has-flexi-truncate">
@@ -417,7 +418,7 @@
                                             <td colspan="3" style="padding:0px;">
                                                 <div class="effortsdiv" style="margin-top:5px;display:{!IF(childscope.slider_state = 'effort', 'block', 'block')}">
                                                     <span class="slds-badge slds-theme--default slds-float-left" style="font-weight:bold;">Effort</span>
-                                                    <apex:commandbutton onclick="return validateData();TrackScopeUpdates.markJSDirty();" styleClass="slds-button slds-button--neutral slds-button--small slds-button--right--float" value="Add Effort" action="{!childscope.AddNewEffort}" />
+                                                    <apex:commandbutton onclick="return validateData();" styleClass="slds-button slds-button--neutral slds-button--small slds-button--right--float slds-update-scope" value="Add Effort" action="{!childscope.AddNewEffort}"/>
                                                     <table class="slds-table slds-table--bordered slds-no-row-hover slds-max-medium-table--stacked ">
                                                         <thead>
                                                             <tr class="slds-text-heading--label slds-truncate slds-selection-background">
@@ -567,7 +568,7 @@
                                     <img class="Typeahead-spinner" src="{!URLFOR($Resource.E2_SLDS1, '/assets/images/spinners/slds_spinner.gif')}" style="display: none;" />
                                     <!--button id="hideTypeahead" type="button" onclick="typeahead_input.hideTypeahead();" class="slds-button slds-button--neutral slds-button--small">Cancel</button-->
                                 </div>
-                                <div class="Typeahead-menu">
+                                <div class="Typeahead-menu" style="max-height: 350px; overflow-y: auto;">
                                 </div>
 
                             </div>
@@ -665,20 +666,8 @@
         var msg = '{!dmlOperationMessage}';
         var scope_sfdc_id = '{!scope.id}';
         var scope_sfdc_name = '{!JSENCODE(scope.name)}';
+        Typeahead_input.resourceUrl = '{!$Resource.E2_TypeaheadResources}';
 
-        $(document).ready(function() {
-            typeahead_input.load();
-            var assetsRecsJson = '{!assetsRecsJson}';
-            typeahead_input.resourceUrl = '{!$Resource.E2_TypeaheadResources}';
-            if (assetsRecsJson != '' && assetsRecsJson.length > 0) {
-                typeahead_input.selectedAssetsMap = JSON.parse(assetsRecsJson);
-                $.each(typeahead_input.selectedAssetsMap, function(index, element) {
-                    if(element.isDeleted == 'false'){
-                        typeahead_input.addRowToTable(element);
-                    }
-                });
-            }
-        });
     </script>
     <!-- / JAVASCRIPT -->
 

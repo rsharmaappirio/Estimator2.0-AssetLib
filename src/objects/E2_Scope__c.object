@@ -124,7 +124,7 @@
     </fields>
     <fields>
         <fullName>Display_Order__c</fullName>
-        <description>This field will be used for ordering of scopes related to particular estimate.</description>
+        <description>This field will be used to display scope in selected order related to particular estimate on estimator 2.0 app.</description>
         <externalId>false</externalId>
         <label>Display Order</label>
         <precision>18</precision>
@@ -283,6 +283,21 @@
         <trackHistory>false</trackHistory>
         <trackTrending>false</trackTrending>
         <type>Picklist</type>
+    </fields>
+    <fields>
+        <fullName>Sequence__c</fullName>
+        <description>This field is used to query the order of scope items in the way they are displayed in the add/edit scope screen to the end user in estimator 2.0 app</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Hidden; used at background only</inlineHelpText>
+        <label>Sequence</label>
+        <precision>10</precision>
+        <required>false</required>
+        <scale>0</scale>
+        <trackFeedHistory>false</trackFeedHistory>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
     </fields>
     <fields>
         <fullName>Source_Scope__c</fullName>

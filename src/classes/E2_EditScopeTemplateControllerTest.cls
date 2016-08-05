@@ -217,14 +217,16 @@ public class E2_EditScopeTemplateControllerTest {
             ApexPages.StandardController stdController = new ApexPages.StandardController(scope);
             E2_EditScopeTemplateController controller = new E2_EditScopeTemplateController(stdController);
             controller.pageAction();
-            System.assertEquals(controller.lstExistingAssets.size(), 1);     
-      
+            
             controller.assetsRecsJson = '{"'+ recommendedAsset.Asset__c + '" : {"recommendedAssetRecId" : "' + recommendedAsset.Id + 
                                     '", "id" : "' + recommendedAsset.Asset__c + '", '+
                                     '"isExisting" : "true", "isDeleted" : "true"}}'; 
             
             controller.saveScope();     
-            System.assertEquals(controller.lstExistingAssets.size(), 0);
+            List<E2_Recommended_Asset__c> relatedAssets = new List<E2_Recommended_Asset__c>([SELECT Scope__c, Asset__c 
+      																			FROM E2_Recommended_Asset__c
+      																			WHERE Scope__c = :scope.Id]);     
+      			System.assertEquals(relatedAssets.size(), 0);
         Test.stopTest();  
      }
   }

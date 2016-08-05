@@ -516,6 +516,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>false</editable>
+        <field>E2_Scope__c.Sequence__c</field>
+        <readable>false</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
         <field>E2_Scope__c.Source_Scope__c</field>
         <readable>false</readable>
     </fieldPermissions>

@@ -148,7 +148,8 @@ public class E2_DataUtil {
       return [SELECT Name, Complexity__c, Scope_Item_Type__c, Description__c ,
       E2_Assumption__c, LOE_Hrs__c, Parent_Scope__r.Name                                 
                      FROM E2_Scope__c 
-                     WHERE Is_Active__c = true AND Presales_LOE__c = : estimateId];   
+                     WHERE Is_Active__c = true AND Presales_LOE__c = : estimateId
+                     order by Sequence__c asc];   
   }
   
   public static List<E2_Scope__c> getScopesOnTemplate(string scopeId) {
@@ -176,9 +177,15 @@ public class E2_DataUtil {
   	return [SELECT Id, Question_Text__c, Scope__c, Source_Question__c, 
   			Type__c, Is_Active__c, Weighted_Effort_LOE__c,
   			(SELECT Id, Answer_Text__c, Effort_LOE__c, Is_Selected__c, 
-  			  Source_Answer__c, Is_Active__c, Question__c, Action__c 
-  			 FROM Answers__r)
+  			  Sequence__c, Source_Answer__c, Is_Active__c, Question__c, Action__c 
+  			 FROM Answers__r ORDER BY Sequence__c)
   			 FROM E2_Question__c
   			 WHERE Scope__c =: scopeId];
+  }
+  
+  public static List<E2_Action_Scope__c> getRelatedScopes(set<Id> answers) {
+  	return [SELECT Id, Answer__c, Scope__c, Unique_Key__c 
+  			FROM E2_Action_Scope__c
+  			WHERE Answer__c IN: answers];
   }
 }

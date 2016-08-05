@@ -190,15 +190,17 @@ var tabpanel = {
     feed_tabId : '#tab-default-2__item',
     bindEvents : function(){
        $('.slds-tabs--default__item').on('click', function(){
-			        $(this).addClass('slds-active');
-			        $(this).find('a').attr('aria-selected', true);
-			        var $contentToShow = $('#'+$(this).find('a').attr('aria-controls'));
-			        $contentToShow.removeClass('slds-hide');
-			        $contentToShow.addClass('slds-show');			
-			        $(this).siblings().removeClass('slds-active');
-			        $(this).siblings().find('a').attr('aria-selected', false);
-			        $contentToShow.siblings('.slds-tabs--default__content').removeClass('slds-show');
-			        $contentToShow.siblings('.slds-tabs--default__content').addClass('slds-hide');
+                  var $contentToShow = $('#'+$(this).find('a').attr('aria-controls'));
+                  setTimeout(function() {
+                      $contentToShow.siblings('.slds-tabs--default__content').removeClass('slds-show');
+			          $contentToShow.siblings('.slds-tabs--default__content').addClass('slds-hide');
+                  },80);    
+		          $(this).addClass('slds-active');
+			      $(this).find('a').attr('aria-selected', true);
+			      $contentToShow.removeClass('slds-hide');
+			      $contentToShow.addClass('slds-show');			
+			      $(this).siblings().removeClass('slds-active');
+			      $(this).siblings().find('a').attr('aria-selected', false);
 		});
     },
     activateTab: function(that){
@@ -323,9 +325,30 @@ $(document).ready(function() {
          }     
     });
     
+    $('div.slds-page-header input.slds-button, a.slds-tabs--path__link, button.slds-path__mark-complete, a#tab-default-2__item').each(function(){
+        var handler = $(this).prop('onclick');
+        $(this).removeProp('onclick');
+        $(this).click(warning_event);
+        $(this).click(handler);
+    });
+    
     
 });
 
+
+var warning_event = function(e){
+        var IFRAME_KEY = global_scopeId + AddEditScope.ENDS_WITH;
+        var scope_detail_obj = document.getElementById(IFRAME_KEY);
+        //alert(typeof scope_detail_obj);
+        if(scope_detail_obj 
+                         && scope_detail_obj.contentWindow 
+                         && scope_detail_obj.contentWindow.TrackScopeUpdates 
+                         && scope_detail_obj.contentWindow.TrackScopeUpdates.is_Dirty()) {
+           AddEditScope.showIsDirtyWarning(global_scopeId);
+           e.stopImmediatePropagation();
+           return false;
+        }
+}
 
 var bindEvents = function(){
 	//EVENT: JSTREE NODE BEING REPARENTED
@@ -597,20 +620,7 @@ var AddEditScope = {
                 //to refresh scope loe we need to reload jstree
                 global_scopeId = result;
                 
-                //to handle the re-ordering of scopes (vikash goyal 7/15/2016)
-                // create a json of new order of scopes in the tree hierarchy and send this json to the 
-                // controller to update the position of all the scopes in the tree.
-                var nodes_order_json = '[';
-                $($(treeId).jstree(true).get_json('#', {flat:true})).each(function(index, value){
-                    var position = $.inArray(value.id, $(treeId).jstree().get_node(value.parent).children);
-                    nodes_order_json += '{"scopeId":"' + value.id + '", "displayOrder":"' + position + '"},';
-                });
-                nodes_order_json = nodes_order_json.slice(0, -1);
-                nodes_order_json += ']'
-                // invoke the webservice to update scopes display order 
-                sforce.apex.execute("E2_Estimator_WS", "updateScopesDisplayOrder", {
-                    scopeJsonStr: nodes_order_json
-                }, AddEditScope.updateScopeDisplayOrderCallback);
+                AddEditScope.updateScopeDisplayOrder();
             }
         },
         onFailure: function(error) {
@@ -618,6 +628,28 @@ var AddEditScope = {
             $(loadSpinner).hide();
         }
     },
+    
+    
+    updateScopeDisplayOrder : function(){
+        //to handle the re-ordering of scopes (vikash goyal 7/15/2016)
+        // create a json of new order of scopes in the tree hierarchy and send this json to the 
+        // controller to update the position of all the scopes in the tree.
+        var nodes_order_json = '[';
+        
+        $($(treeId).jstree(true).get_json('#', {flat:true})).each(function(index, value){
+            var position = $.inArray(value.id, $(treeId).jstree().get_node(value.parent).children);
+            nodes_order_json += '{"scopeId":"' + value.id + '", "displayOrder":"' + position + '", "sequence":"' + index + '"},';
+        });
+        
+        nodes_order_json = nodes_order_json.slice(0, -1);
+        nodes_order_json += ']';
+        
+        // invoke the webservice to update scopes display order 
+        sforce.apex.execute("E2_Estimator_WS", "updateScopesDisplayOrder", {
+                scopeJsonStr: nodes_order_json
+                }, AddEditScope.updateScopeDisplayOrderCallback);
+    },
+    
     updateScopeDisplayOrderCallback : {
         onSuccess: function(result) {
             result = (result.length > 0 ? result[0] : result);

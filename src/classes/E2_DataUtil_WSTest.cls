@@ -39,6 +39,8 @@ public class E2_DataUtil_WSTest {
           system.assertEquals(E2_DataUtil_WS.getScopeChildList(favScope.Id).size(), 1); 
           system.assertEquals(E2_DataUtil_WS.getRelatedAssets('test', new List<String>{recommendedAsset.Asset__c}).size(), 1);
           system.assertEquals(E2_DataUtil_WS.getAssetContributors(new List<CMC_Asset__c>()).size(), 0);
+          system.assertEquals(E2_DataUtil_WS.getRecommendedAssetsForScope(scopeTemplate.id).size(), 1);
+          system.assertEquals(E2_DataUtil_WS.getAssetsMap(new Set<Id>{recommendedAsset.Asset__c}).size(), 1);
         Test.stopTest();
     }
    }

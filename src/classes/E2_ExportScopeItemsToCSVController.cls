@@ -4,16 +4,6 @@ public with sharing class E2_ExportScopeItemsToCSVController {
   public List<ScopeWrapper> lstScopeWrapper {get; set;}
   public CMC_Presales_LOE__c estimate {get;set;}
   
-  /**
-  public String xlsHeader {
-        get {
-            String strHeader = '';
-            strHeader += '<?xml version="1.0"?>';
-            strHeader += '<?mso-application progid="Excel.Sheet"?>';
-            return strHeader;
-        }
-    }
-  **/
   
   public E2_ExportScopeItemsToCSVController(ApexPages.StandardController std){
     this.estimate = (CMC_Presales_LOE__c)std.getRecord();

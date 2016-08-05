@@ -169,39 +169,7 @@ public class E2_Estimator_WSManager {
         }        
         return nodeList;    
     }
-    
-    /*public static E2_TreeNodeMap getClonedNodes(string scopeId, string estimateId, string parentScopeId){
-        E2_TreeNodeMap scopeIdToNodeList;
-        List<E2_Scope__c> scopeList = new List<E2_Scope__c>();
-        List<E2_TreeNode> nodeList = new List<E2_TreeNode>();
-        parentScopeId = (parentScopeId == null || parentScopeId == E2_Constants.BLANK ? E2_Constants.HASH_TAG : parentScopeId);
-        Id recTypeId = E2_RecordTypeClass.getId(E2_Constants.E2_SCOPE_API_NAME, E2_Constants.SCOPE_RT_SCOPE);
-        boolean hasChildren = false;
-        for(E2_Scope__c scope : E2_DataUtil_WS.getFullScopeDetailsWithLimit(scopeId)){
-           E2_Scope__c cloneScope = scope.clone(false, true, false, false);
-           cloneScope.Source_Scope__c = scope.id;
-           cloneScope.Presales_LOE__c = estimateId;
-           cloneScope.Parent_Scope__c = (parentScopeId == E2_Constants.HASH_TAG ? null : parentScopeId);
-           cloneScope.recordTypeId = recTypeId;    
-           cloneScope.Scope_Group__c = null;                      
-           scopeList.add(cloneScope);
-           if(scope.Child_Scopes__r.size() > 0 ||
-              scope.Efforts__r.size() > 0){
-              hasChildren = true;
-           }                                                
-        }
-        if(!scopeList.isEmpty()){
-            insert scopeList;        
-            for(E2_Scope__c scope : scopeList){
-               nodeList.add(new E2_TreeNode(scope.id, getFormatedScopeNameForFlag(scope, 0), 
-                                            parentScopeId, hasChildren, 
-                                            scope.Source_Scope__c));   
-            }               
-        }
-        scopeIdToNodeList = new E2_TreeNodeMap(scopeId, nodeList);        
-        return scopeIdToNodeList;            
-    }*/
-    
+        
     // Method to clonned scope from scope library
     public static string getSelectedScopeNodes(string scopeIdCSV, string estimateId, string parentScopeId) {
         parentScopeId = (parentScopeId == null || parentScopeId == E2_Constants.BLANK ? E2_Constants.HASH_TAG : parentScopeId);
@@ -288,58 +256,6 @@ public class E2_Estimator_WSManager {
         	update scopesToUpdate;
         }
     }
-    
-    /*public static E2_TreeNodeMap getChildCloneNodes(string parentId, string sourceId, string estimateId){
-        E2_TreeNodeMap scopeIdToNodeList;
-        List<E2_Scope__c> scopeList = new List<E2_Scope__c>();        
-        List<E2_Effort__c> effortList = new List<E2_Effort__c>();
-        List<E2_Recommended_Asset__c> assetList = new List<E2_Recommended_Asset__c>();
-        List<E2_TreeNode> nodeList = new List<E2_TreeNode>();
-        Id recTypeId = E2_RecordTypeClass.getId(E2_Constants.E2_SCOPE_API_NAME, E2_Constants.SCOPE_RT_SCOPE);
-        boolean hasChildren = false;
-        
-        for(E2_Scope__c scope : E2_DataUtil_WS.getFullScopeDetails(sourceId)){                               
-           for(E2_Scope__c childScope : scope.Child_Scopes__r){
-            E2_Scope__c cloneScope = childScope.clone(false, true, false, false);
-            cloneScope.Source_Scope__c = childScope.id;
-            cloneScope.Presales_LOE__c = estimateId;
-            cloneScope.Parent_Scope__c = parentId;
-            cloneScope.recordTypeId = recTypeId;
-            cloneScope.Scope_Group__c = null;
-            scopeList.add(cloneScope); 
-           }           
-           for(E2_Effort__c effort : scope.Efforts__r){
-            E2_Effort__c cloneEffort = effort.clone(false, true, false, false);
-            cloneEffort.Scope__c = parentId;
-            cloneEffort.Source_Effort__c = effort.id;
-            effortList.add(cloneEffort);
-           }
-           for(E2_Recommended_Asset__c asset : scope.E2_Recommended_Assets__r){
-           	E2_Recommended_Asset__c clonedAsset = asset.clone(false, true, false, false);
-           	clonedAsset.Scope__c = parentId;
-           	assetList.add(clonedAsset);	
-           }
-        }        
-        
-        if(!effortList.isEmpty()){
-            insert effortList;
-        }
-        
-        if(!assetList.isEmpty()){
-        		insert assetList;
-        }
-        
-        if(!scopeList.isEmpty()){
-            insert scopeList;       
-            for(E2_Scope__c scope : scopeList){
-               nodeList.add(new E2_TreeNode(scope.id, getFormatedScopeNameForFlag(scope, 0), 
-                                             parentId, true, scope.Source_Scope__c));   
-            }               
-        }
-        scopeIdToNodeList = new E2_TreeNodeMap(parentId, nodeList);
-        return scopeIdToNodeList;    
-    }*/
-    
     
     public static E2_TreeNodeMap getChildScopeDetailNodes(string parentId) {
         E2_TreeNodeMap scopeIdToNodeList;
@@ -480,7 +396,9 @@ public class E2_Estimator_WSManager {
     	
     	List<E2_Scope__c> lstScopes = new List<E2_Scope__c>();
     	for(E2_Estimator_WSManager.ScopeWrapper scopeWrapper : lstScopesWrapper){
-    		lstScopes.add(new E2_Scope__c(Id= scopeWrapper.scopeId, Display_Order__c = Integer.valueOf(scopeWrapper.displayOrder)));
+    		lstScopes.add(new E2_Scope__c(Id= scopeWrapper.scopeId, 
+    		                              Display_Order__c = Integer.valueOf(scopeWrapper.displayOrder),
+    		                              Sequence__c = Integer.valueOf(scopeWrapper.sequence)));
     	}
     	
     	try{
@@ -504,6 +422,7 @@ public class E2_Estimator_WSManager {
 	  		Map<Id, String> mapAssetContributors = new Map<Id, String>();
 	  		
 	  		for(CMC_Asset_Contributor__c assetContibutor : E2_DataUtil_WS.getAssetContributors(listAssets)){
+	  		  system.debug('==assetContibutor>>'+assetContibutor);
 	  			if(!mapAssetContributors.containsKey(assetContibutor.Asset__c)){
 	  				mapAssetContributors.put(assetContibutor.Asset__c, '');
 	  			}
@@ -589,5 +508,6 @@ public class E2_Estimator_WSManager {
     public class ScopeWrapper{
     	public string scopeId;
     	public string displayOrder;
+    	public string sequence;
     }
 }

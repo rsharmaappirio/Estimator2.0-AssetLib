@@ -119,18 +119,15 @@ var ck_custom_editor = {
         CKEDITOR.instances[_a].on( 'contentDom', function(e) {		    
 		    ck_custom_editor.editor_load(e.editor.name);
 		});
-       
-        
-        CKEDITOR.instances[_a].on( 'blur', function( e ) {
-          
+         
+        CKEDITOR.instances[_a].on( 'change', function( e ) {
           // mark global is-dirty to true for save warning in case any
           // changes applied manually to the rte of assumptions and description
-          // can't use with change event as event will be triggered with every keyup
-          TrackScopeUpdates.IS_INSIDE_CURRENT_WINDOW = false;
-            if(CKEDITOR.instances[e.editor.name].checkDirty()){
+         if(CKEDITOR.instances[e.editor.name].checkDirty()){
     	        TrackScopeUpdates.markJSDirty();
-    	        TrackScopeUpdates.showIsDirtyWarning();
-    	    }      
+    	    }
+        });
+        CKEDITOR.instances[_a].on( 'blur', function( e ) {
 	      // Hide the editor
 	      ck_custom_editor.editorHide(e.editor.name);
 	      
@@ -143,8 +140,6 @@ var ck_custom_editor = {
 		        descriptionRTE_jq.html(CKEDITOR.instances[e.editor.name].getData(false));
 	            descriptionRTE_jq.show('slow', function(e){resetIframeHeight();});
 		  }
-		 
-		  
 	   });
 	    
 	   if(_a.indexOf('assumptionRtext') != -1) {
@@ -170,7 +165,6 @@ var ck_custom_editor = {
   
   editorShow : function(id){
     var editor_id = 'cke_' + id;
-    TrackScopeUpdates.IS_INSIDE_CURRENT_WINDOW = true;
     $(document.getElementById(editor_id)).show('slow', function(e){
          CKEDITOR.instances[$(this).attr('id').replace('cke_', '')].focus(); 
          resetIframeHeight();
@@ -181,7 +175,7 @@ var ck_custom_editor = {
     var editor_id = 'cke_' + id;
     //debugger;
     $(document.getElementById(editor_id)).hide('slow', function(e){resetIframeHeight();});
-    TrackScopeUpdates.IS_INSIDE_CURRENT_WINDOW = false;
+    
   },
   
   editorHideWithoutEffect : function(id){
@@ -189,7 +183,6 @@ var ck_custom_editor = {
     //debugger;
     $(document.getElementById(editor_id)).hide();
     resetIframeHeight();
-    TrackScopeUpdates.IS_INSIDE_CURRENT_WINDOW = false;
   } 
 
 
@@ -207,19 +200,23 @@ var flag_controller = {
     }
 }
 
-var typeahead_input = {
+var Typeahead_input = {
     searchKey : '',
+    resourceUrl : '',
     searchinput_jQclientid : '#searchStr_ele',
     typeaheadmenu_selector: 'div.Typeahead-menu',
     typeaheadhint_selector: '.Typeahead-hint',
-    resourceUrl : '',
     selectedAssetsMap : {},
-    resetFrameHeightWithTypeAheadEvents:function(){
+    rowCount : 0,
+    resetFrameHeightWithTypeAheadEvents:function(isMenuOpen){
         var height = $(document.body).height();
         var height_addr = 15;
-        var offsetHeight = $(typeahead_input.searchinput_jQclientid).offset().top 
-                                  + $(typeahead_input.searchinput_jQclientid).height() 
-                                  + $(typeahead_input.typeaheadmenu_selector).height();
+        var offsetHeight = $(Typeahead_input.searchinput_jQclientid).offset().top 
+                                  + $(Typeahead_input.searchinput_jQclientid).height(); 
+                                  //+ $(Typeahead_input.typeaheadmenu_selector).height();
+        if(isMenuOpen){
+            offsetHeight += $(Typeahead_input.typeaheadmenu_selector).height();
+        }
         if(offsetHeight > height){
             height = offsetHeight;
         }
@@ -227,8 +224,8 @@ var typeahead_input = {
     },
     load : function(){
         $('.Typeahead-input').typeahead({
-            hint: $(typeahead_input.typeaheadhint_selector),
-            menu: $(typeahead_input.typeaheadmenu_selector),
+            hint: $(Typeahead_input.typeaheadhint_selector),
+            menu: $(Typeahead_input.typeaheadmenu_selector),
             highlight: true,    
             minLength: 3,
             classNames: {
@@ -244,14 +241,14 @@ var typeahead_input = {
             displayKey: 'name',
             limit: 10,
             source: function(query, syncResults, asyncResults){
-                typeahead_input.searchKey = query;
-                var selectedAssets = typeahead_input.getAlreadyAddedAssets();
+                Typeahead_input.searchKey = query;
+                var selectedAssets = Typeahead_input.getAlreadyAddedAssetsIds();
                 //console.log(selectedAssets);
                 sforce.apex.execute("E2_Estimator_WS", "searchAssets", {
                     searchStr: query, exisitingAssetIds : selectedAssets}, function(result){
                         if(result.length > 0) {
                           //console.log(result);
-                          if(typeahead_input.searchKey == result[0].searchKey){
+                          if(Typeahead_input.searchKey == result[0].searchKey){
                             var assetList = [];
                             if(typeof result[0].assetList != 'undefined'){
                                 if((result[0].assetList).constructor === Array){
@@ -271,7 +268,7 @@ var typeahead_input = {
             templates: {
                 suggestion: function(data){
                     //console.log(data);
-                    return typeahead_input.prepareSuggestionTemplate(data);
+                    return Typeahead_input.prepareSuggestionTemplate(data);
                 },
                 notFound : function(){
                     return '<div class="EmptyMessage">Your search turned up 0 results.</div>';
@@ -280,19 +277,24 @@ var typeahead_input = {
             }
         })
         .on('typeahead:select', function(ev, suggestion) {
-            typeahead_input.addRowToTable(suggestion);
-            if(typeof typeahead_input.selectedAssetsMap[suggestion.id] == 'undefined'){
-                typeahead_input.selectedAssetsMap[suggestion.id] = suggestion;
+            Typeahead_input.addRowToTable(suggestion);
+            if(typeof Typeahead_input.selectedAssetsMap[suggestion.id] == 'undefined'){
+                Typeahead_input.selectedAssetsMap[suggestion.id] = suggestion;
             }
             else{
-                typeahead_input.selectedAssetsMap[suggestion.id].isDeleted = 'false';    
+                Typeahead_input.selectedAssetsMap[suggestion.id].isDeleted = 'false';    
             }
-            $("input[Id$='existingAssetRecs']").val(JSON.stringify(typeahead_input.selectedAssetsMap));
-            typeahead_input.resetFrameHeightWithTypeAheadEvents();
+            $("input[Id$='existingAssetRecs']").val(JSON.stringify(Typeahead_input.selectedAssetsMap));
             TrackScopeUpdates.markJSDirty();
         })
         .on('typeahead:render', function(ev, suggestion, flag, dataset) {
-           typeahead_input.resetFrameHeightWithTypeAheadEvents(); 
+           Typeahead_input.resetFrameHeightWithTypeAheadEvents(true); 
+        })
+        .on('typeahead:open', function(ev, suggestion, flag, dataset) {
+            Typeahead_input.resetFrameHeightWithTypeAheadEvents(true);
+        })
+        .on('typeahead:close', function(ev, suggestion, flag, dataset) {
+            Typeahead_input.resetFrameHeightWithTypeAheadEvents(false);
         })
         .on('typeahead:asyncrequest', function() {
             $('.Typeahead-spinner').show();
@@ -304,7 +306,7 @@ var typeahead_input = {
     
     prepareSuggestionTemplate : function(data){
         var returnHtmlStr = '<div class = "ProfileCard u-cf"><img class="ProfileCard-avatar" src="{resource_url}/images/{image_name}"/>';
-        returnHtmlStr += '<div class="ProfileCard-details"><div class="ProfileCard-realName"><a onclick="typeahead_input.goToAssetDetailPage(event, this);" href="/{id}" target="_blank">{asset_name}</a>';
+        returnHtmlStr += '<div class="ProfileCard-details"><div class="ProfileCard-realName"><a onclick="Typeahead_input.goToAssetDetailPage(event, this);" href="/{id}" target="_blank">{asset_name}</a>';
         returnHtmlStr += '<img src="{resource_url}/images/{assettype_image_name}.png" title="{assettype_image_name} Asset" style="padding-left:10px;"/>'
         if(data.isRecommended == 'true'){
             returnHtmlStr += '<span style="margin-left: 5px; background-color:#FA9500;" class="slds-badge">Recommended</span>';
@@ -316,7 +318,7 @@ var typeahead_input = {
         returnHtmlStr += '<div class="ProfileCard-stats"><div class="ProfileCard-stat"><span class="ProfileCard-stat-label">Primary Contributor : </span>{primarycontributors}</div>';
         returnHtmlStr += '<div class="ProfileCard-stat"><span class="ProfileCard-stat-label">Technologies : </span>{technologies}</div></div></div>';
         
-        returnHtmlStr = returnHtmlStr.replace(/{resource_url}/gi, typeahead_input.resourceUrl)
+        returnHtmlStr = returnHtmlStr.replace(/{resource_url}/gi, Typeahead_input.resourceUrl)
                                      .replace(/{image_name}/gi, data.imageName)
                                      .replace(/{id}/gi, data.id)
                                      .replace(/{asset_name}/gi, data.assetName)
@@ -336,7 +338,7 @@ var typeahead_input = {
         //tableRowStr += '<td class="slds-truncate whitespace_normal">{technologies}</td>';
         tableRowStr += '<td class="slds-truncate whitespace_normal">{reuse_loe}</td>';
         tableRowStr += '<td class="slds-truncate whitespace_normal">{release_stage}</td>';
-        tableRowStr += '<td class="slds-cell-shrink" data-label="Actions"><a onclick="typeahead_input.removeAssetRow(\'{asset_id}\');return false" class="delete_button slds-button--right--float"/></td></tr>';
+        tableRowStr += '<td class="slds-cell-shrink" data-label="Actions"><a onclick="Typeahead_input.removeAssetRow(\'{asset_id}\');return false" class="delete_button slds-button--right--float"/></td></tr>';
         
         tableRowStr = tableRowStr.replace(/{asset_id}/gi, suggestion.id)
                                  .replace(/{asset_name}/gi, suggestion.assetName)
@@ -345,8 +347,13 @@ var typeahead_input = {
                                  .replace(/{reuse_loe}/gi, (suggestion.totalHours - suggestion.reuseLoe))
                                  .replace(/{release_stage}/gi, suggestion.releaseStage);
         
+        if($('#noAssetRow') != null && $('#noAssetRow').length){
+            Typeahead_input.removeNoAssetsRow();
+        }
+        
         $("#RecommendedAssetsTable tbody").append(tableRowStr);
-        //typeahead_input.resetFrameHeightWithTypeAheadEvents();
+        Typeahead_input.rowCount += 1;
+        Typeahead_input.resetFrameHeightWithTypeAheadEvents(false);
     },
     
     goToAssetDetailPage : function(event, element){
@@ -360,17 +367,22 @@ var typeahead_input = {
     
     removeAssetRow : function(rowId){
         $('#'+rowId).remove();
-        if(typeof typeahead_input.selectedAssetsMap[rowId] != 'undefined'){
-            typeahead_input.selectedAssetsMap[rowId].isDeleted = 'true';
+        if(typeof Typeahead_input.selectedAssetsMap[rowId] != 'undefined'){
+            Typeahead_input.selectedAssetsMap[rowId].isDeleted = 'true';
         }
-        $("input[Id$='existingAssetRecs']").val(JSON.stringify(typeahead_input.selectedAssetsMap));
-        typeahead_input.resetFrameHeightWithTypeAheadEvents();
+        $("input[Id$='existingAssetRecs']").val(JSON.stringify(Typeahead_input.selectedAssetsMap));
+        Typeahead_input.rowCount -= 1;
+        
+        if(Typeahead_input.rowCount === 0){
+            Typeahead_input.addNoAssetsRow();
+        }
+        Typeahead_input.resetFrameHeightWithTypeAheadEvents(false);
         TrackScopeUpdates.markJSDirty();
     },
     
-    getAlreadyAddedAssets : function(){
+    getAlreadyAddedAssetsIds : function(){
         var existingAssetIds = [];
-        $.each(typeahead_input.selectedAssetsMap, function(index, element) {
+        $.each(Typeahead_input.selectedAssetsMap, function(index, element) {
             if(element.isDeleted == 'false'){
                 existingAssetIds.push(element.id);
             }
@@ -378,14 +390,63 @@ var typeahead_input = {
         return existingAssetIds;
     },
     
-    showTypeahead : function(){
-        $('.Typeahead').show();
-        $('#addAsset').hide();
+    retrieveExistingAssets : function(){
+        //var existingAssets = $("input[Id$='existingAssetRecs']").val();
+        //if(existingAssets.length == 0){
+            sforce.apex.execute("E2_Estimator_WS", "getExistingAssetsForScope", {
+                    scopeId: scope_sfdc_id}, function(result){
+                        if(result.length > 0) {
+                          var assetsRecsJson = result[0];
+                          if (assetsRecsJson != null && assetsRecsJson != '' && assetsRecsJson.length > 0) {
+                              Typeahead_input.prepareExistingAssetRows(assetsRecsJson);
+                          }
+                          else{
+                              Typeahead_input.addNoAssetsRow();
+                          }
+                        }
+                        else{
+                            Typeahead_input.addNoAssetsRow();
+                        }
+                });
+      // }
+      // else{
+      //     Typeahead_input.prepareExistingAssetRows(existingAssets);
+      // }
     },
     
-    hideTypeahead : function(){
-        $('.Typeahead').hide();
-        $('#addAsset').show();
+    prepareExistingAssetRows : function(assetsRecsJson){
+        Typeahead_input.selectedAssetsMap = JSON.parse(assetsRecsJson);
+        var hasValidAsset = false; 
+        $.each(Typeahead_input.selectedAssetsMap, function(index, element) {
+            if(element.isDeleted == 'false'){
+                Typeahead_input.addRowToTable(element);
+                hasValidAsset = true;
+            }
+        });
+        
+        var existingAssets = $("input[Id$='existingAssetRecs']").val();
+        
+        if(existingAssets.length !== 0){
+            $.each(JSON.parse(existingAssets), function(index, element) {
+                if(element.isDeleted == 'false' && typeof Typeahead_input.selectedAssetsMap[element.id] == 'undefined'){
+                    Typeahead_input.addRowToTable(element);
+                    hasValidAsset = true;
+                }
+            });
+        }
+        if(hasValidAsset){
+            Typeahead_input.removeNoAssetsRow();
+        }
+        $("input[Id$='existingAssetRecs']").val(JSON.stringify(Typeahead_input.selectedAssetsMap));
+    },
+    
+    addNoAssetsRow : function(){
+        var rowStr = '<tr id="noAssetRow"><td colspan="5">No recommended assets!!!</td></tr>';
+        $("#RecommendedAssetsTable tbody").append(rowStr);
+    },
+    
+    removeNoAssetsRow : function(){
+        $('#noAssetRow').remove();
     }
 }
 
@@ -396,6 +457,8 @@ $(document).ready(function() {
     ck_custom_editor.load();
     // save warning initiation
     TrackScopeUpdates.load();
+    Typeahead_input.load();
+    Typeahead_input.retrieveExistingAssets();
     bindSliders();
     hideSpinner();
     flag_controller.load();
@@ -560,7 +623,6 @@ var validateData = function(){
   
   $(document.body).find('div.effortsdiv').each(validationTraverse);
   //$(document.body).find('div.assumptionsdiv').each(validationTraverse);
-  
   return returnVal;
 }
 
@@ -659,37 +721,21 @@ var TrackScopeUpdates = {
     is_updated : false,
     message_shown : false,
     save_trigged: false,
-    IS_INSIDE_CURRENT_WINDOW: true,
     assets_search_input_client_id : '#searchStr_ele',
-    bindIframeEvents : function() {
-         $(window).on( 'blur', function( e ) {
-             TrackScopeUpdates.showIsDirtyWarning();
-	     });
-    },
-    showIsDirtyWarning : function() {
-        if(TrackScopeUpdates.IS_INSIDE_CURRENT_WINDOW == false && TrackScopeUpdates.is_Dirty()) {
-		    parent&&parent.AddEditScope&&parent.AddEditScope.showIsDirtyWarning&&parent.AddEditScope.showIsDirtyWarning(scope_sfdc_id);
-		}
-		TrackScopeUpdates.IS_INSIDE_CURRENT_WINDOW = false;
-    },
     load : function() {
-        TrackScopeUpdates.bindIframeEvents();
         var is_Dirty = TrackScopeUpdates.checkIsdirty();
         if(is_Dirty == true) {
+            alert(is_Dirty);
             TrackScopeUpdates.is_updated = true; 
             TrackScopeUpdates.save_trigged = false;
         }
-        
         // attach change event handler to all input fields except the assets search input.
         $("input, select").not(TrackScopeUpdates.assets_search_input_client_id).bind('change',function(e){
                 TrackScopeUpdates.markJSDirty();
         });
-        
-        $(".delete_button").bind('click',function(e){
+        $(".delete_button, .slds-update-scope").bind('click',function(e){
+          updateFormStatus();
           TrackScopeUpdates.markJSDirty();
-        });
-        $("a.slds-select").bind('click',function(e){
-          TrackScopeUpdates.IS_INSIDE_CURRENT_WINDOW = true;
         });
     },
     markJSDirty : function() {

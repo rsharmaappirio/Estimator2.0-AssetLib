@@ -403,20 +403,8 @@ var AddEditScope = {
                 //to refresh scope loe we need to reload jstree
                 global_scopeId = result;
                 
-                //to handle the re-ordering of scopes (vikash goyal 7/15/2016)
-                // create a json of new order of scopes in the tree hierarchy and send this json to the 
-                // controller to update the position of all the scopes in the tree.
-                var nodes_order_json = '[';
-                $($(treeId).jstree(true).get_json('#', {flat:true})).each(function(index, value){
-                    var position = $.inArray(value.id, $(treeId).jstree().get_node(value.parent).children);
-                    nodes_order_json += '{"scopeId":"' + value.id + '", "displayOrder":"' + position + '"},';
-                });
-                nodes_order_json = nodes_order_json.slice(0, -1);
-                nodes_order_json += ']';
-                // invoke the webservice to update scopes display order 
-                sforce.apex.execute("E2_Estimator_WS", "updateScopesDisplayOrder", {
-                    scopeJsonStr: nodes_order_json
-                }, AddEditScope.updateScopeDisplayOrderCallback);
+                AddEditScope.updateScopeDisplayOrder();
+                
                 // show success message
                 /*CustomAlert.show('Scope have been re-parented successfully!!!');
                 $(loadSpinner).show().css('height', $(document).outerHeight());
@@ -430,6 +418,27 @@ var AddEditScope = {
             $(loadSpinner).hide();
         }
     },
+    
+    updateScopeDisplayOrder : function(){
+        //to handle the re-ordering of scopes (vikash goyal 7/15/2016)
+        // create a json of new order of scopes in the tree hierarchy and send this json to the 
+        // controller to update the position of all the scopes in the tree.
+        var nodes_order_json = '[';
+        
+        $($(treeId).jstree(true).get_json('#', {flat:true})).each(function(index, value){
+            var position = $.inArray(value.id, $(treeId).jstree().get_node(value.parent).children);
+            nodes_order_json += '{"scopeId":"' + value.id + '", "displayOrder":"' + position + '", "sequence":"' + index + '"},';
+        });
+        
+        nodes_order_json = nodes_order_json.slice(0, -1);
+        nodes_order_json += ']';
+        
+        // invoke the webservice to update scopes display order 
+        sforce.apex.execute("E2_Estimator_WS", "updateScopesDisplayOrder", {
+                scopeJsonStr: nodes_order_json
+                }, AddEditScope.updateScopeDisplayOrderCallback);
+    },
+    
     updateScopeDisplayOrderCallback : {
         onSuccess: function(result) {
             result = (result.length > 0 ? result[0] : result);

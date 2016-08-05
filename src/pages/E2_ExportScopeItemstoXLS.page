@@ -24,39 +24,6 @@ contentType="application/vnd.ms-excel#{!SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTIT
 </apex:repeat>
 </tbody>
 </table>
-
-<!--
-<apex:outputText value="{!xlsHeader}"/>
-<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
- xmlns:o="urn:schemas-microsoft-com:office:office"
- xmlns:x="urn:schemas-microsoft-com:office:excel"
- xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
- xmlns:html="http://www.w3.org/TR/REC-html40">
- <Styles>
- <Style ss:ID="s1">
- <Alignment/>
- <Borders/>
- <Font ss:Bold="1"/>
- <Interior/>
- <NumberFormat/>
- <Protection/>
- </Style>
- </Styles>
- <Worksheet ss:Name="Scopes">
- <Table x:FullColumns="1" x:FullRows="1">
- <Column ss:Width="170"/>
- <Row>
- <Cell ss:StyleID="s1"><Data ss:Type="String" >Account Name</Data></Cell>
- </Row>
- <apex:repeat value="{!lstScopeWrapper}" var="scope">
- <Row>
- <Cell><Data ss:Type="String">{!scope.scopeName}</Data></Cell>
- </Row>
- </apex:repeat>
- </Table>
- </Worksheet> 
-</Workbook>
--->
 </body>
 </html>
 </apex:page>

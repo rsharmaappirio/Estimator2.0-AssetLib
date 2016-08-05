@@ -1,16 +1,23 @@
 @isTest(seeAllData=false)
 public class E2_Estimator_WSTest {
   public static CMC_Presales_LOE__c estimate;
-  public static E2_Scope__c parentSC, childSC;
+  public static E2_Scope__c parentSC, childSC, parentSC1, childSC1;
   public static E2_Scope_Group__c scopeGroup;
   public static E2_Recommended_Asset__c recommendedAsset;
+  public static Id recTypeId = E2_RecordTypeClass.getId(E2_Constants.E2_SCOPE_API_NAME, E2_Constants.SCOPE_RT_TEMPLATE); 
   
   public static testmethod void testE2_TreeNode(){
     estimate = [SELECT Id, Name FROM CMC_Presales_LOE__c];
-    parentSC = [SELECT Id, Name,Source_Scope__c FROM E2_Scope__c WHERE Parent_Scope__c = null];
-    childSC = [SELECT Id, Name, Source_Scope__c FROM E2_Scope__c WHERE Parent_Scope__c = :parentSC.Id];
+    parentSC = [SELECT Id, Name,Source_Scope__c FROM E2_Scope__c WHERE Parent_Scope__c = null AND RecordTypeId != :recTypeId];
+    childSC = [SELECT Id, Name, Source_Scope__c FROM E2_Scope__c WHERE Parent_Scope__c = :parentSC.Id AND RecordTypeId != :recTypeId];
     scopeGroup = [SELECT Id, Name FROM E2_Scope_Group__c];
     recommendedAsset = [SELECT Scope__c, Asset__c FROM E2_Recommended_Asset__c];
+    parentSC1 = [SELECT Id, Name,Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c,
+                  LOE_Hrs__c, Is_Active__c
+                  FROM E2_Scope__c WHERE Parent_Scope__c = null AND RecordTypeId = :recTypeId];
+    childSC1 = [SELECT Id, Name, Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c,
+                  LOE_Hrs__c, Is_Active__c
+                  FROM E2_Scope__c WHERE Parent_Scope__c = :parentSC1.Id ];
     
     User sysAdmin = E2_Test_Utils.insertUser(E2_Constants.PROFILE_SYS_ADMIN, true);
     
@@ -45,6 +52,9 @@ public class E2_Estimator_WSTest {
       */
       //treeMap = E2_Estimator_WS.getChildCloneNodes(parentSC.Id, parentSC.Id, estimate.Id);
       
+      String cloned_msg = E2_Estimator_WS.getClonedNodesTemplate(childSC.Id, scopeGroup.Id, parentSC.Id);
+      system.assertEquals(cloned_msg, 'Success', 'Success message is returned');
+      
       //commented as getting error during asset related code coverage
       /*treeMap = E2_Estimator_WS.getClonedNodesTemplate(childSC.Id, scopeGroup.Id, parentSC.Id);
       System.assertEquals(childSC.Id, treeMap.scope_id, 'returns same scope id');
@@ -55,7 +65,7 @@ public class E2_Estimator_WSTest {
       //treeMap = E2_Estimator_WS.getChildCloneNodesTemplate(parentSC.Id, parentSC.Id, scopeGroup.Id);
       
       treeLst = E2_Estimator_WS.retrieveAllScopeTreeNodesOnScopeGroup(scopeGroup.Id);
-      System.assertEquals(treeLst.size(), 6, 'Doesnot return 2 scopes associated with the group');
+      System.assertEquals(treeLst.size(), 2, 'Return 2 scopes associated with the group');
        
       string error = E2_Estimator_WS.updateScopeFlag(E2_constants.BLANK,'flagred');  
       System.assertEquals(error, 'Failed to update: Current scope not identified!!!');
@@ -63,17 +73,27 @@ public class E2_Estimator_WSTest {
       String a_scopeId = E2_Estimator_WS.reparentScope(childSC.Id, null);
       System.assertEquals(a_scopeId, childSC.id, 'Not successfully reparenting');
       
-      String jsonString = '[{"scopeId":"' + parentSC.id + '", "displayOrder":"1"},{"scopeId":"' + childSC.id + '", "displayOrder":"2"}]';
+      String jsonString = '[{"scopeId":"' + parentSC.id + '", "displayOrder":"1", "sequence":"1"},{"scopeId":"' + childSC.id + '", "displayOrder":"2", "sequence":"2"}]';
       String statusStr = E2_Estimator_WS.updateScopesDisplayOrder(jsonString);
       System.assertEquals(statusStr, 'success');
         
       String b_scopeId = E2_Estimator_WS.deleteScope(childSC.Id, parentSC.Id);
       System.assertEquals(b_scopeId, childSC.id, 'Not successfully deleting');
       
+      String scopeIds = childSC.Id+ ','+ childSC1.Id ; 
+      String test_Scope1 =  E2_Estimator_WS.getSelectedScopeNodes(parentSC.Id, estimate.Id, null);
+      system.assert(test_Scope1 != null);
+ 
+      String test_Scope2 =  E2_Estimator_WS.getSelectedScopeNodes(parentSC.Id, estimate.Id, null);
+      system.assert(test_Scope2 != null);
+      
       List<string> exisitingAssetIds = new List<string>{recommendedAsset.Asset__c};
       E2_AssetWrapperMap assetMap = E2_Estimator_WS.searchAssets('test', exisitingAssetIds);
       System.assertEquals(assetMap.searchKey, 'test');
-      System.assertEquals(assetMap.assetList.size(), 1);
+      System.assertEquals(assetMap.assetList.size(), 0);
+      
+      String test_Scope3 = E2_Estimator_WS.getExistingAssetsForScope(parentSC.Id);
+      system.assert(test_Scope3 != null);
       
       //stop test  
     Test.stopTest();
@@ -100,7 +120,24 @@ public class E2_Estimator_WSTest {
     childSC.Presales_LOE__c = estimate.Id;
     childSC.Parent_Scope__c = parentSC.Id;
     childSC.Complexity__c = 'Low';
+    childSC.Scope_Group__c = scopeGroup.Id;
     insert childSC;
+    
+    parentSC1 = E2_Test_Utils.insertScope(false);
+    parentSC1.Parent_Scope__c = null;
+    parentSC1.Complexity__c = 'Low';
+    parentSC1.Source_Scope__c = null;
+    parentSC1.LOE_Hrs__c = 10;
+    parentSC1.RecordTypeId = recTypeId;
+    insert parentSC1;
+    
+    childSC1 = E2_Test_Utils.insertScope(false);
+    childSC1.Parent_Scope__c = parentSC1.Id;
+    childSC1.Complexity__c = 'Low';
+    childSC1.LOE_Hrs__c = 30;
+    childSC1.Scope_Group__c = scopeGroup.Id;
+    childSC1.RecordTypeId = recTypeId;
+    insert childSC1;
     
     E2_Effort__c effort1 = E2_Test_Utils.insertEffort(true, parentSC.Id);
     

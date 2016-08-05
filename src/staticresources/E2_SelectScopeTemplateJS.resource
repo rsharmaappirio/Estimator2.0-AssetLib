@@ -361,15 +361,4 @@
     			}
     			return false;
 	    	}
-	    	var hideFavorite = function(favoriteLink) {
-	    	    var  isFav = false;
-	    	    var scopeId = $(favoriteLink).attr('scope-id');
-	    	    
-	    	    if($(favoriteLink).addClass("nonfavStar").removeClass("favStar")){
-	    	        isFav = false;
-	    	    }
-    	    	addOrRemoveFavScope(scopeId, isFav);
-	    	    resetResults();
-	    	    return false;    
-    	    	    
-	    	    }
+	    	

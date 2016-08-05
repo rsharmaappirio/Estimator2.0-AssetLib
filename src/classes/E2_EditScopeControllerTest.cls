@@ -223,13 +223,15 @@ public class E2_EditScopeControllerTest {
       E2_EditScopeController controller = new E2_EditScopeController(stdController);
     
       controller.pageAction();
-      System.assertEquals(controller.lstExistingAssets.size(), 1);     
       
       controller.assetsRecsJson = '{"'+ recommendedAsset.Asset__c + '" : {"recommendedAssetRecId" : "' + recommendedAsset.Id + '", "id" : "' + recommendedAsset.Asset__c + '", '+
                                 '"isExisting" : "true", "isDeleted" : "true"}}'; 
         
-      controller.saveScope();     
-      System.assertEquals(controller.lstExistingAssets.size(), 0);
+      controller.saveScope();
+      List<E2_Recommended_Asset__c> relatedAssets = new List<E2_Recommended_Asset__c>([SELECT Scope__c, Asset__c 
+      																			FROM E2_Recommended_Asset__c
+      																			WHERE Scope__c = :scope.Id]);     
+      System.assertEquals(relatedAssets.size(), 0);
       
         
     //stop test

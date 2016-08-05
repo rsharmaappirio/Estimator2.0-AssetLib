@@ -138,6 +138,7 @@ public with sharing class E2_SelectScopeTemplateController {
   public void searchScopeRecords() {
     E2_ScopeWrapper.sortBy = E2_ScopeWrapper.SORT_BY.ByScopeName;
     if(!isTemplatePage) {
+        scopeIDs.clear();
         favScopeList.clear();
         this.totalMyFav = 0; 
         //if(String.isBlank(scopeGroup))
@@ -238,8 +239,9 @@ public with sharing class E2_SelectScopeTemplateController {
 		        insert favSC;
 		 	} else {
 		    	E2_Favourite_Scope__c favSC = null;
-		        for(E2_Favourite_Scope__c fsc : [SELECT Id,Scope__r.RecordTypeId FROM E2_Favourite_Scope__c WHERE 
-		        										Scope__c =: selectedScopeId AND User__c =: UserInfo.getUserId()]){  
+		        for(E2_Favourite_Scope__c fsc : [SELECT Id,Scope__r.RecordTypeId FROM E2_Favourite_Scope__c 
+		                                           WHERE Scope__c =: selectedScopeId 
+		                                           AND User__c =: UserInfo.getUserId()]){  
 		          favSC = fsc;	          
 		        }
 		        if(favSC != null) {

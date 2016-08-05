@@ -175,7 +175,7 @@ var ck_custom_editor = {
 
 }
 
-var typeahead_input = {
+var Typeahead_input = {
     searchKey : '',
     resourceUrl : '',
     searchinput_jQclientid : '#searchStr_ele',
@@ -186,11 +186,11 @@ var typeahead_input = {
     resetFrameHeightWithTypeAheadEvents:function(isMenuOpen){
         var height = $(document.body).height();
         var height_addr = 15;
-        var offsetHeight = $(typeahead_input.searchinput_jQclientid).offset().top 
-                                  + $(typeahead_input.searchinput_jQclientid).height(); 
-                                  //+ $(typeahead_input.typeaheadmenu_selector).height();
+        var offsetHeight = $(Typeahead_input.searchinput_jQclientid).offset().top 
+                                  + $(Typeahead_input.searchinput_jQclientid).height(); 
+                                  //+ $(Typeahead_input.typeaheadmenu_selector).height();
         if(isMenuOpen){
-            offsetHeight += $(typeahead_input.typeaheadmenu_selector).height();
+            offsetHeight += $(Typeahead_input.typeaheadmenu_selector).height();
         }
         if(offsetHeight > height){
             height = offsetHeight;
@@ -199,8 +199,8 @@ var typeahead_input = {
     },
     load : function(){
         $('.Typeahead-input').typeahead({
-            hint: $(typeahead_input.typeaheadhint_selector),
-            menu: $(typeahead_input.typeaheadmenu_selector),
+            hint: $(Typeahead_input.typeaheadhint_selector),
+            menu: $(Typeahead_input.typeaheadmenu_selector),
             highlight: true,    
             minLength: 3,
             classNames: {
@@ -216,13 +216,13 @@ var typeahead_input = {
             displayKey: 'name',
             limit: 10,
             source: function(query, syncResults, asyncResults){
-                typeahead_input.searchKey = query;
-                var selectedAssets = typeahead_input.getAlreadyAddedAssetsIds();
+                Typeahead_input.searchKey = query;
+                var selectedAssets = Typeahead_input.getAlreadyAddedAssetsIds();
                 //console.log(selectedAssets);
                 sforce.apex.execute("E2_Estimator_WS", "searchAssets", {
                     searchStr: query, exisitingAssetIds : selectedAssets}, function(result){
                         if(result.length > 0) {
-                          if(typeahead_input.searchKey == result[0].searchKey){
+                          if(Typeahead_input.searchKey == result[0].searchKey){
                             var assetList = [];
                             if(typeof result[0].assetList != 'undefined'){
                                 if((result[0].assetList).constructor === Array){
@@ -241,7 +241,7 @@ var typeahead_input = {
             },
             templates: {
                 suggestion: function(data){
-                    return typeahead_input.prepareSuggestionTemplate(data);
+                    return Typeahead_input.prepareSuggestionTemplate(data);
                 },
                 notFound : function(){
                     return '<div class="EmptyMessage">Your search turned up 0 results.</div>';
@@ -250,23 +250,23 @@ var typeahead_input = {
             }
         })
         .on('typeahead:select', function(ev, suggestion) {
-            typeahead_input.addRowToTable(suggestion);
-            if(typeof typeahead_input.selectedAssetsMap[suggestion.id] == 'undefined'){
-                typeahead_input.selectedAssetsMap[suggestion.id] = suggestion;
+            Typeahead_input.addRowToTable(suggestion);
+            if(typeof Typeahead_input.selectedAssetsMap[suggestion.id] == 'undefined'){
+                Typeahead_input.selectedAssetsMap[suggestion.id] = suggestion;
             }
             else{
-                typeahead_input.selectedAssetsMap[suggestion.id].isDeleted = 'false';    
+                Typeahead_input.selectedAssetsMap[suggestion.id].isDeleted = 'false';    
             }
-            $("input[Id$='existingAssetRecs']").val(JSON.stringify(typeahead_input.selectedAssetsMap));
+            $("input[Id$='existingAssetRecs']").val(JSON.stringify(Typeahead_input.selectedAssetsMap));
         })
         .on('typeahead:render', function(ev, suggestion, flag, dataset) {
-            typeahead_input.resetFrameHeightWithTypeAheadEvents(true);
+            Typeahead_input.resetFrameHeightWithTypeAheadEvents(true);
         })
         .on('typeahead:open', function(ev, suggestion, flag, dataset) {
-            typeahead_input.resetFrameHeightWithTypeAheadEvents(true);
+            Typeahead_input.resetFrameHeightWithTypeAheadEvents(true);
         })
         .on('typeahead:close', function(ev, suggestion, flag, dataset) {
-            typeahead_input.resetFrameHeightWithTypeAheadEvents(false);
+            Typeahead_input.resetFrameHeightWithTypeAheadEvents(false);
         })
         .on('typeahead:asyncrequest', function() {
             $('.Typeahead-spinner').show();
@@ -278,7 +278,7 @@ var typeahead_input = {
     
     prepareSuggestionTemplate : function(data){
         var returnHtmlStr = '<div class = "ProfileCard u-cf"><img class="ProfileCard-avatar" src="{resource_url}/images/{image_name}"/>';
-        returnHtmlStr += '<div class="ProfileCard-details"><div class="ProfileCard-realName"><a onclick="typeahead_input.goToAssetDetailPage(event, this);" href="/{id}" target="_blank">{asset_name}</a>';
+        returnHtmlStr += '<div class="ProfileCard-details"><div class="ProfileCard-realName"><a onclick="Typeahead_input.goToAssetDetailPage(event, this);" href="/{id}" target="_blank">{asset_name}</a>';
         returnHtmlStr += '<img src="{resource_url}/images/{assettype_image_name}.png" title="{assettype_image_name} Asset" style="padding-left:10px;"/>'
         if(data.isRecommended == 'true'){
             returnHtmlStr += '<span style="margin-left: 5px; background-color:#FA9500;" class="slds-badge">Recommended</span>';
@@ -290,7 +290,7 @@ var typeahead_input = {
         returnHtmlStr += '<div class="ProfileCard-stats"><div class="ProfileCard-stat"><span class="ProfileCard-stat-label">Primary Contributor : </span>{primarycontributors}</div>';
         returnHtmlStr += '<div class="ProfileCard-stat"><span class="ProfileCard-stat-label">Technologies : </span>{technologies}</div></div></div>';
         
-        returnHtmlStr = returnHtmlStr.replace(/{resource_url}/gi, typeahead_input.resourceUrl)
+        returnHtmlStr = returnHtmlStr.replace(/{resource_url}/gi, Typeahead_input.resourceUrl)
                                      .replace(/{image_name}/gi, data.imageName)
                                      .replace(/{id}/gi, data.id)
                                      .replace(/{asset_name}/gi, data.assetName)
@@ -310,7 +310,7 @@ var typeahead_input = {
         //tableRowStr += '<td class="slds-truncate whitespace_normal">{technologies}</td>';
         tableRowStr += '<td class="slds-truncate whitespace_normal">{reuse_loe}</td>';
         tableRowStr += '<td class="slds-truncate whitespace_normal">{release_stage}</td>';
-        tableRowStr += '<td class="slds-cell-shrink" data-label="Actions"><a onclick="typeahead_input.removeAssetRow(\'{asset_id}\');return false" class="delete_button slds-button--right--float"/></td></tr>';
+        tableRowStr += '<td class="slds-cell-shrink" data-label="Actions"><a onclick="Typeahead_input.removeAssetRow(\'{asset_id}\');return false" class="delete_button slds-button--right--float"/></td></tr>';
         
         tableRowStr = tableRowStr.replace(/{asset_id}/gi, suggestion.id)
                                  .replace(/{asset_name}/gi, suggestion.assetName)
@@ -320,14 +320,14 @@ var typeahead_input = {
                                  .replace(/{release_stage}/gi, suggestion.releaseStage);
         
         if($('#noAssetRow') != null && $('#noAssetRow').length){
-            typeahead_input.removeNoAssetsRow();
+            Typeahead_input.removeNoAssetsRow();
         }
         
         $("#RecommendedAssetsTable tbody").append(tableRowStr);
         
-        typeahead_input.rowCount += 1;
+        Typeahead_input.rowCount += 1;
         
-        typeahead_input.resetFrameHeightWithTypeAheadEvents(false);
+        Typeahead_input.resetFrameHeightWithTypeAheadEvents(false);
     },
     
     goToAssetDetailPage : function(event, element){
@@ -341,21 +341,21 @@ var typeahead_input = {
     
     removeAssetRow : function(rowId){
         $('#'+rowId).remove();
-        if(typeof typeahead_input.selectedAssetsMap[rowId] != 'undefined'){
-            typeahead_input.selectedAssetsMap[rowId].isDeleted = 'true';
+        if(typeof Typeahead_input.selectedAssetsMap[rowId] != 'undefined'){
+            Typeahead_input.selectedAssetsMap[rowId].isDeleted = 'true';
         }
-        $("input[Id$='existingAssetRecs']").val(JSON.stringify(typeahead_input.selectedAssetsMap));
-        typeahead_input.rowCount -= 1;
+        $("input[Id$='existingAssetRecs']").val(JSON.stringify(Typeahead_input.selectedAssetsMap));
+        Typeahead_input.rowCount -= 1;
         
-        if(typeahead_input.rowCount === 0){
-            typeahead_input.addNoAssetsRow();
+        if(Typeahead_input.rowCount === 0){
+            Typeahead_input.addNoAssetsRow();
         }
-        typeahead_input.resetFrameHeightWithTypeAheadEvents(false);
+        Typeahead_input.resetFrameHeightWithTypeAheadEvents(false);
     },
     
     getAlreadyAddedAssetsIds : function(){
         var existingAssetIds = [];
-        $.each(typeahead_input.selectedAssetsMap, function(index, element) {
+        $.each(Typeahead_input.selectedAssetsMap, function(index, element) {
             if(element.isDeleted == 'false'){
                 existingAssetIds.push(element.id);
             }
@@ -364,42 +364,53 @@ var typeahead_input = {
     },
     
     retrieveExistingAssets : function(){
-        var existingAssets = $("input[Id$='existingAssetRecs']").val();
-        if(existingAssets.length == 0){
+        //var existingAssets = $("input[Id$='existingAssetRecs']").val();
+        //if(existingAssets.length == 0){
             sforce.apex.execute("E2_Estimator_WS", "getExistingAssetsForScope", {
                     scopeId: scope_sfdc_id}, function(result){
                         if(result.length > 0) {
                           var assetsRecsJson = result[0];
                           if (assetsRecsJson != null && assetsRecsJson != '' && assetsRecsJson.length > 0) {
-                              typeahead_input.prepareExistingAssetRows(assetsRecsJson);
+                              Typeahead_input.prepareExistingAssetRows(assetsRecsJson);
                           }
                           else{
-                              typeahead_input.addNoAssetsRow();
+                              Typeahead_input.addNoAssetsRow();
                           }
                         }
                         else{
-                            typeahead_input.addNoAssetsRow();
+                            Typeahead_input.addNoAssetsRow();
                         }
                 });
-       }
-       else{
-           typeahead_input.prepareExistingAssetRows(existingAssets);
-       }
+      // }
+      // else{
+      //     Typeahead_input.prepareExistingAssetRows(existingAssets);
+      // }
     },
     
     prepareExistingAssetRows : function(assetsRecsJson){
-        typeahead_input.selectedAssetsMap = JSON.parse(assetsRecsJson);
+        Typeahead_input.selectedAssetsMap = JSON.parse(assetsRecsJson);
         var hasValidAsset = false; 
-        $.each(typeahead_input.selectedAssetsMap, function(index, element) {
+        $.each(Typeahead_input.selectedAssetsMap, function(index, element) {
             if(element.isDeleted == 'false'){
-                typeahead_input.addRowToTable(element);
+                Typeahead_input.addRowToTable(element);
                 hasValidAsset = true;
             }
         });
-        if(hasValidAsset){
-            typeahead_input.removeNoAssetsRow();
+        
+        var existingAssets = $("input[Id$='existingAssetRecs']").val();
+        
+        if(existingAssets.length !== 0){
+            $.each(JSON.parse(existingAssets), function(index, element) {
+                if(element.isDeleted == 'false' && typeof Typeahead_input.selectedAssetsMap[element.id] == 'undefined'){
+                    Typeahead_input.addRowToTable(element);
+                    hasValidAsset = true;
+                }
+            });
         }
-        $("input[Id$='existingAssetRecs']").val(JSON.stringify(typeahead_input.selectedAssetsMap));
+        if(hasValidAsset){
+            Typeahead_input.removeNoAssetsRow();
+        }
+        $("input[Id$='existingAssetRecs']").val(JSON.stringify(Typeahead_input.selectedAssetsMap));
     },
     
     addNoAssetsRow : function(){
@@ -417,14 +428,16 @@ $( document ).ready(function() {
     validations.load();
     ck_custom_editor.load();
     bindSliders();
-    typeahead_input.load();
-    typeahead_input.retrieveExistingAssets();
+    Typeahead_input.load();
+    Typeahead_input.retrieveExistingAssets();
+    AddScopeTree.GenerateTree(scope_sfdc_id);
     hideSpinner();
     
     if(msg.toLowerCase() == 'success'){
        parent&&parent.AddEditScope&&parent.AddEditScope.closeEditScopeModelPopup&&parent.AddEditScope.closeEditScopeModelPopup();
        if($("input[id$='dmlMessage']").length) $("input[id$='dmlMessage']").val('Fail');
        parent&&parent.AddEditScope&&parent.AddEditScope.showSaveSuccessMessage&&parent.AddEditScope.showSaveSuccessMessage(scope_sfdc_id, scope_sfdc_name);
+       resetIframeHeight();
     }else{     
       resetIframeHeight();
     }
@@ -570,6 +583,15 @@ var validateData = function(){
   return returnVal;
 }
 
+var validateDataQuestion = function(){
+  returnVal = true;
+  
+  $(document.body).find('div.questiondiv').each(validationTraverse);
+  //$(document.body).find('div.assumptionsdiv').each(validationTraverse);
+  
+  return returnVal;
+}
+
 
 var validationTraverseForScopes = function(){
    
@@ -658,4 +680,257 @@ var toggleActions = function(jqObj, slide){
     
     //jqObj.closest('tr').prev('tr').find('input.reloadbtn').click();
     
+}
+var AddEditQuestionAnswer = {
+    showEditQuestionRow : function(id) {
+        $("tr#"+id).each(function() {
+            if($(this).hasClass( "table-row-display" ))
+                $(this).removeClass('table-row-display');
+            else
+                $(this).addClass('table-row-display');
+        });
+        resetIframeHeight();
+        return false;
+    },
+    checkSelectedQuestionType : function(that) {
+        if($(that).val() != 'Summary') {
+            $(that).next().click();
+        }
+        return false;
+    },
+    showActionAlert : function(element) {
+        var elementTag;
+        if($(element).is("select")) {
+            elementTag = $('option:selected', element);
+        } else if(($(element).is(":radio") || $(element).is(":checkbox")) && $(element).is(":checked")) {
+            elementTag = $(element);
+        }
+        if(elementTag) { 
+            var questionid = elementTag.attr('questionid');
+            var action = elementTag.attr('action');
+            var value = elementTag.attr('value');
+            var loe = elementTag.attr('loe');
+             if(action != '') {
+                CustomAlert.show('Selected answer will perform following action : '+action);
+                if(action == 'Change Complexity to Low') {
+                    $('select.scope-complexity').val('Low');
+                }else if(action == 'Change Complexity to Medium') {
+                    $('select.scope-complexity').val('Medium');
+                }else if(action == 'Change Complexity to High') {
+                    $('select.scope-complexity').val('High');
+                }
+            }
+            var  selectedAnswers = [];
+            if($(element).is(":checkbox")) {
+                var name = $(element).attr('name');
+                $("input[name="+name+"]").each(function() {
+                    if($(this).is(":checked"))
+                        selectedAnswers.push($(this).attr('value'));
+                });
+            }else {
+                selectedAnswers.push(value);
+            }
+            $('#'+questionid).find("input[id$=selectedAnswer]").val(selectedAnswers.toString());
+        }
+    },
+    answerActionElement : null,
+    showJSTree : function(that) {
+        if($(that).val() == 'Deactivate child scope' || $(that).val() == 'Activate child scope') {
+            AddEditQuestionAnswer.answerActionElement = that;
+            AddScopeTree.updateTreeState();
+            CustomAlert.showJSTree();
+        }
+        return false;
+    },
+    hideJSTree : function() {
+        var bindedScopeIds = AddScopeTree.getselectedTreeNode();
+        $(AddEditQuestionAnswer.answerActionElement).next("[id$=bindedScopes]").val(bindedScopeIds);
+        CustomAlert.hideJSTree();
+        return false;
+    }
+}
+var CustomAlert = {
+    notifyContainerCssSelector: '.slds-notify_container',
+    notifyCloseCssSelector: '.slds-notify__close',
+    notifyMsgCssSelector: '.slds-text-heading--small',
+    notifyTypeCssDiv: '#sldsalertdiv',
+    notifyEditContainer: '.slds-edit-alert',
+    notifyEditContainerbackdrop: '.slds-edit-alert-backdrop',
+    notifyJSTreeHeadingCSS : '.slds-text-heading--small',
+    notifyJSTreeHeading : 'Select child scope',
+    showJSTree: function() {
+        $(CustomAlert.notifyEditContainerbackdrop).show().css('height', $(document).outerHeight());
+        $(CustomAlert.notifyJSTreeHeadingCSS).html(CustomAlert.notifyJSTreeHeading);
+        $(CustomAlert.notifyEditContainer).show();
+    },
+    hideJSTree: function() {
+        $(CustomAlert.notifyEditContainer).hide();
+        $(CustomAlert.notifyEditContainerbackdrop).hide();
+    },
+    show: function(msg) {
+        $(CustomAlert.notifyContainerCssSelector).css({
+            position: 'absolute !important',
+            'opacity': '100',
+            'display': 'block'
+        });
+        $(CustomAlert.notifyTypeCssDiv).removeClass("slds-theme--error");
+        $(CustomAlert.notifyTypeCssDiv).addClass("slds-theme--success");
+        $(CustomAlert.notifyContainerCssSelector).find(CustomAlert.notifyMsgCssSelector).text(msg);
+        $(CustomAlert.notifyContainerCssSelector).find(CustomAlert.notifyCloseCssSelector).unbind("click");
+        $(CustomAlert.notifyContainerCssSelector).find(CustomAlert.notifyCloseCssSelector).bind("click", function() {
+            $(CustomAlert.notifyContainerCssSelector).stop(true, true).fadeTo().slideUp();
+            return false;
+        });
+        window.setTimeout(function() {
+            if ($(CustomAlert.notifyContainerCssSelector).is(":visible")) {
+                $(CustomAlert.notifyContainerCssSelector).fadeTo(500, 0).slideUp(500, function() {
+                    $(this).hide();
+                });
+            }
+        }, 2000);
+    },
+    hide: function() {
+        $(CustomAlert.notifyContainerCssSelector).hide();
+    }
+}
+// JStree Initiate Conffiguration 
+var jstree_options = {
+    "plugins": ["checkbox"],
+	    'core': {
+		    'check_callback': true,
+			'animation': 200,
+			'themes': {
+			    'name': 'proton',
+				"icons": false,
+				'responsive': true
+			},
+			"multiple": true
+		},
+		"checkbox" : {
+		    "cascade": "",
+		    "three_state": false,
+		    "keep_selected_style" : false
+		}
+};
+// JS to generate/destroy Scope tree on scope click
+var AddScopeTree = {
+    CREATE_NODE: 'create_node',
+	OPEN_NODE: 'open_node',
+	LAST: 'last',
+	addscopenode_call_register: {},
+	addscopepill_register: {},
+	GenerateTree : function(scopeId) {
+	    $(treeId).jstree(jstree_options);
+		AddScopeTree.tree_init(scopeId);
+	},
+	refreshTree : function() {
+	    AddScopeTree.getselectedTreeNode();
+	},
+	create_node: function(node, position) {
+	    node.state = JSON.parse(node.state);
+		// jstree api call to create the tree node.
+		$(treeId).jstree(AddScopeTree.CREATE_NODE, node.parent, node, position);
+	},
+	open_node: function(node) {
+	     // jstree api call to open current node.
+	    $(treeId).jstree(AddScopeTree.OPEN_NODE, node);
+	},
+	tree_init: function(scopeId) {			    	
+	    showSpinner();
+		AddScopeTree.addscopenode_call_register[scopeId] = '#';	    	
+		sforce.apex.execute("E2_Estimator_WS","getChildScopeDetailNodes", {parentId:scopeId}, AddScopeTree.tree_init_callback);
+	},
+	tree_init_callback: {
+	    onSuccess: function(result) {
+		    var haschildren = false; 
+			if(result.length > 0){
+	            var scope_id = result[0].scope_id;
+	            if (result[0].nodeList && result[0].nodeList.length) {
+		            $.each(result[0].nodeList, function(indx, node) {
+		                node.parent = "#";
+		                AddScopeTree.create_node(node, AddScopeTree.LAST);
+		                if (node.hasChildren == true || node.hasChildren == 'true') {
+		                    hasChildren = true;
+		                    AddScopeTree.addscopenode_call_register[node.id] = scope_id;
+		                    AddScopeTree.getScopeChildDetail_Recurring(node.id);
+		                }
+		            });
+			    } else if (result[0].nodeList) {
+			        var node = result[0].nodeList;
+			        node.parent = "#";
+			        AddScopeTree.create_node(node, AddScopeTree.LAST);
+			        if (node.hasChildren == true || node.hasChildren == 'true') {
+			            hasChildren = true;
+			            AddScopeTree.addscopenode_call_register[node.id] = scope_id;
+			            AddScopeTree.getScopeChildDetail_Recurring(node.id);
+			        }
+			     }	  
+		         if (AddScopeTree.addscopenode_call_register && AddScopeTree.addscopenode_call_register[scope_id]) delete AddScopeTree.addscopenode_call_register[scope_id];
+		         if (AddScopeTree.addscopenode_call_register && JSON.stringify(AddScopeTree.addscopenode_call_register) == '{}') {
+		            hideSpinner();
+				 }
+	        } else {
+		        hideSpinner();
+	        }
+        },
+		onFailure: function(error) {
+		    alert(error);
+		}
+	},
+	getScopeChildDetail_Recurring : function(parentId){
+        showSpinner();
+		sforce.apex.execute("E2_Estimator_WS","getChildScopeDetailNodes", {parentId:parentId},AddScopeTree.getScopeChildDetail_callback);
+	},
+	getScopeChildDetail_callback: {
+	    onSuccess: function(result) {
+		    var haschildren = false;
+			if(result.length > 0){
+	            var scope_id = result[0].scope_id;
+	            if (result[0].nodeList && result[0].nodeList.length) {
+			        $.each(result[0].nodeList, function(indx, node) {
+			            AddScopeTree.create_node(node, AddScopeTree.LAST);
+			            if (node.hasChildren == true || node.hasChildren == 'true') {
+			                hasChildren = true;
+			                AddScopeTree.addscopenode_call_register[node.id] = scope_id;
+			                AddScopeTree.getScopeChildDetail_Recurring(node.id);
+			            }
+			        });
+    		    } else if (result[0].nodeList) {
+    			    var node = result[0].nodeList;
+    				AddScopeTree.create_node(node, AddScopeTree.LAST);
+    				if (node.hasChildren == true || node.hasChildren == 'true') {
+    				    hasChildren = true;
+    				    AddScopeTree.addscopenode_call_register[node.id] = scope_id;
+    				    AddScopeTree.getScopeChildDetail_Recurring(node.id);
+    				}
+    			}	  
+    			if (AddScopeTree.addscopenode_call_register && AddScopeTree.addscopenode_call_register[scope_id]) delete AddScopeTree.addscopenode_call_register[scope_id];
+    			if (AddScopeTree.addscopenode_call_register && JSON.stringify(AddScopeTree.addscopenode_call_register) == '{}') {
+    			    hideSpinner();
+    			}
+    		} else {
+			        hideSpinner();
+			}
+        },
+		onFailure: function(error) {
+		    alert(error);
+		}
+	},
+	getselectedTreeNode : function() {
+	    var selectedscopes = [];
+	    var $node = $(treeId).jstree(true).get_node('#');
+		$.each($node.children_d, function(indx, id) {
+		    var $childnode = $(treeId).jstree(true).get_node(id);
+		    if($childnode.state.selected) {
+		        selectedscopes.push($childnode.original.id);
+		     }
+		 });
+		 return selectedscopes;
+ 	},
+	updateTreeState : function() {
+	    var $node = $(treeId).jstree(true).get_node('#');
+		$.each($node.children_d, function(indx, id) {
+		    $(treeId).jstree(true).deselect_node(id);
+	    });
+	}
 }
