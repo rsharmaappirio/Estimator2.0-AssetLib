@@ -6,6 +6,8 @@ public class E2_Estimator_WSManagerTest {
   public static E2_Recommended_Asset__c recommendedAsset;
   public static Id recTypeId = E2_RecordTypeClass.getId(E2_Constants.E2_SCOPE_API_NAME, E2_Constants.SCOPE_RT_TEMPLATE); 
   public static CMC_Asset_Contributor__c asetContributor;
+  public static E2_Question__c ques1;
+  public static E2_Answer__c ans1;
   
   public static testmethod void testE2_TreeNode(){
     estimate = [SELECT Id, Name FROM CMC_Presales_LOE__c];
@@ -17,6 +19,8 @@ public class E2_Estimator_WSManagerTest {
                        FROM E2_Scope__c WHERE Parent_Scope__c = :childSC.Id];              
     scopeGroup = [SELECT Id, Name FROM E2_Scope_Group__c];
     recommendedAsset = [SELECT Scope__c, Asset__c FROM E2_Recommended_Asset__c];
+    ques1 = [SELECT Id, Name, Scope__c FROM E2_Question__c];
+    ans1 = [SELECT Id, Name FROM E2_Answer__c WHERE Question__c =: ques1.Id];
     
     parentSC1 = [SELECT Id, Name,Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c, LOE_Hrs__c, Is_Active__c
                     FROM E2_Scope__c WHERE Parent_Scope__c = null AND RecordTypeId = :recTypeId];
@@ -67,7 +71,8 @@ public class E2_Estimator_WSManagerTest {
       //treeMap = E2_Estimator_WSManager.getChildCloneNodes(parentSC.Id, parentSC.Id, estimate.Id);
       
       //commented as getting error during asset related code coverage
-      String cloned_msg = E2_Estimator_WSManager.getClonedNodesTemplate(childSC.Id, scopeGroup.Id, parentSC.Id);
+      String scopeIds = parentSC.Id+ ','+ child_childSC.Id+ ',' + parentSC1.Id+ ','+ child_childSC1.Id ; 
+      String cloned_msg = E2_Estimator_WSManager.getClonedNodesTemplate(scopeIds, scopeGroup.Id, parentSC.Id);
       system.assertEquals(cloned_msg, 'Success', 'Success message is returned');
       /*System.assertEquals(childSC.Id, treeMap.scope_id, 'returns same scope id');
       System.assertEquals(treeMap.nodeList.size(), 1, 'Doesnot return 1 scope related to scope id');
@@ -77,7 +82,7 @@ public class E2_Estimator_WSManagerTest {
       //treeMap = E2_Estimator_WSManager.getChildCloneNodesTemplate(parentSC.Id, parentSC.Id, scopeGroup.Id);
       
       treeLst1 = E2_Estimator_WSManager.retrieveAllScopeTreeNodesOnScopeGroup(scopeGroup.Id);
-      System.assertEquals(treeLst1.size(), 2, 'Return 2 scopes associated with the group');
+      System.assertEquals(treeLst1.size(), 5, 'Does not return 2 scopes associated with the group');
       E2_Estimator_WSManager.updateScopeFlag(estimate.Id,'flagred');
       string error = E2_Estimator_WSManager.updateScopeFlag(E2_constants.BLANK,'flagred');  
       System.assertEquals(error, 'Failed to update: Current scope not identified!!!');
@@ -85,8 +90,11 @@ public class E2_Estimator_WSManagerTest {
       E2_Estimator_WSManager.updateScopeFlag(childSC.Id,'flagyellow');
       E2_Estimator_WSManager.updateScopeFlag(childSC.Id,'flaggreen');
       
-      String test_scope = E2_Estimator_WSManager.getFormatedScopeName(parentSC);
-      system.assert(test_Scope != null);
+      String test_scopeName = E2_Estimator_WSManager.getFormatedScopeName(parentSC);
+      system.assert(test_scopeName != null);
+      
+      String test_scopeName1 = E2_Estimator_WSManager.getFormatedScopeName(childSC);
+      system.assert(test_scopeName1 != null);
       
       //commented as getting error during asset related code coverage
       
@@ -98,8 +106,7 @@ public class E2_Estimator_WSManagerTest {
       String jsonString = '[{"scopeId":"' + parentSC.id + '", "displayOrder":"1", "sequence":"1"},{"scopeId":"' + childSC.id + '", "displayOrder":"2", "sequence":"2"}]';
       String statusStr = E2_Estimator_WSManager.updateScopesDisplayOrder(jsonString);
       System.assertEquals(statusStr, 'success');
-      
-      String scopeIds = parentSC.Id+ ','+ child_childSC.Id+ ',' + parentSC1.Id+ ','+ child_childSC1.Id ; 
+       
       String test_Scope1 =  E2_Estimator_WSManager.getSelectedScopeNodes(scopeIds, estimate.Id, null);
       system.assert(test_Scope1 != null);
       
@@ -107,13 +114,15 @@ public class E2_Estimator_WSManagerTest {
       String b_scopeId = E2_Estimator_WSManager.deleteScope(childSC.Id, parentSC.Id);
       System.assertEquals(b_scopeId, childSC.id, 'Not successfully deleting');
       
+      String existing_assets = E2_Estimator_WSManager.getExistingAssetsForScope(parentSC.Id);
+      system.assert(existing_assets != null);
+      
       List<string> exisitingAssetIds = new List<string>{recommendedAsset.Asset__c};
       E2_AssetWrapperMap assetMap = E2_Estimator_WSManager.searchAssets('test', exisitingAssetIds);
       System.assertEquals(assetMap.searchKey, 'test');
-      //System.assertEquals(assetMap.assetList.size(), 1);
+      System.assertEquals(assetMap.assetList.size(), 0);
       
-      String test_scope3 = E2_Estimator_WSManager.getExistingAssetsForScope(parentSC.Id);
-      system.assert(test_scope3 != null);
+      
       
       //stop test  
     Test.stopTest();
@@ -137,7 +146,7 @@ public class E2_Estimator_WSManagerTest {
     parentSC.Parent_Scope__c = null;
     parentSC.Complexity__c = 'Low';
     parentSC.Source_Scope__c = null;
-    parentSC.LOE_Hrs__c = 10;
+    parentSC.LOE_Hrs__c = 0;
     insert parentSC;
     
     childSC = E2_Test_Utils.insertScope(false);
@@ -186,10 +195,6 @@ public class E2_Estimator_WSManagerTest {
     
     //E2_Story__c story1 = E2_Test_Utils.insertStory(true, parentSC.Id);
     
-    //E2_Question__c ques1 = E2_Test_Utils.insertQuestion(true, parentSC.Id);
-    
-    //E2_Response__c response = E2_Test_Utils.insertResponse(true, ques1.Id);
-    
     List<CMC_Asset__c> lstAssets = new List<CMC_Asset__c>();
     lstAssets.add(E2_Test_Utils.insertAsset('Test Asset 1', 'Test asset record', 'Component', 'User Interface', 
   									        'Apex', 'Salesforce;Data integration', 1, false));
@@ -207,6 +212,9 @@ public class E2_Estimator_WSManagerTest {
   	asetContributor.Hours_Contributed__c = 4;
   	asetContributor.Primary_Contact__c = true;
   	insert asetContributor;
+  	
+  	ques1 = E2_Test_Utils.insertQuestions(parentSC.Id, true);
+  	ans1 = E2_Test_Utils.insertAnswer(ques1.Id, true);
   	
        
   }

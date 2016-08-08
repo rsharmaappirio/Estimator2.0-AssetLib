@@ -108,9 +108,6 @@ var jstree_options = {
         },
         "multiple": false
     },
-    //'sort' :  function (a, b) {
-   //  return this.get_node(a).original.display_order > this.get_node(b).original.display_order ? 1 : -1;
-   // },
     'checkbox': {
         'three_state': false,
         'cascade': ''
@@ -140,7 +137,6 @@ var jstree_options = {
                     "separator_after": false,
                     "label": "Add from Library",
                     "action": function(obj) {
-                        //tree.edit($node);                        
                         AddEditScope.ADD_FROM_TEMPLATE_PARENT_ID = $node.id;
                         AddEditScope.showAddFromTemplateModal();
                     }
@@ -161,11 +157,14 @@ var jstree_options = {
 
                         $(loadSpinner).show().css('height', $(document).outerHeight());
                         AddEditScope.delete_scope_arr.push($node.id);
+                        // traverse all the child li elements (clild nodes to retrieve the sfdc scope ids)
+                        // push each id in array to be utilzied later to delete from db
                         $('#' + $node.id).find('li').each(function(e) {
                             AddEditScope.delete_scope_arr.push($(this).attr('id'));
                         });
-
+                        // delete node and child nodes from UI  
                         tree.delete_node($node);
+                        // delete scope and child scopes from db
                         AddEditScope.delete_scope_async();
 
                     }
@@ -188,19 +187,23 @@ var tabpanel = {
     containerId : '#tabpanel',
     detail_tabId : '#tab-default-1__item',
     feed_tabId : '#tab-default-2__item',
+    contentToShow : null,
     bindEvents : function(){
        $('.slds-tabs--default__item').on('click', function(){
-                  var $contentToShow = $('#'+$(this).find('a').attr('aria-controls'));
+                  tabpanel.contentToShow = $('#'+ $(this).find('a').attr('aria-controls'));
+                  // slow hide the tabs in order to make hide work for rte
                   setTimeout(function() {
-                      $contentToShow.siblings('.slds-tabs--default__content').removeClass('slds-show');
-			          $contentToShow.siblings('.slds-tabs--default__content').addClass('slds-hide');
-                  },80);    
+                      tabpanel.contentToShow.siblings('.slds-tabs--default__content').removeClass('slds-show');
+			          tabpanel.contentToShow.siblings('.slds-tabs--default__content').addClass('slds-hide');
+                  }, 80);    
+                  
 		          $(this).addClass('slds-active');
 			      $(this).find('a').attr('aria-selected', true);
-			      $contentToShow.removeClass('slds-hide');
-			      $contentToShow.addClass('slds-show');			
+			      tabpanel.contentToShow.removeClass('slds-hide');
+			      tabpanel.contentToShow.addClass('slds-show');			
 			      $(this).siblings().removeClass('slds-active');
 			      $(this).siblings().find('a').attr('aria-selected', false);
+			      
 		});
     },
     activateTab: function(that){
@@ -249,14 +252,20 @@ var ck_custom_editor = {
   postComment : function(node){
         tabpanel.showFeedTab();
         ck_custom_editor.openLinkPostView();
+        
+        // populate the link url
         $(ck_custom_editor.linkbox_Id).val(ck_custom_editor.getLinkURL(estimateId, node.id));
         
         var obj = $('<div/>').html(node.original.text);
         var linkName = 'Scope Item: ' + obj.find('span span:first-child').text();
         
+        // populate the link name
         $(ck_custom_editor.linknamebox_Id).val(linkName);
+        // set data to empty in the editor
         CKEDITOR.instances[ck_custom_editor.editor_name].setData('');
+        // focus on link box
         $(ck_custom_editor.linknamebox_Id).focus();
+        // set focus on editor after 500 ms
         window.setTimeout(ck_custom_editor.focusOnEditor, 500);  
   },
   
@@ -270,12 +279,16 @@ var ck_custom_editor = {
   
 }
 
-
+var originalY = 0;
+var topMargin = 0;
 
 $(document).ready(function() {
+    // bind the events and initiate jstree and other libraries 
+    // at the time of dom is ready on the page.
     $(treeId).jstree(jstree_options);
     tabpanel.bindEvents();
     ck_custom_editor.load();
+    
     //EVENT: JSTREE LOADED FOR THE FIRST TIME
     $(treeId).on("ready.jstree", function(e, data) {
         $(loadSpinner).show().css('height', $(document).outerHeight());
@@ -283,16 +296,18 @@ $(document).ready(function() {
     });
 
 
-    
-    var element = $(tabpanel.containerId),
-        originalY = element.offset().top;
+    // 08/05: RJ: originalY, topMargin made global variable: cause of js clouser
+    var element = $(tabpanel.containerId);
+    originalY = element.offset().top;
 
     // Space between element and top of screen (when scrolling)
-    var topMargin = -10;
+    topMargin = -10;
 
     // Should probably be set in CSS; but here just for emphasis
     element.css('position', 'relative');
 
+    // Bind the window scroll event to allow the scope details to scroll with the scrollbar 
+    // on screen for good user experience
     $(window).on('scroll', function(event) {
         if ($(this).width() > 767) {
             var element = $(tabpanel.containerId);
@@ -309,15 +324,16 @@ $(document).ready(function() {
         }
     });    
     
+    // Bind the window resize event to adjust the with of all the iframes with the resized 
+    // width of the window
+    // on screen for good user experience
     $( window ).resize(function() {
-         //alert('window resize');
          var element = $(tabpanel.containerId);
          if ($(this).width() < 767) {
             element.css({'position': 'static', 'top' : 0});
             // reload all the iframe again to adjust their heights
             // may be this can be done through setting height 
             var containerId = '#' + AddEditScope.EDIT_SCOPE_INLINE_DIV_ID;   
-            //$(containerId).find('iframe').attr("src", function(){ return $(this).attr("src")});
             $(containerId).find('iframe').height(function(){return $(this.contentWindow.document).height()});
             
          }else{
@@ -325,6 +341,9 @@ $(document).ready(function() {
          }     
     });
     
+    
+    // Override the onclick property on some relative links, buttons on the page to check isDirty first and then allow the user to 
+    // click; if some form on the page is dirty than show a warning message to the user
     $('div.slds-page-header input.slds-button, a.slds-tabs--path__link, button.slds-path__mark-complete, a#tab-default-2__item').each(function(){
         var handler = $(this).prop('onclick');
         $(this).removeProp('onclick');
@@ -337,9 +356,9 @@ $(document).ready(function() {
 
 
 var warning_event = function(e){
+        // method is used to check is_dirty state and show warning message
         var IFRAME_KEY = global_scopeId + AddEditScope.ENDS_WITH;
         var scope_detail_obj = document.getElementById(IFRAME_KEY);
-        //alert(typeof scope_detail_obj);
         if(scope_detail_obj 
                          && scope_detail_obj.contentWindow 
                          && scope_detail_obj.contentWindow.TrackScopeUpdates 
@@ -390,18 +409,18 @@ var AddEditScope = {
             if($(frame_id).length) $(frame_id).attr("src", function(){ return $(this).attr("src")});
     },
     showIsDirtyWarning : function(id) {
-            SELECTED_NODE = id + parent.AddEditScope.ENDS_WITH;
+            AddEditScope.SELECTED_NODE = id + AddEditScope.ENDS_WITH;
             CustomAlert.showIsDirtyWarning();
     },
     save_edit_scope : function() {
-        $('#'+SELECTED_NODE).focus();
-        document.getElementById(SELECTED_NODE).contentWindow.TrackScopeUpdates.save_scope();
+        $('#' + AddEditScope.SELECTED_NODE).focus();
+        document.getElementById(AddEditScope.SELECTED_NODE).contentWindow.TrackScopeUpdates.save_scope();
         CustomAlert.hideIsDirtyWarning();
         $(treeId).jstree(true).select_node(global_scopeId);
     },
     cancel_scope_save : function() {
-        $('#'+SELECTED_NODE).focus();
-        document.getElementById(SELECTED_NODE).contentWindow.TrackScopeUpdates.markchecked();
+        $('#' + AddEditScope.SELECTED_NODE).focus();
+        document.getElementById(AddEditScope.SELECTED_NODE).contentWindow.TrackScopeUpdates.markchecked();
         CustomAlert.hideIsDirtyWarning();
         $(treeId).jstree(true).select_node(global_scopeId);
     },
@@ -410,33 +429,30 @@ var AddEditScope = {
 	   var containerId = '#' + AddEditScope.EDIT_SCOPE_INLINE_DIV_ID;   
 	   var frame_id = '#' + node.id + endsWith;
 	   var frame_id_standard = node.id + endsWith;
+	   
+	   // check that if the container for all the iframes (for edit scope) is on the page
 	   if($(containerId).length){
 	       // hide all frames on the page but not the one selected (if already loaded)
-		   $(containerId).find("iframe[id$='" + endsWith + "']").not(frame_id).hide("slow", function() {
-		   });
-		   
+		   $(containerId).find("iframe[id$='" + endsWith + "']").not(frame_id).hide("slow", function() {});
+		   // check if selected node's iframe exists or not
 		   if($(frame_id).length){
 		       // don't call show if frame is already visible.
 		       if($(frame_id).is(':visible')){
-		           
 		           var doc = $(document.getElementById(frame_id_standard).contentWindow.document);
 		           //IE - check the height of content window document with an interval using setTimeout
 		           setTimeout(function(){
 		             $(frame_id).css({ 'min-height':'400px', 'width':'100%', 'margin':'0px', 'height' : doc.outerHeight()});
 		             $(frame_id).focus();
 		           }, 500);
-		           //$(frame_id).css({ 'min-height':'400px', 'width':'100%', 'margin':'0px', 'height' : doc.outerHeight()});
-		           
 		       }else{
-		           
     			   $(frame_id).show("slow", function() {
     				   // whenever element is shown again; re-set the height with the dom content
     				   $(this).css({ 'min-height':'400px',width:'100%',margin:'0px', height : $(this.contentWindow.document).height()});
     				   $(frame_id).focus();
     			   });
 		       }
-		       
 		   }else{
+		       // if iframe doesn't exist than create a new iframe for that scope
 			   $('<iframe>', {
 				   src: '/apex/E2_EditScope?estimate_id=' + estimateId + '&id=' + node.id,
 				   id:  node.id + endsWith,
@@ -466,36 +482,34 @@ var AddEditScope = {
     delete_scope_arr: [],
 
     delete_scope_async: function() {
+        // check if deleted scopes id array is populated
         if (AddEditScope.delete_scope_arr.length > 0) {
+            // remove/pop last element 
             var scopeid_delete = AddEditScope.delete_scope_arr.pop();
+            // remove the respective iframe from the page too.
             var frame_id = '#' + scopeid_delete + AddEditScope.ENDS_WITH;
             if($(frame_id).length) $(frame_id).remove(); 
+            // call the webservice method to remove from db
             sforce.apex.execute("E2_Estimator_WS", "deleteScope", {
                 scopeId: scopeid_delete,
                 parentId: '#'
             }, AddEditScope.delete_scope_asyncCallback);
         } else {
+            // if nothing in the list anymore; reload the jstree with the new data
             $(loadSpinner).show().css('height', $(document).outerHeight());
             global_scopeId = null;
             //to refresh scope loe we need to reload jstree
             $(treeId).jstree('destroy');
             $(treeId).jstree(jstree_options);
             AddEditScope.tree_init();
-            //$(loadSpinner).hide();
-            //CustomAlert.show('Scope(s) have been removed successfully!!!');
-            
         }
     },
     delete_scope_asyncCallback: {
         onSuccess: function(result) {
-             result = (result.length > 0 ? result[0] : result); 
-            //if (result[0].indexOf("Failed") != -1) {
-            //    CustomAlert.showError(result[0]);
-            //    $(loadSpinner).hide();
-            //    AddEditScope.delete_scope_arr = [];
-            //    return;
-            //} 
+            result = (result.length > 0 ? result[0] : result); 
+            // check if the result contains a failure message from the webservice
             if (result.indexOf('Fail') != -1) {
+                // if failed show the failure warning custom alert
                 var exception = 'INSUFFICIENT_ACCESS_OR_READONLY';
                 if(result.toLowerCase().indexOf(exception.toLowerCase()) != -1){
                   CustomAlert.showError('Remove Failed: You do not have permission to remove this scope!!! Please contact scope owner for remove!!');    
@@ -513,7 +527,7 @@ var AddEditScope = {
                 return;
                 
             }
-            
+            // call the delete function again for other items in the array
             AddEditScope.delete_scope_async();
         },
         onFailure: function(error) {
@@ -587,7 +601,7 @@ var AddEditScope = {
     reparent_scopeCallback: {
         onSuccess: function(result) {
             result = (result.length > 0 ? result[0] : result); 
-            
+            // check for failure message, show alert and stop
             if (result.indexOf('Fail') != -1) {
                 var exception = 'INSUFFICIENT_ACCESS_OR_READONLY';
                 if(result.toLowerCase().indexOf(exception.toLowerCase()) != -1){
@@ -609,7 +623,7 @@ var AddEditScope = {
                 AddEditScope.tree_init();
                 return;
             }
-           
+            // if there is no failure; delete respective call registers
             if (AddEditScope.reparent_call_register && AddEditScope.reparent_call_register[result]) delete AddEditScope.reparent_call_register[result];
             if (AddEditScope.reparent_call_register && JSON.stringify(AddEditScope.reparent_call_register) == '{}') {
            
@@ -620,6 +634,7 @@ var AddEditScope = {
                 //to refresh scope loe we need to reload jstree
                 global_scopeId = result;
                 
+                // set the display order and sequence back in the database
                 AddEditScope.updateScopeDisplayOrder();
             }
         },
@@ -653,7 +668,7 @@ var AddEditScope = {
     updateScopeDisplayOrderCallback : {
         onSuccess: function(result) {
             result = (result.length > 0 ? result[0] : result);
-            
+            // check for failure message
             if (result.indexOf('Fail') != -1) {
                 var exception = 'INSUFFICIENT_ACCESS_OR_READONLY';
                 
@@ -673,6 +688,7 @@ var AddEditScope = {
             
             CustomAlert.show('Scope have been re-parented successfully!!!');
             $(loadSpinner).show().css('height', $(document).outerHeight());
+            // load the tree again with updated data with reparenting
             $(treeId).jstree('destroy');
             $(treeId).jstree(jstree_options);
             AddEditScope.tree_init();
@@ -730,13 +746,18 @@ var AddEditScope = {
     
     tree_init_callback: {
         onSuccess: function(result) {
+            // sort the result order based on the display order
+            // this is necessary as create nodes only in the same order they were
+            // stored in database
             result = AddEditScope.sort_order_new(result);
             $.each(result, function(indx, node) {
-                console.log('MI::::' + node.title + '-' + node.display_order);
+                //console.log('MI::::' + node.title + '-' + node.display_order);
                 AddEditScope.create_node(node, parseInt(node.display_order));
             });
             // clear the result
             result = [];
+            
+            // since tree is reloaded/refreshed; bind the tree events back
             bindEvents();
             
             if(AddEditScope.SAVED_SCOPE_ID != null){
@@ -781,6 +802,7 @@ var AddEditScope = {
             } else {
                 $(loadSpinner).hide();
             }
+            result = null;
         },
         onFailure: function(error) {
             alert(error);

@@ -92,9 +92,18 @@ public with sharing class E2_DataUtil_WS {
                    e.E2_Assumption__c,
             (Select Id, Name, Scope__c, Complexity_Factor_High__c, Resource_Role__c, Phase__c, Effort_Hrs__c, Speciality__c, 
              Complexity_Factor_Low__c, Is_Active__c, Source_Effort__c FROM Efforts__r),
-             (SELECT Id, Scope__c, Asset__c FROM E2_Recommended_Assets__r) 
+             (SELECT Id, Scope__c, Asset__c FROM E2_Recommended_Assets__r),
+             (SELECT Id, Question_Text__c, Scope__c, Source_Question__c, 
+  			  Type__c, Is_Active__c, Weighted_Effort_LOE__c FROM Questions__r) 
             FROM E2_Scope__c e 
             WHERE e.id IN : scopeId];
+   }
+   
+   public static List<E2_Answer__c> getAnswersDetails(set<Id> questions) {
+   	 return [SELECT Id, Answer_Text__c, Effort_LOE__c, Is_Selected__c, 
+  			  Sequence__c, Source_Answer__c, Is_Active__c, Question__c, Action__c 
+  			 FROM E2_Answer__c
+   	  		 WHERE Question__c IN: questions];
    }
    
    public static List<E2_scope__c> getParentScopeIds(set<string> scopeId) {

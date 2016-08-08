@@ -161,6 +161,10 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>E2_ScopeQuestionAnswerManager</apexClass>
+        <enabled>false</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>E2_ScopeWrapper</apexClass>
         <enabled>true</enabled>
     </classAccesses>

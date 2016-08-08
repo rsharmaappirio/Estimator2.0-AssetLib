@@ -41,6 +41,7 @@
         <members>E2_PaginationUtilityTest</members>
         <members>E2_RecordTypeClass</members>
         <members>E2_RecordTypeClassTest</members>
+        <members>E2_ScopeQuestionAnswerManager</members>
         <members>E2_ScopeWrapper</members>
         <members>E2_ScopeWrapperTest</members>
         <members>E2_SelectDerEffortTemplateControllerTest</members>

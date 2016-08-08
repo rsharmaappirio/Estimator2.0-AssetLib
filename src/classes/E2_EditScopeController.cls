@@ -17,7 +17,7 @@ public with sharing class E2_EditScopeController {
     public string dmlOperationMessage{get;set;}
     public string errorMessage{get;set;}
     public boolean is_Dirty{get;set;}
-    
+    public E2_ScopeQuestionAnswerManager scopeQuestionManager{get;set;}
     public string assetsRecsJson {get;set;}
 
     public E2_EditScopeController(ApexPages.StandardController std) {
@@ -29,6 +29,7 @@ public with sharing class E2_EditScopeController {
        this.errorMessage = E2_constants.BLANK;
        this.is_Dirty = false;
        assetsRecsJson = '';
+       scopeQuestionManager = new E2_ScopeQuestionAnswerManager();
     }
 
     public PageReference pageAction(){
@@ -37,8 +38,9 @@ public with sharing class E2_EditScopeController {
         if(this.scope.id == null){
         	this.errorMessage = 'No scope defined to edit!!!';
             return null;            
-        }else{ 
-            populateViewRecords();
+        }else{
+        	scopeQuestionManager.scope = this.scope;
+            populateViewRecords();            
         }
         return null;
     }
@@ -133,7 +135,7 @@ public with sharing class E2_EditScopeController {
                
             }           
         }
-        
+                
         try{
             if(!effortsToDelete.isEmpty()){
               delete effortsToDelete;            
@@ -165,6 +167,7 @@ public with sharing class E2_EditScopeController {
         this.dmlOperationMessage = E2_Constants.DML_OPERATION_MESSAGE_SUCCESS;
         //this.childScopes.clear();
         //populateViewRecords();
+        scopeQuestionManager.saveQuestion(this.errorMessage, this.dmlOperationMessage);
         return null;             
     }
     
@@ -192,6 +195,14 @@ public with sharing class E2_EditScopeController {
         for(E2_Scope__c scope : E2_DataUtil.getScopeAndChildrenOnScopeIdForEditScope(scopeId)){                
                this.childScopes.add(new Scope(scope, scope.Efforts__r));
         }
+        scopeQuestionManager.retriveScopeQuestion();
+    }
+    
+    
+    
+    public pagereference addNewQuestion() {
+    	is_Dirty = true;
+    	return scopeQuestionManager.addNewQuestion();
     }
     
     public pagereference updateFormStatus() {

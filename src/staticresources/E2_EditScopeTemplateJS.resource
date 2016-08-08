@@ -319,7 +319,7 @@ var Typeahead_input = {
                                  .replace(/{reuse_loe}/gi, (suggestion.totalHours - suggestion.reuseLoe))
                                  .replace(/{release_stage}/gi, suggestion.releaseStage);
         
-        if($('#noAssetRow') != null && $('#noAssetRow').length){
+        if($('#noAssetRow') !== null && $('#noAssetRow').length){
             Typeahead_input.removeNoAssetsRow();
         }
         
@@ -363,32 +363,44 @@ var Typeahead_input = {
         return existingAssetIds;
     },
     
+    populatedSelectedAssetMap : function(suggestions){
+        $.each(JSON.parse(suggestions), function(index, element) {
+                if(typeof Typeahead_input.selectedAssetsMap[element.id] == 'undefined'){
+                    Typeahead_input.selectedAssetsMap[element.id] = element;
+                }
+        });
+    },
+    
     retrieveExistingAssets : function(){
-        //var existingAssets = $("input[Id$='existingAssetRecs']").val();
-        //if(existingAssets.length == 0){
-            sforce.apex.execute("E2_Estimator_WS", "getExistingAssetsForScope", {
-                    scopeId: scope_sfdc_id}, function(result){
-                        if(result.length > 0) {
-                          var assetsRecsJson = result[0];
-                          if (assetsRecsJson != null && assetsRecsJson != '' && assetsRecsJson.length > 0) {
-                              Typeahead_input.prepareExistingAssetRows(assetsRecsJson);
-                          }
-                          else{
-                              Typeahead_input.addNoAssetsRow();
-                          }
-                        }
-                        else{
-                            Typeahead_input.addNoAssetsRow();
-                        }
-                });
-      // }
-      // else{
-      //     Typeahead_input.prepareExistingAssetRows(existingAssets);
-      // }
+       sforce.apex.execute("E2_Estimator_WS", "getExistingAssetsForScope", 
+                            {scopeId: scope_sfdc_id}, function(result){
+                        
+            if(result.length > 0) {
+                var assetsRecsJson = result[0];
+                if (assetsRecsJson !== null && assetsRecsJson !== '' && assetsRecsJson.length > 0) {
+                      Typeahead_input.prepareExistingAssetRows(assetsRecsJson);
+                }
+                else{
+                      Typeahead_input.addNoAssetsRow();
+                }
+            }
+            else{
+                Typeahead_input.addNoAssetsRow();
+            }
+       });
     },
     
     prepareExistingAssetRows : function(assetsRecsJson){
-        Typeahead_input.selectedAssetsMap = JSON.parse(assetsRecsJson);
+        var existingAssets = $("input[Id$='existingAssetRecs']").val();
+        
+        if(existingAssets.length !== 0){
+            Typeahead_input.populatedSelectedAssetMap(existingAssets);
+        }
+        
+        if(assetsRecsJson.length !== 0){
+            Typeahead_input.populatedSelectedAssetMap(assetsRecsJson);
+        }
+        
         var hasValidAsset = false; 
         $.each(Typeahead_input.selectedAssetsMap, function(index, element) {
             if(element.isDeleted == 'false'){
@@ -397,16 +409,6 @@ var Typeahead_input = {
             }
         });
         
-        var existingAssets = $("input[Id$='existingAssetRecs']").val();
-        
-        if(existingAssets.length !== 0){
-            $.each(JSON.parse(existingAssets), function(index, element) {
-                if(element.isDeleted == 'false' && typeof Typeahead_input.selectedAssetsMap[element.id] == 'undefined'){
-                    Typeahead_input.addRowToTable(element);
-                    hasValidAsset = true;
-                }
-            });
-        }
         if(hasValidAsset){
             Typeahead_input.removeNoAssetsRow();
         }

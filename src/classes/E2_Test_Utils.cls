@@ -231,5 +231,25 @@ public with sharing class E2_Test_Utils {
     }
     return recommendedAsset;
   }
+  
+  // insert E2 Question record
+  public static E2_Question__c insertQuestions(Id scopeId, Boolean isInsert){
+    E2_Question__c question = new E2_Question__c(Scope__c = scopeId, Is_Active__c = true);
+    if(isInsert) {                                  
+      insert(question);
+    }
+    return question; 
+  }
+  
+
+  // insert E2 Answer record
+  public static E2_Answer__c insertAnswer(Id questionId, Boolean isInsert){
+    E2_Answer__c answer = new E2_Answer__c(Question__c = questionId, Is_Active__c = true, Sequence__c = 1, 
+                                            Is_Selected__c =true);
+    if(isInsert) {                                  
+      insert(answer);
+    }
+    return answer; 
+  }
 
 }

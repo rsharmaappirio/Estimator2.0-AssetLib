@@ -468,10 +468,10 @@
                                           <apex:outputPanel id="Questions">
                                           <table class="slds-table slds-table--bordered slds-no-row-hover slds-max-medium-table--stacked scope-table">
                                             <tbody>
-                                                <apex:outputpanel rendered="{!IF(listQuestions.size = 0, true, false)}">
+                                                <apex:outputpanel rendered="{!IF(scopeQuestionManager.listQuestions.size = 0, true, false)}">
                                                     <tr><td colspan="9">No Q &#38; A records defined.</td></tr>                                                                                                       
                                                 </apex:outputpanel>
-                                                <apex:repeat value="{!listQuestions}" var="question">
+                                                <apex:repeat value="{!scopeQuestionManager.listQuestions}" var="question">
                                                    <apex:outputpanel rendered="{!!question.isDeleted}">
                                                        <apex:outputpanel layout="none" rendered="{!question.e2question.Id != NULL}">
                                                       <tr class="slds-hint-parent slds-selection-background">
@@ -777,21 +777,6 @@
          var scope_sfdc_id = '{!scope.id}';
          var scope_sfdc_name = '{!JSENCODE(scope.name)}';
          Typeahead_input.resourceUrl = '{!$Resource.E2_TypeaheadResources}';
-         
-         $(document).ready(function() {
-            //typeahead_input.load();
-            //var assetsRecsJson = '{!JSENCODE(assetsRecsJson)}';
-            //console.log(assetsRecsJson);
-            //typeahead_input.resourceUrl = '{!$Resource.E2_TypeaheadResources}';
-            /*if (assetsRecsJson != '' && assetsRecsJson.length > 0) {
-                typeahead_input.selectedAssetsMap = JSON.parse(assetsRecsJson);
-                $.each(typeahead_input.selectedAssetsMap, function(index, element) {
-                    if(element.isDeleted == 'false'){
-                        typeahead_input.addRowToTable(element);
-                    }
-                });
-            }*/
-        });
       </script>
       <!-- / JAVASCRIPT -->    
    </html>

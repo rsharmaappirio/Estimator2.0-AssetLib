@@ -190,7 +190,8 @@ public class E2_Estimator_WSManager {
            cloneScope.Scope_Group__c = null;                      
            scopeList.add(cloneScope);
            clonedSourceMap.put(scope.id, cloneScope);
-           if(scope.Efforts__r.size() > 0 || scope.E2_Recommended_Assets__r.size() > 0){
+           if(scope.Efforts__r.size() > 0 || scope.E2_Recommended_Assets__r.size() > 0
+           	   || scope.Questions__r.size() > 0){
               	hasChildrenScope.put(scope.id, scope);
            }                                                
         }
@@ -207,6 +208,7 @@ public class E2_Estimator_WSManager {
     									map<string, E2_Scope__c> clonedSourceMap) {
     	List<E2_Effort__c> effortList = new List<E2_Effort__c>();
     	List<E2_Recommended_Asset__c> assetList = new List<E2_Recommended_Asset__c>();
+    	map<Id, E2_Question__c> questionsmap = new map<Id, E2_Question__c>();
         for(E2_Scope__c scope : scopeList) {
         	if(hasChildrenScope.containsKey(scope.Source_Scope__c)) {
             	E2_Scope__c sourceScope = hasChildrenScope.get(scope.Source_Scope__c);          
@@ -221,6 +223,12 @@ public class E2_Estimator_WSManager {
 		           	clonedAsset.Scope__c = scope.Id;
 		           	assetList.add(clonedAsset);	
 		    	}
+		    	for(E2_Question__c sourceQuestion : sourceScope.Questions__r) {
+		    		E2_Question__c clonedQuestion  = sourceQuestion.clone(false, true, false, false);
+		    		clonedQuestion.Scope__c = scope.Id;
+		    		clonedQuestion.Source_Question__c = sourceQuestion.Id;
+		    		questionsmap.put(sourceQuestion.Id, clonedQuestion);
+		    	}
             }   
 		}
         if(!effortList.isEmpty()) {
@@ -228,6 +236,20 @@ public class E2_Estimator_WSManager {
         }
         if(!assetList.isEmpty()) {
         	insert assetList;
+        }
+        if(!questionsmap.isEmpty()) {
+        	insert questionsmap.values();
+        	map<id,E2_Answer__c> answersList = new map<id,E2_Answer__c>();
+        	for(E2_Answer__c sourceAnswer : E2_DataUtil_WS.getAnswersDetails(questionsmap.KeySet())) {
+        		E2_Answer__c clonedAnswer = sourceAnswer.clone(false, true, false, false);
+        		clonedAnswer.Question__c = questionsmap.get(sourceAnswer.Question__c).Id;
+        		clonedAnswer.Source_Answer__c = sourceAnswer.Id;
+        		answersList.put(sourceAnswer.Id,clonedAnswer);
+        	}
+        	if(!answersList.isEmpty()) {
+	        	insert answersList.values();
+	        	//list<>
+	        }
         }
     	list<E2_Scope__c> scopesToUpdate = new list<E2_Scope__c>();
         for(E2_Scope__c scope : E2_dataUtil_WS.getParentScopeIds(clonedSourceMap.KeySet())) {
