@@ -1,0 +1,122 @@
+<apex:page controller="E2_AddBulkEffortsController" showHeader="false" standardStylesheets="true" sidebar="false" applyHtmlTag="false" applyBodyTag="false">
+    <html xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+
+    <head>
+        <title>Add Efforts</title>
+        <link type="text/css" rel="stylesheet" href="{!URLFOR($Resource.cloneany, '/slds/styles/salesforce-lightning-design-system-vf.min.css')}" />
+        <apex:includeScript value="{!URLFOR($Resource.cloneany, '/libs/jquery.js')}" />
+    </head>
+
+    <body>
+        <apex:form >
+            <apex:actionFunction name="prepareJson" action="{!prepareEffortsJson}"/>
+            <!-- REQUIRED SLDS WRAPPER -->
+            <div class="slds">
+                <!-- PAGE HEADER -->
+                <!-- / PAGE HEADER -->
+                <!-- PRIMARY CONTENT WRAPPER -->
+                <div class="myapp">
+                    <apex:pageMessages />
+                    
+                    <div class="slds-page-header" role="banner">
+                        <div class="slds-grid">
+                            <div class="slds-col slds-has-flexi-truncate">
+                                <div class="slds-media">
+                                    <div class="slds-media__body">
+                                        <h1 class="slds-page-header__title slds-m-right--small slds-truncate slds-align-middle" title="Record Title">Add Efforts</h1>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                    <table class="slds-table slds-table--bordered slds-no-row-hover ">
+                        <thead>
+                            <tr class="slds-text-heading--label">
+                                <th scope="col">
+                                    <div class="slds-truncate">Phase</div>
+                                </th>
+                                <th scope="col">
+                                    <div class="slds-truncate">Role</div>
+                                </th>
+                                <th scope="col">
+                                    <div class="slds-truncate">Hours</div>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <apex:repeat value="{!lstEfforts}" var="effort">
+                                <tr class="slds-hint-parent slds-selection-background">
+                                    <td class="slds-truncate" data-label="Phase" style="width:30%;">
+                                        <div class="slds-form-element">
+                                            <div class="slds-form-element__control">
+                                                <apex:selectList styleclass="slds-select" value="{!effort.phaseName}" size="1">
+                                                    <apex:selectOptions value="{!phases}"/>
+                                                </apex:selectList>
+                                            </div>
+                                        </div>
+                                    </td>
+                                
+                                    <td class="slds-truncate" data-label="Role" style="width:30%;">
+                                        <div class="slds-form-element">
+                                            <div class="slds-form-element__control">
+                                                <apex:selectList styleclass="slds-select" value="{!effort.roleName}" size="1">
+                                                    <apex:selectOptions value="{!roles}"/>
+                                                </apex:selectList>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    
+                                    <td class="slds-truncate" data-label="Hours" style="width:30%;">
+                                        <div class="slds-form-element">
+                                            <div class="slds-form-element__control">
+                                                <apex:inputText styleclass="slds-input mandate-numeric" value="{!effort.hours}"/>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </apex:repeat>
+                        </tbody>
+                    </table>
+                    <apex:commandbutton styleClass="slds-button slds-button--neutral slds-button--small slds-button--right--float slds-update-scope" value="Add more rows" action="{!addEfforts}"/>
+                    </div>
+                </div>
+            </div>
+        </apex:form>
+    </body>
+    
+    <!-- JAVASCRIPT -->
+    <script type="text/javascript">
+       $(document).ready(function() {
+        var effortsJson = '{!effortsJson}';
+        applyNumericValidation();
+        parent&&parent.EditScope&&parent.EditScope.setHeightOfAddNewModal&&parent.EditScope.setHeightOfAddNewModal($(document.body).outerHeight());
+        if(effortsJson != null && effortsJson.length > 0){
+            parent&&parent.EditScope&&parent.EditScope.updateAddEffortsJson&&parent.EditScope.updateAddEffortsJson(effortsJson);
+        }
+       });
+       
+        var applyNumericValidation = function(){
+            $('.mandate-numeric').keyup(function(evt) {		    
+		    $('body div.slds-error--tooltip').remove();
+		    var inputVal = $(this).val();
+		    var numericReg = /^[0-9]*$/;
+		    console.log($(this));
+		    if(!numericReg.test(inputVal)) {
+		        $(this).val(inputVal.substring(0, inputVal.length - 1)); 
+		        $(document.body).append('<div class="slds slds-error--tooltip"><div class="slds slds-popover slds-popover--tooltip slds-nubbin--bottom" role="tooltip"><div class="slds-popover__body">Numeric only.</div></div></div>');
+		        var top = $(this).offset().top - $(this).height() + 'px';
+		        var left = $(this).offset().left + 'px';
+		        $('body div.slds-error--tooltip').css({position : 'absolute', top : top , left : left});
+		    }
+		    
+		});
+		
+		$('.mandate-numeric').blur(function(evt) {
+		   $('body div.slds-error--tooltip').remove(); 
+		});
+	  }
+    </script>
+</html>
+</apex:page>
