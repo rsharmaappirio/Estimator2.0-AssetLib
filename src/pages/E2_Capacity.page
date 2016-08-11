@@ -91,9 +91,9 @@ table tbody tr td.slds-td{
                        <h2 class="slds-text-heading--small slds-truncate">Capacity Needs by Role and Phase</h2>
                        </div>
                        <div class="slds-col slds-no-flex slds-align-bottom">
-                        <h3><apex:outputPanel layout="none" rendered="{!IF(OR(!!ISNULL(estimate.E2_Risk__c),estimate.E2_Risk__c == '0%'), false, true)}" >
+                        <h3><apex:outputPanel layout="none" rendered="{!IF(OR(!!ISNULL(estimate.E2_Risk_percentage__c),estimate.E2_Risk_percentage__c == '0%'), false, true)}" >
                         <div class="slds-text-heading--label slds-grid grid--flex-spread " title="Risk" style="color: red;">
-                         <b>Risk Factor : + <apex:outputField value="{!estimate.E2_Risk__c}" /></b>
+                         <b>Risk Factor : + <apex:outputField value="{!estimate.E2_Risk_percentage__c}" /></b>
                         </div>
                        </apex:outputPanel></h3>
                       </div>
@@ -170,9 +170,9 @@ table tbody tr td.slds-td{
                       <h2 class="slds-text-heading--small slds-truncate">Role Specialty Details</h2>
                       </div>
                       <div class="slds-col slds-no-flex slds-align-bottom">
-                        <h3><apex:outputPanel layout="none" rendered="{!IF(OR(!!ISNULL(estimate.E2_Risk__c),estimate.E2_Risk__c == '0%'), false, true)}" >
+                        <h3><apex:outputPanel layout="none" rendered="{!IF(OR(!!ISNULL(estimate.E2_Risk_percentage__c),estimate.E2_Risk_percentage__c == '0%'), false, true)}" >
                         <div class="slds-text-heading--label slds-grid grid--flex-spread " title="Risk" style="color: red;">
-                         <b>Risk Factor : +<apex:outputField value="{!estimate.E2_Risk__c}" /></b>
+                         <b>Risk Factor : +<apex:outputField value="{!estimate.E2_Risk_percentage__c}" /></b>
                         </div>
                        </apex:outputPanel></h3>
                       </div>
@@ -271,6 +271,7 @@ table tbody tr td.slds-td{
     <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Derived_Effort_Template__c}"/>   
     <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Last_Build_Datetime__c}"/>
     <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Risk__c}"/>
+    <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Risk_percentage__c}"/>
 </apex:form>               
         </apex:define>
         <apex:define name="footer">

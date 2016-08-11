@@ -19,8 +19,6 @@ public with sharing class E2_EditScopeTemplateController {
     public string assetsRecsJson {get;set;}
 	public boolean showFavForSTMPermissionSet {get;set;}
 	
-	public E2_ScopeQuestionAnswerManager scopeQuestionManager{get;set;}
-
     public E2_EditScopeTemplateController(ApexPages.StandardController std) {
        // constructor for the page tied to standard controller  
        this.scope = (E2_Scope__c)std.getRecord();
@@ -30,7 +28,6 @@ public with sharing class E2_EditScopeTemplateController {
        
        assetsRecsJson = '';
        showFavForSTMPermissionSet = true;
-       scopeQuestionManager = new E2_ScopeQuestionAnswerManager();
     }
 
     public PageReference pageAction(){
@@ -41,7 +38,6 @@ public with sharing class E2_EditScopeTemplateController {
             ApexPages.addMessage(msg); 
             return null;            
         }else{
-        	scopeQuestionManager.scope = this.scope; 
             populateViewRecords();
         }
         
@@ -159,7 +155,6 @@ public with sharing class E2_EditScopeTemplateController {
         }
         this.dmlOperationMessage = E2_Constants.DML_OPERATION_MESSAGE_SUCCESS;
         string errorMessage = E2_Constants.BLANK;
-        scopeQuestionManager.saveQuestion(errorMessage, this.dmlOperationMessage);
         if(!string.isBlank(errorMessage)) {
         	msg = new ApexPages.Message(ApexPages.Severity.ERROR, errorMessage);
             ApexPages.addMessage(msg);
@@ -185,16 +180,11 @@ public with sharing class E2_EditScopeTemplateController {
     
     }
     
-    public pagereference addNewQuestion() {
-    	return scopeQuestionManager.addNewQuestion();
-    }
-    
     public void populateViewRecords(){
         Id scopeId = this.scope.id;        
         for(E2_Scope__c scope : E2_DataUtil.getScopeAndChildrenOnScopeIdForEditScope(scopeId)){                
                this.childScopes.add(new Scope(scope, scope.Efforts__r));
         }
-        scopeQuestionManager.retriveScopeQuestion();
     }
     
     public List<E2_Effort__c> getEffortsInstanceList(){

@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
     <types>
+        <members>E2_AddBulkEffortsController</members>
+        <members>E2_AddBulkEffortsControllerTest</members>
         <members>E2_AddEditDerivedEffortsController</members>
         <members>E2_AddEditDerivedEffortsControllerTest</members>
         <members>E2_AddEditEstimateController</members>
@@ -13,8 +15,10 @@
         <members>E2_AddNewScopeControllerTest</members>
         <members>E2_AddNewScopeTemplateController</members>
         <members>E2_AddNewScopeTemplateControllerTest</members>
+        <members>E2_BatchUpdateUltimateParentScope</members>
         <members>E2_CapacityController</members>
         <members>E2_CapacityControllerTest</members>
+        <members>E2_Constants</members>
         <members>E2_Constants</members>
         <members>E2_ConstantsTest</members>
         <members>E2_DataUtil</members>
@@ -22,9 +26,13 @@
         <members>E2_DataUtil_WS</members>
         <members>E2_DataUtil_WSTest</members>
         <members>E2_EditScopeController</members>
+        <members>E2_EditScopeController</members>
+        <members>E2_EditScopeControllerTest</members>
         <members>E2_EditScopeControllerTest</members>
         <members>E2_EditScopeTemplateController</members>
         <members>E2_EditScopeTemplateControllerTest</members>
+        <members>E2_EffortsWrapper</members>
+        <members>E2_EffortsWrapperTest</members>
         <members>E2_Estimator_Manager</members>
         <members>E2_Estimator_ManagerTest</members>
         <members>E2_Estimator_WS</members>
@@ -42,6 +50,7 @@
         <members>E2_RecordTypeClass</members>
         <members>E2_RecordTypeClassTest</members>
         <members>E2_ScopeQuestionAnswerManager</members>
+        <members>E2_ScopeTriggerHandler</members>
         <members>E2_ScopeWrapper</members>
         <members>E2_ScopeWrapperTest</members>
         <members>E2_SelectDerEffortTemplateControllerTest</members>
@@ -53,7 +62,6 @@
         <members>E2_TreeNodeMap</members>
         <members>E2_TreeNodeMapTest</members>
         <members>E2_TreeNodeTest</members>
-        <members>RS_EditScopeController</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -62,6 +70,7 @@
         <name>ApexComponent</name>
     </types>
     <types>
+        <members>E2_AddBulkEfforts</members>
         <members>E2_AddEditDerivedEfforts</members>
         <members>E2_AddEditEstimate</members>
         <members>E2_AddEditScope</members>
@@ -82,6 +91,10 @@
         <name>ApexPage</name>
     </types>
     <types>
+        <members>E2_ScopeTrigger</members>
+        <name>ApexTrigger</name>
+    </types>
+    <types>
         <members>CMC_Presales_LOE__c.E2_AE__c</members>
         <members>CMC_Presales_LOE__c.E2_Date_Scoped__c</members>
         <members>CMC_Presales_LOE__c.E2_Derived_Effort_Template__c</members>
@@ -90,6 +103,7 @@
         <members>CMC_Presales_LOE__c.E2_Last_Build_Datetime__c</members>
         <members>CMC_Presales_LOE__c.E2_Reviewer__c</members>
         <members>CMC_Presales_LOE__c.E2_Risk__c</members>
+        <members>CMC_Presales_LOE__c.E2_Risk_percentage__c</members>
         <members>CMC_Presales_LOE__c.E2_SA__c</members>
         <members>CMC_Presales_LOE__c.E2_Total_Architect_Hrs__c</members>
         <members>CMC_Presales_LOE__c.E2_Total_Build_Hrs__c</members>

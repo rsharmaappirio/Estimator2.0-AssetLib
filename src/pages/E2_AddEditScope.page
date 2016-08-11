@@ -125,7 +125,7 @@
                                             </div>
                                          </div>
                                       </div>                                    
-                                      <div class="slds-form-element" id="relationShipTree"></div>
+                                      <div class="slds-form-element" id="relationShipTree" style="overflow-x:auto;"></div>
                                     </td>
                                     <td class="slds-truncate" style="vertical-align:top;padding-right:0px;">
                                         <div id="tabpanel">
@@ -175,7 +175,8 @@
          <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Is_Primary__c}"/>
          <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Total_Hrs__c}"/>  
          <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Derived_Effort_Template__c}"/>
-         <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Risk__c}"/>     
+         <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Risk__c}"/>  
+         <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Risk_percentage__c}"/>  
          <div id="helpModal" class="slds-modal slds-fade-in-open" role="dialog" style="display: none !important;">
             <div class="slds-modal__container" style="max-width:100%; width:95%;max-height:2400px; height:700px">
                <div class="slds-modal__header">

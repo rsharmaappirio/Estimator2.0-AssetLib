@@ -17,8 +17,8 @@ public with sharing class E2_EditScopeController {
     public string dmlOperationMessage{get;set;}
     public string errorMessage{get;set;}
     public boolean is_Dirty{get;set;}
-    public E2_ScopeQuestionAnswerManager scopeQuestionManager{get;set;}
     public string assetsRecsJson {get;set;}
+    public string effortsJson {get;set;}
 
     public E2_EditScopeController(ApexPages.StandardController std) {
        // constructor for the page tied to standard controller	
@@ -29,7 +29,7 @@ public with sharing class E2_EditScopeController {
        this.errorMessage = E2_constants.BLANK;
        this.is_Dirty = false;
        assetsRecsJson = '';
-       scopeQuestionManager = new E2_ScopeQuestionAnswerManager();
+       effortsJson = '';
     }
 
     public PageReference pageAction(){
@@ -39,7 +39,6 @@ public with sharing class E2_EditScopeController {
         	this.errorMessage = 'No scope defined to edit!!!';
             return null;            
         }else{
-        	scopeQuestionManager.scope = this.scope;
             populateViewRecords();            
         }
         return null;
@@ -167,7 +166,6 @@ public with sharing class E2_EditScopeController {
         this.dmlOperationMessage = E2_Constants.DML_OPERATION_MESSAGE_SUCCESS;
         //this.childScopes.clear();
         //populateViewRecords();
-        scopeQuestionManager.saveQuestion(this.errorMessage, this.dmlOperationMessage);
         return null;             
     }
     
@@ -195,15 +193,8 @@ public with sharing class E2_EditScopeController {
         for(E2_Scope__c scope : E2_DataUtil.getScopeAndChildrenOnScopeIdForEditScope(scopeId)){                
                this.childScopes.add(new Scope(scope, scope.Efforts__r));
         }
-        scopeQuestionManager.retriveScopeQuestion();
     }
     
-    
-    
-    public pagereference addNewQuestion() {
-    	is_Dirty = true;
-    	return scopeQuestionManager.addNewQuestion();
-    }
     
     public pagereference updateFormStatus() {
         is_Dirty = true;
@@ -213,6 +204,23 @@ public with sharing class E2_EditScopeController {
     public List<E2_Effort__c> getEffortsInstanceList(){
         List<E2_Effort__c> efforts = new List<E2_Effort__c>();        
         return efforts;
+    }
+    
+    public PageReference addBulkEfforts(){
+        if(effortsJson != null && effortsJson.length() > 0){
+            List<E2_EffortsWrapper> lstEffortsWrapper = (List<E2_EffortsWrapper>)JSON.deserialize(effortsJson, List<E2_EffortsWrapper>.class);
+            for(E2_EffortsWrapper effortWrapper : lstEffortsWrapper){
+                if(effortWrapper.hours > 0){
+                    childScopes[0].efforts.add(new Effort(new E2_Effort__c(Complexity_Factor_High__c = 0, 
+                                                                           Complexity_Factor_Low__c = 0, 
+                                                                           Effort_Hrs__c = effortWrapper.hours,
+                                                                           Name = effortWrapper.phaseName + '-' + effortWrapper.roleName,
+                                                                           Phase__c = effortWrapper.phaseName,
+                                                                           Resource_Role__c = effortWrapper.roleName)));
+                }    
+            }
+        }
+        return null;
     }
     
     public class Scope{

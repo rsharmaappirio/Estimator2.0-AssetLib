@@ -179,6 +179,7 @@ table tbody tr td input[type="text"], table tbody tr td select{
     <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Total_Hrs__c}"/>
     <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Derived_Effort_Template__c}"/>
     <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Risk__c}"/>
+    <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Risk_percentage__c}"/>
     <br/>       
 
     <div id="helpModal" class="slds-modal slds-fade-in-open" role="dialog" style="display: none !important;">

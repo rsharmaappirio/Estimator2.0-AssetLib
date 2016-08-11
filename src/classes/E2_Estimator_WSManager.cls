@@ -240,15 +240,36 @@ public class E2_Estimator_WSManager {
         if(!questionsmap.isEmpty()) {
         	insert questionsmap.values();
         	map<id,E2_Answer__c> answersList = new map<id,E2_Answer__c>();
+        	map<id,List<E2_Action_Scope__c>> actionScopes = new map<id,List<E2_Action_Scope__c>>();
         	for(E2_Answer__c sourceAnswer : E2_DataUtil_WS.getAnswersDetails(questionsmap.KeySet())) {
         		E2_Answer__c clonedAnswer = sourceAnswer.clone(false, true, false, false);
         		clonedAnswer.Question__c = questionsmap.get(sourceAnswer.Question__c).Id;
         		clonedAnswer.Source_Answer__c = sourceAnswer.Id;
         		answersList.put(sourceAnswer.Id,clonedAnswer);
+        		if(!sourceAnswer.Action_Scopes__r.isEmpty()) {
+        			actionScopes.put(sourceAnswer.Id,sourceAnswer.Action_Scopes__r);
+        		}
         	}
         	if(!answersList.isEmpty()) {
 	        	insert answersList.values();
-	        	//list<>
+	        	List<E2_Action_Scope__c> actionscopestoinsert = new List<E2_Action_Scope__c>();
+	        	for(Id sourceAnswer : answersList.keySet()) {
+	        		if(actionScopes.containsKey(sourceAnswer)) {
+	        			for(E2_Action_Scope__c actionScope : actionScopes.get(sourceAnswer)) {
+	        				if(clonedSourceMap.containsKey(actionScope.Scope__c)) {
+	        					E2_Scope__c clonedScope = clonedSourceMap.get(actionScope.Scope__c);
+	        					E2_Answer__c clonedAnswer = answersList.get(sourceAnswer);
+	        					string uniqueKey = clonedAnswer.Id + E2_Constants.BLANK + clonedScope.Id;
+	        					actionscopestoinsert.add(new E2_Action_Scope__c(Answer__c = clonedAnswer.Id,
+                									Scope__c = clonedScope.Id,
+                									Unique_Key__c = uniqueKey));
+	        				}			        		
+			        	}
+	        		}
+	        	}
+	        	if(!actionscopestoinsert.isEmpty()) {
+	        		insert actionscopestoinsert;
+	        	}	        	
 	        }
         }
     	list<E2_Scope__c> scopesToUpdate = new list<E2_Scope__c>();

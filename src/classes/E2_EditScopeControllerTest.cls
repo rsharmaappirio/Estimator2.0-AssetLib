@@ -78,11 +78,19 @@ public class E2_EditScopeControllerTest {
       }  
       System.assertEquals(scope_wrap.getEffortsSize(), 80, 'scope cumulative efforts size should match'); 
       scope_wrap.reload();
-      scope_wrap.changeComplexity();  
+      scope_wrap.changeComplexity();
+      
+      List<E2_EffortsWrapper> lstEfforts = new List<E2_EffortsWrapper>();
+      lstEfforts.add(new E2_EffortsWrapper());
+      lstEfforts.add(new E2_EffortsWrapper());
+      lstEfforts[0].hours = 5;
+      String effortsJson = JSON.serialize(lstEfforts, true);
+      controller.effortsJson = effortsJson;
+      controller.addBulkEfforts();
         
       controller.saveScope();     
       List<E2_Scope__c> scopeList = E2_DataUtil.getScopeAndChildrenOnScopeIdForEditScope(scope.id);
-      System.assertEquals(scopeList[0].Efforts__r.size(), 2, '2 efforts should saved');
+      System.assertEquals(scopeList[0].Efforts__r.size(), 3, '3 efforts should saved');
       
       for(E2_EditScopeController.Effort eff: scope_wrap.efforts){
          eff.remove();    

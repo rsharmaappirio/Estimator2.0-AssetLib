@@ -101,7 +101,8 @@ public with sharing class E2_DataUtil_WS {
    
    public static List<E2_Answer__c> getAnswersDetails(set<Id> questions) {
    	 return [SELECT Id, Answer_Text__c, Effort_LOE__c, Is_Selected__c, 
-  			  Sequence__c, Source_Answer__c, Is_Active__c, Question__c, Action__c 
+  			  Sequence__c, Source_Answer__c, Is_Active__c, Question__c, Action__c,
+  			  (SELECT Answer__c, Scope__c FROM Action_Scopes__r) 
   			 FROM E2_Answer__c
    	  		 WHERE Question__c IN: questions];
    }

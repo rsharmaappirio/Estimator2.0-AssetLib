@@ -66,6 +66,7 @@ public with sharing class E2_CapacityController extends E2_Master{
         insert rolePhaseCapacityMatrix.values();
     }
     estimate.E2_Last_Build_Datetime__c = System.now();
+    estimate.E2_Risk_percentage__c = estimate.E2_Risk__c;
     update estimate;
   }
   

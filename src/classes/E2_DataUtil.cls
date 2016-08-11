@@ -188,4 +188,19 @@ public class E2_DataUtil {
   			FROM E2_Action_Scope__c
   			WHERE Answer__c IN: answers];
   }
+  
+  public static List<E2_scope__c> getParentScopeIds(set<Id> scopeId) {
+      return [SELECT Id, Parent_Scope__c, Parent_Scope__r.Parent_Scope__c,  
+                                 Parent_Scope__r.Parent_Scope__r.Parent_Scope__c,
+                                 Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__c, 
+                                 Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__r.Parent_Scope__c 
+                                 FROM E2_Scope__c 
+                                 WHERE ID IN :scopeId];
+   }
+   
+  public static List<E2_scope__c> getscopeUltimateParentDetails(set<Id> scopeIds) {
+      return [SELECT Id, Ultimate_Parent_Id__c, Ultimate_Parent_Scope__c
+                                     FROM E2_Scope__c
+                                     WHERE Id IN: scopeIds];
+  }
 }

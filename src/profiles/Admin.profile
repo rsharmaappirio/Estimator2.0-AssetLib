@@ -1,6 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Profile xmlns="http://soap.sforce.com/2006/04/metadata">
     <classAccesses>
+        <apexClass>E2_AddBulkEffortsController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>E2_AddBulkEffortsControllerTest</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>E2_AddEditDerivedEffortsController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
@@ -49,6 +57,10 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>E2_BatchUpdateUltimateParentScope</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>E2_CapacityController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
@@ -94,6 +106,14 @@
     </classAccesses>
     <classAccesses>
         <apexClass>E2_EditScopeTemplateControllerTest</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>E2_EffortsWrapper</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>E2_EffortsWrapperTest</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -165,6 +185,10 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>E2_ScopeTriggerHandler</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>E2_ScopeWrapper</apexClass>
         <enabled>true</enabled>
     </classAccesses>
@@ -208,10 +232,6 @@
         <apexClass>E2_TreeNodeTest</apexClass>
         <enabled>true</enabled>
     </classAccesses>
-    <classAccesses>
-        <apexClass>RS_EditScopeController</apexClass>
-        <enabled>true</enabled>
-    </classAccesses>
     <custom>false</custom>
     <fieldPermissions>
         <editable>true</editable>
@@ -246,6 +266,11 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>CMC_Presales_LOE__c.E2_Risk__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>CMC_Presales_LOE__c.E2_Risk_percentage__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -531,7 +556,7 @@
     <fieldPermissions>
         <editable>false</editable>
         <field>E2_Scope__c.Ultimate_Parent_Id__c</field>
-        <readable>false</readable>
+        <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
@@ -635,6 +660,10 @@
         <object>E2_Scope__c</object>
         <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
+    <pageAccesses>
+        <apexPage>E2_AddBulkEfforts</apexPage>
+        <enabled>true</enabled>
+    </pageAccesses>
     <pageAccesses>
         <apexPage>E2_AddEditDerivedEfforts</apexPage>
         <enabled>true</enabled>

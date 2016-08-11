@@ -98,5 +98,11 @@ public class E2_Constants {
   public final static string ASSET_NO_PRACTICE_IMAGE = 'no-practice.png';
   public final static string ASSET_PRACTICE_IMAGE_SUFFIX = '-practice.png';
   
+  public final static Decimal DEFAULT_BULK_EFFORTS_TO_ADD = 5;
+  public final static string DEFAULT_ROLE_FOR_BULK_EFFORT = 'Developer';
+  public final static string DEFAULT_PHASE_FOR_BULK_EFFORT = 'Build';
+  public final static string EFFORT_ROLE_FIELD_API_NAME = 'Resource_Role__c';
+  public final static string EFFORT_PHASE_FIELD_API_NAME = 'Phase__c';
+  
   public void testConstantsMethod(){}
 }

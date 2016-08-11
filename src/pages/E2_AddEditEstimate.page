@@ -319,6 +319,7 @@
          <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Total_Deploy_Thrive_Hrs__c}"/> 
          <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Last_Build_Datetime__c}"/>
          <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Risk__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Risk_percentage__c}"/>
          </apex:form>
       </apex:define>
       <apex:define name="footer">

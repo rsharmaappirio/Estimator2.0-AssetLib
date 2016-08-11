@@ -118,6 +118,20 @@
         <type>Picklist</type>
     </fields>
     <fields>
+        <fullName>E2_Risk_percentage__c</fullName>
+        <description>The Risk percentage added on the total capacity .</description>
+        <externalId>false</externalId>
+        <inlineHelpText>The Risk percentage added on the total capacity .</inlineHelpText>
+        <label>Risk percentage</label>
+        <length>12</length>
+        <required>false</required>
+        <trackFeedHistory>false</trackFeedHistory>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
         <fullName>E2_SA__c</fullName>
         <deleteConstraint>SetNull</deleteConstraint>
         <description>Solution Architect</description>
