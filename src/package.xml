@@ -89,6 +89,7 @@
         <members>E2_ExportScopeItemsToCSV</members>
         <members>E2_ExportScopeItemstoXLS</members>
         <members>E2_ManageTemplateDerivedEffort</members>
+        <members>E2_ScopeTree</members>
         <members>E2_SelectDerivedEffortTemplate</members>
         <members>E2_SelectScopeTemplate</members>
         <members>E2_SelectScopeTemplateTmpmgr</members>
@@ -132,6 +133,7 @@
         <members>E2_Derived_Effort_Group__c</members>
         <members>E2_Derived_Effort__c</members>
         <members>E2_Effort__c</members>
+        <members>E2_Estimate_Rate_Card__c</members>
         <members>E2_Favourite_Scope__c</members>
         <members>E2_Scope_Group__c</members>
         <members>E2_Scope__c</members>
@@ -200,8 +202,10 @@
         <members>E2_EditScopeTemplateJS</members>
         <members>E2_Resources</members>
         <members>E2_SLDS1</members>
+        <members>E2_ScopeTreeJS</members>
         <members>E2_SelectDerivedEffortTemplateJS</members>
         <members>E2_SelectScopeTemplateJS</members>
+        <members>E2_TimelineJS</members>
         <members>cloneany</members>
         <members>e2_bootstrapmultiselect</members>
         <name>StaticResource</name>

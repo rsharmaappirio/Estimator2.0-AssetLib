@@ -305,11 +305,11 @@ var Typeahead_input = {
     },
     
     addRowToTable : function(suggestion){
-        var tableRowStr = '<tr id="{asset_id}"><td class="slds-truncate whitespace_normal"><a href="/{asset_id}" target="_blank">{asset_name}</a></td>';
-        tableRowStr += '<td class="slds-truncate whitespace_normal">{description}</td>';
-        //tableRowStr += '<td class="slds-truncate whitespace_normal">{technologies}</td>';
-        tableRowStr += '<td class="slds-truncate whitespace_normal">{reuse_loe}</td>';
-        tableRowStr += '<td class="slds-truncate whitespace_normal">{release_stage}</td>';
+        var tableRowStr = '<tr id="{asset_id}"><td data-label="Asset Name" class="slds-truncate whitespace_normal"><a href="/{asset_id}" target="_blank">{asset_name}</a></td>';
+        tableRowStr += '<td data-label="Short Descripition" class="slds-truncate whitespace_normal">{description}</td>';
+        //tableRowStr += '<td data-label="Technologies" class="slds-truncate whitespace_normal">{technologies}</td>';
+        tableRowStr += '<td data-label="Hours Saved" class="slds-truncate whitespace_normal">{reuse_loe}</td>';
+        tableRowStr += '<td data-label="Release Stage" class="slds-truncate whitespace_normal">{release_stage}</td>';
         tableRowStr += '<td class="slds-cell-shrink" data-label="Actions"><a onclick="Typeahead_input.removeAssetRow(\'{asset_id}\');return false" class="delete_button slds-button--right--float"/></td></tr>';
         
         tableRowStr = tableRowStr.replace(/{asset_id}/gi, suggestion.id)
@@ -433,7 +433,7 @@ $( document ).ready(function() {
     Typeahead_input.load();
     Typeahead_input.retrieveExistingAssets();
     //Question JS
-    AddScopeTree.GenerateTree(scope_sfdc_id);
+    $('#' + AddEditQuestionAnswer.SCOPE_TREE_IFRAME_ID).attr('src', '/apex/E2_ScopeTree?Id='+scope_sfdc_id);
     AddEditQuestionAnswer.bindEvent();
     resetIframeHeight();
     //Question JS
@@ -464,7 +464,14 @@ $( document ).ready(function() {
         	$(this).closest(".effortsColumn").find("div.override-reason").hide();
         }
         resetIframeHeight();
-	});    
+	});
+	
+	$('.Typeahead-input').keydown(function(event){
+        if(event.keyCode == 13){
+            event.preventDefault();
+            return false;
+        }
+    });
 });
 
 var resetIframeHeight = function(){
@@ -720,6 +727,12 @@ var validationQuestionTraverse = function(){
 	});
 }
 var AddEditQuestionAnswer = {
+    SCOPE_TREE_IFRAME_ID : 'scopeTreeIframe',
+    setHeightOfEditScopeModal: function(height) {
+        if ($('#' + AddEditQuestionAnswer.SCOPE_TREE_IFRAME_ID).length) {
+            $('#' + AddEditQuestionAnswer.SCOPE_TREE_IFRAME_ID).css('height', height + 'px');
+        }
+    },
     bindEvent : function() {
         $("[id$=questionText]").on('dblclick', function() {
             var id = $(this).attr('id');
@@ -736,6 +749,7 @@ var AddEditQuestionAnswer = {
             $("#"+answerText).hide();
             $(this).siblings( "#"+questionInput ).show();
             $(this).hide();
+            resetIframeHeight();
         });
     },
     hideQuestionEditDiv : function(id) {
@@ -748,6 +762,7 @@ var AddEditQuestionAnswer = {
         $("#"+id).hide();
         $("#"+answerInput).hide();
         $("#"+answerText).show();
+        resetIframeHeight();
     },
     updateQuestionContent : function(that) {
         var id = $(that).attr('id');
@@ -821,23 +836,23 @@ var AddEditQuestionAnswer = {
     showJSTree : function(that) {
         if($(that).val() == 'Deactivate child scope' || $(that).val() == 'Activate child scope') {
             AddEditQuestionAnswer.answerActionElement = that;
-            AddScopeTree.updateTreeState($(AddEditQuestionAnswer.answerActionElement).next("[id$=bindedScopes]").val());
             CustomAlert.showJSTree();
+            document.getElementById(AddEditQuestionAnswer.SCOPE_TREE_IFRAME_ID).contentWindow.AddScopeTree.updateTreeState($(AddEditQuestionAnswer.answerActionElement).next("[id$=bindedScopes]").val());
         }else {
             var displayAnswerDivId = $(that).attr("displayAnswerDivId");
             $("#"+displayAnswerDivId).hide();
         }
         return false;
     },
-    showJSTreeEdit : function(id) {
+     showJSTreeEdit : function(id) {
         AddEditQuestionAnswer.answerActionElement = $("#"+id).find("select[id$=answerAction]");
-        AddScopeTree.updateTreeState($(AddEditQuestionAnswer.answerActionElement).next("[id$=bindedScopes]").val());
         CustomAlert.showJSTree();
+        document.getElementById(AddEditQuestionAnswer.SCOPE_TREE_IFRAME_ID).contentWindow.AddScopeTree.updateTreeState($(AddEditQuestionAnswer.answerActionElement).next("[id$=bindedScopes]").val());
     },
     hideJSTree : function() {
-        var bindedScopeIds = AddScopeTree.getselectedTreeNode();
+        var bindedScopeIds = document.getElementById(AddEditQuestionAnswer.SCOPE_TREE_IFRAME_ID).contentWindow.AddScopeTree.getselectedTreeNode();
         var scopeNameString = '<span class="slds-float-left" style="font-weight:bold;">Selected scopes : </span>';
-        var selectedScopesNames = AddScopeTree.getselectedTreeNodeNames();
+        var selectedScopesNames = document.getElementById(AddEditQuestionAnswer.SCOPE_TREE_IFRAME_ID).contentWindow.AddScopeTree.getselectedTreeNodeNames();
         var displayAnswerDivId = $(AddEditQuestionAnswer.answerActionElement).attr("displayAnswerDivId");
         if(selectedScopesNames && selectedScopesNames.length) {
             $.each(selectedScopesNames, function(indx, name) {
@@ -871,7 +886,7 @@ var CustomAlert = {
     notifyJSTreeHeadingCSS : '.slds-text-heading--small',
     notifyJSTreeHeading : 'Select child scope',
     showJSTree: function() {
-        if(AddScopeTree.hasChildScope == true) {
+        if(document.getElementById(AddEditQuestionAnswer.SCOPE_TREE_IFRAME_ID).contentWindow.AddScopeTree.hasChildScope == true) {
             $(CustomAlert.notifyEditContainerbackdrop).show().css('height', $(document).outerHeight());
             $(CustomAlert.notifyJSTreeHeadingCSS).html(CustomAlert.notifyJSTreeHeading);
             $(CustomAlert.notifyEditContainer).show();
@@ -908,165 +923,6 @@ var CustomAlert = {
     hide: function() {
         $(CustomAlert.notifyContainerCssSelector).hide();
     }
-}
-// JStree Initiate Conffiguration 
-var jstree_options = {
-    "plugins": ["checkbox"],
-	    'core': {
-		    'check_callback': true,
-			'animation': 200,
-			'themes': {
-			    'name': 'proton',
-				"icons": false,
-				'responsive': true
-			},
-			"multiple": true
-		},
-		"checkbox" : {
-		    "cascade": "",
-		    "three_state": false,
-		    "keep_selected_style" : false
-		}
-};
-// JS to generate/destroy Scope tree on scope click
-var AddScopeTree = {
-    CREATE_NODE: 'create_node',
-	OPEN_NODE: 'open_node',
-	LAST: 'last',
-	addscopenode_call_register: {},
-	addscopepill_register: {},
-	hasChildScope : false,
-	GenerateTree : function(scopeId) {
-	    $(treeId).jstree(jstree_options);
-		AddScopeTree.tree_init(scopeId);
-	},
-	refreshTree : function() {
-	    AddScopeTree.getselectedTreeNode();
-	},
-	create_node: function(node, position) {
-	    node.state = JSON.parse(node.state);
-		// jstree api call to create the tree node.
-		$(treeId).jstree(AddScopeTree.CREATE_NODE, node.parent, node, position);
-	},
-	open_node: function(node) {
-	     // jstree api call to open current node.
-	    $(treeId).jstree(AddScopeTree.OPEN_NODE, node);
-	},
-	tree_init: function(scopeId) {			    	
-	    showSpinner();
-		AddScopeTree.addscopenode_call_register[scopeId] = '#';	    	
-		sforce.apex.execute("E2_Estimator_WS","getChildScopeDetailNodes", {parentId:scopeId}, AddScopeTree.tree_init_callback);
-	},
-	tree_init_callback: {
-	    onSuccess: function(result) {
-		    var haschildren = false; 
-			if(result.length > 0){
-			    AddScopeTree.hasChildScope = true;
-	            var scope_id = result[0].scope_id;
-	            if (result[0].nodeList && result[0].nodeList.length) {
-		            $.each(result[0].nodeList, function(indx, node) {
-		                node.parent = "#";
-		                AddScopeTree.create_node(node, AddScopeTree.LAST);
-		                if (node.hasChildren == true || node.hasChildren == 'true') {
-		                    hasChildren = true;
-		                    AddScopeTree.addscopenode_call_register[node.id] = scope_id;
-		                    AddScopeTree.getScopeChildDetail_Recurring(node.id);
-		                }
-		            });
-			    } else if (result[0].nodeList) {
-			        var node = result[0].nodeList;
-			        node.parent = "#";
-			        AddScopeTree.create_node(node, AddScopeTree.LAST);
-			        if (node.hasChildren == true || node.hasChildren == 'true') {
-			            hasChildren = true;
-			            AddScopeTree.addscopenode_call_register[node.id] = scope_id;
-			            AddScopeTree.getScopeChildDetail_Recurring(node.id);
-			        }
-			     }	  
-		         if (AddScopeTree.addscopenode_call_register && AddScopeTree.addscopenode_call_register[scope_id]) delete AddScopeTree.addscopenode_call_register[scope_id];
-		         if (AddScopeTree.addscopenode_call_register && JSON.stringify(AddScopeTree.addscopenode_call_register) == '{}') {
-		            hideSpinner();
-				 }
-	        } else {
-	            AddScopeTree.hasChildScope = false;
-		        hideSpinner();
-	        }
-        },
-		onFailure: function(error) {
-		    alert(error);
-		}
-	},
-	getScopeChildDetail_Recurring : function(parentId){
-        showSpinner();
-		sforce.apex.execute("E2_Estimator_WS","getChildScopeDetailNodes", {parentId:parentId},AddScopeTree.getScopeChildDetail_callback);
-	},
-	getScopeChildDetail_callback: {
-	    onSuccess: function(result) {
-		    var haschildren = false;
-			if(result.length > 0){
-	            var scope_id = result[0].scope_id;
-	            if (result[0].nodeList && result[0].nodeList.length) {
-			        $.each(result[0].nodeList, function(indx, node) {
-			            AddScopeTree.create_node(node, AddScopeTree.LAST);
-			            if (node.hasChildren == true || node.hasChildren == 'true') {
-			                hasChildren = true;
-			                AddScopeTree.addscopenode_call_register[node.id] = scope_id;
-			                AddScopeTree.getScopeChildDetail_Recurring(node.id);
-			            }
-			        });
-    		    } else if (result[0].nodeList) {
-    			    var node = result[0].nodeList;
-    				AddScopeTree.create_node(node, AddScopeTree.LAST);
-    				if (node.hasChildren == true || node.hasChildren == 'true') {
-    				    hasChildren = true;
-    				    AddScopeTree.addscopenode_call_register[node.id] = scope_id;
-    				    AddScopeTree.getScopeChildDetail_Recurring(node.id);
-    				}
-    			}	  
-    			if (AddScopeTree.addscopenode_call_register && AddScopeTree.addscopenode_call_register[scope_id]) delete AddScopeTree.addscopenode_call_register[scope_id];
-    			if (AddScopeTree.addscopenode_call_register && JSON.stringify(AddScopeTree.addscopenode_call_register) == '{}') {
-    			    hideSpinner();
-    			}
-    		} else {
-			        hideSpinner();
-			}
-        },
-		onFailure: function(error) {
-		    alert(error);
-		}
-	},
-	getselectedTreeNode : function() {
-	    var selectedscopes = [];
-	    var $node = $(treeId).jstree(true).get_node('#');
-		$.each($node.children_d, function(indx, id) {
-		    var $childnode = $(treeId).jstree(true).get_node(id);
-		    if($childnode.state.selected) {
-		        selectedscopes.push($childnode.original.id);
-		     }
-		 });
-		 return selectedscopes;
- 	},
- 	getselectedTreeNodeNames : function() {
-	    var selectedscopes = [];
-	    var $node = $(treeId).jstree(true).get_node('#');
-		$.each($node.children_d, function(indx, id) {
-		    var $childnode = $(treeId).jstree(true).get_node(id);
-		    if($childnode.state.selected) {
-		        selectedscopes.push($childnode.original.title);
-		     }
-		 });
-		 return selectedscopes;
- 	},
-	updateTreeState : function(nodeIds) {
-	    var $node = $(treeId).jstree(true).get_node('#');
-		$.each($node.children_d, function(indx, id) {
-		    if(nodeIds != '' && nodeIds.includes(id)) {
-		        $(treeId).jstree(true).select_node(id);
-		    } else {
-		        $(treeId).jstree(true).deselect_node(id);
-		    }
-	    });
-	}
 }
 
 var EditScope = {

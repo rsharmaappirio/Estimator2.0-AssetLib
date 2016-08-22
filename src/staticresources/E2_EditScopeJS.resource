@@ -333,11 +333,11 @@ var Typeahead_input = {
     },
     
     addRowToTable : function(suggestion){
-        var tableRowStr = '<tr id="{asset_id}"><td class="slds-truncate whitespace_normal"><a href="/{asset_id}" target="_blank">{asset_name}</a></td>';
-        tableRowStr += '<td class="slds-truncate whitespace_normal">{description}</td>';
-        //tableRowStr += '<td class="slds-truncate whitespace_normal">{technologies}</td>';
-        tableRowStr += '<td class="slds-truncate whitespace_normal">{reuse_loe}</td>';
-        tableRowStr += '<td class="slds-truncate whitespace_normal">{release_stage}</td>';
+        var tableRowStr = '<tr id="{asset_id}"><td data-label="Asset Name" class="slds-truncate whitespace_normal"><a href="/{asset_id}" target="_blank">{asset_name}</a></td>';
+        tableRowStr += '<td data-label="Short Descripition" class="slds-truncate whitespace_normal">{description}</td>';
+        //tableRowStr += '<td data-label="Technologies" class="slds-truncate whitespace_normal">{technologies}</td>';
+        tableRowStr += '<td data-label="Hours Saved" class="slds-truncate whitespace_normal">{reuse_loe}</td>';
+        tableRowStr += '<td data-label="Release Stage" class="slds-truncate whitespace_normal">{release_stage}</td>';
         tableRowStr += '<td class="slds-cell-shrink" data-label="Actions"><a onclick="Typeahead_input.removeAssetRow(\'{asset_id}\');return false" class="delete_button slds-button--right--float"/></td></tr>';
         
         tableRowStr = tableRowStr.replace(/{asset_id}/gi, suggestion.id)
@@ -479,11 +479,15 @@ $(document).ready(function() {
     $("input:text, textarea").first().focus();
     
     $('input:text').keydown(function(event){
-    if(event.keyCode == 13 && $(this).attr('id') != 'searchStr_ele') {
-      event.preventDefault();
-      $('.save-button-custom').click();
-      return false;
-    }
+        if(event.keyCode == 13 && $(this).attr('id') != 'searchStr_ele') {
+          event.preventDefault();
+          $('.save-button-custom').click();
+          return false;
+        }
+        else if(event.keyCode == 13 && $(this).attr('id') == 'searchStr_ele'){
+            event.preventDefault();
+            return false;
+        }
     });
     
     //$( window ).resize(function() {

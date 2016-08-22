@@ -1,0 +1,41 @@
+<apex:page standardController="E2_Scope__c" showHeader="false" standardStylesheets="true" sidebar="false" applyHtmlTag="false" applyBodyTag="false">
+    <html xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+      <head>
+        <link type="text/css" rel="stylesheet" href="{!URLFOR($Resource.cloneany, '/slds/styles/salesforce-lightning-design-system-vf.min.css')}" />
+        <link type="text/css" rel="stylesheet" href="{!URLFOR($Resource.cloneany, '/jstree/themes/proton/style.min.css')}" />
+        <apex:includeScript value="{!URLFOR($Resource.cloneany, '/libs/jquery.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.cloneany, '/jstree/jstree.min.js')}" />
+        <apex:includeScript value="../../soap/ajax/36.0/connection.js" />
+        <apex:includeScript value="../../soap/ajax/15.0/apex.js" />
+        <style>
+            .jstree-anchor:focus, .jstree-anchor:hover{
+                outline: none !important;
+                text-decoration: none !important;
+                }
+            .slds body, .slds:not(html) {
+                font-size: 100%!important;
+                line-height : 15px!important;
+            }
+        </style>
+        <script>
+            var treeId = "#relationShipTree";
+            var scope_sfdc_id = '{!E2_Scope__c.Id}';
+            sforce.connection.sessionId='{!GETSESSIONID()}';
+        </script>
+        <apex:includeScript value="{!$Resource.E2_ScopeTreeJS}" />
+        </head>
+        <body>
+        <div class="slds">
+        <div class="slds-form-element" id="relationShipTree"></div>
+        
+        <!-- / FOOTER -->     
+               <div id="loadingSpinner" class="slds-spinner_container" style="display: none !important;">
+                  <div class="slds-spinner--brand slds-spinner slds-spinner--large" aria-hidden="false" role="alert">
+                     <div class="slds-spinner__dot-a"></div>
+                     <div class="slds-spinner__dot-b"></div>
+                  </div>
+               </div>
+               </div>
+               </body>
+               </html>
+</apex:page>

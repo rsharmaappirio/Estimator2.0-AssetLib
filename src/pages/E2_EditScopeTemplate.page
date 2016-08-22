@@ -217,8 +217,8 @@
                   <h2 class="slds-text-heading--small">Save Hierarchy</h2>
                </div>
               <div class="slds-modal__content">
-                  <div class="slds-form-element paddingleft20" id="relationShipTree"></div>
-              </div>
+                  <iframe class="slds-card" scrolling="no" id="scopeTreeIframe" src="about:blank" frameborder="0" style="width:100%;"/>
+                  </div>
               <div class="slds-modal__footer">
                 <button class="slds-button slds-button--neutral" onclick="return AddEditQuestionAnswer.hideJSTree();">Done</button>
               </div>
