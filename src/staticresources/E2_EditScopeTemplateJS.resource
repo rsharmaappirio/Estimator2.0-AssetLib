@@ -432,11 +432,17 @@ $( document ).ready(function() {
     bindSliders();
     Typeahead_input.load();
     Typeahead_input.retrieveExistingAssets();
+    //Question JS
+    AddScopeTree.GenerateTree(scope_sfdc_id);
+    AddEditQuestionAnswer.bindEvent();
+    resetIframeHeight();
+    //Question JS
     hideSpinner();
     
     if(msg.toLowerCase() == 'success'){
        parent&&parent.AddEditScope&&parent.AddEditScope.closeEditScopeModelPopup&&parent.AddEditScope.closeEditScopeModelPopup();
        if($("input[id$='dmlMessage']").length) $("input[id$='dmlMessage']").val('Fail');
+       parent&&parent.AddEditScope&&parent.AddEditScope.updateChildScopeOnParentScopeEdit&&parent.AddEditScope.updateChildScopeOnParentScopeEdit(scope_sfdc_id, changeComplexity, scopeToActivate, scopeToDeactivate);
        parent&&parent.AddEditScope&&parent.AddEditScope.showSaveSuccessMessage&&parent.AddEditScope.showSaveSuccessMessage(scope_sfdc_id, scope_sfdc_name);
        resetIframeHeight();
     }else{     
@@ -681,4 +687,427 @@ var toggleActions = function(jqObj, slide){
     
     //jqObj.closest('tr').prev('tr').find('input.reloadbtn').click();
     
+}
+// Question 
+var returnQVal
+var validateDataQuestion = function(){
+  returnQVal = true;
+  $(document.body).find('div#QuestionanswerDiv').each(validationQuestionTraverse);
+  return returnQVal;
+}
+var validationQuestionTraverse = function(){
+    
+    $(this).find('div.slds-col--padded').each(function(){
+        if($(this).find('div.is-required').length > 0){             
+		    $(this).find('div.is-required').removeClass('slds-has-error');
+			$(this).find('div.is-required').find('div.slds-form-element__help').hide();
+			if($(this).find('div.is-required input.slds-input').length > 0 && $(this).find('div.is-required input.slds-input').val() == ''){
+			    $(this).find('div.is-required').addClass('slds-has-error');
+				$(this).find('div.is-required').find('div.slds-form-element__help').show();
+				returnQVal = false;   
+			}   
+			if($(this).find('div.is-required select').length > 0 && $(this).find('div.is-required select').val() == ''){
+			    $(this).find('div.is-required').addClass('slds-has-error');
+				$(this).find('div.is-required').find('div.slds-form-element__help').show();
+				returnQVal = false;   
+			}
+			if($(this).find('div.is-required textarea.slds-textarea').length > 0 && $(this).find('div.is-required textarea.slds-textarea').val() == ''){
+			    $(this).find('div.is-required').addClass('slds-has-error');
+				$(this).find('div.is-required').find('div.slds-form-element__help').show();
+				returnQVal = false;   
+			}           
+		}   
+	});
+}
+var AddEditQuestionAnswer = {
+    bindEvent : function() {
+        $("[id$=questionText]").on('dblclick', function() {
+            var id = $(this).attr('id');
+            var questionInput = id.replace('questionText', 'questionInput');
+            var answerText = id.replace('questionText', 'answerText');
+            var answerInput = questionInput.replace('questionInput', 'answerInput');
+                $(document).find("[id$=answerInput]").not("#"+answerInput).not("#answerInput").hide();
+                $(document).find("[id$=answerText]").not("#"+answerText).not("#answerText").show();
+                $(document).find("[id$=questionInput]").not("#"+questionInput).not("#questionInput").hide();
+                $(document).find("[id$=questionText]").not(this).not("#questionText").show("fast", function() {
+                    AddEditQuestionAnswer.updateQuestionContent(this);
+                });
+            $("#"+answerInput).show();
+            $("#"+answerText).hide();
+            $(this).siblings( "#"+questionInput ).show();
+            $(this).hide();
+        });
+    },
+    hideQuestionEditDiv : function(id) {
+        var questionText = id.replace('questionInput', 'questionText');
+        var that = "#"+questionText;
+        var answerText = questionText.replace('questionText', 'answerText');
+        var answerInput = id.replace('questionInput', 'answerInput');
+        AddEditQuestionAnswer.updateQuestionContent(that);
+        $(that).show();
+        $("#"+id).hide();
+        $("#"+answerInput).hide();
+        $("#"+answerText).show();
+    },
+    updateQuestionContent : function(that) {
+        var id = $(that).attr('id');
+        var questionInput = id.replace('questionText', 'questionInput');
+        var answerText = id.replace('questionText', 'answerText');
+        var answerInput = questionInput.replace('questionInput', 'answerInput');
+        var questionUpdatedValue = $("#"+questionInput).find("input[id$=questionValue]").val();
+        $(that).html("Q "+questionUpdatedValue);
+        $("#"+answerInput).find("[id$=answerEditDiv]").each(function(answerText){
+            var action = $(this).find("select[id$=answerAction]").val();
+            var value = $(this).find("input[id$=answerValue]").val();
+            var loe = $(this).find("input[id$=answerLOE]").val();
+            var answerId = $(this).attr('id').replace('answerEditDiv', '');
+            $("#"+answerId).attr( "action", action );
+            $("#"+answerId).attr( "loe", loe );
+            $("#"+answerId+'Text').html( value );
+        });
+    },
+    showEditQuestionRow : function(id) {
+        $("tr#"+id).each(function() {
+            if($(this).hasClass( "table-row-display" ))
+                $(this).removeClass('table-row-display');
+            else
+                $(this).addClass('table-row-display');
+        });
+        resetIframeHeight();
+        return false;
+    },
+    checkSelectedQuestionType : function(that) {
+        $(that).next().click();
+        return false;
+    },
+    showActionAlert : function(element) {
+        var elementTag;
+        if($(element).is("select")) {
+            elementTag = $('option:selected', element);
+        } else if(($(element).is(":radio") || $(element).is(":checkbox"))) {
+            elementTag = $(element);
+        }
+        if(elementTag) { 
+            var questionid = elementTag.attr('questionid');
+            var action = elementTag.attr('action');
+            var value = elementTag.attr('value');
+            var loe = elementTag.attr('loe');
+             if(action != '' && (($(element).is(":radio") || $(element).is(":checkbox")) && $(element).is(":checked"))) {
+                CustomAlert.show('Selected answer will perform following action : '+action);
+                if(action == 'Change Complexity to Low') {
+                    $('select.scope-complexity').val('Low');
+                }else if(action == 'Change Complexity to Medium') {
+                    $('select.scope-complexity').val('Medium');
+                }else if(action == 'Change Complexity to High') {
+                    $('select.scope-complexity').val('High');
+                }
+            }
+            var  selectedAnswers = [];
+            if($(element).is(":checkbox")) {
+                var name = $(element).attr('name');
+                $("input[name="+name+"]").each(function() {
+                    if($(this).is(":checked"))
+                        selectedAnswers.push($(this).attr('value'));
+                });
+            }else {
+                if(!$(element).is(":radio") || $(element).is(":checked")) {
+                    selectedAnswers.push(value);
+                }
+            }
+            $('#'+questionid+'answerText').find("input[id$=selectedAnswer]").val(selectedAnswers.toString());
+        }
+    },
+    answerActionElement : null,
+    showJSTree : function(that) {
+        if($(that).val() == 'Deactivate child scope' || $(that).val() == 'Activate child scope') {
+            AddEditQuestionAnswer.answerActionElement = that;
+            AddScopeTree.updateTreeState($(AddEditQuestionAnswer.answerActionElement).next("[id$=bindedScopes]").val());
+            CustomAlert.showJSTree();
+        }else {
+            var displayAnswerDivId = $(that).attr("displayAnswerDivId");
+            $("#"+displayAnswerDivId).hide();
+        }
+        return false;
+    },
+    showJSTreeEdit : function(id) {
+        AddEditQuestionAnswer.answerActionElement = $("#"+id).find("select[id$=answerAction]");
+        AddScopeTree.updateTreeState($(AddEditQuestionAnswer.answerActionElement).next("[id$=bindedScopes]").val());
+        CustomAlert.showJSTree();
+    },
+    hideJSTree : function() {
+        var bindedScopeIds = AddScopeTree.getselectedTreeNode();
+        var scopeNameString = '<span class="slds-float-left" style="font-weight:bold;">Selected scopes : </span>';
+        var selectedScopesNames = AddScopeTree.getselectedTreeNodeNames();
+        var displayAnswerDivId = $(AddEditQuestionAnswer.answerActionElement).attr("displayAnswerDivId");
+        if(selectedScopesNames && selectedScopesNames.length) {
+            $.each(selectedScopesNames, function(indx, name) {
+                scopeNameString += '<span class="slds-badge slds-theme--default slds-float-left slds-custom-badge-background-grey" style="font-weight:bold;">'+name+'</span>';
+            });
+        }else if(selectedScopesNames) {
+            scopeNameString += '<span class="slds-badge slds-theme--default slds-float-left slds-custom-badge-background-grey" style="font-weight:bold;">'+selectedScopesNames+'</span>';
+        }
+        var id = displayAnswerDivId.replace('ActionScopes', 'answerEditDiv');
+         scopeNameString += '<a class="edit-button1 slds-button--right--float" href="javascript:void(0);" onclick="AddEditQuestionAnswer.showJSTreeEdit(\''+id+'\');"> </a>';
+        
+        $("#"+displayAnswerDivId).html(scopeNameString);
+        if(selectedScopesNames) {
+            $("#"+displayAnswerDivId).show();
+        }else {
+            $("#"+displayAnswerDivId).hide();
+        }
+        $(AddEditQuestionAnswer.answerActionElement).next("[id$=bindedScopes]").val(bindedScopeIds);
+        console.log($(AddEditQuestionAnswer.answerActionElement).next("[id$=bindedScopes]").val());
+        CustomAlert.hideJSTree();
+        return false;
+    }
+}
+var CustomAlert = {
+    notifyContainerCssSelector: '.slds-notify_container',
+    notifyCloseCssSelector: '.slds-notify__close',
+    notifyMsgCssSelector: '.slds-text-heading--small',
+    notifyTypeCssDiv: '#sldsalertdiv',
+    notifyEditContainer: '.slds-edit-alert',
+    notifyEditContainerbackdrop: '.slds-edit-alert-backdrop',
+    notifyJSTreeHeadingCSS : '.slds-text-heading--small',
+    notifyJSTreeHeading : 'Select child scope',
+    showJSTree: function() {
+        if(AddScopeTree.hasChildScope == true) {
+            $(CustomAlert.notifyEditContainerbackdrop).show().css('height', $(document).outerHeight());
+            $(CustomAlert.notifyJSTreeHeadingCSS).html(CustomAlert.notifyJSTreeHeading);
+            $(CustomAlert.notifyEditContainer).show();
+        } else {
+            CustomAlert.show('No child scope under current scope hierarchy');
+        }
+    },
+    hideJSTree: function() {
+        $(CustomAlert.notifyEditContainer).hide();
+        $(CustomAlert.notifyEditContainerbackdrop).hide();
+    },
+    show: function(msg) {
+        $(CustomAlert.notifyContainerCssSelector).css({
+            position: 'absolute !important',
+            'opacity': '100',
+            'display': 'block'
+        });
+        $(CustomAlert.notifyTypeCssDiv).removeClass("slds-theme--error");
+        $(CustomAlert.notifyTypeCssDiv).addClass("slds-theme--success");
+        $(CustomAlert.notifyContainerCssSelector).find(CustomAlert.notifyMsgCssSelector).text(msg);
+        $(CustomAlert.notifyContainerCssSelector).find(CustomAlert.notifyCloseCssSelector).unbind("click");
+        $(CustomAlert.notifyContainerCssSelector).find(CustomAlert.notifyCloseCssSelector).bind("click", function() {
+            $(CustomAlert.notifyContainerCssSelector).stop(true, true).fadeTo().slideUp();
+            return false;
+        });
+        window.setTimeout(function() {
+            if ($(CustomAlert.notifyContainerCssSelector).is(":visible")) {
+                $(CustomAlert.notifyContainerCssSelector).fadeTo(500, 0).slideUp(500, function() {
+                    $(this).hide();
+                });
+            }
+        }, 2000);
+    },
+    hide: function() {
+        $(CustomAlert.notifyContainerCssSelector).hide();
+    }
+}
+// JStree Initiate Conffiguration 
+var jstree_options = {
+    "plugins": ["checkbox"],
+	    'core': {
+		    'check_callback': true,
+			'animation': 200,
+			'themes': {
+			    'name': 'proton',
+				"icons": false,
+				'responsive': true
+			},
+			"multiple": true
+		},
+		"checkbox" : {
+		    "cascade": "",
+		    "three_state": false,
+		    "keep_selected_style" : false
+		}
+};
+// JS to generate/destroy Scope tree on scope click
+var AddScopeTree = {
+    CREATE_NODE: 'create_node',
+	OPEN_NODE: 'open_node',
+	LAST: 'last',
+	addscopenode_call_register: {},
+	addscopepill_register: {},
+	hasChildScope : false,
+	GenerateTree : function(scopeId) {
+	    $(treeId).jstree(jstree_options);
+		AddScopeTree.tree_init(scopeId);
+	},
+	refreshTree : function() {
+	    AddScopeTree.getselectedTreeNode();
+	},
+	create_node: function(node, position) {
+	    node.state = JSON.parse(node.state);
+		// jstree api call to create the tree node.
+		$(treeId).jstree(AddScopeTree.CREATE_NODE, node.parent, node, position);
+	},
+	open_node: function(node) {
+	     // jstree api call to open current node.
+	    $(treeId).jstree(AddScopeTree.OPEN_NODE, node);
+	},
+	tree_init: function(scopeId) {			    	
+	    showSpinner();
+		AddScopeTree.addscopenode_call_register[scopeId] = '#';	    	
+		sforce.apex.execute("E2_Estimator_WS","getChildScopeDetailNodes", {parentId:scopeId}, AddScopeTree.tree_init_callback);
+	},
+	tree_init_callback: {
+	    onSuccess: function(result) {
+		    var haschildren = false; 
+			if(result.length > 0){
+			    AddScopeTree.hasChildScope = true;
+	            var scope_id = result[0].scope_id;
+	            if (result[0].nodeList && result[0].nodeList.length) {
+		            $.each(result[0].nodeList, function(indx, node) {
+		                node.parent = "#";
+		                AddScopeTree.create_node(node, AddScopeTree.LAST);
+		                if (node.hasChildren == true || node.hasChildren == 'true') {
+		                    hasChildren = true;
+		                    AddScopeTree.addscopenode_call_register[node.id] = scope_id;
+		                    AddScopeTree.getScopeChildDetail_Recurring(node.id);
+		                }
+		            });
+			    } else if (result[0].nodeList) {
+			        var node = result[0].nodeList;
+			        node.parent = "#";
+			        AddScopeTree.create_node(node, AddScopeTree.LAST);
+			        if (node.hasChildren == true || node.hasChildren == 'true') {
+			            hasChildren = true;
+			            AddScopeTree.addscopenode_call_register[node.id] = scope_id;
+			            AddScopeTree.getScopeChildDetail_Recurring(node.id);
+			        }
+			     }	  
+		         if (AddScopeTree.addscopenode_call_register && AddScopeTree.addscopenode_call_register[scope_id]) delete AddScopeTree.addscopenode_call_register[scope_id];
+		         if (AddScopeTree.addscopenode_call_register && JSON.stringify(AddScopeTree.addscopenode_call_register) == '{}') {
+		            hideSpinner();
+				 }
+	        } else {
+	            AddScopeTree.hasChildScope = false;
+		        hideSpinner();
+	        }
+        },
+		onFailure: function(error) {
+		    alert(error);
+		}
+	},
+	getScopeChildDetail_Recurring : function(parentId){
+        showSpinner();
+		sforce.apex.execute("E2_Estimator_WS","getChildScopeDetailNodes", {parentId:parentId},AddScopeTree.getScopeChildDetail_callback);
+	},
+	getScopeChildDetail_callback: {
+	    onSuccess: function(result) {
+		    var haschildren = false;
+			if(result.length > 0){
+	            var scope_id = result[0].scope_id;
+	            if (result[0].nodeList && result[0].nodeList.length) {
+			        $.each(result[0].nodeList, function(indx, node) {
+			            AddScopeTree.create_node(node, AddScopeTree.LAST);
+			            if (node.hasChildren == true || node.hasChildren == 'true') {
+			                hasChildren = true;
+			                AddScopeTree.addscopenode_call_register[node.id] = scope_id;
+			                AddScopeTree.getScopeChildDetail_Recurring(node.id);
+			            }
+			        });
+    		    } else if (result[0].nodeList) {
+    			    var node = result[0].nodeList;
+    				AddScopeTree.create_node(node, AddScopeTree.LAST);
+    				if (node.hasChildren == true || node.hasChildren == 'true') {
+    				    hasChildren = true;
+    				    AddScopeTree.addscopenode_call_register[node.id] = scope_id;
+    				    AddScopeTree.getScopeChildDetail_Recurring(node.id);
+    				}
+    			}	  
+    			if (AddScopeTree.addscopenode_call_register && AddScopeTree.addscopenode_call_register[scope_id]) delete AddScopeTree.addscopenode_call_register[scope_id];
+    			if (AddScopeTree.addscopenode_call_register && JSON.stringify(AddScopeTree.addscopenode_call_register) == '{}') {
+    			    hideSpinner();
+    			}
+    		} else {
+			        hideSpinner();
+			}
+        },
+		onFailure: function(error) {
+		    alert(error);
+		}
+	},
+	getselectedTreeNode : function() {
+	    var selectedscopes = [];
+	    var $node = $(treeId).jstree(true).get_node('#');
+		$.each($node.children_d, function(indx, id) {
+		    var $childnode = $(treeId).jstree(true).get_node(id);
+		    if($childnode.state.selected) {
+		        selectedscopes.push($childnode.original.id);
+		     }
+		 });
+		 return selectedscopes;
+ 	},
+ 	getselectedTreeNodeNames : function() {
+	    var selectedscopes = [];
+	    var $node = $(treeId).jstree(true).get_node('#');
+		$.each($node.children_d, function(indx, id) {
+		    var $childnode = $(treeId).jstree(true).get_node(id);
+		    if($childnode.state.selected) {
+		        selectedscopes.push($childnode.original.title);
+		     }
+		 });
+		 return selectedscopes;
+ 	},
+	updateTreeState : function(nodeIds) {
+	    var $node = $(treeId).jstree(true).get_node('#');
+		$.each($node.children_d, function(indx, id) {
+		    if(nodeIds != '' && nodeIds.includes(id)) {
+		        $(treeId).jstree(true).select_node(id);
+		    } else {
+		        $(treeId).jstree(true).deselect_node(id);
+		    }
+	    });
+	}
+}
+
+var EditScope = {
+    ADD_BULK_EFFORTS_FRAME_ID : 'bulkEffortIframe',
+    
+    addEfforts: function() {
+        var func = document.getElementById(EditScope.ADD_BULK_EFFORTS_FRAME_ID).contentWindow.prepareJson;
+        if (typeof func != 'undefined') {
+            func();
+        }
+    },
+    
+    updateAddEffortsJson: function(jsonStr){
+        $("input[Id$='effortsJson']").val(jsonStr);
+        addBulkEfforts();
+        EditScope.hideAddBulkEffortsModal();
+    },
+    
+    addBulkEfforts_click : function(obj){
+        EditScope.showAddBulkEffortsModal();
+        return false;
+    },
+    
+    showAddBulkEffortsModal : function(){
+        $('#helpModal').show();
+        $('#helpModal').find('#' + EditScope.ADD_BULK_EFFORTS_FRAME_ID).attr('src', '/apex/E2_AddBulkEfforts');
+        $('#helpModal').find('#' + EditScope.ADD_BULK_EFFORTS_FRAME_ID).closest('div.slds-modal__content').scrollTop(0);
+        $('#helpBackdrop').css({'height' : $(window.document).height()});
+        $('#helpBackdrop').show();
+    },
+    
+    hideAddBulkEffortsModal: function() {
+        $('#helpModal').hide();
+        $('#helpModal').find('#' + EditScope.ADD_BULK_EFFORTS_FRAME_ID).attr('src', 'about:blank');
+        $('#helpModal').find('#' + EditScope.ADD_BULK_EFFORTS_FRAME_ID).closest('div.slds-modal__content').scrollTop(0);
+        $('#helpBackdrop').hide();
+    },
+    
+    setHeightOfAddNewModal: function(height) {
+        if ($('#' + EditScope.ADD_BULK_EFFORTS_FRAME_ID).length) {
+            $('#' + EditScope.ADD_BULK_EFFORTS_FRAME_ID).css('height', height + 'px');
+        }
+    }
 }

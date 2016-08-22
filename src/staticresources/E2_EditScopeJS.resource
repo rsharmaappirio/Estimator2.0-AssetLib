@@ -239,7 +239,7 @@ var Typeahead_input = {
         {
             name: 'assets',
             displayKey: 'name',
-            limit: 10,
+            //limit: 20,
             source: function(query, syncResults, asyncResults){
                 Typeahead_input.searchKey = query;
                 var selectedAssets = Typeahead_input.getAlreadyAddedAssetsIds();
@@ -459,6 +459,8 @@ $(document).ready(function() {
     ck_custom_editor.load();
     // save warning initiation
     TrackScopeUpdates.load();
+    
+    //$('.Typeahead-input').val(scope_sfdc_name);
     Typeahead_input.load();
     Typeahead_input.retrieveExistingAssets();
     bindSliders();

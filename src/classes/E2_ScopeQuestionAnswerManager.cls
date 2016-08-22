@@ -33,8 +33,6 @@ public with sharing class E2_ScopeQuestionAnswerManager {
         map<string,List<E2_Answer__c>> answerToUpsert = new map<string,List<E2_Answer__c>>();
         List<E2_Answer__c> answerToDelete = new List<E2_Answer__c>();
         map<E2_Answer__c, string> answerScopeMap = new map<E2_Answer__c, string>();
-        //set<string> scopeIdsToDeactivate = new set<string>();
-        //set<string> scopeIdsToActivate = new set<string>();
         Savepoint sp = Database.setSavepoint();
         
         integer questionindex = 1;
@@ -51,14 +49,12 @@ public with sharing class E2_ScopeQuestionAnswerManager {
                 if(question.e2question.Id == NULL) {
                     string mapKey = questionindex+question.e2question.Question_Text__c;
                     updateQuestionUpsertList(questionToUpsert, answerToUpsert, answerToDelete,
-                                             answerScopeMap, question,/* scopeIdsToDeactivate,
-                                             scopeIdsToActivate,*/ mapKey);
+                                             answerScopeMap, question, mapKey);
                     questionindex++;
                 } else {
                     string mapKey = question.e2question.Id;
                     updateQuestionUpsertList(questionToUpsert, answerToUpsert, answerToDelete,
-                                             answerScopeMap, question,/* scopeIdsToDeactivate,
-                                             scopeIdsToActivate,*/ mapKey);
+                                             answerScopeMap, question, mapKey);
                 }
             }
         }
@@ -90,10 +86,11 @@ public with sharing class E2_ScopeQuestionAnswerManager {
                 }
                 upsert e2Answers;
                 set<Id> answersId = new set<Id>();
+                //system.assertEquals(answerScopeMap,NULL);
                 list<E2_Action_Scope__c> answerScopes = new list<E2_Action_Scope__c>();
-                for(E2_Answer__c answer : e2Answers) {
-                	answersId.add(answer.Id);
-                	if(answerScopeMap.containsKey(answer)) {
+                for(E2_Answer__c answer : answerScopeMap.keySet()) {
+                	if(answer.Id != NULL) {
+                		answersId.add(answer.Id);
                 		for(String scopeId : answerScopeMap.get(answer).split(E2_Constants.COMMA)) {
                 			answerScopes.add(new E2_Action_Scope__c(Answer__c = answer.Id,
                 									Scope__c = scopeId,
@@ -101,8 +98,14 @@ public with sharing class E2_ScopeQuestionAnswerManager {
                 		}
                 	}
                 }
-                delete E2_DataUtil.getRelatedScopes(answersId);
-                insert answerScopes;
+                if(!answersId.isEmpty()) { 
+                	list<E2_Action_Scope__c> relatedScopes = E2_DataUtil.getRelatedScopes(answersId);
+                	if(!relatedScopes.isEmpty())
+                		delete relatedScopes;
+                }
+                if(!answerScopes.isEmpty())
+                	insert answerScopes;
+                
             }
         }catch(Exception ex){
             Database.rollback(sp);
@@ -123,8 +126,7 @@ public with sharing class E2_ScopeQuestionAnswerManager {
                                             map<string,List<E2_Answer__c>> answerToUpsert,
                                             List<E2_Answer__c> answerToDelete,
                                             map<E2_Answer__c,string> answerScopeMap,
-                                            Question question,/* set<string> scopeIdsToDeactivate,
-                                            set<string> scopeIdsToActivate,*/ string mapKey) {
+                                            Question question, string mapKey) {
         questionToUpsert.put(mapKey, question.e2question);
         for(Answer answer : question.e2answers) {                       
             if(!answer.isDeleted) {
@@ -134,22 +136,6 @@ public with sharing class E2_ScopeQuestionAnswerManager {
 	                } else {
 	                	answer.e2answer.Is_Selected__c = false;
 	                }
-                    /*if(answer.e2answer.Is_Selected__c != answer.isSelected
-                    	&& !string.isBlank(answer.bindedScopes)) {
-                    	if(answer.e2answer.Action__c =='Deactivate child scope'
-                    	   || (answer.e2answer.Action__c =='Activate child scope' && 
-                    	   	   !answer.e2answer.Is_Selected__c)) {
-                    		for(string scopeid : answer.bindedScopes.split(E2_Constants.COMMA)) {
-                    			scopeIdsToDeactivate.add(scopeid);
-                    		}
-                    	} else if(answer.e2answer.Action__c =='Activate child scope' 
-                    			  || (answer.e2answer.Action__c =='Deactivate child scope' && 
-                    	   	   		  !answer.e2answer.Is_Selected__c)) {
-                    		for(string scopeid : answer.bindedScopes.split(E2_Constants.COMMA)) {
-                    			scopeIdsToActivate.add(scopeid);
-                    		}
-                    	}
-	                }*/
 	                if(answer.e2answer.Is_Selected__c != answer.isSelected 
 	                	&& answer.e2answer.Is_Selected__c) {
 	                	if(answer.e2answer.Action__c =='Change Complexity to Low') {
@@ -161,13 +147,13 @@ public with sharing class E2_ScopeQuestionAnswerManager {
 	                	}else if(answer.e2answer.Action__c =='Activate child scope' 
 	                		&& !string.isBlank(answer.bindedScopes)) {
 	                		for(string scopeid : answer.bindedScopes.split(E2_Constants.COMMA)) {
-	                			scopeToActivate = (!string.isBlank(scopeToActivate) ? E2_Constants.COMMA : E2_Constants.BLANK) +
+	                			this.scopeToActivate += (!string.isBlank(this.scopeToActivate) ? E2_Constants.COMMA : E2_Constants.BLANK) +
 	                							  scopeid;
 	                		}
 	                	}else if(answer.e2answer.Action__c =='Deactivate child scope' 
 	                		&& !string.isBlank(answer.bindedScopes)) {
 	                		for(string scopeid : answer.bindedScopes.split(E2_Constants.COMMA)) {
-	                			scopeToDeactivate = (!string.isBlank(scopeToDeactivate) ? E2_Constants.COMMA : E2_Constants.BLANK) +
+	                			this.scopeToDeactivate += (!string.isBlank(this.scopeToDeactivate) ? E2_Constants.COMMA : E2_Constants.BLANK) +
 	                							  scopeid;
 	                		}
 	                	}
@@ -207,6 +193,7 @@ public with sharing class E2_ScopeQuestionAnswerManager {
         if(!answermap.isEmpty()) {
         	for(E2_Action_Scope__c actionScopes : E2_DataUtil.getRelatedScopes(answermap.KeySet())) {
         		Answer answer = answermap.get(actionScopes.Answer__c);
+        		answer.bindedActionScopes.add(actionScopes);
         		if(answer.bindedScopes.length() >=15) {
         			answer.bindedScopes = answer.bindedScopes+E2_Constants.COMMA+actionScopes.Scope__c;
         		}else {
@@ -307,6 +294,7 @@ public with sharing class E2_ScopeQuestionAnswerManager {
         public boolean isEdit{get;set;}
         public String key{get;set;}
         public boolean isSelected{get;set;}
+        public list<E2_Action_Scope__c> bindedActionScopes{get;set;}
         public string bindedScopes{get;set;}
         public string originalBindedScopes{get;set;}
         public E2_Answer__c e2answer{get;set;}
@@ -317,6 +305,7 @@ public with sharing class E2_ScopeQuestionAnswerManager {
             this.isEdit = false;
             this.bindedScopes = E2_constants.BLANK;
             this.originalBindedScopes = E2_constants.BLANK;
+            this.bindedActionScopes = new list<E2_Action_Scope__c>();
             if(e2answer.Source_Answer__c <> NULL){
                 this.isCloned = true;           
             }

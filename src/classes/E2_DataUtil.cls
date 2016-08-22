@@ -184,7 +184,7 @@ public class E2_DataUtil {
   }
   
   public static List<E2_Action_Scope__c> getRelatedScopes(set<Id> answers) {
-  	return [SELECT Id, Answer__c, Scope__c, Unique_Key__c 
+  	return [SELECT Id, Answer__c, Scope__c, Scope__r.Id, Scope__r.Name, Unique_Key__c 
   			FROM E2_Action_Scope__c
   			WHERE Answer__c IN: answers];
   }

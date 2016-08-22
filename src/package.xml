@@ -15,7 +15,10 @@
         <members>E2_AddNewScopeControllerTest</members>
         <members>E2_AddNewScopeTemplateController</members>
         <members>E2_AddNewScopeTemplateControllerTest</members>
+        <members>E2_BatchCreateFavoriteScope</members>
+        <members>E2_BatchCreateFavoriteScopeTest</members>
         <members>E2_BatchUpdateUltimateParentScope</members>
+        <members>E2_BatchUpdateUltimateParentScopeTest</members>
         <members>E2_CapacityController</members>
         <members>E2_CapacityControllerTest</members>
         <members>E2_Constants</members>
@@ -58,10 +61,12 @@
         <members>E2_SelectScopeTemplateController</members>
         <members>E2_SelectScopeTemplateControllerTest</members>
         <members>E2_Test_Utils</members>
+        <members>E2_TimelineController</members>
         <members>E2_TreeNode</members>
         <members>E2_TreeNodeMap</members>
         <members>E2_TreeNodeMapTest</members>
         <members>E2_TreeNodeTest</members>
+        <members>RS_EditScopeTemplateController</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -88,6 +93,7 @@
         <members>E2_SelectScopeTemplate</members>
         <members>E2_SelectScopeTemplateTmpmgr</members>
         <members>E2_Template</members>
+        <members>E2_Timeline</members>
         <name>ApexPage</name>
     </types>
     <types>

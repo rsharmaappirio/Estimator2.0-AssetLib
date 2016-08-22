@@ -19,6 +19,10 @@ public with sharing class E2_EditScopeTemplateController {
     public string assetsRecsJson {get;set;}
 	public boolean showFavForSTMPermissionSet {get;set;}
 	
+	public E2_ScopeQuestionAnswerManager scopeQuestionManager{get;set;}
+	
+	public string effortsJson {get;set;}
+	
     public E2_EditScopeTemplateController(ApexPages.StandardController std) {
        // constructor for the page tied to standard controller  
        this.scope = (E2_Scope__c)std.getRecord();
@@ -28,6 +32,8 @@ public with sharing class E2_EditScopeTemplateController {
        
        assetsRecsJson = '';
        showFavForSTMPermissionSet = true;
+       scopeQuestionManager = new E2_ScopeQuestionAnswerManager();
+       effortsJson = '';
     }
 
     public PageReference pageAction(){
@@ -38,6 +44,7 @@ public with sharing class E2_EditScopeTemplateController {
             ApexPages.addMessage(msg); 
             return null;            
         }else{
+        	scopeQuestionManager.scope = this.scope;
             populateViewRecords();
         }
         
@@ -155,6 +162,7 @@ public with sharing class E2_EditScopeTemplateController {
         }
         this.dmlOperationMessage = E2_Constants.DML_OPERATION_MESSAGE_SUCCESS;
         string errorMessage = E2_Constants.BLANK;
+        scopeQuestionManager.saveQuestion(errorMessage, this.dmlOperationMessage);
         if(!string.isBlank(errorMessage)) {
         	msg = new ApexPages.Message(ApexPages.Severity.ERROR, errorMessage);
             ApexPages.addMessage(msg);
@@ -180,16 +188,38 @@ public with sharing class E2_EditScopeTemplateController {
     
     }
     
+    public pagereference addNewQuestion() {
+    	return scopeQuestionManager.addNewQuestion();
+    }
+    
     public void populateViewRecords(){
         Id scopeId = this.scope.id;        
         for(E2_Scope__c scope : E2_DataUtil.getScopeAndChildrenOnScopeIdForEditScope(scopeId)){                
                this.childScopes.add(new Scope(scope, scope.Efforts__r));
         }
+        scopeQuestionManager.retriveScopeQuestion();
     }
     
     public List<E2_Effort__c> getEffortsInstanceList(){
         List<E2_Effort__c> efforts = new List<E2_Effort__c>();        
         return efforts;
+    }
+    
+    public PageReference addBulkEfforts(){
+        if(effortsJson != null && effortsJson.length() > 0){
+            List<E2_EffortsWrapper> lstEffortsWrapper = (List<E2_EffortsWrapper>)JSON.deserialize(effortsJson, List<E2_EffortsWrapper>.class);
+            for(E2_EffortsWrapper effortWrapper : lstEffortsWrapper){
+                if(effortWrapper.hours > 0){
+                    childScopes[0].efforts.add(new Effort(new E2_Effort__c(Complexity_Factor_High__c = 0, 
+                                                                           Complexity_Factor_Low__c = 0, 
+                                                                           Effort_Hrs__c = effortWrapper.hours,
+                                                                           Name = effortWrapper.phaseName + '-' + effortWrapper.roleName,
+                                                                           Phase__c = effortWrapper.phaseName,
+                                                                           Resource_Role__c = effortWrapper.roleName)));
+                }    
+            }
+        }
+        return null;
     }
     
     public class Scope{

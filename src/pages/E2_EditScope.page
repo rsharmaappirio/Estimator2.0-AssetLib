@@ -312,7 +312,7 @@
                                             <span class="dot {!If(ISBLANK(childScopes[0].scope.Scope_Flag__c), 'dot-active', '')}" title=""><span class="dot-inner"></span></span>
                                             </span>
                                             <span style="padding-top:6px;">
-                                        <span class="slds-change-notification">You have unsaved item.</span>
+                                                  <span class="slds-change-notification">You have unsaved item.</span>
                                             </span>
                                         </div>
                                     </div>
@@ -649,7 +649,13 @@
                 <!-- FOOTER -->
                 <div>
                     <div class="slds-modal__footer page-footer">
-
+                             <div class="slds-col slds-no-flex slds-align-bottom">
+                                <div class="" role="group">
+                                    <!--button class="slds-button slds-button--neutral" onclick="return false;">Help</button-->
+                                    <apex:commandButton onclick="parent&&parent.AddEditScope&&parent.AddEditScope.reload_frame('/apex/E2_EditScope?estimate_id={!estimateId}&id={!scope.id}', window.name);return false;" styleClass="slds-button slds-button--neutral" title="Cancel" value="Cancel" />
+                                    <apex:commandButton onclick="return addUpdateScopes();" styleClass="slds-button slds-button--neutral slds-button--brand save-button-custom" title="Save" value="Save" action="{!saveScope}" />
+                                </div>
+                            </div>
                     </div>
                     <footer role="contentinfo" class="slds-p-around--large">
 

@@ -1,3 +1,14 @@
+/**=====================================================================
+ * Appirio, Inc
+ * Name: E2_BatchUpdateUltimateParentScope
+ * Description: Batch class to update Ultimate Parent on Scope. This class will run once
+                and update Ultimate Parent on all the existing Scope records where Parent is not null
+ * Created Date: August 9th, 2016
+ * Created By: Arpita Bose (Appirio)
+ * 
+ * Date Modified      Modified By                  Description of the update
+ *  
+*  =====================================================================*/
 global class E2_BatchUpdateUltimateParentScope implements  Database.Batchable<sObject>, Database.Stateful {
 
   // Start method
@@ -7,10 +18,6 @@ global class E2_BatchUpdateUltimateParentScope implements  Database.Batchable<sO
     query = 'SELECT Id, Ultimate_Parent_Id__c, Ultimate_Parent_Scope__c '+                         
             'FROM E2_Scope__c '+ 
             'WHERE Parent_Scope__c != null';
-
-    if ( Test.isRunningTest() ) {
-      query += ' limit 200';
-    }
    
     return Database.getQueryLocator(query);
   }

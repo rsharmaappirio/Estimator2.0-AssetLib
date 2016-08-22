@@ -57,7 +57,19 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>E2_BatchCreateFavoriteScope</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>E2_BatchCreateFavoriteScopeTest</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>E2_BatchUpdateUltimateParentScope</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>E2_BatchUpdateUltimateParentScopeTest</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -217,6 +229,10 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>E2_TimelineController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>E2_TreeNode</apexClass>
         <enabled>true</enabled>
     </classAccesses>
@@ -230,6 +246,10 @@
     </classAccesses>
     <classAccesses>
         <apexClass>E2_TreeNodeTest</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>RS_EditScopeTemplateController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <custom>false</custom>
@@ -730,6 +750,10 @@
     </pageAccesses>
     <pageAccesses>
         <apexPage>E2_Template</apexPage>
+        <enabled>true</enabled>
+    </pageAccesses>
+    <pageAccesses>
+        <apexPage>E2_Timeline</apexPage>
         <enabled>true</enabled>
     </pageAccesses>
     <recordTypeVisibilities>

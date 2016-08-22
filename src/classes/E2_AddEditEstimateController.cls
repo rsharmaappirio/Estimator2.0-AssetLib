@@ -18,6 +18,7 @@ public class E2_AddEditEstimateController extends E2_Master{
   private static final string URL_KEY_PSR_ID = 'psr_id';
   private static final string URL_KEY_IS_SAVE = 'is_save';
   private static final string URL_VALUE_TRUE = 'true';
+  public List<SelectOption> riskList {get;set;}
  
   
   public E2_AddEditEstimateController(ApexPages.StandardController std) {    
@@ -37,6 +38,7 @@ public class E2_AddEditEstimateController extends E2_Master{
   public PageReference pageAction(){
     super.validateAccess(this.estimate);
     string psr_id = E2_Constants.BLANK;
+    riskList = populateRiskPicklistValues();
     if(this.estimate.id == null){
       psr_id = ApexPages.currentPage().getParameters().get(URL_KEY_PSR_ID);
     }else{
@@ -124,5 +126,14 @@ public class E2_AddEditEstimateController extends E2_Master{
     pg.getParameters().put('id', this.estimate.id);    
     return pg; 
   }
+  
+  // I-230082 : method to display Risk % without 'None' option
+  private List<SelectOption> populateRiskPicklistValues() {
+      List<SelectOption> options = new List<SelectOption>();               
+      for( Schema.PicklistEntry f : CMC_Presales_LOE__c.E2_Risk__c.getDescribe().getPicklistValues()){
+        options.add(new SelectOption(f.getLabel(), f.getValue()));
+      }      
+      return options;  
+    }
   
 }

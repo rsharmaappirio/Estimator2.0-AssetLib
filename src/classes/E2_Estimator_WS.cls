@@ -82,4 +82,11 @@ global with sharing class E2_Estimator_WS {
     webservice static string getSelectedScopeNodes(string scopeIdCSV, string estimateId, string parentScopeId) {
     	return E2_Estimator_WSManager.getSelectedScopeNodes(scopeIdCSV, estimateId, parentScopeId);
     } 
+    
+    // Method to update child scope complexity and Active state
+    webservice static string updateScopesStatus(string complexity, string scopeToActivate, string scopeToDeactivate,
+    										string allscopesIds) {
+    	return E2_Estimator_WSManager.updateScopesStatus(complexity, scopeToActivate, scopeToDeactivate,
+    										allscopesIds);						
+    }
 }

@@ -45,7 +45,7 @@ table tbody tr td.slds-td{
     </div>
     <div class="slds-col slds-no-flex slds-align-bottom">
       <div class="slds-button-group" role="group">
-        <button class="slds-button slds-button--neutral" value="Export Scope Items (Conga)" onclick="window.open('https://composer.congamerge.com?SessionId={!$API.Session_ID}&ServerUrl={!$API.Partner_Server_URL_80}&id={!estimate.id}&QueryId=[E2Estimate]{!$Label.E2_Scope_Export_Query}?pv0={!estimate.id}&TemplateGroup=E2&DS2=1&DS3=1&OFN={Template.Label}+-+{!URLENCODE(estimate.name)}&DS8=1', '', 'width=600,height=400,top=0');return false;">Export Scope Items (Conga)</button>
+        <button class="slds-button slds-button--neutral" value="Export Scope Items (Conga)" onclick="window.open('https://composer.congamerge.com?SessionId={!$API.Session_ID}&ServerUrl={!$API.Partner_Server_URL_80}&id={!estimate.id}&QueryId=[E2Estimate]{!$Label.E2_Scope_Export_Query}?pv0={!estimate.id},[E2UltimateScope]{!$Label.E2_Ultimate_Scope_Export_Query}?pv0={!estimate.id}&TemplateGroup=E2&DS2=1&DS3=1&OFN={Template.Label}+-+{!URLENCODE(estimate.name)}&DS8=1', '', 'width=600,height=400,top=0');return false;">Export Scope Items (Conga)</button>
         <button class="slds-button slds-button--neutral" value="Export (XLS)" onclick="window.location.href='/apex/E2_ExportScopeItemstoXLS?id={!estimate.id}';return false;">Export (XLS)</button>
         <button class="slds-button slds-button--neutral" value="Export (CSV)" onclick="window.location.href='/apex/E2_ExportScopeItemsToCSV?id={!estimate.id}';return false;">Export (CSV)</button>
         <apex:commandButton rendered="{!isEditable}" styleClass="slds-button slds-button--neutral" title="Build Capacity" value="Build Capacity" action="{!buildCapacity}"/>

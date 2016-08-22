@@ -102,7 +102,6 @@
 		    $('body div.slds-error--tooltip').remove();
 		    var inputVal = $(this).val();
 		    var numericReg = /^[0-9]*$/;
-		    console.log($(this));
 		    if(!numericReg.test(inputVal)) {
 		        $(this).val(inputVal.substring(0, inputVal.length - 1)); 
 		        $(document.body).append('<div class="slds slds-error--tooltip"><div class="slds slds-popover slds-popover--tooltip slds-nubbin--bottom" role="tooltip"><div class="slds-popover__body">Numeric only.</div></div></div>');

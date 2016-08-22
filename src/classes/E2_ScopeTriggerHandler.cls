@@ -1,3 +1,13 @@
+/**=====================================================================
+ * Appirio, Inc
+ * Name: E2_ScopeTriggerHandler
+ * Description: Trigger handler for E2_ScopeTrigger
+ * Created Date: August 9th, 2016
+ * Created By: Arpita Bose (Appirio)
+ * 
+ * Date Modified      Modified By                  Description of the update
+ *  
+*  =====================================================================*/
 public class E2_ScopeTriggerHandler{
     //after insert
     public static void afterInsert(List<E2_Scope__c> newList){

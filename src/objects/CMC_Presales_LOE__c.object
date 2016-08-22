@@ -87,7 +87,7 @@
         <picklist>
             <picklistValues>
                 <fullName>0%</fullName>
-                <default>false</default>
+                <default>true</default>
             </picklistValues>
             <picklistValues>
                 <fullName>5%</fullName>

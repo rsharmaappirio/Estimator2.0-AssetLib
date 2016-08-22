@@ -318,9 +318,10 @@ public class E2_Estimator_WSManager {
         List<E2_Scope__c> scopes =  E2_DataUtil_WS.getScopeChildList(scopeId);
         if(!scopes.isEmpty()) {
         	decimal totalhours = 0;        	
-        	
-        	for(E2_Scope__c scope : E2_DataUtil_WS.getUltimateScopeLOE((scopeId.length() == 18 ? scopeId.substring(0, 15) : scopeId))) {
-        		totalhours = scope.LOE_Hrs__c + totalhours; 
+        	string scopeIdString = scopeId.length() == 18 ? scopeId.substring(0, 15) : scopeId;
+        	for(E2_Scope__c scope : E2_DataUtil_WS.getUltimateScopeLOE(scopeIdString)) {
+        		if(scope.Ultimate_Parent_Id__c.equals(scopeIdString)) 
+        			totalhours = scope.LOE_Hrs__c + totalhours; 
         	}
 	        for(E2_Scope__c scope : E2_DataUtil_WS.getScopeChildList(scopeId)){           
 	           nodeList.add(new E2_TreeNode(scope.id, scope.Name, getFormatedScopeName(scope, totalhours), 
@@ -546,6 +547,34 @@ public class E2_Estimator_WSManager {
           return null;
         }
         return assetsRecsJson;
+    }
+    
+    public static string updateScopesStatus(string complexity, string scopeToActivate, string scopeToDeactivate,
+    										string allscopesIds) {
+    	list<E2_Scope__c> scopesToUpdate = new list<E2_Scope__c>();
+    	for(string scopeid : allscopesIds.split(E2_constants.COMMA)) {
+    		E2_Scope__c scope = NULL;
+    		if(!string.isBlank(complexity)) {
+    			scope = new E2_Scope__c(Complexity__c = complexity, id = scopeid);
+    		}
+    		if(!string.isBlank(scopeToActivate) && scopeToActivate.contains(scopeid)) {
+    			if(scope == NULL)
+    				scope = new E2_Scope__c(Is_Active__c = true, id = scopeid);
+    			else
+    				scope.Is_Active__c = true;
+    		}else if(!string.isBlank(scopeToDeactivate) && scopeToDeactivate.contains(scopeid)) {
+    			if(scope == NULL)
+    				scope = new E2_Scope__c(Is_Active__c = false, id = scopeid);
+    			else
+    				scope.Is_Active__c = false;
+    		}
+    		if(scope != NULL) {
+    			scopesToUpdate.add(scope);
+    		}
+    	}
+    	if(!scopesToUpdate.isEmpty())
+    		update scopesToUpdate;
+    	return 'Success';
     }
     
     public class ScopeWrapper{
