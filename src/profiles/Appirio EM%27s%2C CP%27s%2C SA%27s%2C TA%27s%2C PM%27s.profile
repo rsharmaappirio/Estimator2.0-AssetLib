@@ -2,11 +2,11 @@
 <Profile xmlns="http://soap.sforce.com/2006/04/metadata">
     <classAccesses>
         <apexClass>E2_AddBulkEffortsController</apexClass>
-        <enabled>false</enabled>
+        <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
         <apexClass>E2_AddBulkEffortsControllerTest</apexClass>
-        <enabled>false</enabled>
+        <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
         <apexClass>E2_AddEditDerivedEffortsController</apexClass>
@@ -14,7 +14,7 @@
     </classAccesses>
     <classAccesses>
         <apexClass>E2_AddEditDerivedEffortsControllerTest</apexClass>
-        <enabled>false</enabled>
+        <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
         <apexClass>E2_AddEditEstimateController</apexClass>
@@ -22,7 +22,7 @@
     </classAccesses>
     <classAccesses>
         <apexClass>E2_AddEditEstimateControllerTest</apexClass>
-        <enabled>false</enabled>
+        <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
         <apexClass>E2_AddEditScopeController</apexClass>
@@ -30,7 +30,7 @@
     </classAccesses>
     <classAccesses>
         <apexClass>E2_AddEditScopeControllerTest</apexClass>
-        <enabled>false</enabled>
+        <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
         <apexClass>E2_AddEditScopeTemplatesController</apexClass>
@@ -38,7 +38,7 @@
     </classAccesses>
     <classAccesses>
         <apexClass>E2_AddEditScopeTemplatesControllerTest</apexClass>
-        <enabled>false</enabled>
+        <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
         <apexClass>E2_AddNewScopeController</apexClass>
@@ -46,7 +46,7 @@
     </classAccesses>
     <classAccesses>
         <apexClass>E2_AddNewScopeControllerTest</apexClass>
-        <enabled>false</enabled>
+        <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
         <apexClass>E2_AddNewScopeTemplateController</apexClass>
@@ -54,23 +54,23 @@
     </classAccesses>
     <classAccesses>
         <apexClass>E2_AddNewScopeTemplateControllerTest</apexClass>
-        <enabled>false</enabled>
+        <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
         <apexClass>E2_BatchCreateFavoriteScope</apexClass>
-        <enabled>false</enabled>
+        <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
         <apexClass>E2_BatchCreateFavoriteScopeTest</apexClass>
-        <enabled>false</enabled>
+        <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
         <apexClass>E2_BatchUpdateUltimateParentScope</apexClass>
-        <enabled>false</enabled>
+        <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
         <apexClass>E2_BatchUpdateUltimateParentScopeTest</apexClass>
-        <enabled>false</enabled>
+        <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
         <apexClass>E2_CapacityController</apexClass>
@@ -78,7 +78,7 @@
     </classAccesses>
     <classAccesses>
         <apexClass>E2_CapacityControllerTest</apexClass>
-        <enabled>false</enabled>
+        <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
         <apexClass>E2_Constants</apexClass>
@@ -86,7 +86,7 @@
     </classAccesses>
     <classAccesses>
         <apexClass>E2_ConstantsTest</apexClass>
-        <enabled>false</enabled>
+        <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
         <apexClass>E2_DataUtil</apexClass>
@@ -94,7 +94,7 @@
     </classAccesses>
     <classAccesses>
         <apexClass>E2_DataUtilTest</apexClass>
-        <enabled>false</enabled>
+        <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
         <apexClass>E2_DataUtil_WS</apexClass>
@@ -102,7 +102,7 @@
     </classAccesses>
     <classAccesses>
         <apexClass>E2_DataUtil_WSTest</apexClass>
-        <enabled>false</enabled>
+        <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
         <apexClass>E2_EditScopeController</apexClass>
@@ -110,7 +110,7 @@
     </classAccesses>
     <classAccesses>
         <apexClass>E2_EditScopeControllerTest</apexClass>
-        <enabled>false</enabled>
+        <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
         <apexClass>E2_EditScopeTemplateController</apexClass>
@@ -118,15 +118,15 @@
     </classAccesses>
     <classAccesses>
         <apexClass>E2_EditScopeTemplateControllerTest</apexClass>
-        <enabled>false</enabled>
+        <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
         <apexClass>E2_EffortsWrapper</apexClass>
-        <enabled>false</enabled>
+        <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
         <apexClass>E2_EffortsWrapperTest</apexClass>
-        <enabled>false</enabled>
+        <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
         <apexClass>E2_Estimator_Manager</apexClass>
@@ -134,7 +134,7 @@
     </classAccesses>
     <classAccesses>
         <apexClass>E2_Estimator_ManagerTest</apexClass>
-        <enabled>false</enabled>
+        <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
         <apexClass>E2_Estimator_WS</apexClass>
@@ -146,11 +146,11 @@
     </classAccesses>
     <classAccesses>
         <apexClass>E2_Estimator_WSManagerTest</apexClass>
-        <enabled>false</enabled>
+        <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
         <apexClass>E2_Estimator_WSTest</apexClass>
-        <enabled>false</enabled>
+        <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
         <apexClass>E2_ExportScopeItemsToCSVController</apexClass>
@@ -158,7 +158,7 @@
     </classAccesses>
     <classAccesses>
         <apexClass>E2_ExportScopeItemsToCSVControllerTest</apexClass>
-        <enabled>false</enabled>
+        <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
         <apexClass>E2_ManageTemplateDerivedEffortController</apexClass>
@@ -166,7 +166,7 @@
     </classAccesses>
     <classAccesses>
         <apexClass>E2_ManageTemplateDerivedEffortCtrTest</apexClass>
-        <enabled>false</enabled>
+        <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
         <apexClass>E2_Master</apexClass>
@@ -174,7 +174,7 @@
     </classAccesses>
     <classAccesses>
         <apexClass>E2_MasterTest</apexClass>
-        <enabled>false</enabled>
+        <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
         <apexClass>E2_PaginationUtility</apexClass>
@@ -182,7 +182,7 @@
     </classAccesses>
     <classAccesses>
         <apexClass>E2_PaginationUtilityTest</apexClass>
-        <enabled>false</enabled>
+        <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
         <apexClass>E2_RecordTypeClass</apexClass>
@@ -190,15 +190,15 @@
     </classAccesses>
     <classAccesses>
         <apexClass>E2_RecordTypeClassTest</apexClass>
-        <enabled>false</enabled>
+        <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
         <apexClass>E2_ScopeQuestionAnswerManager</apexClass>
-        <enabled>false</enabled>
+        <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
         <apexClass>E2_ScopeTriggerHandler</apexClass>
-        <enabled>false</enabled>
+        <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
         <apexClass>E2_ScopeWrapper</apexClass>
@@ -206,11 +206,11 @@
     </classAccesses>
     <classAccesses>
         <apexClass>E2_ScopeWrapperTest</apexClass>
-        <enabled>false</enabled>
+        <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
         <apexClass>E2_SelectDerEffortTemplateControllerTest</apexClass>
-        <enabled>false</enabled>
+        <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
         <apexClass>E2_SelectDerivedEffortTemplateController</apexClass>
@@ -222,15 +222,15 @@
     </classAccesses>
     <classAccesses>
         <apexClass>E2_SelectScopeTemplateControllerTest</apexClass>
-        <enabled>false</enabled>
+        <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
         <apexClass>E2_Test_Utils</apexClass>
-        <enabled>false</enabled>
+        <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
         <apexClass>E2_TimelineController</apexClass>
-        <enabled>false</enabled>
+        <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
         <apexClass>E2_TreeNode</apexClass>
@@ -242,11 +242,11 @@
     </classAccesses>
     <classAccesses>
         <apexClass>E2_TreeNodeMapTest</apexClass>
-        <enabled>false</enabled>
+        <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
         <apexClass>E2_TreeNodeTest</apexClass>
-        <enabled>false</enabled>
+        <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
         <apexClass>RS_EditScopeTemplateController</apexClass>
@@ -718,7 +718,7 @@
     </objectPermissions>
     <pageAccesses>
         <apexPage>E2_AddBulkEfforts</apexPage>
-        <enabled>false</enabled>
+        <enabled>true</enabled>
     </pageAccesses>
     <pageAccesses>
         <apexPage>E2_AddEditDerivedEfforts</apexPage>
@@ -774,7 +774,7 @@
     </pageAccesses>
     <pageAccesses>
         <apexPage>E2_ScopeTree</apexPage>
-        <enabled>false</enabled>
+        <enabled>true</enabled>
     </pageAccesses>
     <pageAccesses>
         <apexPage>E2_SelectDerivedEffortTemplate</apexPage>
@@ -794,7 +794,7 @@
     </pageAccesses>
     <pageAccesses>
         <apexPage>E2_Timeline</apexPage>
-        <enabled>false</enabled>
+        <enabled>true</enabled>
     </pageAccesses>
     <recordTypeVisibilities>
         <default>false</default>

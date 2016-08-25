@@ -8,7 +8,9 @@
  * Date Modified      Modified By                  Description of the update
  *  
 *  =====================================================================*/
-public class E2_ScopeTriggerHandler{
+public class E2_ScopeTriggerHandler {
+	
+	public static set<id> scopeIds = new set<id>();
     //after insert
     public static void afterInsert(List<E2_Scope__c> newList){
       populateUltimateParent(newList, null);
@@ -24,9 +26,10 @@ public class E2_ScopeTriggerHandler{
         list<E2_scope__c> scopesToUpdate = new list<E2_scope__c>();
         //get all the scope Ids where Parent Scope is not null or is changed
         for(E2_Scope__c scope : newList) {
-            if(oldMap == null || scope.Parent_Scope__c != oldMap.get(scope.Id).Parent_Scope__c) {
-              updatedScopes.add(scope.Id);
-          }
+        	if(scope.Parent_Scope__c != NULL && !scopeIds.contains(scope.Id)) {
+        		updatedScopes.add(scope.Id);
+        		scopeIds.add(scope.Id);
+        	}            
         }
         //update ultimate parent on Scopes for the set of scope Ids fetched 
         if(!updatedScopes.isEmpty()) {

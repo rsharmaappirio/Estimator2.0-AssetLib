@@ -50,15 +50,18 @@
 		    }
 		    // Add remove scope pills
     		var scopesPills = {
+    		    IS_REMOVE_EVENT : false,
 	        	removePills : function(pillId) {
 	            	$( "#pillContainer" ).children( "#"+pillId ).replaceWith("");
 	            	$( "#"+pillId+"href" ).addClass("addup_button");
 					$( "#"+pillId+"href" ).removeClass("added_button");
-	            	resetIframeHeight();
 	        	},
 	        	addScopeFromVF : function(scopeId,scopeName) {
 	        	    if($( "#pillContainer" ).children( "#"+scopeId ).length) {
-	        	        // Do nothing
+	        	        scopesPills.IS_REMOVE_EVENT = true;
+	        	        scopesPills.removePills(scopeId);
+	        	        AddScopeTree.onScopeClick(scopeId);
+	        	        resetIframeHeight();
 	        	    } else {
 	        	        scopesPills.addPillsLink(scopeId,scopeName);
 	        	        AddScopeTree.onScopeClick(scopeId);
@@ -73,7 +76,7 @@
 	                	var pillsString ='<span class="slds-pill" id="'+scopeId+'">'+
 	                                  	 '<a href="javascript:void(0);" id="pillsDiv" scope-id="'+scopeId+'">'+
 	                                  	 '<span class="slds-pill__label">'+scopeName+'</span></a>'+
-	                  					 '<button class="slds-button slds-button--icon-bare slds-pill__remove" onclick="scopesPills.removePills(\''+scopeId+'\');AddScopeTree.updateTreeState();return false;">'+
+	                  					 '<button class="slds-button slds-button--icon-bare slds-pill__remove" onclick="scopesPills.removePills(\''+scopeId+'\');AddScopeTree.updateTreeState();resetIframeHeight();return false;">'+
 	                    				 '<img src="'+ close_png_url +'" width="12" height="12"/></button>'+
 	                					 '</span>';
 	                	$( "#pillContainer" ).append(pillsString);
@@ -163,9 +166,7 @@
 			    	$(treeId).jstree("destroy");			    	
 				    $(treeId).jstree(jstree_options);
 				    AddScopeTree.tree_init(scopeId);
-				    setTimeout(function(){
-		                AddScopeTree.refreshFrame();
-		            }, 4000);
+				    bindEvents();
 			    },
 			    refreshFrame : function() {
 			        var $node = $(treeId).jstree(true).get_node('#');
@@ -179,9 +180,14 @@
 	        		node.state = JSON.parse(node.state);
 			        // jstree api call to create the tree node.
 			        console.log(node.parent + '-'+node.id );
-			        if((node.parent !='#' && $( "#pillContainer" ).children( "#"+node.parent ).length) || 
+			        if(scopesPills.IS_REMOVE_EVENT == true) {
+			        	    scopesPills.removePills(node.id);
+			        }else if((node.parent !='#' && $( "#pillContainer" ).children( "#"+node.parent ).length) || 
 			        	$( "#pillContainer" ).children( "#"+node.id ).length) {
 			        	node.state = {opened:true, selected:true};
+			        	if(!$( "#pillContainer" ).children( "#"+node.id ).length) {
+			        	    scopesPills.addPillsLink(node.id,node.title);
+			        	}
 			        }		        
 			        $(treeId).jstree(AddScopeTree.CREATE_NODE, node.parent, node, position);
 				},
@@ -193,24 +199,13 @@
 				    	spinner.show();	
 				    	AddScopeTree.addscopenode_call_register[scopeId] = '#';	    	
 				    	sforce.apex.execute("E2_Estimator_WS","getScopeDetailNodes", {scopeId:scopeId}, AddScopeTree.tree_init_callback);
-				    
 				 },
 				tree_init_callback: {
 			    	onSuccess: function(result) {
-			        	var haschildren = false; 
-			            if(result.length > 0){
+			            if(result.length > 0) {
+			                var haschildren = false;
 	                    	var scope_id = result[0].scope_id;
-	                      	if (result[0].nodeList && result[0].nodeList.length) {
-		                    	$.each(result[0].nodeList, function(indx, node) {
-		                    	    node.parent = "#";
-		                        	AddScopeTree.create_node(node, AddScopeTree.LAST);
-		                        	if (node.hasChildren == true || node.hasChildren == 'true') {
-		                            	hasChildren = true;
-		                            	AddScopeTree.addscopenode_call_register[node.id] = scope_id;
-		                            	AddScopeTree.getScopeChildDetail_Recurring(node.id);
-		                        	}
-		                    	});
-			              	} else if (result[0].nodeList) {
+	                      	if (result[0].nodeList) {
 			              		var node = result[0].nodeList;
 			              		node.parent = "#";
 			                	AddScopeTree.create_node(node, AddScopeTree.LAST);
@@ -218,14 +213,14 @@
 			                		hasChildren = true;
 			                    	AddScopeTree.addscopenode_call_register[node.id] = scope_id;
 			                    	AddScopeTree.getScopeChildDetail_Recurring(node.id);
+			                 	} else {
+			                 	    scopesPills.IS_REMOVE_EVENT = false;
+			                 	    spinner.hide();
 			                 	}
-			               	}	  
-		                   	bindEvents();
+			               	}	
 		                   	if (AddScopeTree.addscopenode_call_register && AddScopeTree.addscopenode_call_register[scope_id]) delete AddScopeTree.addscopenode_call_register[scope_id];
-		                   	if (AddScopeTree.addscopenode_call_register && JSON.stringify(AddScopeTree.addscopenode_call_register) == '{}') {
-		                   	   	spinner.hide();
-							}
 						} else {
+						    scopesPills.IS_REMOVE_EVENT = false;
 		                   	spinner.hide();
 	                	}
 					},
@@ -262,9 +257,11 @@
 				            }	  
 			                if (AddScopeTree.addscopenode_call_register && AddScopeTree.addscopenode_call_register[scope_id]) delete AddScopeTree.addscopenode_call_register[scope_id];
 			                if (AddScopeTree.addscopenode_call_register && JSON.stringify(AddScopeTree.addscopenode_call_register) == '{}') {
+			                   	scopesPills.IS_REMOVE_EVENT = false;
 			                   	spinner.hide();
 			                }
 						} else {
+						    scopesPills.IS_REMOVE_EVENT = false;
 			                spinner.hide();
 			        	}
 			        },
@@ -287,25 +284,10 @@
 		    			}
 		    			else {
 		    				scopesPills.removePills($childnode.original.id);
+		    				resetIframeHeight();
 		    			}
 		    		});
 			 	},
-			 	/*getselectedTreeNode : function() {
-			 		var $node = $(treeId).jstree(true).get_node('#');
-		    		var parentSelected = false;
-		    		$.each($node.children_d, function(indx, id) {
-		    			var $childnode = $(treeId).jstree(true).get_node(id);
-		    			if($childnode.state.selected && !parentSelected) {
-		    			    var pillsId = $(treeId).jstree(true).get_parent($childnode.original.id);
-		    			    if(pillsId == '#' || !$( "#pillContainer" ).children( "#"+pillsId ).length) {
-		    			        scopesPills.addPillsLink($childnode.original.id,$childnode.original.title);
-		    			  		parentSelected = true;
-		    			    }
-		    			}
-		    			else
-		    				scopesPills.removePills($childnode.original.id);
-		    		});
-			 	},*/
 			 	updateTreeState : function() {
 			 		var $node = $(treeId).jstree(true).get_node('#');
 		    		var parentSelected = false;		    		
@@ -317,6 +299,15 @@
 		    			}else {
 		    				$(treeId).jstree(true).deselect_node(id);
 		    			}		    			
+		    		});
+			 	},
+			 	deSelectAllNodes : function() {
+			 	    var $node = $(treeId).jstree(true).get_node('#');
+		    		var parentSelected = false;		    		
+		    		$.each($node.children_d, function(indx, id) {
+		    		    $(treeId).jstree(true).deselect_node(id);
+		    		    scopesPills.removePills(id);
+		    		    resetIframeHeight();
 		    		});
 			 	}
 			}

@@ -589,6 +589,68 @@ var undoRedoBuffer = {
 }
 
 
+function MilestoneEditor(args) {
+    var $input;
+    var defaultValue;
+    var scope = this;
+
+    this.init = function () {
+      $input = $("<INPUT type=text class='editor-text' />")
+          .appendTo(args.container)
+          .bind("keydown.nav", function (e) {
+            if (e.keyCode === $.ui.keyCode.LEFT || e.keyCode === $.ui.keyCode.RIGHT) {
+              e.stopImmediatePropagation();
+            }
+          })
+          .focus()
+          .select();
+    };
+
+    this.destroy = function () {
+      $input.remove();
+    };
+
+    this.focus = function () {
+      $input.focus();
+    };
+
+    this.getValue = function () {
+      return $input.val();
+    };
+
+    this.setValue = function (val) {
+      $input.val(val);
+    };
+
+    this.loadValue = function (item) {
+      defaultValue = item[args.column.field] || "";
+      $input.val(defaultValue);
+      $input[0].defaultValue = defaultValue;
+      $input.select();
+    };
+
+    this.serializeValue = function () {
+      return $input.val();
+    };
+
+    this.applyValue = function (item, state) {
+      item[args.column.field] = state;
+    };
+
+    this.isValueChanged = function () {
+      return (!($input.val() == "" && defaultValue == null)) && ($input.val() != defaultValue);
+    };
+
+    this.validate = function () {
+     return {
+        valid: true,
+        msg: null
+      };
+    };
+
+    this.init();
+}
+
 function PhaseSelectionEditor(args) {
     var $input, $picker;
     var defaultValue;
@@ -1170,7 +1232,9 @@ var gridMainInitiate = function(){
 
 var datepickerOptions = {
     onSelect: function(dateText) {
-        Timeline.onStartDateSelectionChange(new Date(dateText).toYYYYMMDD());
+        if(!$('#build_div').is(':visible')){
+          Timeline.onStartDateSelectionChange(new Date(dateText).toYYYYMMDD());
+        }
     },
     beforeShowDay: function(date) {
         return [date.getDay() == 1, ""]
@@ -1180,7 +1244,7 @@ var datepickerOptions = {
 var loader = {
     show: function() {
         if (!loadingIndicator) {
-            loadingIndicator = $("<span class='loading-indicator'><label>Buffering...</label></span>").appendTo(document.body);
+            loadingIndicator = $("<span class='loading-indicator'><label>Processing...</label></span>").appendTo(document.body);
             var $g = $("#myGrid");
 
             loadingIndicator
@@ -1611,8 +1675,16 @@ var Timeline = {
                       }
                     };
                     
-                if(row == Timeline.weekNameRow || row == Timeline.totalRow || row == Timeline.milestoneRow){
+                if(row == Timeline.weekNameRow || row == Timeline.totalRow){
                   return metadata;    
+                }else if(row == Timeline.milestoneRow){
+                     $.each(columns, function(indx1, colItem) {
+                        if(indx1 >= Timeline.fixedColumns && typeof colItem.usedForCalculation != 'undefined' && colItem.usedForCalculation){
+                             metadata.columns[colItem.field] = {};
+                             metadata.columns[colItem.field].editor = MilestoneEditor;
+                        }
+                    });
+                    return metadata;
                 }else if(row == Timeline.phaseRow){
                     $.each(columns, function(indx1, colItem) {
                         if(indx1 >= Timeline.fixedColumns && typeof colItem.usedForCalculation != 'undefined' && colItem.usedForCalculation){
@@ -1621,15 +1693,7 @@ var Timeline = {
                         }
                     });
                     return metadata;
-                }/**else if(row == Timeline.milestoneRow){
-                    $.each(columns, function(indx1, colItem) {
-                        if(indx1 >= Timeline.fixedColumns && typeof colItem.usedForCalculation != 'undefined' && colItem.usedForCalculation){
-                             metadata.columns[colItem.field] = {};
-                             metadata.columns[colItem.field]["validator"] = Timeline.textFieldValidator;
-                        }
-                    });
-                    return metadata;
-                }**/
+                }
            }
         
         
@@ -1683,12 +1747,18 @@ var Timeline = {
         onSuccess: function(result) {
             //result = (result.length > 0 ? result[0] : result); 
             columns = Timeline.getDefaultColumns();
+            
+            if(result.length == 0) $('#build_div').show();
+            
             $.each(result, function(indx, column) {
                 columns.push(Timeline.defineAddPropForColumn(column));
                 if (indx === 0) {
-                    $("#datepicker").datepicker('setDate', new Date(column.sDate))
+                    $("#datepicker").datepicker('setDate', new Date(column.sDate));
+                    $('#build_div').hide();
                 };
             });
+            
+            
             // clear the initital array
             result = [];
             
@@ -1752,10 +1822,14 @@ var Timeline = {
         onSuccess: function(result) {
             //result = (result.length > 0 ? result[0] : result); 
             columns = Timeline.getDefaultColumns();
+            
+            if(result.length == 0) $('#build_div').show();
+            
             $.each(result, function(indx, column) {
                 columns.push(Timeline.defineAddPropForColumn(column));
                 if (indx === 0) {
-                    $("#datepicker").datepicker('setDate', new Date(column.sDate))
+                    $("#datepicker").datepicker('setDate', new Date(column.sDate));
+                    $('#build_div').hide();
                 };
             });
             // clear the initital array
@@ -2292,5 +2366,71 @@ var Timeline = {
         CustomAlert.show('Rate card has been successfully updated!!!');
         tabpanel.showTimelineTab();
         reFreshGrid();
+    },
+    refreshRateCardRatesAndCost: function(){
+        if(!confirm('Refreshing cost and rate will updated existing rate card entries with the latest rates & cost in the system!!\nAre you sure you want to try this?')){
+            return false;
+        }
+        loadSpinner.show();
+        // invoke action function
+        refreshRateCardRatesAndCost();
+        return false;
+    },
+    refreshRateCardRatesAndCost_complete: function(){
+        loadSpinner.hide();
+        CustomAlert.show('Rate card has been successfully refreshed!!!');
+        tabpanel.showTimelineTab();
+        reFreshGrid();
+    },
+    build: function(){
+        $('#datepicker').parent().removeClass('slds-has-error');
+        var dateText = $("#datepicker").datepicker('getDate');
+        // check that date is supplied before build progress
+        if(dateText == null){
+            $('#datepicker').parent().addClass('slds-has-error');
+            return false;
+        }
+        
+        var sDate = new Date(dateText).toYYYYMMDD();
+        var noOfColumnsToAdd = $('#no_of_weeks').val();
+        
+        loader.show();
+        sforce.apex.execute(WEBSERVICE_NAME, "onBuild", {
+            estimateId: estimateId,
+            sDate: sDate,
+            noOfColumnsToAdd: noOfColumnsToAdd
+        }, Timeline.onbuild_Callback);
+        
+        return false;
+        //onBuild(string estimateId, string sDate, integer noOfColumnsToAdd)
+    },
+    onbuild_Callback: {
+        onSuccess: function(result) {
+
+            result = (result.length > 0 ? result[0] : result);
+            // check for failure message, show alert and stop
+            if (result.indexOf('Fail') != -1) {
+                var exception = 'INSUFFICIENT_ACCESS_OR_READONLY';
+                if (result.toLowerCase().indexOf(exception.toLowerCase()) != -1) {
+                    alert(result); //CustomAlert.showError('Reparenting Failed: You do not have permission to reparent this scope!!! Please contact scope owner for reparenting!!');    
+                } else {
+                    alert(result);
+                }
+                loader.hide();
+                return;
+            }
+            loader.hide();
+            
+            // process success
+            sforce.apex.execute(WEBSERVICE_NAME, "getTimelineColumns", {
+                estimateId: estimateId
+            }, Timeline.getColumns_Callback);
+
+        },
+        onFailure: function(error) {
+            alert(error);
+            loader.hide();
+        }
     }
+    
 }

@@ -2,11 +2,11 @@
 <Profile xmlns="http://soap.sforce.com/2006/04/metadata">
     <classAccesses>
         <apexClass>E2_AddBulkEffortsController</apexClass>
-        <enabled>false</enabled>
+        <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
         <apexClass>E2_AddBulkEffortsControllerTest</apexClass>
-        <enabled>false</enabled>
+        <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
         <apexClass>E2_AddEditDerivedEffortsController</apexClass>
@@ -122,11 +122,11 @@
     </classAccesses>
     <classAccesses>
         <apexClass>E2_EffortsWrapper</apexClass>
-        <enabled>false</enabled>
+        <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
         <apexClass>E2_EffortsWrapperTest</apexClass>
-        <enabled>false</enabled>
+        <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
         <apexClass>E2_Estimator_Manager</apexClass>
@@ -246,7 +246,7 @@
     </classAccesses>
     <classAccesses>
         <apexClass>E2_TreeNodeTest</apexClass>
-        <enabled>false</enabled>
+        <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
         <apexClass>RS_EditScopeTemplateController</apexClass>
@@ -718,7 +718,7 @@
     </objectPermissions>
     <pageAccesses>
         <apexPage>E2_AddBulkEfforts</apexPage>
-        <enabled>false</enabled>
+        <enabled>true</enabled>
     </pageAccesses>
     <pageAccesses>
         <apexPage>E2_AddEditDerivedEfforts</apexPage>

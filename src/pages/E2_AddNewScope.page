@@ -243,7 +243,7 @@
                                           <div class="slds-form-element is-required ">
                                              <div class="slds-form-element__control">
                                                 <apex:inputfield id="scope-complexity" value="{!childscope.scope.Complexity__c}" styleclass="slds-select scope-complexity" rendered="{!NOT(is_View)}" >
-                                                   <apex:actionSupport event="onchange" action="{!childscope.changeComplexity}"/>
+                                                   <!--apex:actionSupport event="onchange" action="{!childscope.changeComplexity}"/-->
                                                 </apex:inputfield>
                                              </div>
                                              <div class="slds-form-element__help" style="display:none">This field is required</div>

@@ -85,6 +85,7 @@ public with sharing class E2_Estimator_Manager {
 															FROM E2_Estimate_Rate_Card__c 
 															WHERE Estimate__c =: estimateId
 															ORDER BY Region__c ASC, Resource_Role__c ASC];
+		
 															
 		if(estimateRateCards.isEmpty() && !String.isBlank(currencyCode)) {			
 			for(pse__Rate_Card__c rateCard : [SELECT Id, pse__Average_Cost_Rate__c, 
@@ -115,17 +116,19 @@ public with sharing class E2_Estimator_Manager {
 			       system.debug('Error in new estimate rate card creation:' + ex.getMessage()); 
 			    }
 			}
-			return newEstimateRateCards;
-		}
-		return estimateRateCards;
-		// No need to query again
-		/*return [SELECT Id, Resource_Role__c, Estimate__c, Region__c, 
+			
+			// QUERYING AGAIN FOR RETURNING THE ORDERED LIST BY REGION & ROLE
+			return [SELECT Id, Resource_Role__c, Estimate__c, Region__c, 
 															Practice__c, Code__c, Rate_Card__c, Resource_Cost__c,
 															Bill_Rate__c,Discounted_Rate__c, Category__c 
 															FROM E2_Estimate_Rate_Card__c 
 															WHERE Estimate__c =: estimateId
-															// WHERE Id =: estimateId : this is Wrong
-															ORDER BY Region__c ASC, Resource_Role__c ASC];*/
+															ORDER BY Region__c ASC, Resource_Role__c ASC];
+			
+			//return newEstimateRateCards;
+		}
+		return estimateRateCards;
+	
 	}
 	
 }

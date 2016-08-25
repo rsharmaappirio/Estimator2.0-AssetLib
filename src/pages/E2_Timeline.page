@@ -547,6 +547,7 @@
             <apex:form >
                 <apex:pageMessages />
                 <apex:actionfunction name="updateEstimateRateCards" action="{!updateEstimateRateCards}" oncomplete="Timeline.updateEstimateRateCards_complete();" rerender="ratecard_table"/>
+                <apex:actionfunction name="refreshRateCardRatesAndCost" action="{!refreshRateCardRatesAndCost}" oncomplete="Timeline.refreshRateCardRatesAndCost_complete();" rerender="ratecard_table"/>
                 
                 <div id="tabpanel">
                     <ul class="slds-tabs--default__nav" role="tablist">
@@ -562,13 +563,39 @@
                     </ul>
                     <div id="tab-default-1" style="padding:0px" class="slds-tabs--default__content slds-hide paddingTopZero" role="tabpanel" aria-labelledby="tab-default-1__item">
                         <div id="manage_timeline_div"><br/>
-                                       
-                                       <div class="slds-form-element">
+                        
+                                <div class="slds-grid" style="width:48%;">
+                                 <div class="slds-col--padded">       
+                                      <div class="slds-form-element">
                                          <div class="slds-form-element__control">
-                                             <label class="slds-form-element__label" for="text-input-12">Start Date<abbr class="slds-required" title="required">*</abbr></label>
-                                            <input type="text" class="slds-input" style="width:25%" id="datepicker" />
+                                             <label class="slds-form-element__label" for="text-input-1">Start Date<abbr class="slds-required" title="required">*</abbr></label>
+                                            <input type="text" class="slds-input" id="datepicker" style="width:205px" />
                                          </div>
                                       </div>
+                                  </div>
+                                  <div id="build_div" class="slds-col--padded" style="display:none;">       
+                                      <div class="slds-form-element">
+                                         <div class="slds-form-element__control">
+                                             <label class="slds-form-element__label" for="text-input-2">No. of weeks<abbr class="slds-required" title="required">*</abbr></label>
+                                             <select id="no_of_weeks" class="slds-select" style="width:55px">
+                                                 <option value="1">1</option>
+                                                  <option value="5">5</option>
+                                                  <option value="10">10</option>
+                                                  <option value="20">20</option>
+                                                  <option value="30">30</option>
+                                                  <option value="40">40</option>
+                                                  <option value="50">50</option>
+                                                  <option value="60">60</option>
+                                                  <option value="70">70</option>
+                                                  <option value="80">80</option>
+                                                  <option value="90">90</option>
+                                                  <option value="100">100</option>
+                                             </select> 
+                                             <input type="submit" onclick="return Timeline.build();" class="slds-button slds-button--neutral slds-button--brand save-button-custom" title="Build" value="Build"/>
+                                         </div>
+                                      </div>
+                                  </div>
+                                </div>  
                                       <br/>
                                        <div style="position:relative">
                                             <div>
@@ -584,6 +611,8 @@
                                              <div class="slds-col slds-no-flex slds-align-bottom">
                                                 <div class="" role="group">
                                                     <apex:commandButton onclick="return Timeline.updateEstimateRateCards();" styleClass="slds-button slds-button--neutral slds-button--brand save-button-custom" title="Save" value="Save" action="{!updateEstimateRateCards}" />
+                                                    
+                                                    <apex:commandButton onclick="return Timeline.refreshRateCardRatesAndCost();" styleClass="slds-button slds-button--neutral slds-button--brand save-button-custom" title="Refresh Rates & Cost" value="Refresh Rates & Cost" action="{!refreshRateCardRatesAndCost}" />
                                                 </div>
                                             </div>
                                     </div> 
@@ -633,16 +662,14 @@
                                                     <td class="slds-truncate " data-label="Resource Cost">
                                                         <apex:outputfield value="{!estimateratecard.Resource_Cost__c}"/>
                                                     </td>
-                                                    <apex:repeat value="{!mapIdtoRCMargin[rcID]}" var="mapRC">
-                                                    <td class="slds-truncate " data-label="Rate Card Margin">
-                                                        {!mapRC}
+                                                     <td class="slds-truncate " data-label="Rate Card Margin">
+                                                        <apex:outputtext value="{!ROUND(1-(estimateratecard.Resource_Cost__c/estimateratecard.Bill_Rate__c), 2)}"/>
                                                     </td>
-                                                    </apex:repeat>
-                                                    <apex:repeat value="{!mapIdToRateMargin[rcID]}" var="mapRate">
+                                                   
                                                     <td class="slds-truncate " data-label="Rate Margin">
-                                                        {!mapRate}
+                                                        <apex:outputtext value="{!ROUND(1-(estimateratecard.Resource_Cost__c/estimateratecard.Discounted_Rate__c), 2)}"/>
                                                     </td>
-                                                    </apex:repeat>
+                                                    
                                                     <td class="slds-cell-shrink" data-label="Actions">
                                                     </td>
                                                  </tr>
