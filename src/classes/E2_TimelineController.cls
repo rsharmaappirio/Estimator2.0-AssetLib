@@ -11,42 +11,46 @@
 public with sharing class E2_TimelineController extends E2_Master {
   public CMC_Presales_LOE__c estimate {get;set;}
   public List<E2_Estimate_Rate_Card__c> estimateRateCards{get;set;}
-  public Decimal marginNum; // TODO: REMOVE NOT NEEDED NOW
-  public Map<Id, double> mapIdtoRCMargin {get;set;}// TODO: REMOVE NOT NEEDED NOW
-  public Map<Id, Double> mapIdToRateMargin {get;set;}// TODO: REMOVE NOT NEEDED NOW
+  
   
   public E2_TimelineController (ApexPages.StandardController std) {
     this.estimate = (CMC_Presales_LOE__c)std.getRecord();
     this.estimateRateCards = new List<E2_Estimate_Rate_Card__c>();
-    marginNum = 0;// TODO: REMOVE NOT NEEDED NOW
-    mapIdtoRCMargin = new Map<Id, double>();// TODO: REMOVE NOT NEEDED NOW
-    mapIdToRateMargin = new Map<Id, double>();// TODO: REMOVE NOT NEEDED NOW
+    this.estimate.Discount_Percent__c = this.estimate.Discount_Percent__c == NULL ? 0 : this.estimate.Discount_Percent__c;
+  }
+  
+  
+  public pagereference refreshOverviewPanel(){
+     this.estimate = [SELECT id, Name, Service_Fees__c,
+                        Service_Costs__c,
+                        Service_Margin__c,                
+                        Calculated_Fees__c,
+                        Calculated_Costs__c,
+                        Calculated_Margin__c,
+                        Discount_Percent__c,
+                        Discount_Amount__c,
+                        Total_Fees__c,
+                        As_Sold_Margin__c,
+                        Final_Total__c,
+                        Blended_Rate_Number__c,
+                        Offshore_Blend__c
+                       FROM CMC_Presales_LOE__c 
+                       WHERE Id = :estimate.id];
+      
+      this.estimate.Discount_Percent__c = this.estimate.Discount_Percent__c == NULL ? 0 : this.estimate.Discount_Percent__c;
+      
+      return null;
+  }
+  
+  public void changeDiscount(){
+      update this.estimate;
+      refreshOverviewPanel(); 
   }
   
   public PageReference pageAction(){
     super.validateAccess(this.estimate);
     this.estimateRateCards = E2_Estimator_Manager.getEstimateRateCards(this.estimate.Id, this.estimate.CurrencyISOCode);
-    populateMarginMap();// TODO: REMOVE NOT NEEDED NOW
     return null;
-  }
-  
-  public void populateMarginMap(){
-      // TODO: REMOVE NOT NEEDED NOW
-    //code for rc margin and rate margin
-    if(!estimateRateCards.isEmpty()){
-      for(E2_Estimate_Rate_Card__c rc : estimateRateCards){
-        if(rc.Resource_Cost__c != null && rc.Bill_Rate__c != null){
-            marginNum = 1 - (Double.valueOf(rc.Resource_Cost__c)/Double.valueOf(rc.Bill_Rate__c));
-            Decimal roundedrcMargin  = marginNum.setScale(2);
-            mapIdtoRCMargin.put(rc.Id, roundedrcMargin);
-        }
-        if(rc.Resource_Cost__c != null && rc.Discounted_Rate__c!= null){
-            marginNum = 1 - (Double.valueOf(rc.Resource_Cost__c)/Double.valueOf(rc.Discounted_Rate__c));
-            Decimal roundedrcMargin  = marginNum.setScale(2);
-            mapIdToRateMargin.put(rc.Id, roundedrcMargin);
-        }
-      }  
-    }
   }
   
   public E2_Estimate_Rate_Card__c getEstimateRateCard(pse__Rate_Card__c rateCard, String currencyCode){
@@ -136,7 +140,6 @@ public with sharing class E2_TimelineController extends E2_Master {
     									ORDER BY Region__c ASC, Resource_Role__c ASC];
     									
     		updateEstimateResources();
-    		populateMarginMap();
     	
        }
       return null;

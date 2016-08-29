@@ -62,6 +62,8 @@
         <members>E2_SelectScopeTemplateControllerTest</members>
         <members>E2_Test_Utils</members>
         <members>E2_TimelineController</members>
+        <members>E2_TimelineWS</members>
+        <members>E2_TimelineWSManager</members>
         <members>E2_TreeNode</members>
         <members>E2_TreeNodeMap</members>
         <members>E2_TreeNodeMapTest</members>

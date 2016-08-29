@@ -22,7 +22,9 @@ public class E2_AddEditEstimateController extends E2_Master{
  
   
   public E2_AddEditEstimateController(ApexPages.StandardController std) {    
-    this.estimate = (CMC_Presales_LOE__c)std.getRecord();                      
+    this.estimate = (CMC_Presales_LOE__c)std.getRecord();   
+    // set the default currency iso code for this estimate
+    this.estimate.CurrencyISOCode = (this.estimate.CurrencyISOCode == NULL ? E2_Constants.CURRENCY_ISO_CODE_USD : this.estimate.CurrencyISOCode);
     this.isEdit = false;
     this.estimateDateScoped = system.today(); 
     this.std = std;

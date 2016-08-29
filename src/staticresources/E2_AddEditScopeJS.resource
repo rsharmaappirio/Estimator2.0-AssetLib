@@ -878,7 +878,42 @@ var AddEditScope = {
         CustomAlert.show('Scope(s) have been edited successfully!!!');
         **/
     },
-    
+    updateChildScopeOnParentScopeEdit: function(scope_id, changeComplexity, scopeToActivate, scopeToDeactivate) {
+        var allChildScopes = [];
+        var $node = $(treeId).jstree().get_node(scope_id);
+		$.each($node.children_d, function(indx, id) {
+		    var $childnode = $(treeId).jstree().get_node(id);
+		    allChildScopes.push($childnode.original.id);
+		 });
+		 var scopesString = allChildScopes.toString();
+		 if(scopesString != '' && (changeComplexity != '' || scopeToActivate != '' || scopeToDeactivate != '')) {
+		     sforce.apex.execute("E2_Estimator_WS", "updateScopesStatus", {
+                complexity: changeComplexity,
+                scopeToActivate: scopeToActivate,
+                scopeToDeactivate: scopeToDeactivate,
+                allscopesIds : scopesString
+            }, AddEditScope.scopesUpdatedCallback);
+		 }
+    },
+    scopesUpdatedCallback: {
+        onSuccess: function(result) {
+            if (result.length > 0) {
+                    $(treeId).jstree('destroy');
+                    $(treeId).jstree(jstree_options);
+                    AddEditScope.tree_init();
+                    // End
+                    $(loadSpinner).hide();
+                    CustomAlert.show('Scopes has been successfully updated!!!');
+            } else {
+                $(loadSpinner).hide();
+            }
+
+        },
+        onFailure: function(error) {
+            console.log(error);
+            $(loadSpinner).hide();
+        }
+    },
     showSaveSuccessMessage: function(scope_id, scope_name){
     	AddEditScope.SAVED_SCOPE_ID = scope_id;
         AddEditScope.SAVED_SCOPE_NAME = scope_name;

@@ -722,6 +722,126 @@ function PhaseSelectionEditor(args) {
     this.init();
 }
 
+function AutoCompleteEditor(args) {
+    var $input;
+    var defaultValue = '';
+    var scope = this;
+    
+    this.init = function () {
+      $input = $("<INPUT id='" + (typeof args.item.id == 'undefined' ? 'new' : args.item.id) + "' type=text class='editor-text' />");
+      
+      $input.appendTo(args.container)
+            .keydown(function(e){
+                if(e.which == 37 || e.which == 39 || e.which == 38 || e.which == 40 || e.which == 13){
+                    // Don't propogate the event to the document
+                    if (e.stopPropagation) {
+                        e.stopPropagation();   // W3C model
+                    } else {
+                          e.cancelBubble = true; // IE model
+                    }
+                }
+            });
+            
+      $input.focus().select();
+      
+      $input.autocomplete({
+        delay: 0,
+        minLength: 0,
+        source: function(request, response){
+        	var matcher = new RegExp( $.ui.autocomplete.escapeRegex(request.term), "i" );
+        	var results = [];
+        	
+        	$(Timeline.rt_json).each(function(index, element) {
+        		if(matcher.test(element.resource)){
+			        results.push(element);
+			      }
+			    });
+        	
+        	response(results);
+        },
+        select: function( event, ui ) {
+            console.log('---' + ui.item.resource);
+            $input.val(ui.item.resource);
+            var isValid = false;
+            $(Timeline.rt_json).each(function(index, element) {
+        	    if(element.resource == $input.val()){ 
+            	        isValid = true;
+                        return false;
+        	    }
+        	});
+            
+            if(isValid){
+                console.log('valid entry');
+                Timeline.onResourceSelectionChange(event, ui, $input.attr('id'));
+            }
+            
+            return false;
+		}
+        
+      }).data( "autocomplete" )._renderItem  = function( ul, item ) {
+          
+          return $( "<li></li>" )
+	                .data( "item.autocomplete", item )
+	                .append( "<a>" + item.resource + "</a>" )
+	                .appendTo( ul ); 
+      };
+      
+      
+    };
+
+
+
+    this.destroy = function() {
+        $input.autocomplete("destroy");
+        //$input.remove();
+    };
+
+    this.focus = function() {
+        $input.focus();
+    };
+
+    this.loadValue = function(item) {
+      defaultValue = item[args.column.field] || "";
+      $input.val(defaultValue);
+      $input[0].defaultValue = defaultValue;
+      $input.select();
+    };
+
+    this.serializeValue = function() {
+        return $input.val();
+    };
+
+    this.applyValue = function(item, state) {
+        item[args.column.field] = state;
+    };
+
+    this.isValueChanged = function() {
+        return ($input.val() != defaultValue);
+    };
+
+    this.validate = function() {
+        var isValid = false;
+        
+        if($input.val() == defaultValue){
+            isValid = true;
+        }
+        
+    	$(Timeline.rt_json).each(function(index, element) {
+    	    if(element.resource == $input.val()){ 
+    	        isValid = true;
+                return false;
+    	    }
+    	});
+        
+        return {
+            valid: isValid,
+            msg: null
+        };
+    };
+
+    this.init();
+}
+
 function PickListEditor(args) {
     var $select;
     var defaultValue;
@@ -1259,6 +1379,8 @@ var loader = {
     hide: function() {
 
         loadingIndicator.fadeOut();
+        // To refresh the overview panel
+        if(typeof refreshOverviewPanel === 'function') refreshOverviewPanel();
     }
 }
 
@@ -1355,6 +1477,25 @@ var Timeline = {
 
     },
 
+   onResourceSelectionChange: function(event, ui, id) {
+        
+    	var cost = parseInt(ui.item.cost);
+    	var rate = parseInt(ui.item.discountedRate);
+    	var role = ui.item.resource;
+    	var estimateRateCardId = ui.item.id == 'undefined' ? '' : ui.item.id; 
+    	
+    	var order = 1; //this is just dummy setting here; actually set before calling ajax to server
+    	var skill = '';
+       
+    	
+    	if (id.toLowerCase().indexOf('new') != -1) {
+    		Timeline.addRow(estimateId, order, cost, rate, role, skill, estimateRateCardId);
+    	} else {
+    		Timeline.updateRow(estimateId, id, role, skill, cost, rate,  estimateRateCardId);
+    	}
+    
+    },
+
     getDefaultColumns: function() {
         return [{
             id: "move",
@@ -1399,7 +1540,8 @@ var Timeline = {
             selectable: false,
             resizable: false,
             focusable : true,
-            editor: PickListEditor,
+            //editor: PickListEditor,
+            editor: AutoCompleteEditor,
             cssClass: "",
             groupName: " ",
             header: {},
@@ -2109,9 +2251,15 @@ var Timeline = {
                 loader.hide();
                 return;
             }
-            sforce.apex.execute(WEBSERVICE_NAME, "getTimelineRows", {
+            
+            sforce.apex.execute(WEBSERVICE_NAME, "getTimelineColumns", {
+                estimateId: estimateId
+            }, Timeline.initCallback);
+            
+            /**sforce.apex.execute(WEBSERVICE_NAME, "getTimelineRows", {
                 estimateId: estimateId
             }, Timeline.getRows_CallBack);
+            **/
 
         },
         onFailure: function(error) {
@@ -2122,9 +2270,6 @@ var Timeline = {
     updateRow: function(estimateId, rowId,
         role,
         skill,cost,rate,estimateRateCardId) {
-           /** alert(cost);
-            alert(rate);
-            alert(estimateRateCardId);**/
         loader.show();
         sforce.apex.execute(WEBSERVICE_NAME, "updateRow", {
             estimateId: estimateId,
@@ -2153,9 +2298,10 @@ var Timeline = {
             }
             //loader.hide();
             // Because we need rate and cost updated as per the latest selected resource
-            sforce.apex.execute(WEBSERVICE_NAME, "getTimelineRows", {
+            // also needed the phases/milestone data too.
+             sforce.apex.execute(WEBSERVICE_NAME, "getTimelineColumns", {
                 estimateId: estimateId
-            }, Timeline.getRows_CallBack);
+            }, Timeline.initCallback);
 
         },
         onFailure: function(error) {
@@ -2424,7 +2570,7 @@ var Timeline = {
             // process success
             sforce.apex.execute(WEBSERVICE_NAME, "getTimelineColumns", {
                 estimateId: estimateId
-            }, Timeline.getColumns_Callback);
+            }, Timeline.initCallback);
 
         },
         onFailure: function(error) {

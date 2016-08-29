@@ -19,6 +19,8 @@ public with sharing class E2_EditScopeController {
     public boolean is_Dirty{get;set;}
     public string assetsRecsJson {get;set;}
     public string effortsJson {get;set;}
+    
+    public E2_ScopeQuestionAnswerManager scopeQuestionManager{get;set;}
 
     public E2_EditScopeController(ApexPages.StandardController std) {
        // constructor for the page tied to standard controller	
@@ -30,6 +32,7 @@ public with sharing class E2_EditScopeController {
        this.is_Dirty = false;
        assetsRecsJson = '';
        effortsJson = '';
+       scopeQuestionManager = new E2_ScopeQuestionAnswerManager();
     }
 
     public PageReference pageAction(){
@@ -39,6 +42,7 @@ public with sharing class E2_EditScopeController {
         	this.errorMessage = 'No scope defined to edit!!!';
             return null;            
         }else{
+        	scopeQuestionManager.scope = this.scope;
             populateViewRecords();            
         }
         return null;
@@ -164,8 +168,7 @@ public with sharing class E2_EditScopeController {
             return null;            
         }
         this.dmlOperationMessage = E2_Constants.DML_OPERATION_MESSAGE_SUCCESS;
-        //this.childScopes.clear();
-        //populateViewRecords();
+        scopeQuestionManager.saveQuestion(this.errorMessage, this.dmlOperationMessage);
         return null;             
     }
     
@@ -187,12 +190,17 @@ public with sharing class E2_EditScopeController {
     
     }
     
+    public pagereference addNewQuestion() {
+    	return scopeQuestionManager.addNewQuestion();
+    }
+    
     public void populateViewRecords(){
         Id scopeId = this.scope.id;   
         Id currentUserId = UserInfo.getUserId();     
         for(E2_Scope__c scope : E2_DataUtil.getScopeAndChildrenOnScopeIdForEditScope(scopeId)){                
                this.childScopes.add(new Scope(scope, scope.Efforts__r));
         }
+        scopeQuestionManager.retriveScopeQuestion();
     }
     
     

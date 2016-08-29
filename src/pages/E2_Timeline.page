@@ -239,14 +239,14 @@
                     background: url("{!$Resource.E2_SlickGrid}/images/editor-helper-bg.gif") no-repeat top left;
                     padding-left: 9px;
                     width: 120px;
-                    height: 140px;
+                    height: 182px;
                     display: none;
                     overflow: visible;
                 }
                 
                 .editor-percentcomplete-wrapper {
-                    background: beige;
-                    padding: 20px 8px;
+                    background: #d8dde6;
+                    padding: 4px;
                     width: 100%;
                     height: 180px;
                     border: 1px solid gray;
@@ -254,11 +254,11 @@
                 }
                 
                 .editor-percentcomplete-buttons {
-                    float: right;
+                    float: left;
                 }
                 
                 .editor-percentcomplete-buttons button {
-                    width: 80px;
+                    width: 100%;
                 }
                 
                 .editor-percentcomplete-slider {
@@ -313,7 +313,7 @@
                     /**left: -9px;**/
                     /**background: url("{!$Resource.E2_SlickGrid}/images/editor-helper-bg.gif") no-repeat top left;**/
                     padding-left: 9px;
-                    width: 376px;
+                    width: 451px;
                     height: 80px;
                     display: none;
                     overflow: visible;
@@ -542,12 +542,27 @@
                       background-color: rgb(163, 9, 58);
                       font-style: italic;
                   }
-                  
+                  span.overview-label{
+                      font-weight:bold;
+                      line-height:20px;
+                  }
+                  #overview-table tbody tr td{
+                        background: #e0e5ee none repeat scroll 0 0;
+                        border: 1px solid #ccc;
+                        color: #16325c;
+                        padding: 1px;
+                  }
+                  .slds .slds-tabs--default__link {
+                     height:35px!important;   
+                  }
             </style>
             <apex:form >
                 <apex:pageMessages />
                 <apex:actionfunction name="updateEstimateRateCards" action="{!updateEstimateRateCards}" oncomplete="Timeline.updateEstimateRateCards_complete();" rerender="ratecard_table"/>
                 <apex:actionfunction name="refreshRateCardRatesAndCost" action="{!refreshRateCardRatesAndCost}" oncomplete="Timeline.refreshRateCardRatesAndCost_complete();" rerender="ratecard_table"/>
+                <apex:actionfunction name="refreshOverviewPanel" action="{!refreshOverviewPanel}" rerender="overview_panel"/>
+                <apex:actionfunction name="changeDiscount" action="{!changeDiscount}" rerender="overview_panel"/>
+                
                 
                 <div id="tabpanel">
                     <ul class="slds-tabs--default__nav" role="tablist">
@@ -562,40 +577,91 @@
                         </li-->
                     </ul>
                     <div id="tab-default-1" style="padding:0px" class="slds-tabs--default__content slds-hide paddingTopZero" role="tabpanel" aria-labelledby="tab-default-1__item">
-                        <div id="manage_timeline_div"><br/>
+                        <div id="manage_timeline_div">
                         
-                                <div class="slds-grid" style="width:48%;">
+                                <div class="slds-grid"> <!--style="width:48%;"-->
                                  <div class="slds-col--padded">       
                                       <div class="slds-form-element">
                                          <div class="slds-form-element__control">
                                              <label class="slds-form-element__label" for="text-input-1">Start Date<abbr class="slds-required" title="required">*</abbr></label>
-                                            <input type="text" class="slds-input" id="datepicker" style="width:205px" />
+                                            <input type="text" class="slds-input" id="datepicker" style="width:90%" />
                                          </div>
                                       </div>
                                   </div>
-                                  <div id="build_div" class="slds-col--padded" style="display:none;">       
-                                      <div class="slds-form-element">
-                                         <div class="slds-form-element__control">
-                                             <label class="slds-form-element__label" for="text-input-2">No. of weeks<abbr class="slds-required" title="required">*</abbr></label>
-                                             <select id="no_of_weeks" class="slds-select" style="width:55px">
-                                                 <option value="1">1</option>
-                                                  <option value="5">5</option>
-                                                  <option value="10">10</option>
-                                                  <option value="20">20</option>
-                                                  <option value="30">30</option>
-                                                  <option value="40">40</option>
-                                                  <option value="50">50</option>
-                                                  <option value="60">60</option>
-                                                  <option value="70">70</option>
-                                                  <option value="80">80</option>
-                                                  <option value="90">90</option>
-                                                  <option value="100">100</option>
-                                             </select> 
-                                             <input type="submit" onclick="return Timeline.build();" class="slds-button slds-button--neutral slds-button--brand save-button-custom" title="Build" value="Build"/>
-                                         </div>
-                                      </div>
+                                  <div id="build_div" class="slds-col--padded" style="display:none;"> 
+                                      <table>
+                                        <tbody>
+                                            <tr><td>
+                                                <div class="slds-form-element">
+                                                 <div class="slds-form-element__control">
+                                                     <label class="slds-form-element__label" for="text-input-2">No. of weeks<abbr class="slds-required" title="required">*</abbr></label>
+                                                     <select id="no_of_weeks" class="slds-select" style="width:90%"> 
+                                                         <option value="1">1</option>
+                                                         <option value="2">2</option>
+                                                         <option value="3">3</option>
+                                                         <option value="4">4</option>
+                                                          <option value="5">5</option>
+                                                          <option value="10">10</option>
+                                                          <option value="20">20</option>
+                                                          <option value="30">30</option>
+                                                          <option value="40">40</option>
+                                                          <option value="50">50</option>
+                                                          <option value="60">60</option>
+                                                          <option value="70">70</option>
+                                                          <option value="80">80</option>
+                                                          <option value="90">90</option>
+                                                          <option value="100">100</option>
+                                                     </select> 
+                                                 </div>
+                                              </div>
+                                            </td><td style="vertical-align:bottom">
+                                                <input type="submit" onclick="return Timeline.build();" class="slds-button slds-button--neutral slds-button--brand save-button-custom" title="Build" value="Build"/>
+                                            </td></tr>
+                                        </tbody>    
+                                      </table>
+                                      
+                                      
+                                  </div>
+                                  <div id="overview_div" class="slds-col--padded" style="width:50%"> 
+                                    <apex:outputpanel id="overview_panel">
+                                        <table style="width:100%" id="overview-table">
+                                            <thead>
+                                                <tr>
+                                                    <th colspan="3">ESTIMATE SUMMARY</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td><span class="overview-label">Services Fees:</span>&nbsp;<apex:outputfield value="{!estimate.Service_Fees__c}"/></td>
+                                                    <td><span class="overview-label">Services Cost:</span>&nbsp;<apex:outputfield value="{!estimate.Service_Costs__c}"/></td>
+                                                    <td><span class="overview-label">Services Margin:</span>&nbsp;<apex:outputfield value="{!estimate.Service_Margin__c}"/></td>
+                                                </tr>
+                                                <tr>
+                                                    <td><span class="overview-label">Calculated Fees:</span>&nbsp;{!CMC_Presales_LOE__c.CurrencyIsoCode}&nbsp;<apex:outputfield value="{!estimate.Calculated_Fees__c}"/></td>
+                                                    <td><span class="overview-label">Calculated Costs:</span>&nbsp;{!CMC_Presales_LOE__c.CurrencyIsoCode}&nbsp;<apex:outputfield value="{!estimate.Calculated_Costs__c}"/></td>
+                                                    <td><span class="overview-label">Calculated Margin:</span>&nbsp;<apex:outputfield value="{!estimate.Calculated_Margin__c}"/></td>
+                                                </tr>
+                                                <tr>
+                                                    <td><span class="overview-label">Discount:</span>&nbsp;<apex:inputfield onchange="changeDiscount();return false;" styleClass="slds-input" style="line-height: 20px;min-height: 20px;width: 40px;" value="{!estimate.Discount_Percent__c}"/>%</td>
+                                                    <td><span class="overview-label">Discount Amt:</span>&nbsp;{!CMC_Presales_LOE__c.CurrencyIsoCode}&nbsp;<apex:outputfield value="{!estimate.Discount_Amount__c}"/></td>
+                                                    <td></td>
+                                                </tr>
+                                                <tr>
+                                                    <td><span class="overview-label">As Sold Margin:</span>&nbsp;<apex:outputfield value="{!estimate.As_Sold_Margin__c}"/></td>
+                                                    <td><span class="overview-label">Blended (List) Rate:</span>&nbsp;<apex:outputfield value="{!estimate.Blended_Rate_Number__c}"/></td>
+                                                    <td><span class="overview-label">Offshore Blend:</span>&nbsp;<apex:outputfield value="{!estimate.Offshore_Blend__c}"/></td>
+                                                </tr>
+                                                <tr>
+                                                    <td><span class="overview-label">Total Fees:</span>&nbsp;{!CMC_Presales_LOE__c.CurrencyIsoCode}&nbsp;<apex:outputfield value="{!estimate.Total_Fees__c}"/></td>
+                                                    <td><span class="overview-label">Total:</span>&nbsp;{!CMC_Presales_LOE__c.CurrencyIsoCode}&nbsp;<apex:outputfield value="{!estimate.Final_Total__c}"/></td>
+                                                    <td></td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </apex:outputpanel>
                                   </div>
                                 </div>  
+                                
                                       <br/>
                                        <div style="position:relative">
                                             <div>
@@ -745,7 +811,25 @@
                 <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Derived_Effort_Template__c}" />
                 <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Last_Build_Datetime__c}" />
                 <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Risk__c}" />
+                
                 <input type="hidden" value="{!CMC_Presales_LOE__c.CurrencyISOCode}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.Service_Fees__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.Service_Costs__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.Service_Margin__c}" />
+                
+                <input type="hidden" value="{!CMC_Presales_LOE__c.Calculated_Fees__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.Calculated_Costs__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.Calculated_Margin__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.Discount_Percent__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.Discount_Amount__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.Total_Fees__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.As_Sold_Margin__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.Final_Total__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.Blended_Rate_Number__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.Offshore_Blend__c}" />
+               
+               
+               
             </apex:form>
         </apex:define>
         <apex:define name="footer">
