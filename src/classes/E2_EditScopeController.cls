@@ -11,7 +11,7 @@
 
 public with sharing class E2_EditScopeController {
     public E2_Scope__c scope{get;set;}
-    public List<Scope> childScopes{get;set;}     
+    public Scope childScope{get;set;}
     public boolean is_View{get;set;}
     public string estimateId{get;set;}
     public string dmlOperationMessage{get;set;}
@@ -25,7 +25,7 @@ public with sharing class E2_EditScopeController {
     public E2_EditScopeController(ApexPages.StandardController std) {
        // constructor for the page tied to standard controller	
        this.scope = (E2_Scope__c)std.getRecord();
-       this.childScopes = new List<Scope>();       
+       this.childScope = new Scope();
        this.is_View = false;       
        this.dmlOperationMessage = E2_Constants.DML_OPERATION_MESSAGE_FAIL;
        this.errorMessage = E2_constants.BLANK;
@@ -48,6 +48,16 @@ public with sharing class E2_EditScopeController {
         return null;
     }
     
+    public E2_Favourite_Scope__c getE2FavoriteScopeInstance(Id scopeId, Id userId, string uniqueKey){
+          E2_Favourite_Scope__c favSC = new E2_Favourite_Scope__c();
+	      favSC.Scope__c = scopeId;
+	      favSC.User__c = userId;
+	      favSC.Unique_Scope_User_Id__c = uniqueKey;
+		  return favSc;	      
+        
+    }
+    
+    
     public pagereference saveScope(){
         List<E2_Scope__c> scopeListToUpsert = new List<E2_Scope__c>();       
         List<E2_Effort__c> masterScope_Efforts = new List<E2_Effort__c>();        
@@ -56,21 +66,27 @@ public with sharing class E2_EditScopeController {
         List<E2_Favourite_Scope__c> fscLstToInsert = new List<E2_Favourite_Scope__c>();
         List<E2_Favourite_Scope__c> fscLstToDelete = new List<E2_Favourite_Scope__c>();  
         Map<String,E2_Favourite_Scope__c> favScopes = new Map<String,E2_Favourite_Scope__c>();
-        for(E2_Favourite_Scope__c favSC : [SELECT Id,Unique_Scope_User_Id__c FROM E2_Favourite_Scope__c WHERE User__c =: UserInfo.getUserId()]) {
-            favScopes.put(favSC.Unique_Scope_User_Id__c, favSC);
-        }
-        Scope masterScope;
-        this.errorMessage = E2_Constants.BLANK;        
-        Id recTypeId = E2_RecordTypeClass.getId(E2_Constants.E2_SCOPE_API_NAME, E2_Constants.SCOPE_RT_SCOPE);
-        
         List<E2_Recommended_Asset__c> assetsToInsert = new List<E2_Recommended_Asset__c>();
         List<E2_Recommended_Asset__c> assetsToDelete = new List<E2_Recommended_Asset__c>();
+        this.errorMessage = E2_Constants.BLANK;  
+        Scope masterScope;
+        Id recTypeId = E2_RecordTypeClass.getId(E2_Constants.E2_SCOPE_API_NAME, E2_Constants.SCOPE_RT_SCOPE);
         
-        if(assetsRecsJson != '' && assetsRecsJson.length() > 0){
+        
+        // TODO - Rohit Sharma/Arpita - please move this query to datautil class
+        for(E2_Favourite_Scope__c favSC : [SELECT Id,Unique_Scope_User_Id__c 
+                                          FROM E2_Favourite_Scope__c 
+                                          WHERE User__c =: UserInfo.getUserId()]) {
+            favScopes.put(favSC.Unique_Scope_User_Id__c, favSC);
+        }
+        
+       
+        
+        if(!String.isBlank(assetsRecsJson) && assetsRecsJson.length() > 0){
             Map<String, Object> assetsMap =  (Map<String, Object>) JSON.deserializeUntyped(assetsRecsJson);
             for(String assetId : assetsMap.keySet()){
               Map<String, Object> obj = (Map<String, Object>)assetsMap.get(assetId);
-              if((String)obj.get('isExisting') == 'false' && (String)obj.get('isDeleted') == 'false'){
+              if(((String)obj.get('isExisting')) == 'false' && ((String)obj.get('isDeleted')) == 'false'){
                   assetsToInsert.add(new E2_Recommended_Asset__c(Scope__c = this.scope.id, Asset__c = assetId));
               }
               else if((String)obj.get('isExisting') == 'true' && (String)obj.get('isDeleted') == 'true' && (String)obj.get('recommendedAssetRecId') != null){
@@ -82,34 +98,28 @@ public with sharing class E2_EditScopeController {
         // Create a savepoint 
         Savepoint sp = Database.setSavepoint();
         
-        for(Scope sc : childScopes){
-        	if(sc.isDeleted == false){                
-                scopeListToUpsert.add(sc.scope);
-                String uniqueKey = sc.scope.Id +'-'+ UserInfo.getUserId();
-                if(sc.scope.Is_Favourite__c == true && !favScopes.containsKey(uniqueKey)){
-                  E2_Favourite_Scope__c favSC = new E2_Favourite_Scope__c();
-			      favSC.Scope__c = sc.scope.Id;
-			      favSC.User__c = UserInfo.getUserId();
-			      favSC.Unique_Scope_User_Id__c = uniqueKey;
-			      fscLstToInsert.add(favSC);
-                }
-                else if(sc.scope.Is_Favourite__c == false && favScopes.containsKey(uniqueKey)){
-				    fscLstToDelete.add(favScopes.get(uniqueKey));
-				}
-        	} else {
-        		scopeListToDelete.add(sc.scope);
-        	}
-        	this.scope = sc.scope;
+    	if(this.childScope.isDeleted == false){                
+            // scope to insert/update (Upsert)
+            scopeListToUpsert.add(this.childScope.scope);
+        
+            String uniqueKey = this.childScope.scope.Id + '-' + UserInfo.getUserId();
+            if(this.childScope.scope.Is_Favourite__c == true && !favScopes.containsKey(uniqueKey)){
+		      fscLstToInsert.add(getE2FavoriteScopeInstance(this.childScope.scope.Id, UserInfo.getUserId(), uniqueKey));
+		    }else if(this.childScope.scope.Is_Favourite__c == false && favScopes.containsKey(uniqueKey)){
+			  fscLstToDelete.add(favScopes.get(uniqueKey));
+			}
+				
+        } else {
+        	scopeListToDelete.add(this.childScope.scope);
         }
+        this.scope = this.childScope.scope;
         
         try{       
            system.debug('>>>>>SIZE>>>>' + scopeListToUpsert.size()); 
-           if(!fscLstToInsert.isEmpty()){
-              upsert fscLstToInsert;
-           }
-           if(!fscLstToDelete.isEmpty()){
-              delete fscLstToDelete;
-           } 
+           if(!fscLstToInsert.isEmpty()) upsert fscLstToInsert;
+           
+           if(!fscLstToDelete.isEmpty()) delete fscLstToDelete;
+           
            if(!scopeListToUpsert.isEmpty()) upsert scopeListToUpsert;
            
 		        
@@ -123,22 +133,18 @@ public with sharing class E2_EditScopeController {
             return null;
         }
         
-        for(Scope sc : childScopes){        
-            if(sc.isDeleted == false){             
+        if(this.childScope.isDeleted == false){             
                     
-                    for(Effort ef : sc.efforts){
-                        if(ef.isDeleted == true){
-                           if(ef.effort.id <> NULL) effortsToDelete.add(ef.effort); 
-                           continue;
-                        }
-                        system.debug('>>ef.effort.scope__c = sc.scope.id>>' + ef.effort.scope__c + '=' +  sc.scope.id);
-                        if(ef.effort.scope__c == null) ef.effort.scope__c = sc.scope.id;
-                        masterScope_Efforts.add(ef.effort);
-                    }
-               
-            }           
-        }
-                
+            for(Effort ef : this.childScope.efforts){
+                if(ef.isDeleted == true){
+                    if(ef.effort.id <> NULL) effortsToDelete.add(ef.effort); 
+                        continue;
+                }
+                system.debug('>>ef.effort.scope__c = sc.scope.id>>' + ef.effort.scope__c + '=' +  this.childScope.scope.id);
+                if(ef.effort.scope__c == null) ef.effort.scope__c = this.childScope.scope.id;
+                    masterScope_Efforts.add(ef.effort);
+            }
+        }       
         try{
             if(!effortsToDelete.isEmpty()){
               delete effortsToDelete;            
@@ -159,6 +165,8 @@ public with sharing class E2_EditScopeController {
             if(assetsToDelete.size() > 0){
             	delete assetsToDelete;
             }
+            assetsRecsJson = '';
+            this.is_Dirty = false;
         }catch(Exception ex){
             Database.rollback(sp);
             resetChildScopesOnException(); 
@@ -173,21 +181,17 @@ public with sharing class E2_EditScopeController {
     }
     
     public void resetChildScopesOnException(){       
-       for(Scope sc : childScopes){ 
-               string scope_id = sc.scope.id;
-               if(sc.key <> scope_id){
-                  sc.scope.id = null;
-               }
-                
-                for(Effort ef : sc.efforts){
-                    string ef_id = ef.effort.id;
-                    if(ef.key <> ef_id){
-                      ef.effort.id = null;
-                      ef.effort.scope__c = null;
-                    }
-                }
+        string scope_id = this.childScope.scope.id;
+        if(this.childScope.key <> scope_id){
+            this.childScope.scope.id = null;
         }
-    
+        for(Effort ef : this.childScope.efforts){
+            string ef_id = ef.effort.id;
+            if(ef.key <> ef_id){
+                ef.effort.id = null;
+                ef.effort.scope__c = null;
+            }
+        }
     }
     
     public pagereference addNewQuestion() {
@@ -197,8 +201,8 @@ public with sharing class E2_EditScopeController {
     public void populateViewRecords(){
         Id scopeId = this.scope.id;   
         Id currentUserId = UserInfo.getUserId();     
-        for(E2_Scope__c scope : E2_DataUtil.getScopeAndChildrenOnScopeIdForEditScope(scopeId)){                
-               this.childScopes.add(new Scope(scope, scope.Efforts__r));
+        for(E2_Scope__c scope : E2_DataUtil.getScopeAndChildrenOnScopeIdForEditScope(scopeId)){
+               this.childScope = new Scope(scope, scope.Efforts__r);
         }
         scopeQuestionManager.retriveScopeQuestion();
     }
@@ -219,7 +223,7 @@ public with sharing class E2_EditScopeController {
             List<E2_EffortsWrapper> lstEffortsWrapper = (List<E2_EffortsWrapper>)JSON.deserialize(effortsJson, List<E2_EffortsWrapper>.class);
             for(E2_EffortsWrapper effortWrapper : lstEffortsWrapper){
                 if(effortWrapper.hours > 0){
-                    childScopes[0].efforts.add(new Effort(new E2_Effort__c(Complexity_Factor_High__c = 0, 
+                    childScope.efforts.add(new Effort(new E2_Effort__c(Complexity_Factor_High__c = 0, 
                                                                            Complexity_Factor_Low__c = 0, 
                                                                            Effort_Hrs__c = effortWrapper.hours,
                                                                            Name = effortWrapper.phaseName + '-' + effortWrapper.roleName,
@@ -227,6 +231,7 @@ public with sharing class E2_EditScopeController {
                                                                            Resource_Role__c = effortWrapper.roleName)));
                 }    
             }
+            this.is_Dirty = true;
         }
         return null;
     }
@@ -237,7 +242,6 @@ public with sharing class E2_EditScopeController {
         public boolean isCloned{get;set;}
         public boolean hasClonedEfforts{get;set;}
         public List<Effort> efforts{get;set;}
-        //public string deletekey_effort{get;set;}
 
         public boolean isDeleted{get;set;}
         public string slider_state{get;set;}
@@ -261,6 +265,9 @@ public with sharing class E2_EditScopeController {
             return hrs.round();
         }
         
+        public Scope() {
+        }
+        
         public Scope(E2_Scope__c scope, List<E2_Effort__c> efforts){            
             this.efforts = new List<Effort>();
             this.isDeleted = false;
@@ -269,12 +276,7 @@ public with sharing class E2_EditScopeController {
             if(scope.Source_Scope__c != NULL){
             	this.isCloned = true;            	
             }
-            /*if(scope.id == null){   
-               Blob hash2 = Crypto.generateDigest(E2_Constants.MD5, Blob.valueOf(E2_Constants.STRING_1000 + String.valueOf(Datetime.now().formatGMT(E2_Constants.DATETIME_FORMAT_YYYYMMDD))));
-               this.key = EncodingUtil.convertToHex(hash2);
-            }else{*/
-              this.key = scope.id;
-            //}
+            this.key = scope.id;
             this.scope = scope;
             for(E2_Effort__c effort : efforts){
                 if(effort.Source_Effort__c <> NULL) {

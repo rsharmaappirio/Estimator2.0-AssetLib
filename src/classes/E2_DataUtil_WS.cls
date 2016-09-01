@@ -72,19 +72,7 @@ public with sharing class E2_DataUtil_WS {
             FROM E2_Scope__c e 
             WHERE e.id = : scopeId];
    }
-   
-     
-   /*public static List<E2_scope__c> getFullScopeDetailsWithLimit(string scopeId) {
-   	return [Select e.Source_Scope__c, e.Scope_Group__c, e.Parent_Scope__c, e.Name, 
-                   e.Presales_LOE__c, e.Description__c , e.LOE_Hrs__c, 
-                   e.Complexity__c, e.Scope_Item_Type__c, e.Is_Active__c, e.Scope_Flag__c, 
-                   e.E2_Assumption__c, 
-            (Select Id FROM Child_Scopes__r limit 1), 
-            (Select Id FROM Efforts__r limit 1) 
-            FROM E2_Scope__c e 
-            WHERE e.id = : scopeId];
-   }*/
-   
+      
    public static List<E2_scope__c> getFullScopesDetailsWithLimit(List<string> scopeId) {
    	return [Select e.Source_Scope__c, e.Scope_Group__c, e.Parent_Scope__c, e.Name, 
                    e.Presales_LOE__c, e.Description__c , e.LOE_Hrs__c, 

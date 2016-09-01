@@ -43,6 +43,14 @@
                 <behavior>Edit</behavior>
                 <field>Description__c</field>
             </layoutItems>
+            <layoutItems>
+                <behavior>Edit</behavior>
+                <field>Display_Order__c</field>
+            </layoutItems>
+            <layoutItems>
+                <behavior>Edit</behavior>
+                <field>Sequence__c</field>
+            </layoutItems>
         </layoutColumns>
         <layoutColumns>
             <layoutItems>
@@ -139,6 +147,8 @@
         <fields>Is_Active__c</fields>
         <fields>Complexity__c</fields>
         <fields>LOE_Hrs__c</fields>
+        <fields>Display_Order__c</fields>
+        <fields>Sequence__c</fields>
         <relatedList>E2_Scope__c.Parent_Scope__c</relatedList>
     </relatedLists>
     <relatedLists>

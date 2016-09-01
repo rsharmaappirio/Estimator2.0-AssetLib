@@ -344,10 +344,10 @@
                                         <div class="slds-grid">
                                             <h1 class="slds-page-header__title slds-m-right--small slds-truncate slds-align-middle" title="Record Title">Scope Detail</h1>
                                             <span>
-                                        <span class="dot dot-red {!If(childScopes[0].scope.Scope_Flag__c = 'Red', 'dot-active', '')}" title="Red"><span class="dot-inner"></span></span>
-                                            <span class="dot dot-yellow {!If(childScopes[0].scope.Scope_Flag__c = 'Yellow', 'dot-active', '')}" title="Yellow"><span class="dot-inner"></span></span>
-                                            <span class="dot dot-green {!If(childScopes[0].scope.Scope_Flag__c = 'Green', 'dot-active', '')}" title="Green"><span class="dot-inner"></span></span>
-                                            <span class="dot {!If(ISBLANK(childScopes[0].scope.Scope_Flag__c), 'dot-active', '')}" title=""><span class="dot-inner"></span></span>
+                                        <span class="dot dot-red {!If(childScope.scope.Scope_Flag__c = 'Red', 'dot-active', '')}" title="Red"><span class="dot-inner"></span></span>
+                                            <span class="dot dot-yellow {!If(childScope.scope.Scope_Flag__c = 'Yellow', 'dot-active', '')}" title="Yellow"><span class="dot-inner"></span></span>
+                                            <span class="dot dot-green {!If(childScope.scope.Scope_Flag__c = 'Green', 'dot-active', '')}" title="Green"><span class="dot-inner"></span></span>
+                                            <span class="dot {!If(ISBLANK(childScope.scope.Scope_Flag__c), 'dot-active', '')}" title=""><span class="dot-inner"></span></span>
                                             </span>
                                             <span style="padding-top:6px;">
                                                   <span class="slds-change-notification">You have unsaved item.</span>
@@ -368,33 +368,32 @@
                     <div>
                         <table class="slds-table slds-table--bordered slds-no-row-hover slds-max-medium-table--stacked scope-table">
 
-                            <tbody>
-                                <apex:repeat value="{!childScopes}" var="childscope">
-                                    <apex:outputpanel rendered="{!!childscope.isDeleted}">
-                                        <tr class="slds-hint-parent {!IF(childscope.slider_state == '', '', 'slds-selection-background')}">
+                            <tbody>                                    
+                                    <apex:outputpanel rendered="{!!childScope.isDeleted}">
+                                        <tr class="slds-hint-parent {!IF(childScope.slider_state == '', '', 'slds-selection-background')}">
 
-                                            <td class="slds-truncate slds-size--1-of-3" data-label="Scope Name" title="{!childscope.scope.Name}">
+                                            <td class="slds-truncate slds-size--1-of-3" data-label="Scope Name" title="{!childScope.scope.Name}">
 
 
                                                 <div class="slds-form-element is-required ">
                                                     <label class="slds-form-element__label">Name</label>
                                                     <div class="slds-form-element__control">
-                                                        <apex:inputfield styleclass="slds-input" value="{!childscope.scope.Name}" />
+                                                        <apex:inputfield styleclass="slds-input" value="{!childScope.scope.Name}" />
                                                     </div>
                                                     <div class="slds-form-element__help" style="display:none">This field is required</div>
                                                 </div>
 
-                                                <apex:inputHidden id="slider_state" value="{!childscope.slider_state}" />
+                                                <apex:inputHidden id="slider_state" value="{!childScope.slider_state}" />
 
 
 
                                                 <div class="slds-grid top">
                                                     <div class="slds-col paddingrightThree">
-                                                        <div class="slds-form-element is-required " title="{!childscope.scope.Complexity__c}">
+                                                        <div class="slds-form-element is-required " title="{!childScope.scope.Complexity__c}">
                                                             <label class="slds-form-element__label">Complexity</label>
                                                             <div class="slds-form-element__control">
-                                                                <apex:inputfield id="scope-complexity" value="{!childscope.scope.Complexity__c}" styleclass="slds-select scope-complexity" rendered="{!NOT(is_View)}">
-                                                                    <!--                                                    <apex:actionSupport event="onchange" action="{!childscope.changeComplexity}"/> -->
+                                                                <apex:inputfield id="scope-complexity" value="{!childScope.scope.Complexity__c}" styleclass="slds-select scope-complexity" rendered="{!NOT(is_View)}">
+                                                                    <!--                                                    <apex:actionSupport event="onchange" action="{!childScope.changeComplexity}"/> -->
                                                                 </apex:inputfield>
                                                             </div>
                                                             <div class="slds-form-element__help" style="display:none">This field is required</div>
@@ -405,7 +404,7 @@
                                                             <label class="slds-form-element__label">Type</label>
                                                             <div class="slds-form-element__control">
 
-                                                                <apex:inputfield id="scope-itemtype" styleclass="slds-select scope-itemtype" value="{!childscope.scope.Scope_Item_Type__c}" rendered="{!NOT(is_View)}" />
+                                                                <apex:inputfield id="scope-itemtype" styleclass="slds-select scope-itemtype" value="{!childScope.scope.Scope_Item_Type__c}" rendered="{!NOT(is_View)}" />
 
                                                             </div>
                                                         </div>
@@ -414,12 +413,12 @@
 
                                                 <Br/>
                                                 <div class="slds-grid">
-                                                    <apex:outputPanel layout="none" rendered="{!IF($User.Id == childscope.scope.CreatedById, true, false)}">
+                                                    <apex:outputPanel layout="none" rendered="{!IF($User.Id == childScope.scope.CreatedById, true, false)}">
                                                         <div class="slds-col slds-size--1-of-3">
                                                             <div class="slds-form-element">
                                                                 <div class="slds-form-element__control">
                                                                     <label class="slds-checkbox">
-	                                                      <apex:inputfield styleclass="slds-checkbox" value="{!childscope.scope.Is_Favourite__c}" rendered="{!NOT(is_View)}" />
+	                                                      <apex:inputfield styleclass="slds-checkbox" value="{!childScope.scope.Is_Favourite__c}" rendered="{!NOT(is_View)}" />
 	                                                      <span class="slds-checkbox--faux"></span>
 	                                                      <span class="slds-form-element__label">Favorite</span>
 	                                                    </label>
@@ -431,7 +430,7 @@
                                                         <div class="slds-form-element">
                                                             <div class="slds-form-element__control">
                                                                 <label class="slds-checkbox">
-                                                  <apex:inputfield styleclass="slds-checkbox" value="{!childscope.scope.Is_Active__c}" rendered="{!NOT(is_View)}" />
+                                                  <apex:inputfield styleclass="slds-checkbox" value="{!childScope.scope.Is_Active__c}" rendered="{!NOT(is_View)}" />
                                                   <span class="slds-checkbox--faux"></span>
                                                   <span class="slds-form-element__label">Active</span>
                                                 </label>
@@ -448,22 +447,22 @@
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <apex:inputField id="scope-flag" value="{!childscope.scope.Scope_Flag__c}" style="display:none;" />
+                                                <apex:inputField id="scope-flag" value="{!childScope.scope.Scope_Flag__c}" style="display:none;" />
                                             </td>
 
                                             <td data-label="" class="slds-truncate slds-size--2-of-3">
                                                 <div class="slds-form-element" style="padding-left:0px;">
                                                     <label class="slds-form-element__label">Description</label>
                                                     <div class="slds-form-element__control scope-description">
-                                                        <apex:inputTextarea id="richtext" richtext="true" cols="250" rows="8" value="{!childscope.scope.Description__c}" />
-                                                        <apex:outputText style="padding:inherit;margin:inherit" id="outputtext" value="{!childscope.scope.Description__c}" escape="false" />
+                                                        <apex:inputTextarea id="richtext" richtext="true" cols="250" rows="8" value="{!childScope.scope.Description__c}" />
+                                                        <apex:outputText style="padding:inherit;margin:inherit" id="outputtext" value="{!childScope.scope.Description__c}" escape="false" />
                                                     </div>
                                                 </div>
                                                 <div class="slds-form-element" style="padding-left:0px;">
                                                     <label class="slds-form-element__label">Assumption</label>
                                                     <div class="slds-form-element__control scope-description">
-                                                        <apex:inputTextarea id="assumptionRtext" richtext="true" cols="250" rows="8" value="{!childscope.scope.E2_Assumption__c}" />
-                                                        <apex:outputText style="padding:inherit;margin:inherit" id="assumptiontext" value="{!childscope.scope.E2_Assumption__c}" escape="false" />
+                                                        <apex:inputTextarea id="assumptionRtext" richtext="true" cols="250" rows="8" value="{!childScope.scope.E2_Assumption__c}" />
+                                                        <apex:outputText style="padding:inherit;margin:inherit" id="assumptiontext" value="{!childScope.scope.E2_Assumption__c}" escape="false" />
                                                     </div>
                                                 </div>
 
@@ -473,10 +472,12 @@
                                         </tr>
                                         <tr class="slds-selection-background">
                                             <td colspan="3" style="padding:0px;">
-                                                <div class="effortsdiv" style="margin-top:5px;display:{!IF(childscope.slider_state = 'effort', 'block', 'block')}">
+                                                
+                                                <div class="effortsdiv" style="margin-top:5px;display:{!IF(childScope.slider_state = 'effort', 'block', 'block')}">
                                                     <span class="slds-badge slds-theme--default slds-float-left" style="font-weight:bold;">Effort</span>
                                                     <apex:commandbutton styleClass="slds-button slds-button--neutral slds-button--small slds-button--right--float slds-update-scope" title="Add Bulk Efforts" value="Add Bulk Efforts" onclick="EditScope.addBulkEfforts_click(this); return false;"/>
-                                                    <apex:commandbutton onclick="return validateData();" styleClass="slds-button slds-button--neutral slds-button--small slds-button--right--float slds-update-scope" value="Add Effort" action="{!childscope.AddNewEffort}"/>
+                                                    <apex:commandbutton onclick="return validateData();" styleClass="slds-button slds-button--neutral slds-button--small slds-button--right--float slds-update-scope" value="Add Effort" action="{!childScope.AddNewEffort}"/>
+                                                   
                                                     <table class="slds-table slds-table--bordered slds-no-row-hover slds-max-medium-table--stacked ">
                                                         <thead>
                                                             <tr class="slds-text-heading--label slds-truncate slds-selection-background">
@@ -508,12 +509,12 @@
                                                             </tr>
                                                         </thead>
                                                         <tbody>
-                                                            <apex:outputpanel rendered="{!IF(childscope.efforts.size = 0, true, false)}">
+                                                            <apex:outputpanel rendered="{!IF(childScope.efforts.size = 0, true, false)}">
                                                                 <tr>
                                                                     <td colspan="9">No effort records defined.</td>
                                                                 </tr>
                                                             </apex:outputpanel>
-                                                            <apex:repeat value="{!childscope.efforts}" var="effort">
+                                                            <apex:repeat value="{!childScope.efforts}" var="effort">
                                                                 <apex:outputpanel rendered="{!!effort.isDeleted}">
                                                                     <tr class="slds-hint-parent slds-selection-background">
 
@@ -605,11 +606,12 @@
                                                             </apex:repeat>
                                                         </tbody>
                                                     </table>
+                                                    
                                                 </div>
                                             </td>
                                         </tr>
                                     </apex:outputpanel>
-                                </apex:repeat>
+
                             </tbody>
                         </table>
 						<!--Start : AddEditQuestion-->
@@ -873,7 +875,7 @@
                 </div>
                 
                 <div id="helpModal" class="slds-modal slds-fade-in-open" role="dialog" style="display: none !important;">
-                    <div class="slds-modal__container" style="max-width:100%; width:60%; max-height:2600px;">
+                    <div class="slds-modal__container" style="max-width:100%; width:60%; max-height:800px;">
                        <div class="slds-modal__header">
                           <button class="slds-button slds-button--icon-inverse slds-modal__close slds-modal__close-custom" onclick="EditScope.hideAddBulkEffortsModal(); return false;">               
                           <span class="slds-assistive-text">Close</span>

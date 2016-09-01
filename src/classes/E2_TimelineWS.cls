@@ -7,6 +7,11 @@
 *  =====================================================================*/
 global with sharing class E2_TimelineWS {
     
+    webservice static string updateSkill(string estimateId, string resourceId, string skill){
+        return E2_TimelineWSManager.updateSkill( estimateId,  resourceId,  skill);
+    }
+    
+    
     webservice static List<E2_Estimate_Rate_Card__c> getEstimateRateCards(string estimateId){
         return E2_TimelineWSManager.getEstimateRateCards(estimateId);
     }

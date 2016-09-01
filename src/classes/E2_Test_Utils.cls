@@ -103,7 +103,8 @@ public with sharing class E2_Test_Utils {
                                      //E2_Total_Plan_Hrs__c = null,//RollUP: Not writable fields
                                      //E2_Total_Strategy_Hrs__c = null,//RollUP: Not writable fields
                                      //E2_Total_Test_Hrs__c = null,//RollUP: Not writable fields
-                                     E2_Version_Notes__c = null);
+                                     E2_Version_Notes__c = null,
+                                     Discount_Percent__c = 0);
     
     if(isInsert) {                                  
       insert(psrloe);
@@ -250,6 +251,105 @@ public with sharing class E2_Test_Utils {
       insert(answer);
     }
     return answer; 
+  }
+  
+  //insert Region
+  public static pse__Region__c insertRegion(Boolean isInsert){
+    pse__Region__c region = new pse__Region__c();
+    region.Name = 'GS - North America Delivery';
+    region.Assignable_to_Resources__c = true;
+    region.Assignable_to_Resource_Requests__c = true;
+    
+    if(isInsert)  {
+      insert (region);
+    } 
+    return region;
+  }
+  
+  //insert Practice
+  public static pse__Practice__c insertPractice(Boolean isInsert){
+    pse__Practice__c practice = new pse__Practice__c();
+    practice.Name = 'Test Practice';
+    practice.Assignable_to_Resources__c = true;
+    practice.Assignable_to_Resource_Requests__c = true;
+    
+    if(isInsert) {
+      insert (practice);
+    }
+    return practice;
+  }
+  
+  
+  //insert rate card
+  public static pse__Rate_Card__c insertRateCard(Id accountId, Id regionId, Id practiceId, Boolean isInsert){
+    pse__Rate_Card__c pserateCard = new pse__Rate_Card__c();
+    pserateCard.pse__Account__c = accountId;
+    pserateCard.pse__Average_Cost_Rate__c = 10000;
+    pserateCard.pse__Suggested_Bill_Rate__c = 5000;
+    pserateCard.pse__Role__c = 'Account Director';
+    pserateCard.Code__c = 'Code 1 for testing';
+    pserateCard.pse__Region__c = regionId;
+    pserateCard.pse__Practice__c = practiceId;
+    pserateCard.CurrencyIsoCode = E2_Constants.CURRENCY_ISO_CODE_USD;
+    
+    if(isInsert) {                                  
+      insert(pserateCard);
+    }
+    return pserateCard; 
+  }
+  
+  //insert estimate Rate Card
+  public static E2_Estimate_Rate_Card__c insertEstimateRateCard(String estimateId, Boolean isInsert){
+    E2_Estimate_Rate_Card__c estimateRC = new E2_Estimate_Rate_Card__c();
+    estimateRC.Estimate__c = estimateId;
+    estimateRC.Region__c = 'Jaipur';
+    
+    if(isInsert) {
+      insert estimateRC;
+    }
+    return estimateRC;
+    
+  }
+  
+  //insert CMC Estimate resource
+  public static CMC_Estimate_Resource__c insertCMCEstimateRes(String estimateId, Boolean isInsert){
+    CMC_Estimate_Resource__c res = new CMC_Estimate_Resource__c();
+    res.Name = 'Test Estimate Resource';
+    res.Estimate__c = estimateId;
+    res.Role__c = 'GS - North America Delivery - Technical Architect';
+    res.Skill__c = 'Salesforce';
+    res.Is_Used_For_Calculations__c = true; //, Estimate__c, , , Role__c
+    res.Cost__c = 105;
+    res.Order__c = 2;
+    res.Rate__c = 250;
+    
+    
+    if(isInsert) {
+      insert res;
+    }
+    return res;
+  }
+  
+  //insert Estimate week
+  public static CMC_Estimate_Week__c insertEstimateWeek(String estimateId, Boolean isInsert){
+    CMC_Estimate_Week__c week = new CMC_Estimate_Week__c(Name = 'Week1',Estimate__c = estimateId, Order__c = 2,
+                                                         Date__c = system.today(), Phase__c = 'Plan', Milestone__c = 'Test');
+    if(isInsert) {
+      insert week;
+    }
+    return week;                                                     
+  }
+  
+  //insert CMC Estimate Resource Week
+  public static CMC_Estimate_Resource_Week__c insertCMCEstimateResWeek(String estimateResourceId, String weekId, Boolean isInsert){
+    CMC_Estimate_Resource_Week__c resWeek = new CMC_Estimate_Resource_Week__c(Estimate_Resource__c = estimateResourceId, 
+                                                                              Estimate_Week__c = weekId, Hours__c = 10);
+    if(isInsert) {
+      insert resWeek;
+    }
+    return resWeek;                                                                          
+    
+  
   }
 
 }

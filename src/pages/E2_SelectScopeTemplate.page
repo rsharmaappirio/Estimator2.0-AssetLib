@@ -119,7 +119,7 @@
                <apex:param value="" name="scopeName" assignTo="{!scopeName}"></apex:param>
             </apex:actionFunction>
             <apex:actionFunction name="addOrRemoveFavScope" action="{!addOrRemoveFavScope}" 
-               oncomplete="SelectScopeTempate.search_complete();refreshFrame('{!selectedScopeId}');" rerender="templateCount,favoriteCount">
+               oncomplete="SelectScopeTempate.search_complete();refreshFrame('{!selectedScopeId}');" rerender="scopePanel,myScopePanel,templateCount,favoriteCount">
                <apex:param value="" name="scopeId" assignTo="{!selectedScopeId}"></apex:param>
                <apex:param value="" name="isFav" assignTo="{!isFavourite}"></apex:param>
             </apex:actionFunction>

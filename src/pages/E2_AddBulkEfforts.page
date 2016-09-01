@@ -31,7 +31,7 @@
                     </div-->
                     
                     <div>
-                    <table class="slds-table slds-table--bordered slds-no-row-hover ">
+                    <table class="slds-table slds-table--bordered slds-no-row-hover">
                         <thead>
                             <tr class="slds-text-heading--label">
                                 <th scope="col">
@@ -79,7 +79,7 @@
                             </apex:repeat>
                         </tbody>
                     </table>
-                    <apex:commandbutton styleClass="slds-button slds-button--neutral slds-button--small slds-button--right--float slds-update-scope" value="Add more rows" action="{!addEfforts}"/>
+                    <apex:commandbutton style="margin:5px;" styleClass="slds-button slds-button--neutral slds-button--small slds-update-scope" value="Add more rows" action="{!addEfforts}"/>
                     </div>
                 </div>
             </div>

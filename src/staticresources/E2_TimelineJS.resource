@@ -589,6 +589,81 @@ var undoRedoBuffer = {
 }
 
 
+function SkillEditor(args) {
+    var $input;
+    var defaultValue;
+    var scope = this;
+
+    this.init = function () {
+      $input = $("<INPUT type=text class='editor-text' />");
+      
+      // return when the row is phase or milestone
+      if(typeof args.item.id == 'undefined' || args.item.id == 'phase' || args.item.id == 'milestone') return;
+      
+          $input.appendTo(args.container)
+          .bind("keydown.nav", function (e) {
+            if (e.keyCode === $.ui.keyCode.LEFT || e.keyCode === $.ui.keyCode.RIGHT) {
+              e.stopImmediatePropagation();
+            }
+          })
+          .focus()
+          .select();
+    };
+
+    this.destroy = function () {
+      $input.remove();
+    };
+
+    this.focus = function () {
+      $input.focus();
+    };
+
+    this.getValue = function () {
+      return $input.val();
+    };
+
+    this.setValue = function (val) {
+      $input.val(val);
+    };
+
+    this.loadValue = function (item) {
+      defaultValue = item[args.column.field] || "";
+      $input.val(defaultValue);
+      $input[0].defaultValue = defaultValue;
+      $input.select();
+    };
+
+    this.serializeValue = function () {
+      return $input.val();
+    };
+
+    this.applyValue = function (item, state) {
+      item[args.column.field] = state;
+    };
+
+    this.isValueChanged = function () {
+      return (!($input.val() == "" && defaultValue == null)) && ($input.val() != defaultValue);
+    };
+
+    this.validate = function () {
+      if (args.column.validator) {
+        var validationResults = args.column.validator($input.val());
+        if (!validationResults.valid) {
+          return validationResults;
+        }
+      }
+
+      return {
+        valid: true,
+        msg: null
+      };
+    };
+
+    this.init();
+  }
+
+
+
 function MilestoneEditor(args) {
     var $input;
     var defaultValue;
@@ -760,7 +835,7 @@ function AutoCompleteEditor(args) {
         	response(results);
         },
         select: function( event, ui ) {
-            console.log('---' + ui.item.resource);
+            //console.log('---' + ui.item.resource);
             $input.val(ui.item.resource);
             var isValid = false;
             $(Timeline.rt_json).each(function(index, element) {
@@ -771,7 +846,7 @@ function AutoCompleteEditor(args) {
         	});
             
             if(isValid){
-                console.log('valid entry');
+                //console.log('valid entry');
                 Timeline.onResourceSelectionChange(event, ui, $input.attr('id'));
             }
             
@@ -911,8 +986,13 @@ function AutoFillEditor(args) {
     var scope = this;
 
     this.init = function () {
-      
+      //console.log(args);
       $picker = $("<div class='editor-autofill-picker' />")
+      
+      // return when the row is phase or milestone 
+      if(typeof args.item.id == 'undefined' || args.item.id == 'phase' || args.item.id == 'milestone') return;
+      
+      
       //$picker.width($(args.container).innerWidth());
       $picker.appendTo(args.container);
       
@@ -967,7 +1047,7 @@ function AutoFillEditor(args) {
             }
             
             grid.setData(data);
-            grid.render();
+            Timeline.renderGrid();
             
         }
       });
@@ -1033,6 +1113,11 @@ var loadSpinner = {
 }
 
 
+var _renderOptions = {
+    "lastRendering": 0,
+    "isNextMerged": 0,
+    "changedCells": {}
+};
 
 
 var CustomAlert = {
@@ -1101,6 +1186,10 @@ var CustomAlert = {
 
 
 
+
+
+
+
 var renderOptions_Phases = {
         "Strategy": 'strategy_phase_cell',
         "Plan": 'plan_phase_cell',
@@ -1127,6 +1216,21 @@ $(function() {
     });
     $("#datepicker").datepicker(datepickerOptions);
     reFreshGrid();
+    
+    
+    /** TODO - REMOVE THE CODE LATER
+    $("#contextMenu").click(function (e) {
+        if (!$(e.target).is("li")) {
+          return;
+        }
+        if (!grid.getEditorLock().commitCurrentEdit()) {
+          return;
+        }
+        var range = $(this).data("data");
+        console.log(range);
+    });
+    **/
+    
 });
 
 
@@ -1147,25 +1251,7 @@ var reFreshGrid = function(){
 var gridMainInitiate = function(){
     //var dataProvider = new TotalsDataProvider(data, columns); 
     
-    grid = new Slick.Grid("#myGrid", data, columns, {
-                                                        explicitInitialization : false,
-                                                        editable: true,
-                                                        enableAddRow: true,
-                                                        enableCellNavigation: true,
-                                                        asyncEditorLoading: false,
-                                                        autoEdit: true,
-                                                        enableColumnReorder: false
-                                                        ,forceFitColumns : false
-                                                        ,headerRowHeight : 30
-                                                        ,enableAsyncPostRender: true
-                                                        ,asyncPostRenderDelay : 50 // default 50
-                                                        ,leaveSpaceForNewRows : true
-                                                        //,frozenColumn : 2
-                                                        //,frozenRow : 3
-                                                        //,autoHeight: true
-                                                        //,fullWidthRows: true
-                                                        //,frozenBottom: true
-                                                    });
+    grid = new Slick.Grid("#myGrid", data, columns, Timeline.getGridOptions());
                                                     
      // set keyboard focus on the grid
     grid.getCanvasNode().focus();
@@ -1174,29 +1260,7 @@ var gridMainInitiate = function(){
     // add header menu plugin
     var headerMenuPlugin = new Slick.Plugins.HeaderMenu({});
     // bind on command event
-    headerMenuPlugin.onCommand.subscribe(function(e, args) {
-
-        if (args.command === 'insert_1_right') {
-            Timeline.addMoreColumnsOnRight(args.column.id, 1);
-        }
-        if (args.command === 'insert_2_right') {
-            Timeline.addMoreColumnsOnRight(args.column.id, 2);
-        }
-
-        if (args.command === 'insert_1_left') {
-            Timeline.addMoreColumnsOnLeft(args.column.id, 1);
-        }
-
-        if (args.command === 'insert_2_left') {
-            Timeline.addMoreColumnsOnLeft(args.column.id, 2);
-        }
-
-        if (args.command === 'delete_column') {
-            var respond = confirm("Deleting a column will delete all the data for this week/column!!! \nAre you sure you want to delete?");
-            if(respond == true) Timeline.deleteColumn(args.column.id);
-        }
-
-    });
+    headerMenuPlugin.onCommand.subscribe(Timeline.onHeaderMenuCommandHandler);
     // register the plugin
     grid.registerPlugin(headerMenuPlugin);
 
@@ -1205,149 +1269,62 @@ var gridMainInitiate = function(){
     
     
     /** COPY MANAGER PLUGIN **/
-    
     var copyManager = new Slick.CellCopyManager();
     grid.registerPlugin(copyManager);
-    copyManager.onPasteCells.subscribe(function(e, args) {
-        if (args.from.length !== 1 || args.to.length !== 1) {
-            throw "This implementation only supports single range copy and paste operations";
-        }
-        //alert('in');
-        var from = args.from[0];
-        var to = args.to[0];
-        var val;
-        for (var i = 0; i <= from.toRow - from.fromRow; i++) {
-            for (var j = 0; j <= from.toCell - from.fromCell; j++) {
-                if (i <= to.toRow - to.fromRow && j <= to.toCell - to.fromCell) {
-
-                    if(typeof columns[to.fromCell + j].usedForCalculation != 'undefined' && columns[to.fromCell + j].usedForCalculation == true){ 
-                        val = data[from.fromRow + i][columns[from.fromCell + j].field];
-                        //console.log(data[to.fromRow + i].id + ':' + columns[to.fromCell + j].field + ':' + val);
-                        
-                        data[to.fromRow + i][columns[to.fromCell + j].field] = val;
-                        Timeline.updateHours(columns[to.fromCell + j].field, data[to.fromRow + i].id, val);
-                        grid.invalidateRow(to.fromRow + i);
-                    }
-                }
-            }
-        }
-        grid.setData(data);
-        grid.render();
-
-    });
+    copyManager.onPasteCells.subscribe(Timeline.onPasteCellsHandler);
      
 
     /***  ROW - REORDERING ***/
     var moveRowsPlugin = new Slick.RowMoveManager();
-    moveRowsPlugin.onBeforeMoveRows.subscribe(function(e, data) {
-        for (var i = 0; i < data.rows.length; i++) {
-            // no point in moving before or after itself
-            if (data.rows[i] == data.insertBefore || data.rows[i] == data.insertBefore - 1) {
-                e.stopPropagation();
-                return false;
-            }
-        }
-        return true;
-    });
-    moveRowsPlugin.onMoveRows.subscribe(function(e, args) {
-        // stop the row movement of first fixed Rows
-        if(args.insertBefore < Timeline.fixedRows || args.rows < Timeline.fixedRows){
-            e.stopPropagation();
-            return false;
-        }
-        var extractedRows = [],
-            left, right;
-        var rows = args.rows;
-        var insertBefore = args.insertBefore;
-        left = data.slice(0, insertBefore);
-        right = data.slice(insertBefore, data.length);
-
-        rows.sort(function(a, b) {
-            return a - b;
-        });
-
-        for (var i = 0; i < rows.length; i++) {
-            extractedRows.push(data[rows[i]]);
-        }
-
-        rows.reverse();
-
-        for (var i = 0; i < rows.length; i++) {
-            var row = rows[i];
-            if (row < insertBefore) {
-                left.splice(row, 1);
-            } else {
-                right.splice(row - insertBefore, 1);
-            }
-        }
-
-        data = left.concat(extractedRows.concat(right));
-
-        var selectedRows = [];
-        for (var i = 0; i < rows.length; i++)
-            selectedRows.push(left.length + i);
-
-        grid.resetActiveCell();
-        Timeline.bindMetadata();
-        grid.setData(data);
-        grid.setSelectedRows(selectedRows);
-        grid.render();
-        Timeline.reOrderResources(data);
-    });
+    moveRowsPlugin.onBeforeMoveRows.subscribe(Timeline.onBeforeMoveRowsHandler);
+    moveRowsPlugin.onMoveRows.subscribe(Timeline.onMoveRowsHandler);
     grid.registerPlugin(moveRowsPlugin);
 
     
-    
+    /*** AUTO - TOOLTIP **/
     grid.registerPlugin(new Slick.AutoTooltips());
     
+    
     // bind cell change event
-    grid.onCellChange.subscribe(function(e, args) {
-        var field = grid.getColumns()[args.cell].field;
-        
-        if (field != 'resource' && field != 'autofill') {
-            var item = args.item;
-            var column = args.cell;
-            var row = args.row;
-            var value = data[args.row][grid.getColumns()[args.cell].field];
-            var rowId = item.id;
-            if (rowId && field) {
-                if(rowId.toLowerCase() == 'phase'){
-                    Timeline.updatePhase(field, value);
-                }else if(rowId.toLowerCase() == 'milestone'){
-                    Timeline.updateMilestone(field, value);
-                }else{
-                  Timeline.updateHours(field, rowId, value);
-                }  
-            }
-        }
-        
-        //console.log('cellchange');
-        grid.setData(data);
-        grid.render();
-       
-    });
+    grid.onCellChange.subscribe(Timeline.onCellChangeHandler);
+   
     // bind addnew row event
-    grid.onAddNewRow.subscribe(function(e, args) {
-        /**var item = args.item;
-        var column = args.column;
-        grid.invalidateRow(data.length);
-        data.push(item);
-        grid.updateRowCount();
-        grid.render();**/
-    });
+    grid.onAddNewRow.subscribe(Timeline.onAddNewRowHandler);
+    
+    // beind edit cell event
+    grid.onBeforeEditCell.subscribe(Timeline.onBeforeEditCellHandler);
     
     
-    grid.onBeforeEditCell.subscribe(function(e,args) {
-        // make row un-editable [rows such as weekname, total]
-      if (args.row === Timeline.weekNameRow || args.row === Timeline.totalRow) {
-        return false;
+    /** NOT NEEDED NOW - TO DO REMOVE
+    grid.onContextMenu.subscribe(function (e) {
+      e.preventDefault();
+      var cell = grid.getCellFromEvent(e);
+      
+      if(cell.row != Timeline.phaseRow){
+          return;
       }
+      
+      $("#contextMenu")
+          .data("data", { range : grid.getSelectionModel().getSelectedRanges(), row : cell.row})
+          .css("top", e.pageY)
+          .css("left", e.pageX)
+          .show();
+
+      $("body").one("click", function () {
+        $("#contextMenu").hide();
+      });
     });
+    **/
     
-    grid.render();
+    
+    Timeline.renderGrid();
     
     
 }
+
+
+
+
 
 
 var datepickerOptions = {
@@ -1429,13 +1406,247 @@ var tabpanel = {
 
 var Timeline = {
     fixedRows: 4,
-    fixedColumns : 4,
+    fixedColumns : 5,
     weekNameRow : 0,
     totalRow : 3,
     phaseRow : 1,
     milestoneRow: 2,
     maxHours : 40,
     calcuation_cols_css : {'text-align' : 'center', 'background-color': '#666666', 'color' : '#fff', 'font-weight' : 'bold'},
+    
+    triggerUpdateCell: function(field, rowId, val){
+        if(rowId.toLowerCase() == 'phase'){
+            Timeline.updatePhase(field, val);
+        }else if(rowId.toLowerCase() == 'milestone'){
+            Timeline.updateMilestone(field, val);
+        }else if(field.toLowerCase() == 'skill'){
+            Timeline.updateSkill(rowId, val);    
+        }else{
+           Timeline.updateHours(field, rowId, val);
+        }
+    },
+    
+    
+    renderGrid: function(){
+         
+        grid.render();
+        
+        /** FOLLOWING CODE IS WORKING CODE FOR APPLYING ADDITIONAL CSS STYLE FOR CELLS **/
+        /**
+        if(Timeline.phaseRow < data.length){
+            // phase data
+            var currentdata = data[Timeline.phaseRow];
+            var options = window._renderOptions;
+            var colsLength = columns.length;
+            
+            $.each(columns, function(indx1, colItem) {
+                if(indx1 >= Timeline.fixedColumns && typeof colItem.usedForCalculation != 'undefined' && colItem.usedForCalculation){
+                    var value = currentdata[columns[indx1].field];
+                    var nextCellIndex = indx1 + 1;
+                    if (nextCellIndex < colsLength){    
+                        var nextValue = currentdata[columns[nextCellIndex].field];
+                        if (value == nextValue) {
+                            if (!options.changedCells[Timeline.phaseRow]) {
+                                options.changedCells[Timeline.phaseRow] = {};
+                            }
+                            options.changedCells[Timeline.phaseRow][columns[indx1].field] = "noneline-bottom";
+                        }
+                    }    
+                }
+             });
+             console.log(options.changedCells);
+             grid.setCellCssStyles('cell-noneline-bottom', options.changedCells);
+        }
+        **/
+         
+        
+        
+    },
+    getGridOptions: function(){
+      return {
+                                                        explicitInitialization : false,
+                                                        editable: true,
+                                                        enableAddRow: true,
+                                                        enableCellNavigation: true,
+                                                        asyncEditorLoading: false,
+                                                        autoEdit: true,
+                                                        enableColumnReorder: false
+                                                        ,forceFitColumns : false
+                                                        ,headerRowHeight : 30
+                                                        ,enableAsyncPostRender: true
+                                                        ,asyncPostRenderDelay : 50 // default 50
+                                                        ,leaveSpaceForNewRows : true
+                                                        //,frozenColumn : 2
+                                                        //,frozenRow : 3
+                                                        //,autoHeight: true
+                                                        //,fullWidthRows: true
+                                                        //,frozenBottom: true
+                                                    };  
+        
+    },
+    
+    onAddNewRowHandler: function(e, args) {
+        //var item = args.item;
+        //var column = args.column;
+        //grid.invalidateRow(data.length);
+        //data.push(item);
+        //grid.updateRowCount();
+        //Timeline.renderGrid();
+    },
+    
+    onHeaderMenuCommandHandler: function(e, args) {
+
+        if (args.command === 'insert_1_right') {
+            Timeline.addMoreColumnsOnRight(args.column.id, 1);
+        }
+        if (args.command === 'insert_2_right') {
+            Timeline.addMoreColumnsOnRight(args.column.id, 2);
+        }
+
+        if (args.command === 'insert_1_left') {
+            Timeline.addMoreColumnsOnLeft(args.column.id, 1);
+        }
+
+        if (args.command === 'insert_2_left') {
+            Timeline.addMoreColumnsOnLeft(args.column.id, 2);
+        }
+
+        if (args.command === 'delete_column') {
+            var respond = confirm("Deleting a column will delete all the data for this week/column!!! \nAre you sure you want to delete?");
+            if(respond == true) Timeline.deleteColumn(args.column.id);
+        }
+
+    },
+    
+    
+    onPasteCellsHandler: function(e, args) {
+        if (args.from.length !== 1 || args.to.length !== 1) {
+            throw "This implementation only supports single range copy and paste operations";
+        }
+        //alert('in');
+        
+        var from = args.from[0];
+        var to = args.to[0];
+        var val;
+        // stop user by copying from phase and pasting it to the number formated calculated or other rows
+        // stop user by copying from calculated and pasting it to the phase row
+        if(from.fromRow == Timeline.phaseRow && to.fromRow != from.fromRow){
+            Timeline.renderGrid();
+            return;
+        }else if(to.fromRow == Timeline.phaseRow && from.fromRow != to.fromRow){
+            Timeline.renderGrid();    
+            return;
+        }
+        
+        for (var i = 0; i <= from.toRow - from.fromRow; i++) {
+            for (var j = 0; j <= from.toCell - from.fromCell; j++) {
+                if (i <= to.toRow - to.fromRow && j <= to.toCell - to.fromCell) {
+
+                    if(typeof columns[to.fromCell + j].usedForCalculation != 'undefined' && columns[to.fromCell + j].usedForCalculation == true){ 
+                        val = data[from.fromRow + i][columns[from.fromCell + j].field];
+                        //console.log(data[to.fromRow + i].id + ':' + columns[to.fromCell + j].field + ':' + val);
+                        
+                        data[to.fromRow + i][columns[to.fromCell + j].field] = val;
+                        var rowId = data[to.fromRow + i].id;
+                        var field = columns[to.fromCell + j].field;
+                        
+                        Timeline.triggerUpdateCell(field, rowId, val);
+                        
+                        grid.invalidateRow(to.fromRow + i);
+                    }
+                }
+            }
+        }
+        grid.setData(data);
+        Timeline.renderGrid();
+
+    },
+    
+    onBeforeMoveRowsHandler: function(e, data) {
+        for (var i = 0; i < data.rows.length; i++) {
+            // no point in moving before or after itself
+            if (data.rows[i] == data.insertBefore || data.rows[i] == data.insertBefore - 1) {
+                e.stopPropagation();
+                return false;
+            }
+        }
+        return true;
+    },
+    
+    onMoveRowsHandler : function(e, args) {
+        // stop the row movement of first fixed Rows
+        if(args.insertBefore < Timeline.fixedRows || args.rows < Timeline.fixedRows){
+            e.stopPropagation();
+            return false;
+        }
+        var extractedRows = [],
+            left, right;
+        var rows = args.rows;
+        var insertBefore = args.insertBefore;
+        left = data.slice(0, insertBefore);
+        right = data.slice(insertBefore, data.length);
+
+        rows.sort(function(a, b) {
+            return a - b;
+        });
+
+        for (var i = 0; i < rows.length; i++) {
+            extractedRows.push(data[rows[i]]);
+        }
+
+        rows.reverse();
+
+        for (var i = 0; i < rows.length; i++) {
+            var row = rows[i];
+            if (row < insertBefore) {
+                left.splice(row, 1);
+            } else {
+                right.splice(row - insertBefore, 1);
+            }
+        }
+
+        data = left.concat(extractedRows.concat(right));
+
+        var selectedRows = [];
+        for (var i = 0; i < rows.length; i++)
+            selectedRows.push(left.length + i);
+
+        grid.resetActiveCell();
+        Timeline.bindMetadata();
+        grid.setData(data);
+        grid.setSelectedRows(selectedRows);
+        Timeline.renderGrid();
+        Timeline.reOrderResources(data);
+    },
+    
+    onBeforeEditCellHandler: function(e, args) {
+        // make row un-editable [rows such as weekname, total]
+      if (args.row === Timeline.weekNameRow || args.row === Timeline.totalRow) {
+        return false;
+      }
+    },
+    
+    onCellChangeHandler: function(e, args){
+        var field = grid.getColumns()[args.cell].field;
+        
+        if (field != 'resource' && field != 'autofill') {
+            var item = args.item;
+            var column = args.cell;
+            var row = args.row;
+            var value = data[args.row][grid.getColumns()[args.cell].field];
+            var rowId = item.id;
+            if (rowId && field) {
+                Timeline.triggerUpdateCell(field, rowId, value);   
+            }
+        }
+        
+        //console.log('cellchange');
+        grid.setData(data);
+        Timeline.renderGrid();
+        
+    },
+    
+    
     numFieldValidator : function(value) {
         if (value == null || value == undefined || !value.length || !(/\D/.test(value))) {
           if((value != null || value != undefined || value.length) && value > Timeline.maxHours){
@@ -1548,6 +1759,21 @@ var Timeline = {
             headerCssClass: "Fixed-Header-Style",
             order: null
             ,notUsedForCalculation : true
+        },{
+            id: "skill",
+            field: "skill",
+            name: "Skill",
+            width: 50,
+            selectable: false,
+            resizable: false,
+            focusable : true,
+            editor: SkillEditor,
+            cssClass: "",
+            groupName: " ",
+            header: {},
+            headerCssClass: "Fixed-Header-Style",
+            order: null
+            ,notUsedForCalculation : true
         }, {
             id: "autofill",
             field: "autofill",
@@ -1575,17 +1801,6 @@ var Timeline = {
     getHoursSum: function(cellNode, row, dataContext, colDef){
             var rowData = data[row];
             var sum = 0;
-            //console.log('in' + row);
-            //var str = '';
-            /**
-            var fieldsNotNeededForCalculation = {colRows:'',cost: '',id :'', order:'', rate:'',resource:'',skill:'', autofill: '', toXml: ''};
-          
-            for(var _a in rowData){
-                if(typeof fieldsNotNeededForCalculation[_a] == 'undefined' && typeof rowData[_a] != 'function') {
-                    sum += parseInt(rowData[_a]); 
-                }
-            }
-            **/
             $.each(columns, function(indx1, colItem) {
                 if(indx1 >= Timeline.fixedColumns && typeof colItem.usedForCalculation != 'undefined' && colItem.usedForCalculation){
                     sum += parseInt(isNaN(rowData[colItem.field]) ? 0 : rowData[colItem.field]);
@@ -1828,10 +2043,29 @@ var Timeline = {
                     });
                     return metadata;
                 }else if(row == Timeline.phaseRow){
+                    
+                    var currentRow = data[row];
+                             
                     $.each(columns, function(indx1, colItem) {
                         if(indx1 >= Timeline.fixedColumns && typeof colItem.usedForCalculation != 'undefined' && colItem.usedForCalculation){
+                             metadata.selectable = true;
+                             var val = currentRow[columns[indx1].field];
+                             var nextCellIndex = indx1 + 1;
+                             var colspan = 1;
+                             while(nextCellIndex < columns.length){
+                                 //console.log('----' + val + '==' + currentRow[columns[nextCellIndex].field] + '----');
+                                 if(val == currentRow[columns[nextCellIndex].field] && val != ''){ 
+                                   colspan++;  
+                                 }else {
+                                     break;
+                                 } 
+                                 nextCellIndex += 1;
+                             }
+                             //console.log('----' + colspan + '----');
                              metadata.columns[colItem.field] = {};
-                             metadata.columns[colItem.field].editor = PhaseSelectionEditor;
+                             metadata.columns[colItem.field].editor = MilestoneEditor;
+                             //metadata.columns[colItem.field].editor = PhaseSelectionEditor;
+                             metadata.columns[colItem.field].colspan = colspan;
                         }
                     });
                     return metadata;
@@ -1856,7 +2090,6 @@ var Timeline = {
                 var resource = row.Region__c + ' - ' + row.Resource_Role__c;
                 var json_obj = {};
                 json_obj['id'] = row.Id;
-                //console.log(row.Id);
                 json_obj['region'] = row.Region__c;
                 json_obj['role'] = row.Resource_Role__c;
                 // rate card rate
@@ -1939,14 +2172,15 @@ var Timeline = {
                      }
                      
                      if(row == Timeline.phaseRow){
-                        var sum = 0;
+                        //var sum = 0;
                         var rowData = data[row][colDef.id];
                         
+                        // remove all custom css classes first and apply than the new one next;
                         for(var _a in renderOptions_Phases){
                             var cls = renderOptions_Phases[_a];
                             if(typeof cls == 'String') $(cellNode).removeClass(cls);
                         }
-                        
+                        // apply the new ones 
                         if(typeof renderOptions_Phases[rowData] != 'undefined'){
                             var cls = renderOptions_Phases[rowData];
                             $(cellNode).addClass(cls);
@@ -2021,14 +2255,13 @@ var Timeline = {
                 if (typeof row.colRows != 'undefined') {
                     if (row.colRows.constructor === Array) {
                         $.each(row.colRows, function(indx1, colRow) {
-                            //console.log(colRow.columnId + ':' + colRow.hours);
                             row[colRow.columnId] = parseInt(colRow.hours);
                         });
                     } else {
                         row[row.colRows.columnId] = parseInt(row.colRows.hours);
                     }
                 }
-                //row["selectable"] = false;
+                
                 data.push(row);
             });
 
@@ -2037,7 +2270,7 @@ var Timeline = {
              
             Timeline.bindMetadata();                      
             grid.setData(data);
-            grid.render();
+            Timeline.renderGrid();
             //grid.init();
             loader.hide();
         },
@@ -2087,7 +2320,7 @@ var Timeline = {
     },
     addMoreColumnsOnRight: function(weekId, noOfColumnsToAdd) {
         loader.show();
-        sforce.apex.execute(WEBSERVICE_NAME, "addMoreColumnsOnRight", {
+        sforce.apex.execute(WEBSERVICE_NAME, "addMoreColumnsOnRight", { 
             estimateId: estimateId,
             weekId: weekId,
             noOfColumnsToAdd: noOfColumnsToAdd
@@ -2255,11 +2488,6 @@ var Timeline = {
             sforce.apex.execute(WEBSERVICE_NAME, "getTimelineColumns", {
                 estimateId: estimateId
             }, Timeline.initCallback);
-            
-            /**sforce.apex.execute(WEBSERVICE_NAME, "getTimelineRows", {
-                estimateId: estimateId
-            }, Timeline.getRows_CallBack);
-            **/
 
         },
         onFailure: function(error) {
@@ -2341,7 +2569,7 @@ var Timeline = {
                 return;
             }
             loader.hide();
-            grid.render();
+            Timeline.renderGrid();
             //sforce.apex.execute(WEBSERVICE_NAME, "getTimelineRows", {
             //    estimateId: estimateId
             //}, Timeline.getRows_CallBack);
@@ -2356,7 +2584,7 @@ var Timeline = {
     updateHours: function(weekId, resourceId, hours) {
         loader.show();
         var hrs = 0;
-        if(hours != '') hrs = parseInt(hours);
+        if(hours != '' && !isNaN(hours)) hrs = parseInt(hours);
         Timeline.updateHours_call_register[weekId + '-' + resourceId] = 'hrs';  
         sforce.apex.execute(WEBSERVICE_NAME, "updateHours", {
             weekId: weekId,
@@ -2393,6 +2621,44 @@ var Timeline = {
             loader.hide();
         }
     },
+    
+    
+    updateSkill: function(resourceId, skill) {
+        loader.show();
+        sforce.apex.execute(WEBSERVICE_NAME, "updateSkill", {
+            estimateId: estimateId,
+            resourceId: resourceId,
+            skill: skill
+        }, Timeline.updateSkill_Callback);
+        
+    },
+    
+    
+    updateSkill_Callback: {
+        onSuccess: function(result) {
+            result = (result.length > 0 ? result[0] : result);
+            // check for failure message, show alert and stop
+            if (result.indexOf('Fail') != -1) {
+                var exception = 'INSUFFICIENT_ACCESS_OR_READONLY';
+                if (result.toLowerCase().indexOf(exception.toLowerCase()) != -1) {
+                    alert(result); //CustomAlert.showError('Reparenting Failed: You do not have permission to reparent this scope!!! Please contact scope owner for reparenting!!');    
+                } else {
+                    alert(result);
+                }
+                loader.hide();
+                return;
+            }
+           
+            loader.hide();
+                
+        },
+        onFailure: function(error) {
+            alert(error);
+            loader.hide();
+        }
+    },
+    
+    
     updatePhase_call_register: {},
     updatePhase: function(weekId, phase) {
         loader.show();
@@ -2425,6 +2691,8 @@ var Timeline = {
                 //    estimateId: estimateId
                 //}, Timeline.getRows_CallBack);
             }
+            
+            Timeline.renderGrid();
         },
         onFailure: function(error) {
             alert(error);

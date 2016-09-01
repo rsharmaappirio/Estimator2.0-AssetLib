@@ -54,19 +54,19 @@ public with sharing class E2_TimelineController extends E2_Master {
   }
   
   public E2_Estimate_Rate_Card__c getEstimateRateCard(pse__Rate_Card__c rateCard, String currencyCode){
-      	E2_Estimate_Rate_Card__c estimateRC = new E2_Estimate_Rate_Card__c();
+    E2_Estimate_Rate_Card__c estimateRC = new E2_Estimate_Rate_Card__c();
 		estimateRC.Estimate__c = estimate.id;
 		estimateRC.Resource_Role__c = rateCard.pse__Role__c;
-    	estimateRC.Region__c = rateCard.pse__Region__r.Name;
-    	estimateRC.Practice__c = rateCard.pse__Practice__r.Name;
+    estimateRC.Region__c = rateCard.pse__Region__r.Name;
+    estimateRC.Practice__c = rateCard.pse__Practice__r.Name;
 		estimateRC.Code__c = rateCard.Code__c;
 		estimateRC.Rate_Card__c = rateCard.Id;
 		estimateRC.CurrencyISOCode = currencyCode;
 		estimateRC.Resource_Cost__c = rateCard.pse__Average_Cost_Rate__c;
 		estimateRC.Bill_Rate__c = rateCard.pse__Suggested_Bill_Rate__c;
 		estimateRC.Discounted_Rate__c = rateCard.pse__Suggested_Bill_Rate__c;
-    	estimateRC.Category__c = rateCard.pse__Region__r.Name;
-        return estimateRC;
+    estimateRC.Category__c = rateCard.pse__Region__r.Name;
+    return estimateRC;
   }
   
   public PageReference refreshRateCardRatesAndCost(){
@@ -93,7 +93,7 @@ public with sharing class E2_TimelineController extends E2_Master {
     		
     		// check that no new rate card entries exist in the system for this selected currency.	
 			for(pse__Rate_Card__c rateCard : [SELECT Id, pse__Average_Cost_Rate__c, 
-											  pse__Practice__r.Name, Code__c, 
+											                  pse__Practice__r.Name, Code__c, 
 		                                	  pse__Region__r.Name, pse__Role__c, pse__Suggested_Bill_Rate__c 
 		                                	  FROM pse__Rate_Card__c 
 		                                	  WHERE CurrencyISOCode =: currencyCode 

@@ -115,9 +115,6 @@
         <fields>RecordTypeId</fields>
         <fields>OwnerId</fields>
         <relatedLists>
-            <fields>NAME</fields>
-            <fields>Is_Active__c</fields>
-            <fields>LOE_Hrs__c</fields>
             <relatedList>E2_Scope__c.Parent_Scope__c</relatedList>
         </relatedLists>
     </miniLayout>
@@ -128,6 +125,8 @@
         <fields>Is_Active__c</fields>
         <fields>Complexity__c</fields>
         <fields>LOE_Hrs__c</fields>
+        <fields>Display_Order__c</fields>
+        <fields>Sequence__c</fields>
         <relatedList>E2_Scope__c.Parent_Scope__c</relatedList>
     </relatedLists>
     <relatedLists>

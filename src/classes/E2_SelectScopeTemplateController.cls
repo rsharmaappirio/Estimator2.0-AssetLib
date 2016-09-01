@@ -251,12 +251,36 @@ public with sharing class E2_SelectScopeTemplateController {
 		        } 
 		  	}
 	 	}  
-      	searchScopeRecords();
+      
+      markFavScopeWithPagination();
+      //searchScopeRecords();
       }catch(Exception ex){
         ApexPages.addMessage(new ApexPages.Message(ApexPages.SEVERITY.Error, ex.getMessage()));
         return null;
       }
       return null; 
     }
- 
+    //I-232473: code to display scopes after addition or removal of fav on page
+    public void markFavScopeWithPagination(){
+      E2_ScopeWrapper.sortBy = E2_ScopeWrapper.SORT_BY.ByScopeName;
+	   if(!isTemplatePage) {
+         scopeIDs.clear();
+         favScopeList.clear();
+         this.totalMyFav = 0; 
+         getMyScope(scopeName, scopeGroup);
+       } 
+       scopeList.clear();
+       getTemplateScope(scopeName, scopeGroup); 
+       //set the pagination for scope and fav scopes after scopes
+       //are marked favorite
+       conList.clear(); 
+       List<Object> tempList = scopePaging.setPagination(scopeList);
+       scopeList = getWrapperList(tempList);
+       conList.add(scopePaging);
+       tempList = favScopePaging.setPagination(favScopeList);
+       favScopeList = getWrapperList(tempList);
+       conList.add(favScopePaging);
+       getList();
+    }
+
 }

@@ -442,8 +442,8 @@ $( document ).ready(function() {
     if(msg.toLowerCase() == 'success'){
        parent&&parent.AddEditScope&&parent.AddEditScope.closeEditScopeModelPopup&&parent.AddEditScope.closeEditScopeModelPopup();
        if($("input[id$='dmlMessage']").length) $("input[id$='dmlMessage']").val('Fail');
-       parent&&parent.AddEditScope&&parent.AddEditScope.updateChildScopeOnParentScopeEdit&&parent.AddEditScope.updateChildScopeOnParentScopeEdit(scope_sfdc_id, changeComplexity, scopeToActivate, scopeToDeactivate);
-       parent&&parent.AddEditScope&&parent.AddEditScope.showSaveSuccessMessage&&parent.AddEditScope.showSaveSuccessMessage(scope_sfdc_id, scope_sfdc_name);
+       parent&&parent.AddEditScope&&parent.AddEditScope.updateChildScopeOnParentScopeEdit&&parent.AddEditScope.updateChildScopeOnParentScopeEdit(scope_sfdc_id, scope_sfdc_name, changeComplexity, scopeToActivate, scopeToDeactivate);
+       //parent&&parent.AddEditScope&&parent.AddEditScope.showSaveSuccessMessage&&parent.AddEditScope.showSaveSuccessMessage(scope_sfdc_id, scope_sfdc_name);
        resetIframeHeight();
     }else{     
       resetIframeHeight();

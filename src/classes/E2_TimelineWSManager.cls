@@ -7,7 +7,7 @@
 *  =====================================================================*/
 public class E2_TimelineWSManager {
    public static List<E2_Estimate_Rate_Card__c> getEstimateRateCards(string estimateId){
-        List<E2_Estimate_Rate_Card__c> estimateRateCards = E2_TimelineDataUtil.getEstimateRateCards(estimateId);
+        List<E2_Estimate_Rate_Card__c> estimateRateCards = E2_TimelineDataUtil_WS.getEstimateRateCards(estimateId);
         return estimateRateCards;
     }
     
@@ -31,8 +31,22 @@ public class E2_TimelineWSManager {
        return weekId;  
     }
     
+    public static string updateSkill(string estimateId, string resourceId, string skill){
+        List<CMC_Estimate_Resource__c> estimatResourceList = E2_TimelineDataUtil_WS.getEstimateResourceForSkill(estimateId, resourceId);
+        try{
+            if(!estimatResourceList.isEmpty()){
+                estimatResourceList[0].Skill__c = skill;
+                update estimatResourceList;
+            }
+        }catch(Exception ex){
+            return 'Failed: ' + ex.getMessage();
+        }
+        return 'Success';
+    }
+    
+    
     public static string updateHours(string weekId, string resourceId, integer hours){
-       List<CMC_Estimate_Resource_Week__c> resWeeks = E2_TimelineDataUtil.getHoursforEstimateResourceWeek(weekId, resourceId);
+       List<CMC_Estimate_Resource_Week__c> resWeeks = E2_TimelineDataUtil_WS.getHoursforEstimateResourceWeek(weekId, resourceId);
                                                        
        for(CMC_Estimate_Resource_Week__c resWeek : resWeeks){
           resWeek.Hours__c = hours;
@@ -70,7 +84,7 @@ public class E2_TimelineWSManager {
             
         }
         
-        for(CMC_Estimate_Resource_Week__c rwW : E2_TimelineDataUtil.getEstimateResourceWeekRecords(weekIds, resourceIds)){
+        for(CMC_Estimate_Resource_Week__c rwW : E2_TimelineDataUtil_WS.getEstimateResourceWeekRecords(weekIds, resourceIds)){
                
                string key = rwW.Estimate_Resource__c + '|' + rwW.Estimate_Week__c;
                resourceWeekMap.put(key, rwW);
@@ -122,7 +136,7 @@ public class E2_TimelineWSManager {
     public static string addRow(string estimateId, integer order, 
                                     integer cost, integer rate, string role,
                                     string skill, string estimateRateCardId){
-       List<CMC_Presales_LOE__c> estimateList = E2_TimelineDataUtil.getCurrencyISOCodeonEstimate(estimateId);
+       List<CMC_Presales_LOE__c> estimateList = E2_TimelineDataUtil_WS.getCurrencyISOCodeonEstimate(estimateId);
                                              
        try{                             
          insert new CMC_Estimate_Resource__c(Cost__c = cost, 
@@ -172,7 +186,7 @@ public class E2_TimelineWSManager {
         boolean incrementalUpdateRequired = false;
         integer noOfColumnsToDelete = -1;
         boolean dateUpdateRequired = false;
-        for(CMC_Estimate_Week__c estimateWeek : E2_TimelineDataUtil.getEstimateWeekRecords(estimateId)){
+        for(CMC_Estimate_Week__c estimateWeek : E2_TimelineDataUtil_WS.getEstimateWeekRecords(estimateId)){
             
             if(incrementalUpdateRequired){
                if(dateUpdateRequired) estimateWeek.Date__c = estimateWeek.Date__c.addDays(7 * noOfColumnsToDelete);
@@ -206,7 +220,7 @@ public class E2_TimelineWSManager {
         List<CMC_Estimate_Week__c> estimateWeeksToUpsert = new List<CMC_Estimate_Week__c>();
         boolean incrementalUpdateRequired = false;
         boolean decrementalUpdateRequired = true;
-        for(CMC_Estimate_Week__c estimateWeek : E2_TimelineDataUtil.getEstimateWeekRecords(estimateId)){
+        for(CMC_Estimate_Week__c estimateWeek : E2_TimelineDataUtil_WS.getEstimateWeekRecords(estimateId)){
             
             if(incrementalUpdateRequired){
                //estimateWeek.Date__c = estimateWeek.Date__c.addDays(7 * noOfColumnsToAdd);
@@ -256,7 +270,7 @@ public class E2_TimelineWSManager {
                                                    integer noOfColumnsToAdd){                                                   
         List<CMC_Estimate_Week__c> estimateWeeksToUpsert = new List<CMC_Estimate_Week__c>();
         boolean incrementalUpdateRequired = false;
-        for(CMC_Estimate_Week__c estimateWeek : E2_TimelineDataUtil.getEstimateWeekRecords(estimateId)){
+        for(CMC_Estimate_Week__c estimateWeek : E2_TimelineDataUtil_WS.getEstimateWeekRecords(estimateId)){
             
             if(incrementalUpdateRequired){
                estimateWeek.Date__c = estimateWeek.Date__c.addDays(7 * noOfColumnsToAdd);
@@ -313,7 +327,7 @@ public class E2_TimelineWSManager {
         List<CMC_Estimate_Week__c> estimateWeeksToUpsert = new List<CMC_Estimate_Week__c>();
         Date startDate = date.valueOf(sDate);
         Integer index = 0;
-        for(CMC_Estimate_Week__c estimateWeek : E2_TimelineDataUtil.getEstimateWeekRecords(estimateId)){
+        for(CMC_Estimate_Week__c estimateWeek : E2_TimelineDataUtil_WS.getEstimateWeekRecords(estimateId)){
                                                  
              estimateWeek.Date__c = startDate.addDays(7 * index);
              estimateWeek.Name = 'Week' + (index + 1);
@@ -361,7 +375,7 @@ public class E2_TimelineWSManager {
         List<E2_TimelineWS.E2_TimelineRow> rows = new List<E2_TimelineWS.E2_TimelineRow>();
         
         
-        for(CMC_Estimate_Resource__c res : E2_TimelineDataUtil.getEstimateResourceAndResourceWeekRec(estimateId)){
+        for(CMC_Estimate_Resource__c res : E2_TimelineDataUtil_WS.getEstimateResourceAndResourceWeekRec(estimateId)){
              List<E2_TimelineWS.E2_TimelineRowColumn> colRows = new List<E2_TimelineWS.E2_TimelineRowColumn>();
              for(CMC_Estimate_Resource_Week__c colRow : res.Estimate_Resource_Weeks__r){
                colRows.add(new E2_TimelineWS.E2_TimelineRowColumn(colRow.id, colRow.Estimate_Week__c, colRow.Hours__c.intValue()));
@@ -386,7 +400,7 @@ public class E2_TimelineWSManager {
         string cssClass = '';
         string header = '{"menu": { "items": [{ "title": "Insert 1 right", "command" : "insert_1_right" },{ "title" : "Insert 2 right", "command" : "insert_2_right" }, { "title" : "Insert 1 left", "command" : "insert_1_left" }, { "title" : "Insert 2 left", "command" : "insert_2_left" }, { "title" : "Delete column", "command" : "delete_column" }]}}';
         
-        for(CMC_Estimate_Week__c estimateWeek : E2_TimelineDataUtil.getEstimateWeekRecords(estimateId)){
+        for(CMC_Estimate_Week__c estimateWeek : E2_TimelineDataUtil_WS.getEstimateWeekRecords(estimateId)){
              
               Date weekDate = estimateWeek.Date__c;
               string sDate = weekDate.month() + '/' + weekDate.day() + '/' + weekDate.year(); 

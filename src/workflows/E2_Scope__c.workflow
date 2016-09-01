@@ -32,13 +32,4 @@ Direct_Low_Hrs__c, 0)))</formula>
         <description>This rule will populate the LOE Hrs field on the scope record based on the complexity selected.</description>
         <triggerType>onAllChanges</triggerType>
     </rules>
-    <rules>
-        <fullName>Update Parent Id</fullName>
-        <active>false</active>
-        <criteriaItems>
-            <field>E2_Scope__c.Name</field>
-            <operation>notEqual</operation>
-        </criteriaItems>
-        <triggerType>onAllChanges</triggerType>
-    </rules>
 </Workflow>

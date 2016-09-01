@@ -6,7 +6,7 @@
  * Created By: Arpita Bose (Appirio)
  * 
  * Date Modified      Modified By                  Description of the update
-
+   Aug 29th, 2016     Arpita Bose                  Added CurrencyISOCode in the query
 *  =====================================================================*/
 
 public class E2_DataUtil {
@@ -25,7 +25,7 @@ public class E2_DataUtil {
                          E2_Version_Notes__c, Product__c, E2_Reviewer__c, E2_SA__c, Type__c,E2_Last_Build_Datetime__c,
                          E2_Total_Hrs__c, E2_Derived_Effort_Template__c,
                          E2_Total_Strategy_Hrs__c, E2_Total_Plan_Hrs__c, E2_Total_Architect_Hrs__c, E2_Total_Build_Hrs__c, 
-                         E2_Total_Test_Hrs__c, E2_Total_Deploy_Thrive_Hrs__c, E2_Risk__c     
+                         E2_Total_Test_Hrs__c, E2_Total_Deploy_Thrive_Hrs__c, E2_Risk__c, CurrencyISOCode, Discount_Percent__c   
                     FROM CMC_Presales_LOE__c
                     WHERE Id = :estimateId];
   
@@ -123,7 +123,7 @@ public class E2_DataUtil {
   }
   
   public static List<CMC_Presales_LOE__c> getEstimateDetailForAccess(id estimateId){
-  	return [SELECT ownerId,  Presales_Request__c, E2_Risk__c
+  	return [SELECT ownerId,  Presales_Request__c, E2_Risk__c, CurrencyISOCode, Discount_Percent__c
   	        FROM CMC_Presales_LOE__c
   	        WHERE Id = : estimateId];  	
   }

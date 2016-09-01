@@ -395,20 +395,24 @@ var Typeahead_input = {
                 if(typeof Typeahead_input.selectedAssetsMap[element.id] == 'undefined'){
                     Typeahead_input.selectedAssetsMap[element.id] = element;
                 }
+                else if(Typeahead_input.selectedAssetsMap[element.id].isDeleted == 'false' && element.isDeleted == 'true'){
+                    Typeahead_input.selectedAssetsMap[element.id].isDeleted = 'true';
+                }
         });
     },
     
     retrieveExistingAssets : function(){
+        Typeahead_input.selectedAssetsMap = {};
         sforce.apex.execute("E2_Estimator_WS", "getExistingAssetsForScope", {
                             scopeId: scope_sfdc_id}, function(result){
-            
-            if(result.length > 0) {
+                                
+            if(result !== null && result.length > 0) {
                 var assetsRecsJson = result[0];
-                if (assetsRecsJson != null && assetsRecsJson != '' && assetsRecsJson.length > 0) {
+                if (assetsRecsJson !== null && assetsRecsJson !== '' && assetsRecsJson.length > 0) {
                     Typeahead_input.prepareExistingAssetRows(assetsRecsJson);
                 }
                 else{
-                    Typeahead_input.addNoAssetsRow();
+                    Typeahead_input.prepareExistingAssetRows(null);
                 }
             }
             else{
@@ -420,12 +424,12 @@ var Typeahead_input = {
     prepareExistingAssetRows : function(assetsRecsJson){
         var existingAssets = $("input[Id$='existingAssetRecs']").val();
         
-        if(existingAssets.length !== 0){
-            Typeahead_input.populatedSelectedAssetMap(existingAssets);
+        if(assetsRecsJson !== null && assetsRecsJson.length !== 0){
+            Typeahead_input.populatedSelectedAssetMap(assetsRecsJson);
         }
         
-        if(assetsRecsJson.length !== 0){
-            Typeahead_input.populatedSelectedAssetMap(assetsRecsJson);
+        if(existingAssets !== null && existingAssets.length !== 0){
+            Typeahead_input.populatedSelectedAssetMap(existingAssets);
         }
         
         var hasValidAsset = false; 
@@ -438,6 +442,9 @@ var Typeahead_input = {
         
         if(hasValidAsset){
             Typeahead_input.removeNoAssetsRow();
+        }
+        else{
+            Typeahead_input.addNoAssetsRow();
         }
         $("input[Id$='existingAssetRecs']").val(JSON.stringify(Typeahead_input.selectedAssetsMap));
     },
@@ -474,8 +481,8 @@ $(document).ready(function() {
     if(msg.toLowerCase() == 'success'){
        parent&&parent.AddEditScope&&parent.AddEditScope.closeEditScopeModelPopup&&parent.AddEditScope.closeEditScopeModelPopup();
        if($("input[id$='dmlMessage']").length) $("input[id$='dmlMessage']").val('Fail');
-       else parent&&parent.AddEditScope&&parent.AddEditScope.updateChildScopeOnParentScopeEdit&&parent.AddEditScope.updateChildScopeOnParentScopeEdit(scope_sfdc_id, changeComplexity, scopeToActivate, scopeToDeactivate);
-       parent&&parent.AddEditScope&&parent.AddEditScope.showSaveSuccessMessage&&parent.AddEditScope.showSaveSuccessMessage(scope_sfdc_id, scope_sfdc_name);
+        parent&&parent.AddEditScope&&parent.AddEditScope.updateChildScopeOnParentScopeEdit&&parent.AddEditScope.updateChildScopeOnParentScopeEdit(scope_sfdc_id, scope_sfdc_name, changeComplexity, scopeToActivate, scopeToDeactivate);
+       //parent&&parent.AddEditScope&&parent.AddEditScope.showSaveSuccessMessage&&parent.AddEditScope.showSaveSuccessMessage(scope_sfdc_id, scope_sfdc_name);
     }else{     
       resetIframeHeight();
     }
@@ -547,10 +554,17 @@ var addUpdateScopes = function(){
     $(".slds-change-notification").hide();
     TrackScopeUpdates.is_updated = false;
     TrackScopeUpdates.message_shown = false;
+    
   }catch(ex){
     alert(ex);
   }
   return false;
+}
+
+var clearAssetJsonfield = function(){
+    $("input[Id$='existingAssetRecs']").val('');
+    console.log('=========='+$("input[Id$='existingAssetRecs']").val());
+   // return false;
 }
 
 
@@ -736,8 +750,7 @@ var TrackScopeUpdates = {
     assets_search_input_client_id : '#searchStr_ele',
     load : function() {
         var is_Dirty = TrackScopeUpdates.checkIsdirty();
-        if(is_Dirty == true) {
-            alert(is_Dirty);
+        if(is_Dirty == 'true') {
             TrackScopeUpdates.is_updated = true; 
             TrackScopeUpdates.save_trigged = false;
         }

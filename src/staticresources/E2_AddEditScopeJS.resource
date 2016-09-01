@@ -797,6 +797,9 @@ var AddEditScope = {
                 $(treeId).jstree(jstree_options);
                 AddEditScope.tree_init();
                 // End
+                
+                //TODO : Add method to update order
+                
                 $(loadSpinner).hide();
                 CustomAlert.show('Scope has been cloned successfully!!!');
             } else {
@@ -878,7 +881,9 @@ var AddEditScope = {
         CustomAlert.show('Scope(s) have been edited successfully!!!');
         **/
     },
-    updateChildScopeOnParentScopeEdit: function(scope_id, changeComplexity, scopeToActivate, scopeToDeactivate) {
+    updateChildScopeOnParentScopeEdit: function(scope_id, scope_name, changeComplexity, scopeToActivate, scopeToDeactivate) {
+        AddEditScope.SAVED_SCOPE_ID = scope_id;
+        AddEditScope.SAVED_SCOPE_NAME = scope_name;
         var allChildScopes = [];
         var $node = $(treeId).jstree().get_node(scope_id);
 		$.each($node.children_d, function(indx, id) {
@@ -887,12 +892,15 @@ var AddEditScope = {
 		 });
 		 var scopesString = allChildScopes.toString();
 		 if(scopesString != '' && (changeComplexity != '' || scopeToActivate != '' || scopeToDeactivate != '')) {
+		     $(loadSpinner).show();
 		     sforce.apex.execute("E2_Estimator_WS", "updateScopesStatus", {
                 complexity: changeComplexity,
                 scopeToActivate: scopeToActivate,
                 scopeToDeactivate: scopeToDeactivate,
                 allscopesIds : scopesString
             }, AddEditScope.scopesUpdatedCallback);
+		 } else {
+		     AddEditScope.showSaveSuccessMessage(scope_id, scope_name);
 		 }
     },
     scopesUpdatedCallback: {

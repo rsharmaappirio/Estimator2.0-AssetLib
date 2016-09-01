@@ -202,6 +202,8 @@
         <members>E2_DashboardJS</members>
         <members>E2_EditScopeJS</members>
         <members>E2_EditScopeTemplateJS</members>
+        <members>E2_FAV_Invisible</members>
+        <members>E2_FAV_Visible</members>
         <members>E2_Resources</members>
         <members>E2_SLDS1</members>
         <members>E2_ScopeTreeJS</members>

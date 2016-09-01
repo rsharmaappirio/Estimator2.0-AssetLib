@@ -240,7 +240,7 @@
                     padding-left: 9px;
                     width: 120px;
                     height: 182px;
-                    display: none;
+                    /**display: none;**/ /** remove this because we need to show autofill widget on keyboard key movement **/
                     overflow: visible;
                 }
                 
@@ -315,7 +315,7 @@
                     padding-left: 9px;
                     width: 451px;
                     height: 80px;
-                    display: none;
+                    /**display: none;**/ /** remove this because we need to show autofill widget on keyboard key movement **/
                     overflow: visible;
                 }
                 

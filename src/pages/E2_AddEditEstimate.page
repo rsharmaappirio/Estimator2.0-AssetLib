@@ -141,8 +141,12 @@
                       <div class="slds-col">
                           <div class="slds-form-element">
                              <label class="slds-form-element__label" for="text-input-02">Currency</label>
-                             <div class="slds-form-element__control">
-                                <apex:inputField styleClass="slds-select" value="{!estimate.CurrencyIsoCode}" rendered="{!OR(estimate.id == NULL, estimate.CurrencyIsoCode == NULL)}"/>
+                             <div class="slds-form-element__control"> 
+                               <!-- <apex:inputField styleClass="slds-select" value="{!estimate.CurrencyIsoCode}" rendered="{!OR(estimate.id == NULL, estimate.CurrencyIsoCode == NULL)}"/>-->
+                                <apex:selectList styleClass="form-control slds-select" id="currency" value="{!estimate.CurrencyIsoCode}" rendered="{!OR(estimate.id == NULL, estimate.CurrencyIsoCode == NULL)}"
+                                             multiselect="false" size="1">
+                                      <apex:selectOptions value="{!currencyList}"/>
+                                    </apex:selectList>
                                 <apex:outputField value="{!estimate.CurrencyIsoCode}" rendered="{!AND(estimate.id != NULL, estimate.CurrencyIsoCode != NULL)}"/>
                              </div>
                           </div>

@@ -19,6 +19,7 @@ public class E2_AddEditEstimateController extends E2_Master{
   private static final string URL_KEY_IS_SAVE = 'is_save';
   private static final string URL_VALUE_TRUE = 'true';
   public List<SelectOption> riskList {get;set;}
+  public List<SelectOption> currencyList {get;set;}
  
   
   public E2_AddEditEstimateController(ApexPages.StandardController std) {    
@@ -41,6 +42,7 @@ public class E2_AddEditEstimateController extends E2_Master{
     super.validateAccess(this.estimate);
     string psr_id = E2_Constants.BLANK;
     riskList = populateRiskPicklistValues();
+    currencyList = getCurrencyValuesFromRateCard();
     if(this.estimate.id == null){
       psr_id = ApexPages.currentPage().getParameters().get(URL_KEY_PSR_ID);
     }else{
@@ -137,5 +139,20 @@ public class E2_AddEditEstimateController extends E2_Master{
       }      
       return options;  
     }
+    
+  //I-232598 : method to display CurrencyISOCOde on estimate that exists on Rate Card
+  private List<SelectOption> getCurrencyValuesFromRateCard() {
+      List<SelectOption> options = new List<SelectOption>();
+      Set<String> currencySet = new Set<String>(); 
+      for(pse__Rate_Card__c rc: [SELECT CurrencyISOCode FROM pse__Rate_Card__c]){
+        currencySet.add(rc.CurrencyISOCode);                                            
+      }
+      for(String curStr : currencySet){
+        options.add(new SelectOption(curStr, curStr)); 
+      }
+      return options;  
+    }  
+  
+  //
   
 }
