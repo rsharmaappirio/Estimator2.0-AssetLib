@@ -15,7 +15,8 @@ public class E2_AddBulkEffortsController {
     public List<SelectOption> phases {get;set;}
     
     public String effortsJson {get;set;}
-
+    
+    // constructor 
     public E2_AddBulkEffortsController(){
         lstEfforts = new List<E2_EffortsWrapper>();
         roles = getPicklistValues(new E2_Effort__c(), E2_Constants.EFFORT_ROLE_FIELD_API_NAME);
@@ -24,6 +25,7 @@ public class E2_AddBulkEffortsController {
         addEfforts();
     }
     
+    // method to add efforts 
     public PageReference addEfforts(){
         for(Integer index = 0; index < E2_Constants.DEFAULT_BULK_EFFORTS_TO_ADD; index++){
             lstEfforts.add(new E2_EffortsWrapper());
@@ -31,6 +33,7 @@ public class E2_AddBulkEffortsController {
         return null;
     }
     
+    // utility method to display field values as picklist 
     private static List<SelectOption> getPicklistValues(SObject obj, String fld){
         List<SelectOption> options = new List<SelectOption>();
         Schema.sObjectType objType = obj.getSObjectType(); 
@@ -45,6 +48,7 @@ public class E2_AddBulkEffortsController {
         return options;
     }
     
+    // method to create JSON for list of efforts 
     public PageReference prepareEffortsJson(){
         effortsJson = JSON.serialize(lstEfforts, true);
         return null;   

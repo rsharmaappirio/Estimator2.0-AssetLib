@@ -523,11 +523,6 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>E2_Favourite_Scope__c.Scope__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
         <field>E2_Favourite_Scope__c.Unique_Scope_User_Id__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -1063,6 +1058,10 @@
     </userPermissions>
     <userPermissions>
         <enabled>true</enabled>
+        <name>ManageSandboxes</name>
+    </userPermissions>
+    <userPermissions>
+        <enabled>true</enabled>
         <name>ManageSelfService</name>
     </userPermissions>
     <userPermissions>
@@ -1120,6 +1119,10 @@
     <userPermissions>
         <enabled>true</enabled>
         <name>SendSitRequests</name>
+    </userPermissions>
+    <userPermissions>
+        <enabled>true</enabled>
+        <name>ShowCompanyNameAsUserBadge</name>
     </userPermissions>
     <userPermissions>
         <enabled>true</enabled>

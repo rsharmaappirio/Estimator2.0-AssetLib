@@ -25,16 +25,18 @@ global class E2_TreeNode {
     webservice string description;    
     webservice decimal display_order;
     
+    
     public E2_TreeNode(string title, boolean isFolder, boolean isLazy, string key){
         this.title = title;
         this.isFolder = isFolder;
         this.isLazy = isLazy;
         this.key = key;
     }
+    
     public E2_TreeNode(string title, boolean isFolder, boolean isLazy, string key, string parent){
         this(title, isFolder, isLazy, key);
         this.parent = parent;
-        this.state = '{"disabled":false, "opened":true, "selected":false}';//new E2_State();
+        this.state = '{"disabled":false, "opened":true, "selected":false}';
         this.id = key;
         this.text = title;
     }
@@ -42,7 +44,7 @@ global class E2_TreeNode {
     // for clone
     public E2_TreeNode(string id, string text, string parent, boolean hasChildren, string sourceId){
         this.parent = parent;
-        this.state = '{"disabled":false, "opened":true, "selected":false}';//new E2_State();
+        this.state = '{"disabled":false, "opened":true, "selected":false}';
         this.id = id;
         this.text = text;
         this.hasChildren = hasChildren;
@@ -64,7 +66,7 @@ global class E2_TreeNode {
     // for efforts
     public E2_TreeNode(string id, string text, string parent, boolean hasChildren, string sourceId, string node_type){
         this.parent = parent;
-        this.state = '{"disabled":false, "opened":true, "selected":false}';//new E2_State();
+        this.state = '{"disabled":false, "opened":true, "selected":false}';
         this.id = id;
         this.text = text;
         this.hasChildren = hasChildren;
@@ -74,7 +76,7 @@ global class E2_TreeNode {
     
     public E2_TreeNode(string id, string text, string parent, boolean hasChildren, string sourceId, string node_type, decimal displayOrder){
         this.parent = parent;
-        this.state = '{"disabled":false, "opened":true, "selected":false}';//new E2_State();
+        this.state = '{"disabled":false, "opened":true, "selected":false}';
         this.id = id;
         this.text = text;
         this.hasChildren = hasChildren;
@@ -82,11 +84,12 @@ global class E2_TreeNode {
         this.node_type = node_type;
         this.display_order = displayOrder;
     }
-// for details    
+    
+    // for details    
     public E2_TreeNode(string id, string text, string parent, boolean hasChildren, string sourceId,
                        string complexity, decimal loe_hrs, string description){
         this.parent = parent;
-        this.state = '{"disabled":false, "opened":true, "selected":false}';//new E2_State();
+        this.state = '{"disabled":false, "opened":true, "selected":false}';
         this.id = id;
         this.text = text;
         this.hasChildren = hasChildren;

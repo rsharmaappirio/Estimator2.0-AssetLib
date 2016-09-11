@@ -4,13 +4,119 @@
  * Description: This is a manager class; constitutes all the business logic for E2_TimelineWS webservcie
  * Created Date: Aug 12, 2016
  * Created By: Rahul Jain (Appirio)
+ * 08 Sep 2016: Modified: RJ : Added E2_Estimate_Rate_Card__r.Resource_Role__c, E2_Estimate_Rate_Card__r.Region__c field in the query method for 
+ *                             Capacity Needs and Timeline Hours based on roles
 *  =====================================================================*/
 public class E2_TimelineWSManager {
+    
+   public static final string SEPARATOR = ' - ';    
+    
+   // method to get estimate rate card for an estimate 
    public static List<E2_Estimate_Rate_Card__c> getEstimateRateCards(string estimateId){
         List<E2_Estimate_Rate_Card__c> estimateRateCards = E2_TimelineDataUtil_WS.getEstimateRateCards(estimateId);
         return estimateRateCards;
+   }
+   
+   // method to update Color Code depending upon code type 
+   public static string updateColorCode(string jsonstr){
+        List<E2_TimelineWS.ColorCode> lstColorCodes = (List<E2_TimelineWS.ColorCode>)JSON.deserialize(jsonstr, List<E2_TimelineWS.ColorCode>.class);
+        Map<String, CMC_Estimate_Week__c> estimateWeeksMap = new Map<String, CMC_Estimate_Week__c>();
+        for(E2_TimelineWS.ColorCode cCode: lstColorCodes){
+            if(!estimateWeeksMap.containsKey(cCode.weekId))  estimateWeeksMap.put(cCode.weekId, new CMC_Estimate_Week__c(Id = cCode.weekId));
+            if(cCode.type == 'phase'){
+                CMC_Estimate_Week__c week = estimateWeeksMap.get(cCode.weekId);
+                week.E2_PhaseColorCode__c = cCode.value;
+                estimateWeeksMap.put(cCode.weekId, week);
+            } 
+            
+            if(cCode.type == 'milestone') {
+                CMC_Estimate_Week__c week = estimateWeeksMap.get(cCode.weekId);
+                week.E2_MilestoneColorCode__c = cCode.value;
+                estimateWeeksMap.put(cCode.weekId, week);
+            }
+            
+            if(cCode.type == 'milestone1') {
+                CMC_Estimate_Week__c week = estimateWeeksMap.get(cCode.weekId);
+                week.E2_Milestone1ColorCode__c = cCode.value;
+                estimateWeeksMap.put(cCode.weekId, week);
+            }
+            
+            
+            if(cCode.type == 'milestone2') {
+                CMC_Estimate_Week__c week = estimateWeeksMap.get(cCode.weekId);
+                week.E2_Milestone2ColorCode__c = cCode.value;
+                estimateWeeksMap.put(cCode.weekId, week);
+            }
+        }
+        
+        try{
+
+         if(!estimateWeeksMap.isEmpty()) update estimateWeeksMap.values();
+         
+        }catch(Exception ex){
+         return 'Failed: ' + ex.getMessage(); 
+        }
+         
+        return 'Success';
     }
     
+    // method to update Phase color code 
+    public static string updatePhaseColorCode(string weekId, string phaseColorCode){
+       try{
+         update new CMC_Estimate_Week__c(Id = weekId,
+                                         E2_PhaseColorCode__c = phaseColorCode);
+       }catch(Exception ex){
+         return 'Failed: ' + ex.getMessage(); 
+       }
+       return weekId;  
+    }
+    
+    // method to update Milestone color code for type = 'milestone'
+    public static string updateMilestoneColorCode(string weekId, string milestoneColorCode){
+       try{
+         update new CMC_Estimate_Week__c(Id = weekId,
+                                         E2_MilestoneColorCode__c = milestoneColorCode);
+       }catch(Exception ex){
+         return 'Failed: ' + ex.getMessage(); 
+       }
+       return weekId;  
+    }
+    
+    //  method to update Milestone color code for type = 'milestone1'
+    public static string updateMilestoneColorCode1(string weekId, string milestoneColorCode1){
+       try{
+         update new CMC_Estimate_Week__c(Id = weekId,
+                                         E2_Milestone1ColorCode__c = milestoneColorCode1);
+       }catch(Exception ex){
+         return 'Failed: ' + ex.getMessage(); 
+       }
+       return weekId;  
+    }
+    
+    //  method to update Milestone color code for type = 'milestone2'
+    public static string updateMilestoneColorCode2(string weekId, string milestoneColorCode2){
+       try{
+         update new CMC_Estimate_Week__c(Id = weekId,
+                                         E2_Milestone2ColorCode__c = milestoneColorCode2);
+       }catch(Exception ex){
+         return 'Failed: ' + ex.getMessage(); 
+       }
+       return weekId;  
+    }
+    
+    // method to update Phase__c and color code
+    public static string updatePhaseAndColorCode(string weekId, string phase, string colorCode){
+       try{
+         update new CMC_Estimate_Week__c(Id = weekId,
+                                         Phase__c = phase,
+                                         E2_PhaseColorCode__c = colorCode);
+       }catch(Exception ex){
+         return 'Failed: ' + ex.getMessage(); 
+       }
+       return weekId;  
+    }
+    
+    // method to update Phase__c
     public static string updatePhase(string weekId, string phase){
        try{
          update new CMC_Estimate_Week__c(Id = weekId,
@@ -21,6 +127,7 @@ public class E2_TimelineWSManager {
        return weekId;  
     }
     
+    // method to update Milestone__c
     public static string updateMilestone(string weekId, string milestone){
        try{
          update new CMC_Estimate_Week__c(Id = weekId,
@@ -31,6 +138,29 @@ public class E2_TimelineWSManager {
        return weekId;  
     }
     
+    // method to update E2_Milestone1__c
+    public static string updateMilestone1(string weekId, string milestone1){
+       try{
+         update new CMC_Estimate_Week__c(Id = weekId,
+                                         E2_Milestone1__c = milestone1);
+       }catch(Exception ex){
+         return 'Failed: ' + ex.getMessage(); 
+       }
+       return weekId;  
+    }
+    
+    // method to update E2_Milestone2__c
+    public static string updateMilestone2(string weekId, string milestone2){
+       try{
+         update new CMC_Estimate_Week__c(Id = weekId,
+                                         E2_Milestone2__c = milestone2);
+       }catch(Exception ex){
+         return 'Failed: ' + ex.getMessage(); 
+       }
+       return weekId;  
+    }
+    
+    // method to update Skills
     public static string updateSkill(string estimateId, string resourceId, string skill){
         List<CMC_Estimate_Resource__c> estimatResourceList = E2_TimelineDataUtil_WS.getEstimateResourceForSkill(estimateId, resourceId);
         try{
@@ -44,7 +174,7 @@ public class E2_TimelineWSManager {
         return 'Success';
     }
     
-    
+    // method to update Hours__c
     public static string updateHours(string weekId, string resourceId, integer hours){
        List<CMC_Estimate_Resource_Week__c> resWeeks = E2_TimelineDataUtil_WS.getHoursforEstimateResourceWeek(weekId, resourceId);
                                                        
@@ -61,10 +191,11 @@ public class E2_TimelineWSManager {
         }catch(Exception ex){
           return 'Failed: ' + ex.getMessage();
        }        
-       return weekId + '-' + resourceId;                                                          
+       return weekId + '-' + resourceId;                                                         
     
     }
     
+    // method to auto fill CMC_Estimate_Resource_Week__c
     public static string autoFill(string jsonstr){
         system.debug('>>>>' + jsonstr);
         if(jsonstr == ']' || String.isEmpty(jsonstr)){
@@ -80,21 +211,19 @@ public class E2_TimelineWSManager {
         for(E2_TimelineWS.ResourceWeekWrapper rwW : lstResourceWeekWrapper){
             
             weekIds.add(rwW.weekId);
-            resourceIds.add(rwW.resourceId);
-            
+            resourceIds.add(rwW.resourceId);    
         }
         
         for(CMC_Estimate_Resource_Week__c rwW : E2_TimelineDataUtil_WS.getEstimateResourceWeekRecords(weekIds, resourceIds)){
                
                string key = rwW.Estimate_Resource__c + '|' + rwW.Estimate_Week__c;
-               resourceWeekMap.put(key, rwW);
-                   
-                   
+               resourceWeekMap.put(key, rwW);           
         }
         
          for(E2_TimelineWS.ResourceWeekWrapper rwW : lstResourceWeekWrapper){
             string key = rwW.resourceId + '|' + rwW.weekId;
             integer hours = rwW.hours;
+            system.debug('==rwW.weekId'+rwW.weekId);
             if(resourceWeekMap.containsKey(key)){
                 CMC_Estimate_Resource_Week__c eRW = resourceWeekMap.get(key);
                 eRW.Hours__c = hours;
@@ -114,7 +243,7 @@ public class E2_TimelineWSManager {
        return 'Success';
     }
 
-
+    // method to reorder resources in CMC_Estimate_Resource__c
     public static string reOrderResources(string jsonstr){
         List<E2_TimelineWS.ResourceWrapper> lstResourceWrapper = (List<E2_TimelineWS.ResourceWrapper>)JSON.deserialize(jsonstr, List<E2_TimelineWS.ResourceWrapper>.class);
         
@@ -132,7 +261,8 @@ public class E2_TimelineWSManager {
        }        
         return 'Success';    
     }
-      
+    
+    // method to add rows in CMC_Estimate_Resource__c
     public static string addRow(string estimateId, integer order, 
                                     integer cost, integer rate, string role,
                                     string skill, string estimateRateCardId){
@@ -147,13 +277,14 @@ public class E2_TimelineWSManager {
                                              Skill__c = skill, 
                                              Is_Used_For_Calculations__c = true,
                                              CurrencyIsoCode = estimateList[0].CurrencyIsoCode,
-                                             Estimate_Rate_Card__c = (String.isEmpty(estimateRateCardId) ? null : estimateRateCardId));
+                                             E2_Estimate_Rate_Card__c = (String.isEmpty(estimateRateCardId) ? null : estimateRateCardId));
        }catch(Exception ex){
          return 'Failed: ' + ex.getMessage();
        }
        return 'Success';
     }
     
+    // method to update a row in CMC_Estimate_Resource__c
     public static string updateRow(string estimateId, string rowId, 
                                     string role,
                                     string skill, integer cost, integer rate, string estimateRateCardId){
@@ -162,13 +293,14 @@ public class E2_TimelineWSManager {
                                              Role__c = role, 
                                              Cost__c = cost, 
                                              Rate__c = rate, 
-                                             Estimate_Rate_Card__c = (String.isEmpty(estimateRateCardId) ? null : estimateRateCardId));
+                                             E2_Estimate_Rate_Card__c = (String.isEmpty(estimateRateCardId) ? null : estimateRateCardId));
        }catch(Exception ex){
          return 'Failed: ' + ex.getMessage();
        }
        return 'Success';
     }
     
+    // method to delete a row of CMC_Estimate_Resource__c
     public static string deleteRow(string rowId){
        try{                             
          delete new CMC_Estimate_Resource__c(id = rowId);
@@ -178,7 +310,7 @@ public class E2_TimelineWSManager {
        return 'Success';
     }
     
-    
+    // method to delete columns
     public static string deleteColumn(string estimateId, string weekId){
         List<CMC_Estimate_Week__c> estimateWeeksToUpsert = new List<CMC_Estimate_Week__c>();
         List<CMC_Estimate_Week__c> estimateWeeksToDelete = new List<CMC_Estimate_Week__c>();
@@ -194,8 +326,7 @@ public class E2_TimelineWSManager {
                estimateWeek.Name = 'Week' + estimateWeek.Order__c;
                estimateWeeksToUpsert.add(estimateWeek);               
             }
-            
-            
+
             if(estimateWeek.id == weekId){
                estimateWeeksToDelete.add(estimateWeek);
                if(estimateWeek.Order__c > 1) dateUpdateRequired = true;
@@ -214,10 +345,12 @@ public class E2_TimelineWSManager {
     
     }
     
+    // method to add more columns on Left
     public static string addMoreColumnsOnLeft(string estimateId, 
                                                    string weekId, 
                                                    integer noOfColumnsToAdd){                                                   
         List<CMC_Estimate_Week__c> estimateWeeksToUpsert = new List<CMC_Estimate_Week__c>();
+        List<CMC_Estimate_Week__c> estimateWeeksToUpdate = new List<CMC_Estimate_Week__c>();
         boolean incrementalUpdateRequired = false;
         boolean decrementalUpdateRequired = true;
         for(CMC_Estimate_Week__c estimateWeek : E2_TimelineDataUtil_WS.getEstimateWeekRecords(estimateId)){
@@ -259,12 +392,28 @@ public class E2_TimelineWSManager {
         // process insert/update in database           
         try{                                
            upsert estimateWeeksToUpsert;
+           
+           integer displayOrder = 1;
+           for(CMC_Estimate_Week__c eW : [SELECT Id, Order__c
+                                          FROM CMC_Estimate_Week__c                                                    
+                                          WHERE Estimate__c = :estimateId
+                                          ORDER BY Date__c ASC]){
+                 eW.Order__c = displayOrder;
+                 displayOrder++;
+                 estimateWeeksToUpdate.add(eW); 
+           }
+           
+           if(!estimateWeeksToUpdate.isEmpty()){
+               update estimateWeeksToUpdate;
+           }
+           
         }catch(Exception ex){
            return 'Failed: ' + ex.getMessage();
         }                                                                                         
         return 'Success';
     }
     
+    // method to add more columns on right
     public static string addMoreColumnsOnRight(string estimateId, 
                                                    string weekId, 
                                                    integer noOfColumnsToAdd){                                                   
@@ -299,6 +448,7 @@ public class E2_TimelineWSManager {
         return 'Success';
     }
     
+    // method to create estimate weeks on build
     public static string onBuild(string estimateId, string sDate, integer noOfColumnsToAdd){
         List<CMC_Estimate_Week__c> estimateWeeksToUpsert = new List<CMC_Estimate_Week__c>();
         Date startDate = date.valueOf(sDate);
@@ -318,7 +468,7 @@ public class E2_TimelineWSManager {
     }
     
     
-    
+    // method to create estimate week on selection of start date on the page
     public static string onStartDateSelectionChange(string estimateId, 
                                                   string sDate, 
                                                   integer order,
@@ -348,6 +498,7 @@ public class E2_TimelineWSManager {
         return 'Success';                                          
     }
     
+    // method to create timeline columns on load
     public static CMC_Estimate_Week__c createTimelineColumnOverload(string estimateId, 
                                                   date sDate, 
                                                   integer order,
@@ -359,7 +510,8 @@ public class E2_TimelineWSManager {
                                                                     );
        return estimateWeek;                                                             
     }
-     
+    
+    // method to create timeline column 
     public static CMC_Estimate_Week__c createTimelineColumn(string estimateId, 
                                                   string sDate, 
                                                   integer order,
@@ -371,6 +523,7 @@ public class E2_TimelineWSManager {
        return estimateWeek;                                                             
     }
     
+    // method to get timeline rows 
     public static List<E2_TimelineWS.E2_TimelineRow> getTimelineRows(string estimateId){
         List<E2_TimelineWS.E2_TimelineRow> rows = new List<E2_TimelineWS.E2_TimelineRow>();
         
@@ -378,17 +531,28 @@ public class E2_TimelineWSManager {
         for(CMC_Estimate_Resource__c res : E2_TimelineDataUtil_WS.getEstimateResourceAndResourceWeekRec(estimateId)){
              List<E2_TimelineWS.E2_TimelineRowColumn> colRows = new List<E2_TimelineWS.E2_TimelineRowColumn>();
              for(CMC_Estimate_Resource_Week__c colRow : res.Estimate_Resource_Weeks__r){
-               colRows.add(new E2_TimelineWS.E2_TimelineRowColumn(colRow.id, colRow.Estimate_Week__c, colRow.Hours__c.intValue()));
+               colRows.add(new E2_TimelineWS.E2_TimelineRowColumn(colRow.id, colRow.Estimate_Week__c, (colRow.Hours__c == null ? 0 : colRow.Hours__c.intValue())));
              }
+             
+            string resourceRole = (res.E2_Estimate_Rate_Card__c == null ? '' : res.E2_Estimate_Rate_Card__r.Resource_Role__c);
+            string region = (res.E2_Estimate_Rate_Card__c == null ? '' : res.E2_Estimate_Rate_Card__r.Region__c);
+            string key = region + SEPARATOR + resourceRole;
+            if(E2_Constants.ROLE_RESOURCEROLE_MAP.containsKey(key)){
+                resourceRole = E2_Constants.ROLE_RESOURCEROLE_MAP.get(key);
+            }
+            // E2_Constants.ROLE_RESOURCEROLE_MAP
              rows.add(new E2_TimelineWS.E2_TimelineRow(res.id, res.Role__c, 
-                      res.Skill__c, res.Rate__c.intValue(), 
-                      res.Order__c.intValue(), res.Cost__c.intValue()
+                      resourceRole, 
+                      res.Skill__c,
+                      (res.Rate__c == null ? 0 : res.Rate__c.intValue()),
+                      (res.Order__c == null ? 0 : res.Order__c.intValue()),
+                      (res.Cost__c == null ? 0 : res.Cost__c.intValue())
                       ,colRows));                                   
          }        
         return rows;
     }
     
-    
+    // method to get timeline columns
     public static List<E2_TimelineWS.E2_TimelineColumn> getTimelineColumns(string estimateId){
         List<E2_TimelineWS.E2_TimelineColumn> columns = new List<E2_TimelineWS.E2_TimelineColumn>();        
         integer width = 50;
@@ -420,11 +584,62 @@ public class E2_TimelineWSManager {
                                             sDate,
                                             estimateWeek.Name,
                                             estimateWeek.Phase__c,
-                                            estimateWeek.Milestone__c                                            
+                                            estimateWeek.Milestone__c,
+                                            estimateWeek.E2_PhaseColorCode__c == null ? '' : estimateWeek.E2_PhaseColorCode__c,
+                                            estimateWeek.E2_MilestoneColorCode__c == null ? '' : estimateWeek.E2_MilestoneColorCode__c,
+                                            estimateWeek.E2_Milestone1__c == null ? '' : estimateWeek.E2_Milestone1__c,
+                                            estimateWeek.E2_Milestone1ColorCode__c == null ? '' : estimateWeek.E2_Milestone1ColorCode__c,
+                                            estimateWeek.E2_Milestone2__c == null ? '' : estimateWeek.E2_Milestone2__c,
+                                            estimateWeek.E2_Milestone2ColorCode__c == null ? '' : estimateWeek.E2_Milestone2ColorCode__c
                                             ));                                       
         }
-                                 
-        
         return columns;
+    }
+    
+    // method to update Color Code and values depending upon code type 
+   public static string updateMilestoneWeeks(string jsonstr){
+        List<E2_TimelineWS.MilestoneWeekWrapper> lstMilestoneWeeks = (List<E2_TimelineWS.MilestoneWeekWrapper>)JSON.deserialize(jsonstr, List<E2_TimelineWS.MilestoneWeekWrapper>.class);
+        Map<String, CMC_Estimate_Week__c> estimateWeeksMap = new Map<String, CMC_Estimate_Week__c>();
+        for(E2_TimelineWS.MilestoneWeekWrapper mWeek: lstMilestoneWeeks){
+            if(!estimateWeeksMap.containsKey(mWeek.weekId))  estimateWeeksMap.put(mWeek.weekId, new CMC_Estimate_Week__c(Id = mWeek.weekId));
+            if(mWeek.type == 'phase'){
+                CMC_Estimate_Week__c week = estimateWeeksMap.get(mWeek.weekId);
+                week.Phase__c = mWeek.value;
+                week.E2_PhaseColorCode__c = mWeek.colorCode;
+                estimateWeeksMap.put(mWeek.weekId, week);
+            } 
+            
+            if(mWeek.type == 'milestone') {
+                CMC_Estimate_Week__c week = estimateWeeksMap.get(mWeek.weekId);
+                week.Milestone__c = mWeek.value;
+                week.E2_MilestoneColorCode__c = mWeek.colorCode;
+                estimateWeeksMap.put(mWeek.weekId, week);
+            }
+            
+            if(mWeek.type == 'milestone1') {
+                CMC_Estimate_Week__c week = estimateWeeksMap.get(mWeek.weekId);
+                week.E2_Milestone1__c = mWeek.value;
+                week.E2_Milestone1ColorCode__c = mWeek.colorCode;
+                estimateWeeksMap.put(mWeek.weekId, week);
+            }
+            
+            
+            if(mWeek.type == 'milestone2') {
+                CMC_Estimate_Week__c week = estimateWeeksMap.get(mWeek.weekId);
+                week.E2_Milestone2__c = mWeek.value;
+                week.E2_Milestone2ColorCode__c = mWeek.colorCode;
+                estimateWeeksMap.put(mWeek.weekId, week);
+            }
+        }
+        
+        try{
+
+         if(!estimateWeeksMap.isEmpty()) update estimateWeeksMap.values();
+         
+        }catch(Exception ex){
+         return 'Failed: ' + ex.getMessage(); 
+        }
+         
+        return 'Success';
     }
 }

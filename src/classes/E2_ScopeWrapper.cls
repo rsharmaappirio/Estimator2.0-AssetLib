@@ -44,6 +44,7 @@ global class E2_ScopeWrapper implements Comparable {
       this.isFavorite = isFav;
     }
     
+    // method to compare fields based on sort_by/ sort_order 
     global Integer compareTo(Object objToCompare) {
         if(sortBy == SORT_BY.ByComplexity){
             if(sortOreder==SORT_ORDER.ByASC) 

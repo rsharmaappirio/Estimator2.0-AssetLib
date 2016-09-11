@@ -21,7 +21,7 @@ public class E2_AddEditEstimateController extends E2_Master{
   public List<SelectOption> riskList {get;set;}
   public List<SelectOption> currencyList {get;set;}
  
-  
+  //constructor
   public E2_AddEditEstimateController(ApexPages.StandardController std) {    
     this.estimate = (CMC_Presales_LOE__c)std.getRecord();   
     // set the default currency iso code for this estimate
@@ -32,12 +32,12 @@ public class E2_AddEditEstimateController extends E2_Master{
     this.psr = new Presales_Request__c(); 
      
   }
-
+  //method to check message on the page
   public boolean getHasMessages(){
      return ApexPages.hasMessages();
   }
 
-
+  //page action method on the load of page
   public PageReference pageAction(){
     super.validateAccess(this.estimate);
     string psr_id = E2_Constants.BLANK;

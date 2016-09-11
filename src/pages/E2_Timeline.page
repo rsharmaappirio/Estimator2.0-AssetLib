@@ -1,3 +1,13 @@
+<!--=====================================================================
+ * Appirio, Inc
+ * Name: E2_Timeline
+ * Description: visualforce page for the resource timeline functionalty in estimator 2.0!
+ * Created Date: Aug 15th, 2016
+ * Created By: Rahul Jain (Appirio)
+ * 
+ * Date Modified      Modified By                  Description of the update
+*  =====================================================================
+-->
 <apex:page standardController="CMC_Presales_LOE__c" extensions="E2_TimelineController" action="{!pageAction}" 
    showHeader="false" standardStylesheets="true" sidebar="false" applyHtmlTag="false" applyBodyTag="false">
     <apex:stylesheet value="{!$Resource.E2_SlickGrid}/slick.grid.css" />
@@ -26,13 +36,21 @@
     <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/slick.formatters.js"></script>
     <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/slick.editors.js"></script>
     <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/slick.grid.js"></script>
+    <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/lib/js/require.js"></script>
+    <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/lib/js/underscore.js"></script>
+    
+    <script type="text/javascript">
+        requirejs.config({
+                        baseUrl: '{!$Resource.E2_SlickGrid}/lib/js'  //give the location of the folder which contains require, excel-builder, etc
+                    });
+    </script>
     <script type="text/javascript" src="{!$Resource.E2_TimelineJS}"></script>
     
     <apex:composition template="E2_Template">
         <apex:define name="title">Timeline</apex:define>
         <apex:define name="header">
             <c:E2_PermissionMessage rendered="{!NOT(isEditable)}" />
-            <c:E2_Header psr_id="{!psrId}" step="6" />
+            <c:E2_Header psr_id="{!psrId}" step="7" />
         </apex:define>
         <apex:define name="body">
             <style rel="stylesheet" type="text/css">
@@ -201,6 +219,15 @@
                     outline: 0;
                     padding: 0;
                 }
+                
+                /** SLDS STYLE OF FOCUS ON INPUT
+                input.editor-text:active, input.editor-text:focus {
+                    background-color: #fff;
+                    border-color: #1589ee;
+                    box-shadow: 0 0 3px #0070d2;
+                    outline: 0 none;
+                }
+                **/
                 
                 .ui-datepicker-trigger {
                     margin-top: 2px;
@@ -494,7 +521,7 @@
                     color: #fff!important;
                 }
                 
-                 body {width:100%; height:100%; overflow:auto; margin:0; }
+                 /**body {width:100%; height:100%; overflow:auto; margin:0; }**/
                  /**html {width:100%; height:100%; overflow:auto; }**/
                  
                  .totals {
@@ -555,6 +582,51 @@
                   .slds .slds-tabs--default__link {
                      height:35px!important;   
                   }
+                  
+                  
+                   .noneline-bottom{
+                          border-right:0;
+                      }
+                      
+                      
+                   .cell-title {
+                      font-weight: bold;
+                    }
+                
+                    #contextMenu {
+                      background: #e1efc7;
+                      border: 1px solid gray;
+                      padding: 2px;
+                      display: inline-block;
+                      min-width: 100px;
+                      -moz-box-shadow: 2px 2px 2px silver;
+                      -webkit-box-shadow: 2px 2px 2px silver;
+                      z-index: 99999;
+                      max-width: 120px;
+                    }
+                
+                    #contextMenu li {
+                      padding: 4px 4px 4px 14px;
+                      list-style: none;
+                      cursor: pointer;
+                      /**background: url("{!$Resource.E2_SlickGrid}/images/arrow_right_peppermint.png") no-repeat center left;**/
+                      width:10px;
+                      height:10px;
+                      float:left;
+                      border-color: #ccc;
+                      border-style: solid;
+                      border-width: 1px;
+                    }
+                
+                    #contextMenu li:hover {
+                      background-color: white;
+                    } 
+                    
+                    .slick-cell.selected {
+                        background-color: beige !important;
+                        color: #000000 !important;
+                        /**border-style: dashed;**/
+                    }
             </style>
             <apex:form >
                 <apex:pageMessages />
@@ -662,18 +734,21 @@
                                   </div>
                                 </div>  
                                 
-                                      <br/>
-                                       <div style="position:relative">
-                                            <div>
-                                                <div id="myGrid" style="width:99%;height:450px"></div>
-                                            </div>
-                                        </div>
+                               <a id='downloadLink'></a>
+                               <a id="" href="javascript:void(0);" onclick="return Timeline.downloadExcel_Click();">Download Grid (XLSX)</a>
+                               <!--input type="submit" onclick="return Timeline.downloadExcel_Click();" class="slds-button slds-button--neutral slds-button--brand save-button-custom" title="Download Excel" value="Download Excel"/-->
+                               
+                               <div style="position:relative">
+                                    <div>
+                                        <div id="myGrid" style="width:99%;min-height:450px"></div>
+                                    </div>
+                                </div>
                                    
                         </div>
                     </div>
                     <div id="tab-default-2" style="padding:0px" class="slds-tabs--default__content slds-show paddingTopZero" role="tabpanel" aria-labelledby="tab-default-2__item">
                        <apex:outputPanel layout="block" id="ratecard_table">
-                                     <div class="slds-modal__footer page-footer">
+                                     <div class="slds-modal__footer">
                                              <div class="slds-col slds-no-flex slds-align-bottom">
                                                 <div class="" role="group">
                                                     <apex:commandButton onclick="return Timeline.updateEstimateRateCards();" styleClass="slds-button slds-button--neutral slds-button--brand save-button-custom" title="Save" value="Save" action="{!updateEstimateRateCards}" />
@@ -685,6 +760,9 @@
                                      <table class="slds-table slds-max-medium-table--stacked">
                                         <thead>
                                            <tr class="slds-text-heading--label">
+                                              <th class="slds-is-sortable" scope="col">
+                                                 <div class="slds-truncate">Practice</div>
+                                              </th> 
                                               <th class="slds-is-sortable" scope="col">
                                                  <div class="slds-truncate">Region</div>
                                               </th>
@@ -713,6 +791,9 @@
                                             <apex:repeat value="{!estimateRateCards}" var="estimateratecard">
                                             <apex:variable var="rcID" value="{!estimateratecard.Id}" /> 
                                                  <tr class="slds-hint-parent">
+                                                    <td class="slds-truncate " data-label="Practice">
+                                                        <apex:outputfield value="{!estimateratecard.Practice__c}"/>
+                                                    </td> 
                                                     <td class="slds-truncate " data-label="Region">
                                                         <apex:outputfield value="{!estimateratecard.Region__c}"/>
                                                     </td>
@@ -786,6 +867,48 @@
                  </div>
                 
                 <br/>
+                
+                <ul id="contextMenu" style="display:none;position:absolute">
+                  <span><button id="merge_btn" onclick="return false;" data="MERGE">Merge</button></span>    
+                  <span><button id="unmerge_btn" onclick="return false;" data="UNMERGE">UnMerge</button></span>
+                  <br/>
+                  <b>Apply Background:</b>
+                  <li title="Default Color" style="background-color:transparent;border-color:black;" data="">&nbsp;</li>
+                  <li style="background-color: #F83A22;border-color:#F83A22;" data="#F83A22">&nbsp;</li>
+                  
+                  
+                  <li style="background-color: #ff887c;border-color:#ff887c; " data="#ff887c">&nbsp;</li>
+                  <li style="background-color: #dc2127;border-color:#dc2127; " data="#dc2127">&nbsp;</li>
+                  <li style="background-color: #dbadff;border-color:#dbadff; " data="#dbadff">&nbsp;</li>
+                  
+                  
+                  <li style="background-color: #8B008B;border-color:#8B008B; " data="#8B008B">&nbsp;</li>
+                  <li style="background-color: #556B2F;border-color:#556B2F; " data="#556B2F">&nbsp;</li>
+                  <li style="background-color: #FF8C00;border-color:#FF8C00; " data="#FF8C00">&nbsp;</li>
+                  <li style="background-color: #9932CC;border-color:#9932CC; " data="#9932CC">&nbsp;</li>
+                  <li style="background-color: #8B0000;border-color:#8B0000; " data="#8B0000">&nbsp;</li>
+                  <li style="background-color: #E9967A;border-color:#E9967A; " data="#E9967A">&nbsp;</li>
+                  <li style="background-color: #8FBC8F;border-color:#8FBC8F; " data="#8FBC8F">&nbsp;</li>
+                  <li style="background-color: #483D8B;border-color:#483D8B; " data="#483D8B">&nbsp;</li>
+                  
+                  
+                  
+                  
+                  <li style="background-color: #00FFFF;border-color:#00FFFF; " data="#00FFFF">&nbsp;</li>
+                  <li style="background-color: #00FFFF;border-color:#00FFFF; " data="#00FFFF">&nbsp;</li>
+                  <li style="background-color: #C0C0C0;border-color:#C0C0C0; " data="#C0C0C0">&nbsp;</li>
+                  <li style="background-color: #A0522D;border-color:#A0522D; " data="#A0522D">&nbsp;</li>
+                  <li style="background-color: #4169E1;border-color:#4169E1; " data="#4169E1">&nbsp;</li>
+                  <li style="background-color: #663399;border-color:#663399; " data="#663399">&nbsp;</li>
+                  <li style="background-color: #000080;border-color:#000080; " data="#000080">&nbsp;</li>
+                  <li style="background-color: #FF6347;border-color:#FF6347; " data="#FF6347">&nbsp;</li>
+                  <li style="background-color: #FFFF00;border-color:#FFFF00; " data="#FFFF00">&nbsp;</li>
+                  <li style="background-color: #EE82EE;border-color:#EE82EE; " data="#EE82EE">&nbsp;</li>
+                  <li style="background-color: #D2B48C;border-color:#D2B48C; " data="#D2B48C">&nbsp;</li>
+                 
+                  
+                </ul>
+                
                 <!-- PLEASE DONOT REMOVE: This section is important while using standard controller -->
                 <input type="hidden" value="{!CMC_Presales_LOE__c.Name}" />
                 <input type="hidden" value="{!CMC_Presales_LOE__c.Presales_Request__c}" />
@@ -839,6 +962,8 @@
             <script type="text/javascript">
                 var estimateId = '{!estimate.id}';
                 var currency_code = '{!CMC_Presales_LOE__c.CurrencyIsoCode}';
+                var renderOptions_Phases = {!renderOptions_PhasesJSON};
+                var capacityNeeds_JSON = {!capacityNeeds_JSON};
             </script>
             
         </apex:define>

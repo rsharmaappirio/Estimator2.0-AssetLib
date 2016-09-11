@@ -19,7 +19,7 @@ public with sharing class E2_AddNewScopeController {
     private static final string URL_VALUE_TRUE = 'true';
 
     public string clipboardData{get;set;}
-
+    //constructor
     public E2_AddNewScopeController(ApexPages.StandardController std) {
        this.scope = (E2_Scope__c)std.getRecord();
        this.childScopes = new List<Scope>();
@@ -29,11 +29,7 @@ public with sharing class E2_AddNewScopeController {
        this.dmlOperationMessage = E2_Constants.DML_OPERATION_MESSAGE_FAIL;
        this.clipboardData = E2_Constants.BLANK;
     }
-
-
-
-    
-    
+    //wrapper class to define clipboard info
     public class ClipboardInfo{
         public string property1{get;set;}   
         public string property2{get;set;}   
@@ -44,9 +40,7 @@ public with sharing class E2_AddNewScopeController {
         public List<ClipboardInfo> list1{get;set;}      
     }
     
-   
-
-    
+    //method to process clipboard data
     public pagereference processClipboardData(){
         try{
              String StringIn = this.clipboardData;
@@ -65,12 +59,11 @@ public with sharing class E2_AddNewScopeController {
         }catch(Exception ex){
             ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, ex.getMessage()));
         }
-        
          
         this.clipboardData = E2_Constants.BLANK;
         return null;
     }
-
+    //page action method on page load
     public PageReference pageAction(){
         this.estimateId = ApexPages.CurrentPage().getParameters().get(E2_Constants.URL_KEY_ESTIMATE_ID);
         // New
@@ -89,7 +82,7 @@ public with sharing class E2_AddNewScopeController {
         return null;
     }
     
-    
+    //method to add new child scope 
     public pagereference addNewScope(){
         if(this.childScopes.size() > 0){
           this.childScopes.add(0, new Scope(new E2_Scope__c(Is_Active__c = true, Complexity__c = E2_Constants.MEDIUM), getEffortsInstanceList()));
@@ -99,7 +92,7 @@ public with sharing class E2_AddNewScopeController {
         return null;                
     }
     
-    
+    //method to save scope
     public pagereference saveScope(){
         List<E2_Scope__c> scopeListToUpsert = new List<E2_Scope__c>();        
         List<E2_Effort__c> masterScope_Efforts = new List<E2_Effort__c>();        
@@ -121,6 +114,7 @@ public with sharing class E2_AddNewScopeController {
         Savepoint sp = Database.setSavepoint();
         
         for(Scope sc : childScopes){
+        //if scope is selected to delete 
            if(sc.isDeleted == true){
              if(sc.scope.id <> NULL)  {
              	scopeListToDelete.add(sc.scope); 
@@ -131,24 +125,14 @@ public with sharing class E2_AddNewScopeController {
              }
              continue;
            }
-           
+           //if scope is not selected for deletion,then check if it's to be added as favorite or not based on selection
            if(sc.isDeleted == false){                
                 sc.scope.recordTypeId = recTypeId;
                 sc.scope.Presales_LOE__c = estimateId;
                 if(this.scope.id <> NULL){
                     sc.scope.parent_scope__c = this.scope.id; 
-                    this.is_Edit = true; 
-                    String uniqueKey = sc.scope.Id +'-'+ UserInfo.getUserId();
-		                if(sc.scope.Is_Favourite__c == true && !favScopes.containsKey(uniqueKey)){
-		                  E2_Favourite_Scope__c favSC = new E2_Favourite_Scope__c();
-					            favSC.Scope__c = sc.scope.Id;
-					            favSC.User__c = UserInfo.getUserId();
-					            favSC.Unique_Scope_User_Id__c = uniqueKey;
-					            fscLstToInsert.add(favSC);
-		                }
-		                else if(sc.scope.Is_Favourite__c == false && favScopes.containsKey(uniqueKey)){
-						            fscLstToDelete.add(favScopes.get(uniqueKey));
-						        }                
+                    this.is_Edit = true;
+                                    
                 }
                 if(sc.scope.Id == null ){
                     sc.scope.Is_Active__c = true;
@@ -165,15 +149,28 @@ public with sharing class E2_AddNewScopeController {
            }     
         }
         
-        try{       
-           system.debug('>>>>>SIZE>>>>' + scopeListToUpsert.size()); 
+        try{
+           if(!scopeListToUpsert.isEmpty()) upsert scopeListToUpsert;
+		   // Code moved after scope upsert to get id of new scopes
+		   for(E2_Scope__c scope : scopeListToUpsert) {
+		   	String uniqueKey = scope.Id +'-'+ UserInfo.getUserId();
+            if(scope.Is_Favourite__c == true && !favScopes.containsKey(uniqueKey)){
+		    	E2_Favourite_Scope__c favSC = new E2_Favourite_Scope__c();
+				favSC.Scope__c = scope.Id;
+	            favSC.User__c = UserInfo.getUserId();
+	            favSC.Unique_Scope_User_Id__c = uniqueKey;
+	            fscLstToInsert.add(favSC);
+		    } else if(scope.Is_Favourite__c == false && favScopes.containsKey(uniqueKey)){
+				fscLstToDelete.add(favScopes.get(uniqueKey));
+			}
+		   }              
            if(!fscLstToInsert.isEmpty()){
               upsert fscLstToInsert;
            }
            if(!fscLstToDelete.isEmpty()){
               delete fscLstToDelete;
            }  
-           if(!scopeListToUpsert.isEmpty()) upsert scopeListToUpsert;
+           
         }catch(Exception ex){
             Database.rollback(sp);
             resetChildScopesOnException();            
@@ -226,7 +223,7 @@ public with sharing class E2_AddNewScopeController {
         this.dmlOperationMessage = E2_Constants.DML_OPERATION_MESSAGE_SUCCESS;   
         return null;                
     }
-    
+    //method to reset child scopes 
     public void resetChildScopesOnException(){
         for(Scope sc : childScopes){ 
                string scope_id = sc.scope.id;
@@ -243,7 +240,7 @@ public with sharing class E2_AddNewScopeController {
             }
         
     }
-    
+    //method to populate records 
     public void populateViewRecords(){
         Id scopeId = this.scope.id;
         Set<Id>  childScopeIds = new Set<Id>();                
@@ -261,13 +258,13 @@ public with sharing class E2_AddNewScopeController {
             }
         }
     }
-    
+    //utility method to get efforts
     public List<E2_Effort__c> getEffortsInstanceList(){
         List<E2_Effort__c> efforts = new List<E2_Effort__c>();
         //efforts.add(new E2_Effort__c(Complexity_Factor_High__c = 0, Complexity_Factor_Low__c = 0, Effort_Hrs__c = 0));        
         return efforts;
     }
-    
+    //wrapper class for Scope
     public class Scope{
         public string key{get;set;}
         public E2_Scope__c scope{get;set;}
@@ -297,7 +294,7 @@ public with sharing class E2_AddNewScopeController {
             return hrs;
         }
         
-        
+        //constructor
         public Scope(E2_Scope__c scope, List<E2_Effort__c> efforts){            
             this.efforts = new List<Effort>();
             this.isDeleted = false;
@@ -317,26 +314,26 @@ public with sharing class E2_AddNewScopeController {
                 this.efforts.add(new Effort(effort));
             }           
         }
-        
+        //method to reload 
         public pagereference reload(){
             return null;            
         }
-        
+        //method to change complexity
         public pagereference changeComplexity(){
             return null;
         }
-        
+        //method to remove scope
         public pagereference remove(){
             this.isDeleted = true;
             return null;            
         }
-        
+        //method to add new efforts
         public pagereference addNewEffort(){
             this.efforts.add(new Effort(new E2_Effort__c(Complexity_Factor_High__c = 0, Complexity_Factor_Low__c = 0, Effort_Hrs__c = 0)));
             return null;
         }
     }
-    
+    //wrapper class for Effort 
     public class Effort{
         public boolean isDeleted{get;set;}
         public string key{get;set;}
@@ -359,7 +356,7 @@ public with sharing class E2_AddNewScopeController {
           } 
           this.effort = effort;                     
         }
-        
+        //method to remove effort 
         public pagereference remove(){
             this.isDeleted = true;
             return null;            

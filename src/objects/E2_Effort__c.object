@@ -21,10 +21,6 @@
         <type>Default</type>
     </actionOverrides>
     <actionOverrides>
-        <actionName>Follow</actionName>
-        <type>Default</type>
-    </actionOverrides>
-    <actionOverrides>
         <actionName>List</actionName>
         <type>Default</type>
     </actionOverrides>
@@ -163,6 +159,7 @@ Effort Hrs - (Low% of Effort Hours)</description>
         <globalPicklist>E2_Phases</globalPicklist>
         <inlineHelpText>During which Phase is this effort expended?</inlineHelpText>
         <label>Phase</label>
+        <required>false</required>
         <trackHistory>false</trackHistory>
         <trackTrending>false</trackTrending>
         <type>Picklist</type>
@@ -174,6 +171,7 @@ Effort Hrs - (Low% of Effort Hours)</description>
         <globalPicklist>E2_Role</globalPicklist>
         <inlineHelpText>Aligned with Rate Card Roles</inlineHelpText>
         <label>Resource Role</label>
+        <required>false</required>
         <trackHistory>false</trackHistory>
         <trackTrending>false</trackTrending>
         <type>Picklist</type>

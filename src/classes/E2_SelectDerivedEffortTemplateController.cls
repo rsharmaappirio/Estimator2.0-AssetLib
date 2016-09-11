@@ -15,6 +15,7 @@ public with sharing class E2_SelectDerivedEffortTemplateController {
     public E2_PaginationUtility effortPaging {get; set;}
     public Integer selectedPageNumber{get;set;}
     
+    //constructor 
     public E2_SelectDerivedEffortTemplateController() {
         selectedPageNumber = 1;
         derivedGroups = new List<DerivedGroup>();
@@ -22,6 +23,7 @@ public with sharing class E2_SelectDerivedEffortTemplateController {
         effortPaging.pageSize = 15;
     }
     
+    //page action method which is called on page load 
     public PageReference pageAction(){
         for(E2_Derived_Effort_Group__c dg : Database.query(E2_DataUtil.getDerivedEffortGroup(null))) {
             derivedGroups.add(new DerivedGroup(dg));
@@ -31,6 +33,7 @@ public with sharing class E2_SelectDerivedEffortTemplateController {
         return null;
     }
     
+    //utility method to derived groups 
     private List<DerivedGroup> getWrapperList(List<Object> currentList) {
      List<DerivedGroup> scpList = new List<DerivedGroup>();
      for(Object obj : currentList) {
@@ -39,6 +42,7 @@ public with sharing class E2_SelectDerivedEffortTemplateController {
      return scpList;
     }
 
+    // method to select template effort 
     public PageReference selectTemplateEfforts() {
         derivedGroups.clear();
         // check that if selected Group is not null/empty than retrieve all the derived efforts of selected group
@@ -54,7 +58,8 @@ public with sharing class E2_SelectDerivedEffortTemplateController {
         }
         return null;
     }
-
+    
+    // method to clear the search criteria 
     public PageReference clearTemplateSearch() {
         searchGroup = null;
         derivedGroups.clear();
@@ -62,6 +67,7 @@ public with sharing class E2_SelectDerivedEffortTemplateController {
         return null;
     }
     
+    // method to get the list of records 
     public PageReference getList() {
         try {
             derivedGroups = getWrapperList(effortPaging.getPage(selectedPageNumber));        
@@ -69,6 +75,7 @@ public with sharing class E2_SelectDerivedEffortTemplateController {
         return null;
     }
     
+    //wrapper class for derived effort group 
     public class DerivedGroup {
         public E2_Derived_Effort_Group__c derivedGroups{get;set;}
         

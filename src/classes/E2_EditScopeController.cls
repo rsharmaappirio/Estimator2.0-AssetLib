@@ -19,12 +19,14 @@ public with sharing class E2_EditScopeController {
     public boolean is_Dirty{get;set;}
     public string assetsRecsJson {get;set;}
     public string effortsJson {get;set;}
+    private Map<String,E2_Favourite_Scope__c> favScopes;
     
     public E2_ScopeQuestionAnswerManager scopeQuestionManager{get;set;}
 
     public E2_EditScopeController(ApexPages.StandardController std) {
        // constructor for the page tied to standard controller	
        this.scope = (E2_Scope__c)std.getRecord();
+       this.scope.LastModifiedBy = [SELECT Name,Id FROM User WHERE Id=:this.scope.LastModifiedById];
        this.childScope = new Scope();
        this.is_View = false;       
        this.dmlOperationMessage = E2_Constants.DML_OPERATION_MESSAGE_FAIL;
@@ -33,6 +35,7 @@ public with sharing class E2_EditScopeController {
        assetsRecsJson = '';
        effortsJson = '';
        scopeQuestionManager = new E2_ScopeQuestionAnswerManager();
+       
     }
 
     public PageReference pageAction(){
@@ -42,10 +45,19 @@ public with sharing class E2_EditScopeController {
         	this.errorMessage = 'No scope defined to edit!!!';
             return null;            
         }else{
+        	getUserFavoriteScopes();
         	scopeQuestionManager.scope = this.scope;
             populateViewRecords();            
         }
         return null;
+    }
+    
+    private void getUserFavoriteScopes() {
+    	// Method get all scopes marked favorite by logged-in user
+    	favScopes = new Map<String,E2_Favourite_Scope__c>();
+       	for(E2_Favourite_Scope__c favSC : E2_DataUtil.getFavScopeForCurrentUser()) {
+	    	favScopes.put(favSC.Unique_Scope_User_Id__c, favSC);
+	    }
     }
     
     public E2_Favourite_Scope__c getE2FavoriteScopeInstance(Id scopeId, Id userId, string uniqueKey){
@@ -65,23 +77,13 @@ public with sharing class E2_EditScopeController {
         List<E2_Effort__c> effortsToDelete = new List<E2_Effort__c>();
         List<E2_Favourite_Scope__c> fscLstToInsert = new List<E2_Favourite_Scope__c>();
         List<E2_Favourite_Scope__c> fscLstToDelete = new List<E2_Favourite_Scope__c>();  
-        Map<String,E2_Favourite_Scope__c> favScopes = new Map<String,E2_Favourite_Scope__c>();
         List<E2_Recommended_Asset__c> assetsToInsert = new List<E2_Recommended_Asset__c>();
         List<E2_Recommended_Asset__c> assetsToDelete = new List<E2_Recommended_Asset__c>();
         this.errorMessage = E2_Constants.BLANK;  
         Scope masterScope;
         Id recTypeId = E2_RecordTypeClass.getId(E2_Constants.E2_SCOPE_API_NAME, E2_Constants.SCOPE_RT_SCOPE);
         
-        
-        // TODO - Rohit Sharma/Arpita - please move this query to datautil class
-        for(E2_Favourite_Scope__c favSC : [SELECT Id,Unique_Scope_User_Id__c 
-                                          FROM E2_Favourite_Scope__c 
-                                          WHERE User__c =: UserInfo.getUserId()]) {
-            favScopes.put(favSC.Unique_Scope_User_Id__c, favSC);
-        }
-        
-       
-        
+        //insert Asset if not exist else delete 
         if(!String.isBlank(assetsRecsJson) && assetsRecsJson.length() > 0){
             Map<String, Object> assetsMap =  (Map<String, Object>) JSON.deserializeUntyped(assetsRecsJson);
             for(String assetId : assetsMap.keySet()){
@@ -99,15 +101,20 @@ public with sharing class E2_EditScopeController {
         Savepoint sp = Database.setSavepoint();
         
     	if(this.childScope.isDeleted == false){                
-            // scope to insert/update (Upsert)
+            // mark scopes as favorites
+            if(this.childScope.scope.Is_Favourite__c != this.childScope.isFavorite) {
+	            String uniqueKey = this.childScope.scope.Id + '-' + UserInfo.getUserId();
+	            if(this.childScope.scope.Is_Favourite__c == true && !favScopes.containsKey(uniqueKey)){
+			      fscLstToInsert.add(getE2FavoriteScopeInstance(this.childScope.scope.Id, UserInfo.getUserId(), uniqueKey));
+			    }else if(this.childScope.scope.Is_Favourite__c == false && favScopes.containsKey(uniqueKey)){
+				  fscLstToDelete.add(favScopes.get(uniqueKey));
+				}
+				if(this.childScope.scope.CreatedById != UserInfo.getUserId()) {
+					this.childScope.scope.Is_Favourite__c = this.childScope.isFavorite;
+				}
+            }
+			// scope to insert/update (Upsert)
             scopeListToUpsert.add(this.childScope.scope);
-        
-            String uniqueKey = this.childScope.scope.Id + '-' + UserInfo.getUserId();
-            if(this.childScope.scope.Is_Favourite__c == true && !favScopes.containsKey(uniqueKey)){
-		      fscLstToInsert.add(getE2FavoriteScopeInstance(this.childScope.scope.Id, UserInfo.getUserId(), uniqueKey));
-		    }else if(this.childScope.scope.Is_Favourite__c == false && favScopes.containsKey(uniqueKey)){
-			  fscLstToDelete.add(favScopes.get(uniqueKey));
-			}
 				
         } else {
         	scopeListToDelete.add(this.childScope.scope);
@@ -177,9 +184,15 @@ public with sharing class E2_EditScopeController {
         }
         this.dmlOperationMessage = E2_Constants.DML_OPERATION_MESSAGE_SUCCESS;
         scopeQuestionManager.saveQuestion(this.errorMessage, this.dmlOperationMessage);
+        // Rohit - Set Current user details as last modified by user on scope 
+        User modifiedBy = new User(Id = UserInfo.getUserId(),FirstName = UserInfo.getFirstName(),LastName = UserInfo.getLastName()); 
+        this.scope.LastModifiedBy = modifiedBy;
+        getUserFavoriteScopes();
+        if(favScopes.containsKey(this.childScope.scope.Id + '-' + UserInfo.getUserId()))
+        	this.childScope.scope.Is_Favourite__c = true;
         return null;             
     }
-    
+    //reset child scopes 
     public void resetChildScopesOnException(){       
         string scope_id = this.childScope.scope.id;
         if(this.childScope.key <> scope_id){
@@ -193,21 +206,23 @@ public with sharing class E2_EditScopeController {
             }
         }
     }
-    
+    //method to add new question
     public pagereference addNewQuestion() {
     	return scopeQuestionManager.addNewQuestion();
     }
-    
+    //method to populate records 
     public void populateViewRecords(){
         Id scopeId = this.scope.id;   
         Id currentUserId = UserInfo.getUserId();     
         for(E2_Scope__c scope : E2_DataUtil.getScopeAndChildrenOnScopeIdForEditScope(scopeId)){
                this.childScope = new Scope(scope, scope.Efforts__r);
+               if(favScopes.containsKey(this.childScope.scope.Id + '-' + UserInfo.getUserId()))
+               	this.childScope.scope.Is_Favourite__c = true;
         }
         scopeQuestionManager.retriveScopeQuestion();
     }
     
-    
+    //method to set is_Dirty to true 
     public pagereference updateFormStatus() {
         is_Dirty = true;
         return null;
@@ -217,7 +232,7 @@ public with sharing class E2_EditScopeController {
         List<E2_Effort__c> efforts = new List<E2_Effort__c>();        
         return efforts;
     }
-    
+    //method to add bulk efforts on click of button 
     public PageReference addBulkEfforts(){
         if(effortsJson != null && effortsJson.length() > 0){
             List<E2_EffortsWrapper> lstEffortsWrapper = (List<E2_EffortsWrapper>)JSON.deserialize(effortsJson, List<E2_EffortsWrapper>.class);
@@ -235,13 +250,14 @@ public with sharing class E2_EditScopeController {
         }
         return null;
     }
-    
+    //wrapper class for Scope
     public class Scope{
         public string key{get;set;}
         public E2_Scope__c scope{get;set;}
         public boolean isCloned{get;set;}
         public boolean hasClonedEfforts{get;set;}
         public List<Effort> efforts{get;set;}
+        public boolean isFavorite{get;set;}
 
         public boolean isDeleted{get;set;}
         public string slider_state{get;set;}
@@ -278,6 +294,7 @@ public with sharing class E2_EditScopeController {
             }
             this.key = scope.id;
             this.scope = scope;
+            this.isFavorite = scope.Is_Favourite__c;
             for(E2_Effort__c effort : efforts){
                 if(effort.Source_Effort__c <> NULL) {
 		          	this.hasClonedEfforts = true;          	
@@ -285,26 +302,26 @@ public with sharing class E2_EditScopeController {
                 this.efforts.add(new Effort(effort));
             }           
         }
-        
+        //method to reload 
         public pagereference reload(){
         	return null;        	
         }
-        
+        //method to change complexity 
         public pagereference changeComplexity(){
         	return null;
         }
-        
+        //method to remove scope 
         public pagereference remove(){
             this.isDeleted = true;
             return null;            
         }
-        
+        //method to add new effort 
         public pagereference addNewEffort(){
             this.efforts.add(new Effort(new E2_Effort__c(Complexity_Factor_High__c = 0, Complexity_Factor_Low__c = 0, Effort_Hrs__c = 0)));
             return null;
         }
     }
-    
+    //wrapper class for Effort 
     public class Effort{
         public boolean isDeleted{get;set;}
         public string key{get;set;}
@@ -327,7 +344,7 @@ public with sharing class E2_EditScopeController {
           } 
           this.effort = effort;                     
         }
-        
+        //method to remove effort 
         public pagereference remove(){
             this.isDeleted = true;
             return null;            

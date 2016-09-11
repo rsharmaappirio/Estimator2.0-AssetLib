@@ -434,17 +434,19 @@ $( document ).ready(function() {
     Typeahead_input.retrieveExistingAssets();
     //Question JS
     $('#' + AddEditQuestionAnswer.SCOPE_TREE_IFRAME_ID).attr('src', '/apex/E2_ScopeTree?Id='+scope_sfdc_id);
-    AddEditQuestionAnswer.bindEvent();
+    //AddEditQuestionAnswer.bindEvent();
     resetIframeHeight();
     //Question JS
     hideSpinner();
     
     if(msg.toLowerCase() == 'success'){
-       parent&&parent.AddEditScope&&parent.AddEditScope.closeEditScopeModelPopup&&parent.AddEditScope.closeEditScopeModelPopup();
+       //parent&&parent.AddEditScope&&parent.AddEditScope.closeEditScopeModelPopup&&parent.AddEditScope.closeEditScopeModelPopup();
        if($("input[id$='dmlMessage']").length) $("input[id$='dmlMessage']").val('Fail');
        parent&&parent.AddEditScope&&parent.AddEditScope.updateChildScopeOnParentScopeEdit&&parent.AddEditScope.updateChildScopeOnParentScopeEdit(scope_sfdc_id, scope_sfdc_name, changeComplexity, scopeToActivate, scopeToDeactivate);
        //parent&&parent.AddEditScope&&parent.AddEditScope.showSaveSuccessMessage&&parent.AddEditScope.showSaveSuccessMessage(scope_sfdc_id, scope_sfdc_name);
-       resetIframeHeight();
+       window.setTimeout(function() {
+            resetIframeHeight();
+        }, 2000);
     }else{     
       resetIframeHeight();
     }
@@ -500,6 +502,9 @@ var addUpdateScopes = function(){
   var validate2 = validateData();
   if(validate1 == false || validate2 == false){
     return false;
+  }
+  if(validateDataQuestion() == false) {
+      return false;
   }
   
   try{    
@@ -597,14 +602,6 @@ var validateData = function(){
   return returnVal;
 }
 
-var validateDataQuestion = function(){
-  returnVal = true;
-  
-  $(document.body).find('div.questiondiv').each(validationTraverse);
-  //$(document.body).find('div.assumptionsdiv').each(validationTraverse);
-  
-  return returnVal;
-}
 
 
 var validationTraverseForScopes = function(){
@@ -655,7 +652,7 @@ var validateScopes = function(){
 var slideToggleEffort = function(){
   if(validateData() == false){  
     return false;
-  }  
+  }
   
   closeAllSlides($(this).closest('tr').next('tr').find('.effortsdiv'));
   $(this).closest('tr').addClass('slds-selection-background').next('tr').addClass('slds-selection-background');
@@ -752,6 +749,22 @@ var AddEditQuestionAnswer = {
             resetIframeHeight();
         });
     },
+    editQuestion : function(id) {
+        var questionInput = id.replace('questionText', 'questionInput');
+        var answerText = id.replace('questionText', 'answerText');
+        var answerInput = questionInput.replace('questionInput', 'answerInput');
+        $(document).find("[id$=answerInput]").not("#"+answerInput).not("#answerInput").hide();
+        $(document).find("[id$=answerText]").not("#"+answerText).not("#answerText").show();
+        $(document).find("[id$=questionInput]").not("#"+questionInput).not("#questionInput").hide();
+        $(document).find("[id$=questionText]").not(this).not("#questionText").show("fast", function() {
+            AddEditQuestionAnswer.updateQuestionContent(this);
+        });
+        $("#"+answerInput).show();
+        $("#"+answerText).hide();
+        $("#"+id).siblings( "#"+questionInput ).show();
+        $("#"+id).hide();
+        resetIframeHeight();
+    },
     hideQuestionEditDiv : function(id) {
         var questionText = id.replace('questionInput', 'questionText');
         var that = "#"+questionText;
@@ -770,7 +783,7 @@ var AddEditQuestionAnswer = {
         var answerText = id.replace('questionText', 'answerText');
         var answerInput = questionInput.replace('questionInput', 'answerInput');
         var questionUpdatedValue = $("#"+questionInput).find("input[id$=questionValue]").val();
-        $(that).html("Q "+questionUpdatedValue);
+        $(that).find("span#text").html("Q "+questionUpdatedValue);
         $("#"+answerInput).find("[id$=answerEditDiv]").each(function(answerText){
             var action = $(this).find("select[id$=answerAction]").val();
             var value = $(this).find("input[id$=answerValue]").val();

@@ -1,3 +1,13 @@
+/**=====================================================================
+ * Appirio, Inc
+ * Name: E2_ManageTemplateDerivedEffortController
+ * Description: Controller class to manage template derived effort
+ * Created Date: 
+ * Created By: 
+ * 
+ * Date Modified      Modified By                  Description of the update
+ *                      
+*  =====================================================================*/
 public with sharing class E2_ManageTemplateDerivedEffortController {
 	
 	public E2_Derived_Effort_Group__c selectedGroup{get;set;}
@@ -8,14 +18,15 @@ public with sharing class E2_ManageTemplateDerivedEffortController {
 	public List<SelectOption> rolePicklist{get;set;}
 	public List<SelectOption> includeWhenPicklist{get;set;}
 	public string errorString{get;set;}
-		
+	
+	//constructor	
 	public E2_ManageTemplateDerivedEffortController(ApexPages.StandardController std) {
     	this.selectedGroup = (E2_Derived_Effort_Group__c)std.getRecord();
 		hasNewEffort = false;
 		hasErrorEffort = false;
 		this.derivedEffortTemplates = new List<DerivedEffortTemplate>();
 	}
-
+    //page action method calls when the page loads
 	public PageReference pageAction() {
 		loadTemplates();
 		this.phasePicklist = populatePhasePicklistValues();
@@ -23,7 +34,7 @@ public with sharing class E2_ManageTemplateDerivedEffortController {
 		this.includeWhenPicklist = populateIncludePicklistValues();
 		return null;
 	}
-	
+	//method to load derived effort template 
 	public void loadTemplates() {
 		this.derivedEffortTemplates.clear();
 		map<string,DerivedEffortTemplate> uniqueKeyDerivedEfforts = new map<string,DerivedEffortTemplate>();
@@ -37,7 +48,7 @@ public with sharing class E2_ManageTemplateDerivedEffortController {
 			}	
 		}
 	}
-	
+	//method to display Phase as picklist values 
 	private List<SelectOption> populatePhasePicklistValues() {
 	    List<SelectOption> options = new List<SelectOption>();               
 	    for( Schema.PicklistEntry f : E2_Derived_Effort__c.Of_Phase__c.getDescribe().getPicklistValues()){
@@ -45,7 +56,7 @@ public with sharing class E2_ManageTemplateDerivedEffortController {
 	    }      
 	    return options;  
   	}
-  	
+  	//method to display Role as picklist values 
   	private List<SelectOption> populateRolePicklistValues(){
 	    List<SelectOption> options = new List<SelectOption>();
 	    for( Schema.PicklistEntry f : E2_Derived_Effort__c.Role__c.getDescribe().getPicklistValues()){
@@ -53,7 +64,7 @@ public with sharing class E2_ManageTemplateDerivedEffortController {
 	    }       
 	    return options;  
   	}
-  	
+  	//method to display Include when as picklist vales 
   	private List<SelectOption> populateIncludePicklistValues(){
 	    List<SelectOption> options = new List<SelectOption>();
 	    for( Schema.PicklistEntry f : E2_Derived_Effort__c.Include_When__c.getDescribe().getPicklistValues()){
@@ -62,7 +73,7 @@ public with sharing class E2_ManageTemplateDerivedEffortController {
 	    return options;  
   	}
 	
-	
+	//method to add new effort 
 	public PageReference addNewEffort() {
 		E2_Derived_Effort__c derivedEffort = new E2_Derived_Effort__c(Is_Active__c = true,Derived_Effort_Group__c = this.selectedGroup.Id);
 		if(!this.derivedEffortTemplates.isEmpty())
@@ -73,6 +84,7 @@ public with sharing class E2_ManageTemplateDerivedEffortController {
 		return null;
 	}
 	
+	//method to update efforts 
 	public PageReference updateEfforts() {
 		hasErrorEffort = false;
 		hasNewEffort = false;
@@ -82,6 +94,7 @@ public with sharing class E2_ManageTemplateDerivedEffortController {
 		List<E2_Derived_Effort__c> templatetoDelete = new List<E2_Derived_Effort__c>();
 		List<E2_Derived_Effort__c> templatetoUpsert = new List<E2_Derived_Effort__c>();
 		for(DerivedEffortTemplate template : this.derivedEffortTemplates) {
+		    //if isDelete is true, then delete derived effort else insert a new record 
 			if(template.isDelete) {
 				for(E2_Derived_Effort__c dE : template.derivedEfforts) {
 					if(dE.Id <> NULL) 
@@ -123,7 +136,7 @@ public with sharing class E2_ManageTemplateDerivedEffortController {
 		}
 		return null;
 	}
-	
+	//utility method to create derived effort records based on ofPhase 
 	private void createDerivedEffort(DerivedEffortTemplate template, List<E2_Derived_Effort__c> templatetoUpsert, Id devRecordTypeId) {
 		String generatedUniqueKey = template.generateUniqueKey();
 		decimal allocation = template.allocation/template.toPhase.size();
@@ -155,7 +168,7 @@ public with sharing class E2_ManageTemplateDerivedEffortController {
 			}	
 		}
 	}
-    
+    //wrapper class for derived effort 
     public class DerivedEffortTemplate {
     	public List<E2_Derived_Effort__c> derivedEfforts{get;set;}
     	public String name{get;set;}
@@ -172,7 +185,7 @@ public with sharing class E2_ManageTemplateDerivedEffortController {
     	public boolean isDelete{get;set;}
     	public boolean hasError{get;set;}
     	public boolean isActive{get;set;}    	
-    	
+    	//constructor
     	public DerivedEffortTemplate(E2_Derived_Effort__c derivedEffort) {
     		derivedEfforts = new List<E2_Derived_Effort__c>();
     		ofPhase = new list<String>();
@@ -190,7 +203,8 @@ public with sharing class E2_ManageTemplateDerivedEffortController {
     			this.includeWhen = derivedEffort.Include_When__c;
     			this.includeWhenHrs = derivedEffort.Include_When_Hours__c;  
     			this.isActive = derivedEffort.Is_Active__c;
-    			this.allocationMin = derivedEffort.Allocation_Min__c;	
+    			this.allocationMin = derivedEffort.Allocation_Min__c;
+    			//check for UniqueKey__c of derived effort
     			this.uniqueKey = !String.isBlank(derivedEffort.UniqueKey__c) ? derivedEffort.UniqueKey__c :
     						derivedEffort.Name + E2_Constants.SEPARATOR + (!String.isBlank(this.ofRole) ? this.ofRole : '') +
     						E2_Constants.SEPARATOR + (!String.isBlank(derivedEffort.Of_Phase__c) ? derivedEffort.Of_Phase__c : '') +
@@ -202,13 +216,13 @@ public with sharing class E2_ManageTemplateDerivedEffortController {
     		isDelete = false;
     		addDerivedEffort(derivedEffort);
     	}
-    	
+    	//add derived efforts 
     	public void addDerivedEffort(E2_Derived_Effort__c derivedEffort) {
     		this.derivedEfforts.add(derivedEffort);
     		this.ofPhase.add(derivedEffort.Of_Phase__c);
     		this.toPhase.add(derivedEffort.To_Phase__c);
     	}
-    	
+    	//method to create unique key 
     	public string generateUniqueKey() {
     		return this.name + E2_Constants.SEPARATOR + (!String.isBlank(this.ofRole) ? this.ofRole : '') +
     			   E2_Constants.SEPARATOR + this.ofPhase + E2_Constants.SEPARATOR + 
@@ -217,7 +231,7 @@ public with sharing class E2_ManageTemplateDerivedEffortController {
     			   E2_Constants.SEPARATOR + this.includeWhenHrs + E2_Constants.SEPARATOR + this.isActive
     			   + E2_Constants.SEPARATOR + this.allocationMin;
     	}
-    	
+    	//remove method 
     	public PageReference remove() {
     		this.isDelete = true;
     		//system.assert(false,this.isDelete);

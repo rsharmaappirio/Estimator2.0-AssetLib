@@ -20,7 +20,8 @@ public with sharing class E2_CapacityController extends E2_Master{
   public Map<String, Set<String>> rolesSkillToPhaseMap {get;set;}
   public Map<String, Decimal> rolesSkillPhaseToHoursMap {get;set;}
   private static string TOTAL = 'total';
-    
+  
+  //constructor  
   public E2_CapacityController(ApexPages.StandardController std) {
     this.estimate = (CMC_Presales_LOE__c)std.getRecord();
     phases = new Set<String>();
@@ -32,7 +33,7 @@ public with sharing class E2_CapacityController extends E2_Master{
   }
   
   
-  
+  //page action method on load of page
   public PageReference pageAction(){
     super.validateAccess(this.estimate);
     // Method to invoke on page load to get pre-calculated capacity
@@ -191,7 +192,7 @@ public with sharing class E2_CapacityController extends E2_Master{
     }
     updateZeroHoursInMaps();
   }
-  
+  //utility method to update zero hours 
   private void updateZeroHoursInMaps() {
     Set<string> updatedPhases = new set<string>();
     Set<string> updatedskillPhases = new set<string>();

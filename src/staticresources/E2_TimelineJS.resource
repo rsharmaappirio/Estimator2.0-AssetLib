@@ -328,7 +328,7 @@
 
         function handleKeyDown(e) {
             /***
-             * Кey codes
+             * ?ey codes
              * 37 left
              * 38 up
              * 39 right
@@ -517,6 +517,255 @@
 })(jQuery);
 
 
+(function ($) {
+
+	$.fn.exportToExcel = function (fileName,sheetName, data, options, afterExportCallback) {
+        
+		//actual data to be imported to excel
+		var excelData = data;
+
+
+        var rgbToHexForExcel_Color = function(color) {
+             if(typeof color == 'undefined' || color == null || color == '' || color == 'transparent') return '00000000';  
+            
+             if (color.charAt(0) === "#") {
+                return color.replace('#', '00');
+             }
+        
+             color = color.match(/^rgba?[\s+]?\([\s+]?(\d+)[\s+]?,[\s+]?(\d+)[\s+]?,[\s+]?(\d+)[\s+]?/i);
+             
+             color = (color && color.length === 4) ? "00" +
+              ("0" + parseInt(color[1],10).toString(16)).slice(-2) +
+              ("0" + parseInt(color[2],10).toString(16)).slice(-2) +
+              ("0" + parseInt(color[3],10).toString(16)).slice(-2) : '';
+            
+             return color;
+        };
+        
+        
+        var rgbToHexForExcel_BgColor = function(color) {
+            
+            if(typeof color == 'undefined' || color == null || color == '' || color == 'transparent' || color == 'rgba(0, 0, 0, 0)') return '00ffffff';  
+            
+            if (color.charAt(0) === "#") {
+                return color.replace('#', '00');
+            }
+            
+            color = color.match(/^rgba?[\s+]?\([\s+]?(\d+)[\s+]?,[\s+]?(\d+)[\s+]?,[\s+]?(\d+)[\s+]?/i);
+            
+            
+            color = (color && color.length === 4) ? "00" +
+              ("0" + parseInt(color[1],10).toString(16)).slice(-2) +
+              ("0" + parseInt(color[2],10).toString(16)).slice(-2) +
+              ("0" + parseInt(color[3],10).toString(16)).slice(-2) : '';
+            
+            return color;
+        }; 
+
+
+		//store the base 64 content to be returned
+		var returnValue;
+        require(['excel-builder'], function (EB, downloader) {
+            
+            //new excel workbook created
+            var newWorkbook = EB.createWorkbook();
+
+            //new worksheet created in the already created newWorsheet
+            var newWorksheet = newWorkbook.createWorksheet({ name: sheetName });
+
+            //new stylesheet for adding styles to the newworkbook
+            var stylesheet = newWorkbook.getStyleSheet();
+
+
+            //styles array to store header and cell styles
+            var styles = new Array();
+
+            	//if header style is defined by the user, then use that styles
+            	if (options && options.headerStyle)
+            		styles["headerstyle"] = stylesheet.createFormat(options.headerStyle);
+
+            		//else use default styles
+            	else {
+            		styles["headerstyle"] = stylesheet.createFormat({
+            			font: {
+            				bold: true,
+            				size: 12,
+            				color: '00ffffff'
+            			},
+            			fill: {
+            				type: 'pattern',
+            				patternType: 'solid',
+            				fgColor: '00428BCA'
+            			}
+            		});
+            	}
+
+            	//if cell style is defined by the user, then use that styles
+            	if (options && options.cellStyles)
+            		styles["cellstyles"] = stylesheet.createFormat(options.cellStyle);
+
+            		//else use default styles
+            	else {
+            		styles["cellstyles"] = stylesheet.createFormat({
+            			font: {
+            				bold: false,
+            				size: 12,
+            				color: '00000000'
+            			},
+            			fill: {
+            				type: 'pattern',
+            				patternType: 'solid',
+            				fgColor: '00ffffff'
+            			}
+            		});
+            	}
+
+           
+
+        	//Write the headers of the slick grid values into excel
+            function writeHeaders() {
+                
+            	var headers = [];
+
+            	$('div.slick-header-columns').find('span.slick-column-name').each(function(){
+            	    headers.push({ value: $(this).text(), metadata: { style: styles["headerstyle"].id } });
+            	});
+            	
+            	//push the headers in to excel
+            	newWorksheet.data.push(headers);
+            
+            	return headers;
+            };
+
+        	//write the cell values of each rows in to the excel
+            function writeCell(headers) {
+                
+                var row = 0;
+                $('div.grid-canvas').find('div.slick-row').each(function(){
+                    var rowData = [];
+                    var index = 0;
+                    var cell;
+                    
+                    for(var indx = 0; indx < headers.length; indx++){
+                        
+                        
+                        if($(this).find('div.slick-cell.' + 'l' + indx).length){
+                           
+                            cell = $(this).find('div.slick-cell.' + 'l' + indx);
+                           
+                            
+                            rowData.push({ value: (cell.find('div').length ? cell.find('div').text() : cell.text()), metadata: { style: stylesheet.createFormat({
+                                                                                                                                                        			font: { 
+                                                                                                                                                        				bold: false,
+                                                                                                                                                        				size: 12,
+                                                                                                                                                        				color: rgbToHexForExcel_Color(cell.css('color'))
+                                                                                                                                                        			}, 
+                                                                                                                                                        			fill: {
+                                                                                                                                                        				type: 'pattern',
+                                                                                                                                                        				patternType: 'solid',
+                                                                                                                                                        				fgColor: rgbToHexForExcel_BgColor(cell.css('background-color'))
+                                                                                                                                                        			},
+                                                                                                                                                        			alignment: {
+                                                                                                                                                                        horizontal: cell.css('text-align')
+                                                                                                                                                                    }
+                                                                                                                                                        		}).id 
+                                
+                                                                                                                                } 
+                                
+                                       });
+                                        
+                                      
+                        }else if(typeof cell != 'undefined'){
+                            
+                           
+                           
+                            rowData.push({ value: '', metadata: { style: stylesheet.createFormat({
+                                                                                                                                                        			font: { 
+                                                                                                                                                        				bold: false,
+                                                                                                                                                        				size: 12,
+                                                                                                                                                        				color: rgbToHexForExcel_Color(cell.css('color'))
+                                                                                                                                                        			}, 
+                                                                                                                                                        			fill: {
+                                                                                                                                                        				type: 'pattern',
+                                                                                                                                                        				patternType: 'solid',
+                                                                                                                                                        				fgColor: rgbToHexForExcel_BgColor(cell.css('background-color'))
+                                                                                                                                                        			},
+                                                                                                                                                        			alignment: {
+                                                                                                                                                                        horizontal: cell.css('text-align')
+                                                                                                                                                                    }
+                                                                                                                                                        			
+                                                                                                                                                        		}).id } });
+                        }
+                    }
+                    
+                    
+                    row++;
+                    
+                    newWorksheet.data.push(rowData);
+                });   
+
+            	
+            };
+                
+        	//iniate the write Excel function
+            var headers = writeHeaders();
+            writeCell(headers);
+            
+
+
+
+            //set column width for each column in excel
+            newWorksheet.setColumns([
+                    { width: 30 },
+                    { width: 20, hidden: false }, //enable hidden if that column needs to be hidden in the excel file
+                    { width: 15 },
+                    { width: 15 },
+                    { width: 15 },
+                    { width: 15 },
+                    { width: 15 },
+                    { width: 15 },
+                    { width: 15 },
+                    { width: 15 },
+                    { width: 15 },
+            ]);
+
+
+            //downloader method to add the excel file as base 64 
+            var downloader = function (filename, value) {
+                
+                //add the download and href attributes to the excel file download trigeer button
+            	$("#downloadLink").attr({
+                    download: filename,
+                    href: 'data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,' + value
+            	});
+
+            	//store the base 64 content to be returned
+            	returnValue = 'data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,' + value;
+            };
+
+
+        	
+            //add the created worksheet to the new workbook
+            newWorkbook.addWorksheet(newWorksheet);
+
+            //create the excel file
+            var data = EB.createFile(newWorkbook);
+
+            //call the downloader method with the parameteres, 1.Name of the Excel file to be downloaded, 2.Created Excel File
+            downloader(fileName, data);
+
+            //iniate the callback function
+            if (afterExportCallback)
+            	afterExportCallback(returnValue);
+        });
+    };
+
+}(jQuery));
+
+
+
+
+
 
 Date.prototype.startOfWeek = function(pStartOfWeek) {
     var mDifference = this.getDay() - pStartOfWeek;
@@ -597,8 +846,8 @@ function SkillEditor(args) {
     this.init = function () {
       $input = $("<INPUT type=text class='editor-text' />");
       
-      // return when the row is phase or milestone
-      if(typeof args.item.id == 'undefined' || args.item.id == 'phase' || args.item.id == 'milestone') return;
+      // return when the row is phase or milestone or any fixed row
+      if(typeof args.item.id == 'undefined' || typeof Timeline.fixedRowsTypes[args.item.id] != 'undefined') return;
       
           $input.appendTo(args.container)
           .bind("keydown.nav", function (e) {
@@ -740,7 +989,9 @@ function PhaseSelectionEditor(args) {
       $picker.append("<div class='editor-percentcomplete-helper'><div class='editor-percentcomplete-wrapper'><div class='editor-percentcomplete-buttons' /></div></div>");
 
       for(var _a in renderOptions_Phases){
-          $picker.find(".editor-percentcomplete-buttons").append($('<button val="' + _a + '">' + _a + '</button>'));
+          $picker.find(".editor-percentcomplete-buttons").append($('<button data="' + renderOptions_Phases[_a] + '" style="color:' + 
+                                        (renderOptions_Phases[_a] == '' ? '#000000' : '#ffffff') + ';background:' + renderOptions_Phases[_a] + 
+                                        '" val="' + _a + '">' + _a + '</button>'));
           $picker.find(".editor-percentcomplete-buttons").append($('<br/>'));
       }       
 
@@ -748,6 +999,11 @@ function PhaseSelectionEditor(args) {
 
       $picker.find(".editor-percentcomplete-buttons button").bind("click", function (e) {
         $input.val($(this).attr("val"));
+        $(args.container).css({
+        'background-color': $(this).css('background-color'), 
+        'color' : $(this).css('color')
+        });
+        
         e.stopPropagation();
         $input.focus().select();
         return false;
@@ -798,6 +1054,9 @@ function PhaseSelectionEditor(args) {
 }
 
 function AutoCompleteEditor(args) {
+    // USED FOR RESOURCE COLUMN 
+    // LIKE A TYPE-AHEAD for resource search and apply
+    
     var $input;
     var defaultValue = '';
     var scope = this;
@@ -917,80 +1176,18 @@ function AutoCompleteEditor(args) {
     this.init();
 }
 
-function PickListEditor(args) {
-    var $select;
-    var defaultValue;
-    var scope = this;
-
-    this.init = function() {
-        $select = $("<SELECT id='" + (typeof args.item.id == 'undefined' ? 'new' : args.item.id) + "' tabIndex='0' class='editor-yesno'></SELECT>");
-        $(Timeline.rt_json).each(function(index, element) {
-            //var val = element.region + ' - ' + element.role;
-            var option = '<OPTION value="' + element.resource + '">' + element.resource + '</OPTION>';
-            var $opt = $(option);
-            $opt.attr('suggestedRate', element.suggestedRate);
-            $opt.attr('discountedRate', element.discountedRate);
-            $opt.attr('cost', element.cost);
-            $opt.attr('resource', element.resource);
-            //console.log('estimateRateCardId:'+ element.id);
-            $opt.attr('estimateRateCardId', typeof element.id == 'undefined' ? '' : element.id);
-            $select.append($opt);
-        });
-
-        $select.appendTo(args.container);
-        $select.on('change', Timeline.onResourcePickListChange);
-        $select.focus();
-    };
-
-    this.destroy = function() {
-        $select.remove();
-    };
-
-    this.focus = function() {
-        $select.focus();
-    };
-
-    this.loadValue = function(item) {
-        $select.val((defaultValue = item[args.column.field]));
-        $select.select();
-    };
-
-    this.serializeValue = function() {
-        return $select.val();
-    };
-
-    this.applyValue = function(item, state) {
-        item[args.column.field] = state;
-    };
-
-    this.isValueChanged = function() {
-        return ($select.val() != defaultValue);
-    };
-
-    this.validate = function() {
-        return {
-            valid: true,
-            msg: null
-        };
-    };
-
-    this.init();
-}
-
-
-
 
 function AutoFillEditor(args) {
     var $input, $picker;
     var defaultValue = 0;
-    var scope = this;
+    var scope = this; 
 
     this.init = function () {
       //console.log(args);
       $picker = $("<div class='editor-autofill-picker' />")
       
       // return when the row is phase or milestone 
-      if(typeof args.item.id == 'undefined' || args.item.id == 'phase' || args.item.id == 'milestone') return;
+      if(typeof args.item.id == 'undefined' || typeof Timeline.fixedRowsTypes[args.item.id] != 'undefined') return;
       
       
       //$picker.width($(args.container).innerWidth());
@@ -1022,7 +1219,7 @@ function AutoFillEditor(args) {
             for (var i = 0; i < opt.length; i++) {
         
                 // Create a new element and position it with percentages
-                var el = $('<label>' + opt[i] + '</label>').css('left', ((opt[i]/40)*100)+'%');
+                var el = $('<label>' + opt[i] + '</label>').css('left', ((opt[i]/(opt[opt.length - 1]))*100)+'%');
         
                 // Add the element inside #slider
                 $(this).append(el);
@@ -1092,6 +1289,16 @@ function AutoFillEditor(args) {
 }
 
 
+jQuery.fn.center = function () {
+    this.css("position","absolute");
+    this.css("top", Math.max(0, (($(window).height() - $(this).outerHeight()) / 2) + 
+                                                $(window).scrollTop()) + "px");
+    this.css("left", Math.max(0, (($(window).width() - $(this).outerWidth()) / 2) + 
+                                                $(window).scrollLeft()) + "px");
+    return this;
+}
+
+
 
 var data = [];
 var columns = [];
@@ -1112,12 +1319,6 @@ var loadSpinner = {
     }
 }
 
-
-var _renderOptions = {
-    "lastRendering": 0,
-    "isNextMerged": 0,
-    "changedCells": {}
-};
 
 
 var CustomAlert = {
@@ -1187,19 +1388,6 @@ var CustomAlert = {
 
 
 
-
-
-
-var renderOptions_Phases = {
-        "Strategy": 'strategy_phase_cell',
-        "Plan": 'plan_phase_cell',
-        "Architect": 'architect_phase_cell',
-        "Build": 'build_phase_cell',
-        "Test": 'test_phase_cell',
-        "Deploy & Thrive": 'deploy_thrive_phase_cell',
-    };
-
-
 // On DOM Ready
 $(function() {
     tabpanel.bindEvents();
@@ -1214,23 +1402,12 @@ $(function() {
             }
         }
     });
+    
+    // bind the data picker controller with the input field for date.
     $("#datepicker").datepicker(datepickerOptions);
+    $("#contextMenu").click(Timeline.contextMenuClickHandler);
+    
     reFreshGrid();
-    
-    
-    /** TODO - REMOVE THE CODE LATER
-    $("#contextMenu").click(function (e) {
-        if (!$(e.target).is("li")) {
-          return;
-        }
-        if (!grid.getEditorLock().commitCurrentEdit()) {
-          return;
-        }
-        var range = $(this).data("data");
-        console.log(range);
-    });
-    **/
-    
 });
 
 
@@ -1291,30 +1468,13 @@ var gridMainInitiate = function(){
     // bind addnew row event
     grid.onAddNewRow.subscribe(Timeline.onAddNewRowHandler);
     
-    // beind edit cell event
+    // bind edit cell event
     grid.onBeforeEditCell.subscribe(Timeline.onBeforeEditCellHandler);
     
     
-    /** NOT NEEDED NOW - TO DO REMOVE
-    grid.onContextMenu.subscribe(function (e) {
-      e.preventDefault();
-      var cell = grid.getCellFromEvent(e);
-      
-      if(cell.row != Timeline.phaseRow){
-          return;
-      }
-      
-      $("#contextMenu")
-          .data("data", { range : grid.getSelectionModel().getSelectedRanges(), row : cell.row})
-          .css("top", e.pageY)
-          .css("left", e.pageX)
-          .show();
-
-      $("body").one("click", function () {
-        $("#contextMenu").hide();
-      });
-    });
-    **/
+    // bind context menu
+    grid.onContextMenu.subscribe(Timeline.onContextMenuHandler);
+    
     
     
     Timeline.renderGrid();
@@ -1357,7 +1517,7 @@ var loader = {
 
         loadingIndicator.fadeOut();
         // To refresh the overview panel
-        if(typeof refreshOverviewPanel === 'function') refreshOverviewPanel();
+        //if(typeof refreshOverviewPanel === 'function') refreshOverviewPanel();
     }
 }
 
@@ -1404,65 +1564,71 @@ var tabpanel = {
     
 }
 
+
+
+
+
 var Timeline = {
-    fixedRows: 4,
+    fixedRows: 8,
     fixedColumns : 5,
-    weekNameRow : 0,
-    totalRow : 3,
-    phaseRow : 1,
-    milestoneRow: 2,
     maxHours : 40,
-    calcuation_cols_css : {'text-align' : 'center', 'background-color': '#666666', 'color' : '#fff', 'font-weight' : 'bold'},
-    
-    triggerUpdateCell: function(field, rowId, val){
-        if(rowId.toLowerCase() == 'phase'){
-            Timeline.updatePhase(field, val);
-        }else if(rowId.toLowerCase() == 'milestone'){
-            Timeline.updateMilestone(field, val);
-        }else if(field.toLowerCase() == 'skill'){
-            Timeline.updateSkill(rowId, val);    
-        }else{
-           Timeline.updateHours(field, rowId, val);
-        }
-    },
-    
-    
+    calcuation_cols_css : {'text-align' : 'center', 'background-color': '#666666', 'color' : '#ffffff', 'font-weight' : 'bold'},
+    highlight_cols_css : {'text-align' : 'center', 'background-color': '#ff0000', 'color' : '#0070d2', 'font-weight' : 'bold'},
+    capacityneeds_cols_css : {'text-align' : 'center', 'background-color': '#0070d2', 'color' : '#fff', 'font-weight' : 'bold'},
+    hoursperphase_cols_css : {'text-align' : 'center', 'background-color': '#0070d2', 'color' : '#fff', 'font-weight' : 'bold'},
+    rt_json : [],
     renderGrid: function(){
-         
         grid.render();
-        
-        /** FOLLOWING CODE IS WORKING CODE FOR APPLYING ADDITIONAL CSS STYLE FOR CELLS **/
-        /**
-        if(Timeline.phaseRow < data.length){
-            // phase data
-            var currentdata = data[Timeline.phaseRow];
-            var options = window._renderOptions;
-            var colsLength = columns.length;
-            
-            $.each(columns, function(indx1, colItem) {
-                if(indx1 >= Timeline.fixedColumns && typeof colItem.usedForCalculation != 'undefined' && colItem.usedForCalculation){
-                    var value = currentdata[columns[indx1].field];
-                    var nextCellIndex = indx1 + 1;
-                    if (nextCellIndex < colsLength){    
-                        var nextValue = currentdata[columns[nextCellIndex].field];
-                        if (value == nextValue) {
-                            if (!options.changedCells[Timeline.phaseRow]) {
-                                options.changedCells[Timeline.phaseRow] = {};
-                            }
-                            options.changedCells[Timeline.phaseRow][columns[indx1].field] = "noneline-bottom";
-                        }
-                    }    
-                }
-             });
-             console.log(options.changedCells);
-             grid.setCellCssStyles('cell-noneline-bottom', options.changedCells);
-        }
-        **/
-         
-        
-        
     },
-    getGridOptions: function(){
+    
+    
+    registerExportToExcel: function(){
+       var gridData = grid.getData();    
+       
+       $('body').exportToExcel("Report.xlsx", "Report", gridData, null, function (response) {
+            console.log(response);
+            // use vanilla way of calling click action on anchor tag
+            // jquery click doesn't work on anchor tags
+            document.getElementById("downloadLink").click();
+            $('#myGrid').css({'width': '99%', height: '450px'});
+            grid.destroy();
+            gridMainInitiate();
+            loadSpinner.hide();
+            loader.hide();
+        }); 
+        
+        gridData = null;
+    },
+    
+    downloadExcel_Click: function(src, event){
+       // change the width and height of the grid to make all the columns visible to be 
+       // able to be available at the time of render
+       $('#myGrid').css({'width': '15000px', height: '15000px'});    
+       
+       grid.destroy();
+       gridMainInitiate();
+       loadSpinner.show();
+       loader.show();
+       // 3 seconds are benchmarks
+       // Need to give 3 secs wait period to load the grid with 
+       // all the asyncPostRender items and then start reading grid content
+       
+       setTimeout(function(){
+           try{
+              Timeline.registerExportToExcel();
+           }catch(ex){
+              //in case exception comes while generating the xlsx; do handle the exception 
+              // and render the grid properly
+              loadSpinner.hide();
+              loader.hide();
+           }
+       }, 3000);
+       
+       return false;       
+    },
+    
+    
+    getGridOptions: function(){ 
       return {
                                                         explicitInitialization : false,
                                                         editable: true,
@@ -1484,6 +1650,806 @@ var Timeline = {
                                                     };  
         
     },
+     
+    getDefaultColumns: function() {
+        return [{
+            id: "move",
+            name: "",
+            field: "move",
+            width: 20,
+            behavior: "selectAndMove",
+            selectable: false,
+            resizable: false,
+            focusable : false,
+            cssClass: "cell-reorder dnd",
+            groupName: " ",
+            header: {},
+            headerCssClass: "Fixed-Header-Style",
+            order: null
+            ,notUsedForCalculation : true
+        }, {
+            id: "id",
+            name: "",
+            field: "id",
+            width: 20,
+            behavior: "",
+            selectable: false,
+            resizable: false,
+            focusable : false,
+            cssClass: "",
+            groupName: " ",
+            header: {},
+            headerCssClass: "Fixed-Header-Style",
+            order: null,
+            formatter: function(row, cell, value, columnDef, dataContext) {
+                return "<a style='color:#4996D0; text-decoration:none;cursor:pointer' rowId='" + dataContext.id + "' onclick='Timeline.deleteRow(this);'>Del</a>";
+            }
+            ,notUsedForCalculation : true
+
+        }, {
+            id: "selector1",
+            field: "resource",
+            name: "Resource",
+            behavior: "",
+            width: 350,
+            selectable: false,
+            resizable: false,
+            focusable : true,
+            editor: AutoCompleteEditor,
+            cssClass: "",
+            groupName: " ",
+            header: {},
+            headerCssClass: "Fixed-Header-Style",
+            order: null
+            ,notUsedForCalculation : true
+        },{
+            id: "skill",
+            field: "skill",
+            name: "Notes",
+            width: 50,
+            selectable: false,
+            resizable: true,
+            focusable : true,
+            editor: SkillEditor,
+            cssClass: "",
+            groupName: " ",
+            header: {},
+            headerCssClass: "Fixed-Header-Style",
+            order: null
+            ,notUsedForCalculation : true
+        }, {
+            id: "autofill",
+            field: "autofill",
+            name: "",
+            behavior: "",
+            width: 45,
+            selectable: false,
+            resizable: false,
+            focusable : true,
+            cssClass: "",
+            groupName: " ",
+            header: {},
+            headerCssClass: "Fixed-Header-Style",
+            order: null
+            ,notUsedForCalculation : true
+            ,formatter: function(row, cell, value, columnDef, dataContext) {
+                    //if(row < Timeline.fixedRows || dataContext.id == ''){
+                    //  return "";
+                    //}
+                    if(typeof Timeline.fixedRowsTypes[data[row].id] != 'undefined' || dataContext.id == '') return "";
+                    return "<button style='color:#4996D0; height: 16px;line-height: 16px;' rowId='" + dataContext.id + "' onclick='return false;'>Auto</button>";
+              }
+              ,editor: AutoFillEditor
+        }];
+    },
+    
+     getEndColumns: function() {
+        return [{
+                    id: "hours",
+                    name: "Hours",
+                    field: "hours",
+                    //width: 50,
+                    selectable: false,
+                    resizable: true,
+                    focusable : false,
+                    order: null
+                    ,cssClass : "slds-calculated-cell"
+                    ,headerCssClass: "Fixed-Header-Style"
+                    ,notUsedForCalculation : true
+                    ,formatter: Timeline.waitingFormatter
+                    ,asyncPostRender: function(cellNode, row, dataContext, colDef) {
+                        //console.log('postrender');
+                        if(row < Timeline.fixedRows){
+                            if(data[row].id == Timeline.fixedRowsTypes.total.id){
+                                 //$(cellNode).empty().html(Timeline.getSumOfHoursForRows()).css({'text-align' : 'center', 'background-color': '#666666', 'color' : '#fff'});
+                                 $(cellNode).empty().html(Timeline.getSumOfHoursForAllRows(cellNode, row, dataContext, colDef)).css(Timeline.calcuation_cols_css);
+                            }
+                            return;
+                        }else{
+                          $(cellNode).empty().html(Timeline.getHoursSum(cellNode, row, dataContext, colDef)).css({'text-align':'center'});
+                        }
+                    }
+                },{
+                    id: "capacityneedshours",
+                    name: "Capacity Needs",
+                    field: "capacityneedshours",
+                    width: 100,
+                    selectable: false,
+                    resizable: true,
+                    focusable : false,
+                    order: null
+                    ,cssClass : "slds-calculated-cell"
+                    ,headerCssClass: "Fixed-Header-Style"
+                    ,notUsedForCalculation : true
+                    ,formatter: Timeline.waitingFormatter
+                    ,asyncPostRender: function(cellNode, row, dataContext, colDef) {
+                        //console.log('postrender');
+                        if(row < Timeline.fixedRows){
+                            if(data[row].id == Timeline.fixedRowsTypes.capacityneedsperphase.id){
+                                
+                                var totalHours = 0;
+                                if(typeof capacityNeeds_JSON != 'undefined' && typeof capacityNeeds_JSON.TotalHours != 'undefined'){
+                                    totalHours = capacityNeeds_JSON.TotalHours;
+                                }
+                                 $(cellNode).empty().html(totalHours).css(Timeline.highlight_cols_css);
+                                 
+                            }else if(data[row].id == Timeline.fixedRowsTypes.total.id){
+                                
+                                 var sum = 0;
+                                 var rowData = data.slice(Timeline.fixedRows);
+                                 $.each(rowData, function(indx, rowItem) {
+                                     var row_sum = 0; 
+                                           
+                                      var resourceRateCardRole = rowItem.resourceRateCardRole;
+                                      resourceRateCardRole = (typeof resourceRateCardRole == 'undefined' ? '' : resourceRateCardRole.toLowerCase());
+                                     
+                                      if(typeof capacityNeeds_JSON != 'undefined' && 
+                                            typeof capacityNeeds_JSON.RoleHours != 'undefined' &&
+                                            typeof capacityNeeds_JSON.RoleHours[resourceRateCardRole] != 'undefined'){
+                                          row_sum = capacityNeeds_JSON.RoleHours[resourceRateCardRole];
+                                      }
+                                           
+                                     sum += parseInt(row_sum);
+                                     
+                                 });
+                                 $(cellNode).empty().html(sum).css(Timeline.calcuation_cols_css);
+                                 
+                            }
+                            return;
+                        }else{
+                          var hours = 0;
+                          var resourceRateCardRole = data[row].resourceRateCardRole;
+                          resourceRateCardRole = (typeof resourceRateCardRole == 'undefined' ? '' : resourceRateCardRole.toLowerCase());
+                         
+                          if(typeof capacityNeeds_JSON != 'undefined' && 
+                                typeof capacityNeeds_JSON.RoleHours != 'undefined' &&
+                                typeof capacityNeeds_JSON.RoleHours[resourceRateCardRole] != 'undefined'){
+                              hours = capacityNeeds_JSON.RoleHours[resourceRateCardRole];
+                          }
+                          
+                          $(cellNode).empty().html(hours).css({'text-align':'center'});
+                        }
+                    }
+                }, {
+                    id: "rate",
+                    name: "Rate",
+                    field: "rate",
+                    //width: 50,
+                    selectable: false,
+                    resizable: true,
+                    focusable : false,
+                    order: null
+                    ,cssClass : "slds-calculated-cell"
+                    ,headerCssClass: "Fixed-Header-Style"
+                    ,notUsedForCalculation : true
+                    ,formatter: function(row, cell, value, columnDef, dataContext) {
+                        //if(row < Timeline.fixedRows){
+                        //    return '';
+                        //}
+                        if(typeof Timeline.fixedRowsTypes[data[row].id] != 'undefined' || dataContext.id == '') return "";
+                        return value == '' ? '' : currency_code + " "  + parseFloat(value).toFixed(2);
+                        
+                    },asyncPostRender: function(cellNode, row, dataContext, colDef) {
+                        //console.log('postrender');
+                        if(row < Timeline.fixedRows){
+                            if(data[row].id == Timeline.fixedRowsTypes.total.id){
+                                 //$(cellNode).empty().html(Timeline.getSumOfBelowRows()).css({'text-align' : 'center', 'background-color': '#666666', 'color' : '#fff'});
+                                 var rate = Timeline.getAvgOfBelowRows(cellNode, row, dataContext, colDef);
+                                 $(cellNode).empty().html(currency_code + " "  + parseFloat(isNaN(rate) ? 0 : rate).toFixed(2)).css(Timeline.calcuation_cols_css);
+                            }
+                            return;
+                        }
+                    }
+                }, {
+                    id: "cost",
+                    name: "Cost",
+                    field: "cost",
+                    //width: 50,
+                    selectable: false,
+                    resizable: true,
+                    focusable : false,
+                    order: null
+                    ,cssClass : "slds-calculated-cell"
+                    ,headerCssClass: "Fixed-Header-Style"
+                    ,notUsedForCalculation : true
+                    ,formatter: function(row, cell, value, columnDef, dataContext) {
+                        //if(row < Timeline.fixedRows){
+                        //    return '';
+                        //}
+                        if(typeof Timeline.fixedRowsTypes[data[row].id] != 'undefined' || dataContext.id == '') return "";
+                        return value == '' ? '' : currency_code + " "  + parseFloat(value).toFixed(2);
+                        
+                    },asyncPostRender: function(cellNode, row, dataContext, colDef) {
+                        //console.log('postrender');
+                        if(row < Timeline.fixedRows){
+                            if(data[row].id == Timeline.fixedRowsTypes.total.id){
+                                 //$(cellNode).empty().html(Timeline.getSumOfBelowRows()).css({'text-align' : 'center', 'background-color': '#666666', 'color' : '#fff'});
+                                 var cost = Timeline.getAvgOfBelowRows(cellNode, row, dataContext, colDef);
+                                 $(cellNode).empty().html(currency_code + " "  + parseFloat(isNaN(cost) ? 0 : cost).toFixed(2)).css(Timeline.calcuation_cols_css);
+                            }
+                            return;
+                        }
+                    }
+                },{
+                    id: "cost_price",
+                    name: "Total Cost",
+                    field: "cost_price",
+                    //width: 50,
+                    selectable: false,
+                    resizable: true,
+                    focusable : false,
+                    order: null
+                    ,cssClass : "slds-calculated-cell"
+                    ,headerCssClass: "Fixed-Header-Style"
+                    ,notUsedForCalculation : true
+                    ,formatter: Timeline.waitingFormatter
+                    ,asyncPostRender: function(cellNode, row, dataContext, colDef) {
+                        if(row < Timeline.fixedRows){
+                            if(data[row].id == Timeline.fixedRowsTypes.total.id){
+                                 var sum = 0;
+                                 var rowData = data.slice(Timeline.fixedRows);
+                                 var colData = columns.slice(Timeline.fixedColumns);
+                                 $.each(rowData, function(indx, rowItem) {
+                                    var row_sum = 0; 
+                                    $.each(colData, function(indx1, colItem) {
+                                       if(typeof colItem.notUsedForCalculation == 'undefined' || !colItem.notUsedForCalculation) {
+                                           row_sum += (typeof rowItem[colItem.id] == 'undefined' || rowItem[colItem.id] == ''? 0 : parseInt(rowItem[colItem.id]));
+                                       }       
+                                    });
+                                    sum += parseInt(row_sum) * parseInt(rowItem.cost);
+                                    //console.log('----------' + sum + '-------------' + rowItem.id);
+                                 });
+                                 
+                                 var total_cost = parseFloat(sum).toFixed(2);
+                                 $(cellNode).empty().html(currency_code + " "  + total_cost).css(Timeline.calcuation_cols_css);
+                            }
+                            return;
+                        }
+                        $(cellNode).empty().html(currency_code + " "  + parseFloat(Timeline.getHoursSum(cellNode, row, dataContext, colDef) * dataContext.cost).toFixed(2));
+                    }
+                },{
+                    id: "selling_price",
+                    name: "Total Price",
+                    field: "selling_price",
+                    //width: 50,
+                    selectable: false,
+                    resizable: true,
+                    focusable : false,
+                    order: null
+                    ,cssClass : "slds-calculated-cell"
+                    ,headerCssClass: "Fixed-Header-Style"
+                    ,notUsedForCalculation : true
+                    ,formatter: Timeline.waitingFormatter
+                    ,asyncPostRender: function(cellNode, row, dataContext, colDef) {
+                        if(row < Timeline.fixedRows){
+                            if(data[row].id == Timeline.fixedRowsTypes.total.id){
+                                 var sum = 0;
+                                 var rowData = data.slice(Timeline.fixedRows);
+                                 var colData = columns.slice(Timeline.fixedColumns);
+                                 $.each(rowData, function(indx, rowItem) {
+                                    var row_sum = 0; 
+                                    $.each(colData, function(indx1, colItem) {
+                                       if(typeof colItem.notUsedForCalculation == 'undefined' || !colItem.notUsedForCalculation) {
+                                           row_sum += (typeof rowItem[colItem.id] == 'undefined' || rowItem[colItem.id] == ''? 0 : parseInt(rowItem[colItem.id]));
+                                       }       
+                                    });
+                                    sum += parseInt(row_sum) * parseInt(rowItem.rate);
+                                    //console.log('----------' + sum + '-------------' + rowItem.id);
+                                 });
+                                 
+                                 var total_price = parseFloat(sum).toFixed(2);
+                                 $(cellNode).empty().html(currency_code + " "  + total_price).css(Timeline.calcuation_cols_css);
+                            }
+                            return;
+                        }
+                        $(cellNode).empty().html(currency_code + " "  + parseFloat(Timeline.getHoursSum(cellNode, row, dataContext, colDef) * dataContext.rate).toFixed(2));
+                    }
+                }];
+    },
+    
+    
+    
+    fixedRowsTypes : {
+                      'weekname' : {
+                          id : 'weekname',
+                          defaultValue : '',
+                          valuefield: 'order'
+                          , rowLabel: 'WEEK'
+                          , enableColorCodeContextMenu : false
+                          ,editable : false
+                          ,rowIndex : 0
+                      }, 
+                      'phase' : {
+                          id : 'phase',
+                          defaultValue : '',
+                          valuefield: 'phase',
+                          colorcodefield : 'phaseColorCode',
+                          colorcodepostfix : '_phasecolorcode',
+                          apply_css : true
+                          , rowLabel: 'PHASE'
+                          , enableColorCodeContextMenu : false
+                          ,rowIndex : 1
+                          
+                          
+                      }, 'milestone' : {
+                          id : 'milestone',
+                          defaultValue : '',
+                          valuefield: 'milestone',
+                          colorcodefield : 'milestoneColorCode',
+                          colorcodepostfix : '_milestonecolorcode',
+                          apply_css : true
+                          , rowLabel: 'MILESTONE'
+                          , enableColorCodeContextMenu : true
+                          ,rowIndex : 2
+                          
+                      }, 'milestone1' : {
+                          id : 'milestone1',
+                          defaultValue : '',
+                          valuefield: 'milestone1',
+                          colorcodefield : 'milestoneColorCode1',
+                          colorcodepostfix : '_milestonecolorcode1',
+                          apply_css : true
+                          , rowLabel: ''
+                          , enableColorCodeContextMenu : true
+                          ,rowIndex : 3
+                          
+                      }, 'milestone2' : {
+                          id : 'milestone2',
+                          defaultValue : '',
+                          valuefield: 'milestone2',
+                          colorcodefield : 'milestoneColorCode2',
+                          colorcodepostfix : '_milestonecolorcode2',
+                          apply_css : true
+                          , rowLabel: ''
+                          , enableColorCodeContextMenu : true
+                          ,rowIndex : 4
+                          
+                      }, 'capacityneedsperphase' : {
+                          id : 'capacityneedsperphase',
+                          defaultValue : 0
+                          , rowLabel: 'CAPACITY NEEDS PER PHASE'
+                          , enableColorCodeContextMenu : false,
+                          apply_css : false
+                          ,editable : false
+                          ,rowIndex : 5
+                          
+                      },'hoursperphase' : {
+                          id : 'hoursperphase',
+                          defaultValue : 0
+                          , rowLabel: 'HOURS PER PHASE'
+                          , enableColorCodeContextMenu : false,
+                          apply_css : false
+                          ,editable : false
+                          ,rowIndex : 6
+                          
+                      }, 'total' : {
+                          id : 'total',
+                          defaultValue : 0
+                          , rowLabel: 'TOTAL HRS/WEEK'
+                          , enableColorCodeContextMenu : false,
+                          apply_css : false
+                          ,editable : false
+                          ,rowIndex : 7
+                      }
+        
+    },
+                                                          
+    bindMetadata: function(){
+        // set the grid's data as new rows
+        data.getItemMetadata = function (row) {
+                  
+                   var metadata =  {
+                      selectable: false,
+                      cssClasses: "custom-fix-row",
+                      "columns": {
+                                        "id": {
+                                                  formatter: function(row, cell, value, columnDef, dataContext) {
+                                                        return "";
+                                                  },
+                                                  focusable : false,
+                                                  editor: ""
+                                                },
+                                        "selector1" : {
+                                                  formatter: function(row, cell, value, columnDef, dataContext) {
+                                                      var meta_info = Timeline.fixedRowsTypes[data[row].id];
+                                                      if(typeof meta_info != 'undefined'){
+                                                          var rowLabel = (typeof meta_info.rowLabel == 'undefined' ? '' : meta_info.rowLabel);
+                                                          return "<div style='width:100%;text-align:right;font-weight: bold;'>" + rowLabel + "</div>";
+                                                      }
+                                                      return value;
+                                                  },
+                                                  focusable : false,
+                                                  editor: ""
+                                        }       
+                      }
+                    };
+                
+               
+                
+                
+                if(typeof data[row] != 'undefined' && (data[row].id == Timeline.fixedRowsTypes.milestone.id || data[row].id == Timeline.fixedRowsTypes.milestone1.id || data[row].id == Timeline.fixedRowsTypes.milestone2.id)){
+                      var currentRow = data[row];
+                      
+                     $.each(columns, function(indx1, colItem) {
+                        if(indx1 >= Timeline.fixedColumns && typeof colItem.usedForCalculation != 'undefined' && colItem.usedForCalculation){
+                             //added code for colspan
+                             metadata.selectable = true;
+                             var val = currentRow[columns[indx1].field];
+                             var nextCellIndex = indx1 + 1;
+                             var colspan = 1;
+                             while(nextCellIndex < columns.length){
+                                 if(val == currentRow[columns[nextCellIndex].field] && val != ''){ 
+                                   colspan++;  
+                                 }else {
+                                     break;
+                                 } 
+                                 nextCellIndex += 1;
+                             }
+                             // end of colspan calcuation
+                             metadata.columns[colItem.field] = {};
+                             metadata.columns[colItem.field].editor = MilestoneEditor;
+                             metadata.columns[colItem.field].colspan = colspan; // added for colspan
+                        }
+                    });
+                    
+                    return metadata;
+                    
+                }else if(typeof data[row] != 'undefined' && data[row].id == Timeline.fixedRowsTypes.phase.id){
+                    
+                    var currentRow = data[row];
+                             
+                    $.each(columns, function(indx1, colItem) {
+                        if(indx1 >= Timeline.fixedColumns && typeof colItem.usedForCalculation != 'undefined' && colItem.usedForCalculation){
+                            //added code for colspan
+                             //metadata.selectable = true;
+                             var val = currentRow[columns[indx1].field];
+                             var nextCellIndex = indx1 + 1;
+                             var colspan = 1;
+                             while(nextCellIndex < columns.length){
+                                 if(val == currentRow[columns[nextCellIndex].field] && val != ''){ 
+                                   colspan++;  
+                                 }else {
+                                     break;
+                                 } 
+                                 nextCellIndex += 1;
+                             }
+                             // end of colspan calcuation
+                             metadata.columns[colItem.field] = {};
+                             //metadata.columns[colItem.field].editor = MilestoneEditor; // commented after adding colspan no need for phase editor now
+                             metadata.columns[colItem.field].editor = PhaseSelectionEditor; 
+                             metadata.columns[colItem.field].colspan = colspan; // added for colspan
+                        }
+                    });
+                    
+                    return metadata;
+                    
+                }else if(typeof data[row] != 'undefined' && data[row].id == Timeline.fixedRowsTypes.capacityneedsperphase.id){
+                    
+                    //for(var _a in Timeline.fixedRowsTypes.phase.rowIndex)
+                    
+                    var currentRow = data[Timeline.fixedRowsTypes.phase.rowIndex];
+                    
+                             
+                    $.each(columns, function(indx1, colItem) {
+                        if(indx1 >= Timeline.fixedColumns && typeof colItem.usedForCalculation != 'undefined' && colItem.usedForCalculation){
+                            //added code for colspan
+                             //metadata.selectable = true;
+                             var val = currentRow[columns[indx1].field];
+                             var nextCellIndex = indx1 + 1;
+                             var colspan = 1;
+                             while(nextCellIndex < columns.length){
+                                 if(val == currentRow[columns[nextCellIndex].field] && val != ''){ 
+                                   colspan++;  
+                                 }else {
+                                     break;
+                                 } 
+                                 nextCellIndex += 1;
+                             }
+                             // end of colspan calcuation
+                             metadata.columns[colItem.field] = {};
+                             metadata.columns[colItem.field].colspan = colspan; // added for colspan
+                        }
+                    });
+                    
+                    return metadata;
+                    
+                }else if(typeof data[row] != 'undefined' && data[row].id == Timeline.fixedRowsTypes.hoursperphase.id){
+                    
+                    //for(var _a in Timeline.fixedRowsTypes.phase.rowIndex)
+                    
+                    var currentRow = data[Timeline.fixedRowsTypes.phase.rowIndex];
+                    
+                             
+                    $.each(columns, function(indx1, colItem) {
+                        if(indx1 >= Timeline.fixedColumns && typeof colItem.usedForCalculation != 'undefined' && colItem.usedForCalculation){
+                            //added code for colspan
+                             //metadata.selectable = true;
+                             var val = currentRow[columns[indx1].field];
+                             var nextCellIndex = indx1 + 1;
+                             var colspan = 1;
+                             while(nextCellIndex < columns.length){
+                                 if(val == currentRow[columns[nextCellIndex].field] && val != ''){ 
+                                   colspan++;  
+                                 }else {
+                                     break;
+                                 } 
+                                 nextCellIndex += 1;
+                             }
+                             // end of colspan calcuation
+                             metadata.columns[colItem.field] = {};
+                             metadata.columns[colItem.field].colspan = colspan; // added for colspan
+                        }
+                    });
+                    
+                    return metadata;
+                    
+                }else if(typeof data[row] != 'undefined' && typeof Timeline.fixedRowsTypes[data[row].id] != 'undefined'){
+                    return metadata;
+                }
+                
+           }
+        
+        
+    },
+    
+    onContextMenuHandler: function (e) {
+      e.preventDefault();
+      var cell = grid.getCellFromEvent(e);
+      
+     
+      
+      if(Timeline.fixedRowsTypes[data[cell.row].id] == 'undefined'){
+          return; // if not an fixed header row
+      }
+      
+      if(Timeline.fixedRowsTypes[data[cell.row].id].enableColorCodeContextMenu == false){
+          return; // if context menu disabled for an fixed header row
+      }
+      
+      if(typeof columns[cell.cell] != 'undefined' && typeof columns[cell.cell].usedForCalculation == 'undefined'){
+          return;
+      }
+      //console.log(cell);
+      $("#contextMenu")
+          .data("data", { range : grid.getSelectionModel().getSelectedRanges(), row : cell.row, cell : cell.cell})
+          .css("top", e.pageY)
+          .css("left", e.pageX)
+          .show();
+
+      $("body").one("click", function () {
+        $("#contextMenu").hide();
+      });
+    },
+    
+    contextMenuClickHandler:function (e) {
+        //alert($(e.target).is("button"));
+                 if (!$(e.target).is("li") && !$(e.target).is("button")) {
+                     return;
+                 }
+                
+                 if (!grid.getEditorLock().commitCurrentEdit()) {
+                     return;
+                 }
+                
+                
+                 if ($(e.target).is("li")) {
+                     var context_data = $(this).data("data");
+                     var val = typeof $(e.target).attr("data") == 'undefined' ? '' : $(e.target).attr("data");
+                
+                     if (context_data.range.length > 0) {
+                         var from = context_data.range[0];
+                
+                
+                         var nodes_order_json = '[';
+                
+                         for (var i = 0; i <= from.toRow - from.fromRow; i++) {
+                             //console.log('from:' + from); 
+                             for (var j = 0; j <= from.toCell - from.fromCell; j++) {
+                                 if (typeof columns[from.fromCell + j].usedForCalculation != 'undefined' && columns[from.fromCell + j].usedForCalculation == true) {
+                
+                                     var rowId = data[from.fromRow + i].id;
+                                     var field = columns[from.fromCell + j].field;
+                                     //console.log(rowId + '---' + field + '---' + val);
+                
+                                     var meta_info = Timeline.fixedRowsTypes[rowId];
+                                     if (typeof meta_info != 'undefined') {
+                                         var colorCodePostFix = meta_info.colorcodepostfix;
+                                         if (typeof colorCodePostFix != 'undefined') {
+                                             data[from.fromRow + i][columns[from.fromCell + j].field + colorCodePostFix] = val;
+                                             //Timeline.updatePhaseColorCode(field, val);
+                                             nodes_order_json += '{"weekId":"' + field + '", "type":"' + rowId.toLowerCase() + '", "value":"' + val + '"},';
+                                             grid.invalidateRow(from.fromRow + i);
+                                         }
+                                     }
+                
+                
+                
+                                 }
+                             }
+                
+                         }
+                         // do a database update for milestone and phase color code update
+                         if (nodes_order_json != '[') {
+                             nodes_order_json = nodes_order_json.slice(0, -1);
+                             nodes_order_json += ']';
+                             Timeline.updateColorCode(nodes_order_json);
+                         }
+                
+                     } else {
+                         var rowId = data[context_data.row].id;
+                         var field = columns[context_data.cell].field;
+                
+                         var meta_info = Timeline.fixedRowsTypes[rowId];
+                         if (typeof meta_info != 'undefined') {
+                             var colorCodePostFix = meta_info.colorcodepostfix;
+                             if (typeof colorCodePostFix != 'undefined') {
+                                 data[context_data.row][columns[context_data.cell].field + colorCodePostFix] = val;
+                                 Timeline.triggerUpdateColorCode(field, val, rowId);
+                                 grid.invalidateRow(context_data.row);
+                             }
+                         }
+                
+                
+                     }
+                     grid.getSelectionModel().setSelectedRanges([]);
+                     grid.setData(data);
+                     Timeline.renderGrid();
+                 }else if ($(e.target).is("button")) {
+                     var context_data = $(this).data("data");
+                     var val = typeof $(e.target).attr("data") == 'undefined' ? '' : $(e.target).attr("data");
+                
+                     if (context_data.range.length > 0) {
+                         var from = context_data.range[0];
+                
+                         if (val.toLowerCase() == 'merge') {
+                             var nodes_order_json = '[';
+                
+                             for (var i = 0; i <= from.toRow - from.fromRow; i++) {
+                                 var cellValue = data[from.fromRow + i][columns[from.fromCell].field];
+                
+                
+                                 for (var j = 0; j <= from.toCell - from.fromCell; j++) {
+                                     if (typeof columns[from.fromCell + j].usedForCalculation != 'undefined' && columns[from.fromCell + j].usedForCalculation == true) {
+                
+                                         var rowId = data[from.fromRow + i].id;
+                                         var field = columns[from.fromCell + j].field;
+                                         data[from.fromRow + i][columns[from.fromCell + j].field] = cellValue;
+                                         
+                                         nodes_order_json += '{"weekId":"' + field + '", "type":"' + rowId.toLowerCase() + '", "value":"' + cellValue + '"';
+                                         
+                                         var meta_info = Timeline.fixedRowsTypes[rowId];
+                                         if (typeof meta_info != 'undefined') {
+                                             var colorCodePostFix = meta_info.colorcodepostfix;
+                                             if (typeof colorCodePostFix != 'undefined') {
+                                                 var cCode = data[from.fromRow + i][columns[from.fromCell + j].field + colorCodePostFix];
+                                                 nodes_order_json += ', "colorCode":"' + cCode + '"';
+                                             }
+                                         }
+                                         
+                                         nodes_order_json += '},';
+                                         grid.invalidateRow(from.fromRow + i);
+                
+                                     }
+                                 }
+                
+                             }
+                             
+                             // do a database update for milestone and phase color code update
+                             if (nodes_order_json != '[') {
+                                 nodes_order_json = nodes_order_json.slice(0, -1);
+                                 nodes_order_json += ']';
+                                 Timeline.updateMilestoneWeeks(nodes_order_json);
+                             }
+                             
+                             grid.getSelectionModel().setSelectedRanges([]);
+                             grid.setData(data);
+                             Timeline.renderGrid();
+                         }else if (val.toLowerCase() == 'unmerge') {
+                             var nodes_order_json = '[';
+                    
+                             for (var i = 0; i <= from.toRow - from.fromRow; i++) {
+                                 var cellValue = data[from.fromRow + i][columns[from.fromCell].field];
+                                 for (var j = 0; j <= from.toCell - from.fromCell; j++) {
+                                     if (typeof columns[from.fromCell + j].usedForCalculation != 'undefined' && columns[from.fromCell + j].usedForCalculation == true) {
+                                         var rowId = data[from.fromRow + i].id;
+                                         var field = columns[from.fromCell + j].field;
+                                         var value = data[from.fromRow + i][columns[from.fromCell + j].field];
+                    
+                                         if (columns[from.fromCell].field != columns[from.fromCell + j].field && value == cellValue) {
+                                             data[from.fromRow + i][columns[from.fromCell + j].field] = '';
+                                             
+                                             var meta_info = Timeline.fixedRowsTypes[rowId];
+                                             if (typeof meta_info != 'undefined') {
+                                                 var colorCodePostFix = meta_info.colorcodepostfix;
+                                                 if (typeof colorCodePostFix != 'undefined') {
+                                                    data[from.fromRow + i][columns[from.fromCell + j].field + colorCodePostFix] = '';
+                                                 }
+                                             }
+                                             nodes_order_json += '{"weekId":"' + field + '", "type":"' + rowId.toLowerCase() + '", "value":"", "colorCode":""},';
+                                         }
+                                         grid.invalidateRow(from.fromRow + i);
+                                     }
+                                 }
+                    
+                             }
+                             // do a database update for milestone and phase color code update
+                             if (nodes_order_json != '[') {
+                                 nodes_order_json = nodes_order_json.slice(0, -1);
+                                 nodes_order_json += ']';
+                                 Timeline.updateMilestoneWeeks(nodes_order_json);
+                             }
+                             grid.getSelectionModel().setSelectedRanges([]);
+                             grid.setData(data);
+                             Timeline.renderGrid();
+                    
+                         }
+ 
+                    }// end of context length check    
+                 }//end of is button check  
+        
+        
+    }, 
+    triggerUpdateColorCode: function(field, val, rowId){
+        if(rowId.toLowerCase() == Timeline.fixedRowsTypes.phase.id){
+            Timeline.updatePhaseColorCode(field, val);
+        }else if(rowId.toLowerCase() == Timeline.fixedRowsTypes.milestone.id){
+            Timeline.updateMilestoneColorCode(field, val);
+        }else if(rowId.toLowerCase() == Timeline.fixedRowsTypes.milestone1.id){
+            Timeline.updateMilestoneColorCode1(field, val);
+        }else if(rowId.toLowerCase() == Timeline.fixedRowsTypes.milestone2.id){
+            Timeline.updateMilestoneColorCode2(field, val);
+        }
+    },
+    
+    
+    triggerUpdateCell: function(field, rowId, val, row, cell){
+        
+        
+        if(rowId.toLowerCase() == Timeline.fixedRowsTypes.phase.id){
+            
+            var cellNode = grid.getCellNode(row, cell);
+            //alert($(cellNode).css('background-color'));
+            var colorCode = $(cellNode).css('background-color');
+            colorCode = (val == '' ? 'transparent' : colorCode);
+            data[row][columns[cell].field + Timeline.fixedRowsTypes.phase.colorcodepostfix] = colorCode;
+            Timeline.updatePhaseAndColorCode(field, val, colorCode);
+            
+            //Timeline.updatePhase(field, val); 
+        }else if(rowId.toLowerCase() == Timeline.fixedRowsTypes.milestone.id){
+            Timeline.updateMilestone(field, val);
+        }else if(rowId.toLowerCase() == Timeline.fixedRowsTypes.milestone1.id){
+            Timeline.updateMilestone1(field, val);
+        }else if(rowId.toLowerCase() == Timeline.fixedRowsTypes.milestone2.id){
+            Timeline.updateMilestone2(field, val);
+        }else if(field.toLowerCase() == 'skill'){
+            Timeline.updateSkill(rowId, val);    
+        }else{
+           Timeline.updateHours(field, rowId, val);
+        }
+    },
+    
+    
+    
     
     onAddNewRowHandler: function(e, args) {
         //var item = args.item;
@@ -1530,10 +2496,10 @@ var Timeline = {
         var val;
         // stop user by copying from phase and pasting it to the number formated calculated or other rows
         // stop user by copying from calculated and pasting it to the phase row
-        if(from.fromRow == Timeline.phaseRow && to.fromRow != from.fromRow){
+        if(data[from.fromRow].id == Timeline.fixedRowsTypes.phase.id && to.fromRow != from.fromRow){
             Timeline.renderGrid();
             return;
-        }else if(to.fromRow == Timeline.phaseRow && from.fromRow != to.fromRow){
+        }else if(data[to.fromRow].id == Timeline.fixedRowsTypes.phase.id && from.fromRow != to.fromRow){
             Timeline.renderGrid();    
             return;
         }
@@ -1550,7 +2516,7 @@ var Timeline = {
                         var rowId = data[to.fromRow + i].id;
                         var field = columns[to.fromCell + j].field;
                         
-                        Timeline.triggerUpdateCell(field, rowId, val);
+                        Timeline.triggerUpdateCell(field, rowId, val, to.fromRow + i, to.fromCell + j);
                         
                         grid.invalidateRow(to.fromRow + i);
                     }
@@ -1621,9 +2587,22 @@ var Timeline = {
     
     onBeforeEditCellHandler: function(e, args) {
         // make row un-editable [rows such as weekname, total]
-      if (args.row === Timeline.weekNameRow || args.row === Timeline.totalRow) {
-        return false;
+        
+      //if (typeof data[args.row] != 'undefined' && (data[args.row].id === Timeline.fixedRowsTypes.weekname.id || data[args.row].id === Timeline.fixedRowsTypes.total.id)) {
+      //      return false;
+      //}
+      //if (typeof data[args.row] != 'undefined')
+      
+     
+      
+      if (typeof data[args.row] != 'undefined' && 
+           typeof data[args.row].id != 'undefined' && 
+           typeof Timeline.fixedRowsTypes[data[args.row].id.toLowerCase()] != 'undefined' && 
+           typeof Timeline.fixedRowsTypes[data[args.row].id.toLowerCase()].editable != 'undefined' &&
+           Timeline.fixedRowsTypes[data[args.row].id.toLowerCase()].editable == false) {
+          return false;
       }
+      
     },
     
     onCellChangeHandler: function(e, args){
@@ -1636,7 +2615,7 @@ var Timeline = {
             var value = data[args.row][grid.getColumns()[args.cell].field];
             var rowId = item.id;
             if (rowId && field) {
-                Timeline.triggerUpdateCell(field, rowId, value);   
+                Timeline.triggerUpdateCell(field, rowId, value, row, column);   
             }
         }
         
@@ -1664,10 +2643,11 @@ var Timeline = {
           
     },
     waitingFormatter : function (row, cell, value, columnDef, dataContext) {
-        if(dataContext.id == 'phase' || dataContext.id == 'milestone' || dataContext.id == 'weekname' || dataContext.id == 'total'){ 
-            return '';
-        }
-        return 'wait..';
+        
+        if(typeof Timeline.fixedRowsTypes[dataContext.id.toLowerCase()] != 'undefined') return '';
+        
+        return '';
+        //return 'wait..';
     },
     onResourcePickListChange: function(e) {
 
@@ -1707,97 +2687,7 @@ var Timeline = {
     
     },
 
-    getDefaultColumns: function() {
-        return [{
-            id: "move",
-            name: "",
-            field: "move",
-            width: 20,
-            behavior: "selectAndMove",
-            selectable: false,
-            resizable: false,
-            focusable : false,
-            cssClass: "cell-reorder dnd",
-            groupName: " ",
-            header: {},
-            headerCssClass: "Fixed-Header-Style",
-            order: null
-            ,notUsedForCalculation : true
-        }, {
-            id: "id",
-            name: "",
-            field: "id",
-            width: 20,
-            behavior: "",
-            selectable: false,
-            resizable: false,
-            focusable : false,
-            cssClass: "",
-            groupName: " ",
-            header: {},
-            headerCssClass: "Fixed-Header-Style",
-            order: null,
-            formatter: function(row, cell, value, columnDef, dataContext) {
-                return "<a style='color:#4996D0; text-decoration:none;cursor:pointer' rowId='" + dataContext.id + "' onclick='Timeline.deleteRow(this);'>Del</a>";
-            }
-            ,notUsedForCalculation : true
-
-        }, {
-            id: "selector1",
-            field: "resource",
-            name: "Resource",
-            behavior: "",
-            width: 350,
-            selectable: false,
-            resizable: false,
-            focusable : true,
-            //editor: PickListEditor,
-            editor: AutoCompleteEditor,
-            cssClass: "",
-            groupName: " ",
-            header: {},
-            headerCssClass: "Fixed-Header-Style",
-            order: null
-            ,notUsedForCalculation : true
-        },{
-            id: "skill",
-            field: "skill",
-            name: "Skill",
-            width: 50,
-            selectable: false,
-            resizable: false,
-            focusable : true,
-            editor: SkillEditor,
-            cssClass: "",
-            groupName: " ",
-            header: {},
-            headerCssClass: "Fixed-Header-Style",
-            order: null
-            ,notUsedForCalculation : true
-        }, {
-            id: "autofill",
-            field: "autofill",
-            name: "",
-            behavior: "",
-            width: 45,
-            selectable: false,
-            resizable: false,
-            focusable : true,
-            cssClass: "",
-            groupName: " ",
-            header: {},
-            headerCssClass: "Fixed-Header-Style",
-            order: null
-            ,notUsedForCalculation : true
-            ,formatter: function(row, cell, value, columnDef, dataContext) {
-                    if(row < Timeline.fixedRows || dataContext.id == ''){
-                      return "";
-                    }
-                    return "<button style='color:#4996D0; height: 16px;line-height: 16px;' rowId='" + dataContext.id + "' onclick='return false;'>Auto</button>";
-              }
-              ,editor: AutoFillEditor
-        }];
-    },
+    
     getHoursSum: function(cellNode, row, dataContext, colDef){
             var rowData = data[row];
             var sum = 0;
@@ -1838,243 +2728,7 @@ var Timeline = {
          
          return parseFloat(sum/rowData.length).toFixed(2);
     },
-    getEndColumns: function() {
-        return [{
-                    id: "hours",
-                    name: "Hours",
-                    field: "hours",
-                    //width: 50,
-                    selectable: false,
-                    resizable: true,
-                    focusable : false,
-                    order: null
-                    ,cssClass : "slds-calculated-cell"
-                    ,headerCssClass: "Fixed-Header-Style"
-                    ,notUsedForCalculation : true
-                    ,formatter: Timeline.waitingFormatter
-                    ,asyncPostRender: function(cellNode, row, dataContext, colDef) {
-                        //console.log('postrender');
-                        if(row < Timeline.fixedRows){
-                            if(row == Timeline.totalRow){
-                                 //$(cellNode).empty().html(Timeline.getSumOfHoursForRows()).css({'text-align' : 'center', 'background-color': '#666666', 'color' : '#fff'});
-                                 $(cellNode).empty().html(Timeline.getSumOfHoursForAllRows(cellNode, row, dataContext, colDef)).css(Timeline.calcuation_cols_css);
-                            }
-                            return;
-                        }else{
-                          $(cellNode).empty().html(Timeline.getHoursSum(cellNode, row, dataContext, colDef)).css({'text-align':'center'});
-                        }
-                    }
-                }, {
-                    id: "rate",
-                    name: "Rate",
-                    field: "rate",
-                    //width: 50,
-                    selectable: false,
-                    resizable: true,
-                    focusable : false,
-                    order: null
-                    ,cssClass : "slds-calculated-cell"
-                    ,headerCssClass: "Fixed-Header-Style"
-                    ,notUsedForCalculation : true
-                    ,formatter: function(row, cell, value, columnDef, dataContext) {
-                        if(row < Timeline.fixedRows){
-                            return '';
-                        }
-                        return value == '' ? '' : currency_code + " "  + parseFloat(value).toFixed(2);
-                        
-                    },asyncPostRender: function(cellNode, row, dataContext, colDef) {
-                        //console.log('postrender');
-                        if(row < Timeline.fixedRows){
-                            if(row == Timeline.totalRow){
-                                 //$(cellNode).empty().html(Timeline.getSumOfBelowRows()).css({'text-align' : 'center', 'background-color': '#666666', 'color' : '#fff'});
-                                 var rate = Timeline.getAvgOfBelowRows(cellNode, row, dataContext, colDef);
-                                 $(cellNode).empty().html(currency_code + " "  + parseFloat(isNaN(rate) ? 0 : rate).toFixed(2)).css(Timeline.calcuation_cols_css);
-                            }
-                            return;
-                        }
-                    }
-                }, {
-                    id: "cost",
-                    name: "Cost",
-                    field: "cost",
-                    //width: 50,
-                    selectable: false,
-                    resizable: true,
-                    focusable : false,
-                    order: null
-                    ,cssClass : "slds-calculated-cell"
-                    ,headerCssClass: "Fixed-Header-Style"
-                    ,notUsedForCalculation : true
-                    ,formatter: function(row, cell, value, columnDef, dataContext) {
-                        if(row < Timeline.fixedRows){
-                            return '';
-                        }
-                        return value == '' ? '' : currency_code + " "  + parseFloat(value).toFixed(2);
-                        
-                    },asyncPostRender: function(cellNode, row, dataContext, colDef) {
-                        //console.log('postrender');
-                        if(row < Timeline.fixedRows){
-                            if(row == Timeline.totalRow){
-                                 //$(cellNode).empty().html(Timeline.getSumOfBelowRows()).css({'text-align' : 'center', 'background-color': '#666666', 'color' : '#fff'});
-                                 var cost = Timeline.getAvgOfBelowRows(cellNode, row, dataContext, colDef);
-                                 $(cellNode).empty().html(currency_code + " "  + parseFloat(isNaN(cost) ? 0 : cost).toFixed(2)).css(Timeline.calcuation_cols_css);
-                            }
-                            return;
-                        }
-                    }
-                },{
-                    id: "cost_price",
-                    name: "Total Cost",
-                    field: "cost_price",
-                    //width: 50,
-                    selectable: false,
-                    resizable: true,
-                    focusable : false,
-                    order: null
-                    ,cssClass : "slds-calculated-cell"
-                    ,headerCssClass: "Fixed-Header-Style"
-                    ,notUsedForCalculation : true
-                    ,formatter: Timeline.waitingFormatter
-                    ,asyncPostRender: function(cellNode, row, dataContext, colDef) {
-                        if(row < Timeline.fixedRows){
-                            if(row == Timeline.totalRow){
-                                 var sum = 0;
-                                 var rowData = data.slice(Timeline.fixedRows);
-                                 var colData = columns.slice(Timeline.fixedColumns);
-                                 $.each(rowData, function(indx, rowItem) {
-                                    var row_sum = 0; 
-                                    $.each(colData, function(indx1, colItem) {
-                                       if(typeof colItem.notUsedForCalculation == 'undefined' || !colItem.notUsedForCalculation) {
-                                           row_sum += (typeof rowItem[colItem.id] == 'undefined' || rowItem[colItem.id] == ''? 0 : parseInt(rowItem[colItem.id]));
-                                       }       
-                                    });
-                                    sum += parseInt(row_sum) * parseInt(rowItem.cost);
-                                    //console.log('----------' + sum + '-------------' + rowItem.id);
-                                 });
-                                 
-                                 var total_cost = parseFloat(sum).toFixed(2);
-                                 $(cellNode).empty().html(currency_code + " "  + total_cost).css(Timeline.calcuation_cols_css);
-                            }
-                            return;
-                        }
-                        $(cellNode).empty().html(currency_code + " "  + parseFloat(Timeline.getHoursSum(cellNode, row, dataContext, colDef) * dataContext.cost).toFixed(2));
-                    }
-                },{
-                    id: "selling_price",
-                    name: "Total Price",
-                    field: "selling_price",
-                    //width: 50,
-                    selectable: false,
-                    resizable: true,
-                    focusable : false,
-                    order: null
-                    ,cssClass : "slds-calculated-cell"
-                    ,headerCssClass: "Fixed-Header-Style"
-                    ,notUsedForCalculation : true
-                    ,formatter: Timeline.waitingFormatter
-                    ,asyncPostRender: function(cellNode, row, dataContext, colDef) {
-                        if(row < Timeline.fixedRows){
-                            if(row == Timeline.totalRow){
-                                 var sum = 0;
-                                 var rowData = data.slice(Timeline.fixedRows);
-                                 var colData = columns.slice(Timeline.fixedColumns);
-                                 $.each(rowData, function(indx, rowItem) {
-                                    var row_sum = 0; 
-                                    $.each(colData, function(indx1, colItem) {
-                                       if(typeof colItem.notUsedForCalculation == 'undefined' || !colItem.notUsedForCalculation) {
-                                           row_sum += (typeof rowItem[colItem.id] == 'undefined' || rowItem[colItem.id] == ''? 0 : parseInt(rowItem[colItem.id]));
-                                       }       
-                                    });
-                                    sum += parseInt(row_sum) * parseInt(rowItem.rate);
-                                    //console.log('----------' + sum + '-------------' + rowItem.id);
-                                 });
-                                 
-                                 var total_price = parseFloat(sum).toFixed(2);
-                                 $(cellNode).empty().html(currency_code + " "  + total_price).css(Timeline.calcuation_cols_css);
-                            }
-                            return;
-                        }
-                        $(cellNode).empty().html(currency_code + " "  + parseFloat(Timeline.getHoursSum(cellNode, row, dataContext, colDef) * dataContext.rate).toFixed(2));
-                    }
-                }];
-    },
-    bindMetadata: function(){
-        // set the grid's data as new rows
-        data.getItemMetadata = function (row) {
-                  
-                   var metadata =  {
-                      selectable: false,
-                      cssClasses: "custom-fix-row",
-                      "columns": {
-                                        "id": {
-                                                  formatter: function(row, cell, value, columnDef, dataContext) {
-                                                        return "";
-                                                  },
-                                                  focusable : false,
-                                                  editor: ""
-                                                },
-                                        "selector1" : {
-                                                  formatter: function(row, cell, value, columnDef, dataContext) {
-                                                        if(row == Timeline.phaseRow){
-                                                          return "<div style='width:100%;text-align:right;font-weight: bold;'>PHASE</div>";
-                                                        }else if(row == Timeline.weekNameRow){
-                                                          return "<div style='width:100%;text-align:right;font-weight: bold;'>WEEK</div>";    
-                                                        }else if(row == Timeline.milestoneRow){
-                                                          return "<div style='width:100%;text-align:right;font-weight: bold;'>MILESTONE</div>";  
-                                                        }else if(row == Timeline.totalRow){
-                                                          return "<div style='width:100%;text-align:right;font-weight: bold;'>TOTAL HRS</div>";    
-                                                        }
-                                                        return value;
-                                                  },
-                                                  focusable : false,
-                                                  editor: ""
-                                        }       
-                      }
-                    };
-                    
-                if(row == Timeline.weekNameRow || row == Timeline.totalRow){
-                  return metadata;    
-                }else if(row == Timeline.milestoneRow){
-                     $.each(columns, function(indx1, colItem) {
-                        if(indx1 >= Timeline.fixedColumns && typeof colItem.usedForCalculation != 'undefined' && colItem.usedForCalculation){
-                             metadata.columns[colItem.field] = {};
-                             metadata.columns[colItem.field].editor = MilestoneEditor;
-                        }
-                    });
-                    return metadata;
-                }else if(row == Timeline.phaseRow){
-                    
-                    var currentRow = data[row];
-                             
-                    $.each(columns, function(indx1, colItem) {
-                        if(indx1 >= Timeline.fixedColumns && typeof colItem.usedForCalculation != 'undefined' && colItem.usedForCalculation){
-                             metadata.selectable = true;
-                             var val = currentRow[columns[indx1].field];
-                             var nextCellIndex = indx1 + 1;
-                             var colspan = 1;
-                             while(nextCellIndex < columns.length){
-                                 //console.log('----' + val + '==' + currentRow[columns[nextCellIndex].field] + '----');
-                                 if(val == currentRow[columns[nextCellIndex].field] && val != ''){ 
-                                   colspan++;  
-                                 }else {
-                                     break;
-                                 } 
-                                 nextCellIndex += 1;
-                             }
-                             //console.log('----' + colspan + '----');
-                             metadata.columns[colItem.field] = {};
-                             metadata.columns[colItem.field].editor = MilestoneEditor;
-                             //metadata.columns[colItem.field].editor = PhaseSelectionEditor;
-                             metadata.columns[colItem.field].colspan = colspan;
-                        }
-                    });
-                    return metadata;
-                }
-           }
-        
-        
-    },
-    rt_json : [],
+   
     getEstimateRateCards: function(estimateId){
         loader.show();
         sforce.apex.execute(WEBSERVICE_NAME, "getEstimateRateCards", {
@@ -2087,9 +2741,10 @@ var Timeline = {
              Timeline.rt_json = [];
             //result = (result.length > 0 ? result[0] : result); 
             $.each(result, function(indx, row) {
-                var resource = row.Region__c + ' - ' + row.Resource_Role__c;
+                var resource = row.Practice__c + ' - ' + row.Region__c + ' - ' + row.Resource_Role__c;
                 var json_obj = {};
                 json_obj['id'] = row.Id;
+                json_obj['practice'] = row.Practice__c;
                 json_obj['region'] = row.Region__c;
                 json_obj['role'] = row.Resource_Role__c;
                 // rate card rate
@@ -2162,7 +2817,7 @@ var Timeline = {
         column.asyncPostRender = function(cellNode, row, dataContext, colDef) {
                 //console.log('postrender');
                 if(row < Timeline.fixedRows){
-                     if(row == Timeline.totalRow){
+                     if(data[row].id == Timeline.fixedRowsTypes.total.id){
                         var sum = 0;
                         var rowData = data.slice(row + 1);
                          $.each(rowData, function(indx, rowItem) {
@@ -2171,21 +2826,67 @@ var Timeline = {
                          $(cellNode).empty().html(sum).css({'text-align' : 'center', 'background-color': '#666666', 'color' : '#fff'});
                      }
                      
-                     if(row == Timeline.phaseRow){
-                        //var sum = 0;
-                        var rowData = data[row][colDef.id];
-                        
-                        // remove all custom css classes first and apply than the new one next;
-                        for(var _a in renderOptions_Phases){
-                            var cls = renderOptions_Phases[_a];
-                            if(typeof cls == 'String') $(cellNode).removeClass(cls);
-                        }
-                        // apply the new ones 
-                        if(typeof renderOptions_Phases[rowData] != 'undefined'){
-                            var cls = renderOptions_Phases[rowData];
-                            $(cellNode).addClass(cls);
-                        }
+                     
+                     //var capacityNeeds_JSON = {"PhaseHours" : {"Plan" : "171.0","Build" : "50.0"},"RoleHours" : {"BI Architect" : "101.0","BI Business Analyst" : "10.0","Business Analyst - Jaipur" : "60.0","Developer" : "50.0"},"TotalHours" : "221.0"};    
+                     
+                     if(data[row].id == Timeline.fixedRowsTypes.capacityneedsperphase.id){
+                         var sum = 0;
+                         //console.log(data[Timeline.fixedRowsTypes.phase.rowIndex]);
+                         var selectedPhase = data[Timeline.fixedRowsTypes.phase.rowIndex][colDef.id];
+                         if(selectedPhase != ''){
+                             $(cellNode).css({'text-align' : 'center', 'background-color': (typeof renderOptions_Phases[selectedPhase] == 'undefined' ? '' : renderOptions_Phases[selectedPhase]), 'color' : '#fff'});
+                             selectedPhase = selectedPhase.toLowerCase();
+                             if(typeof capacityNeeds_JSON != 'undefined' && 
+                                            typeof capacityNeeds_JSON.PhaseHours != 'undefined' &&
+                                            typeof capacityNeeds_JSON.PhaseHours[selectedPhase] != 'undefined'){
+                                          sum = capacityNeeds_JSON.PhaseHours[selectedPhase];
+                             }
+                             $(cellNode).empty().html(sum);  
+                         }else{
+                           $(cellNode).css({'text-align' : 'center', 'background-color': '', 'color' : ''});  
+                           $(cellNode).empty().html('');
+                         }
+                         //$(cellNode).empty().html(sum).css(Timeline.capacityneeds_cols_css);
                      }
+                     
+                     
+                     if(data[row].id == Timeline.fixedRowsTypes.hoursperphase.id){
+                                 var sum = 0;
+                                 var selectedPhase = data[Timeline.fixedRowsTypes.phase.rowIndex][colDef.id];
+                                 if(selectedPhase != ''){
+                                     
+                                     var rowData = data.slice(Timeline.fixedRows);
+                                     var colData = columns.slice(Timeline.fixedColumns);
+                                     $.each(rowData, function(indx, rowItem) {
+                                        var row_sum = 0; 
+                                        $.each(colData, function(indx1, colItem) {
+                                           if(data[Timeline.fixedRowsTypes.phase.rowIndex][colItem.id].toLowerCase() == selectedPhase.toLowerCase() && (typeof colItem.notUsedForCalculation == 'undefined' || !colItem.notUsedForCalculation)) {
+                                               row_sum += (typeof rowItem[colItem.id] == 'undefined' || rowItem[colItem.id] == ''? 0 : parseInt(rowItem[colItem.id]));
+                                           }       
+                                        });
+                                        sum += parseInt(row_sum);
+                                     });
+                                     $(cellNode).css({'text-align' : 'center', 'background-color': (typeof renderOptions_Phases[selectedPhase] == 'undefined' ? '' : renderOptions_Phases[selectedPhase]), 'color' : '#fff'});
+                                     $(cellNode).empty().html(sum);  
+                                 }else{
+                                      $(cellNode).css({'text-align' : 'center', 'background-color': '', 'color' : ''});  
+                                      $(cellNode).empty().html('');
+                                 }
+                                 //$(cellNode).empty().html(sum).css(Timeline.hoursperphase_cols_css);
+                     }
+                     
+                     
+                     var meta_info = Timeline.fixedRowsTypes[data[row].id];
+                      if(typeof meta_info != 'undefined'){
+                          var colorCodePostFix = meta_info.colorcodepostfix;
+                          var apply_css = meta_info.apply_css;
+                          if(typeof colorCodePostFix != 'undefined' && typeof apply_css != 'undefined' && apply_css == true){
+                               var backgroundColor = data[row][colDef.id + colorCodePostFix]; 
+                               $(cellNode).css({'background-color': '', 'color' : '#000000'}); 
+                               if(typeof backgroundColor != 'undefined') $(cellNode).css({'text-align' : 'center', 'background-color': backgroundColor, 'color' : (backgroundColor == '' ? '#000' : '#eee')});
+                          }
+                      }
+                      
                 }else{
                     return;
                 }
@@ -2227,28 +2928,43 @@ var Timeline = {
             estimateId: estimateId
         }, Timeline.getRows_CallBack);
     },
+    
+    
+    
     getRows_CallBack: {
         onSuccess: function(result) {
             data = [];
-            // TODO: DO THE REORDERING AND ALL WITH THIS; AFTER PHASE IMPLEMENT
-            for(var indx = 0; indx < Timeline.fixedRows; indx++){
+            
+            
+            for(var _a in Timeline.fixedRowsTypes){
                 var row = {
-                    id : indx == 0 ? 'weekname' : (indx == 1 ? 'phase' : (indx == 2 ? 'milestone' : 'total'))
+                    id : _a
                 };
                 
                 $.each(columns, function(indx1, colRow) {
                     if(indx1 >= Timeline.fixedColumns){
                       //console.log('phase' + indx1 + ':' + (typeof colRow.phase == 'undefined' || colRow.phase == null ? '' : colRow.phase));    
-                      if(row.id == 'phase') row[colRow.id] = (typeof colRow.phase == 'undefined' || colRow.phase == null ? '' : colRow.phase);
-                      if(row.id == 'milestone') row[colRow.id] = (typeof colRow.milestone == 'undefined' || colRow.milestone == null ? '' : colRow.milestone);
-                      if(row.id == 'weekname') row[colRow.id] = (typeof colRow.order == 'undefined' || colRow.order == null ? '' : colRow.order);
-                      if(row.id == 'total') row[colRow.id] = 0;
+                      var meta_info = Timeline.fixedRowsTypes[row.id];
+                      if(typeof meta_info != 'undefined'){
+                          row[colRow.id] = meta_info.defaultValue;
+                          var valueField = meta_info.valuefield;
+                          var colorCodeField = meta_info.colorcodefield;
+                          var colorCodePostFix = meta_info.colorcodepostfix;
+                          if(typeof valueField != 'undefined'){
+                            row[colRow.id] = (typeof colRow[valueField] == 'undefined' || colRow[valueField] == null ? '' : colRow[valueField]);  
+                          } 
+                          
+                          if(typeof colorCodeField != 'undefined' && typeof colorCodePostFix != 'undefined'){
+                            row[colRow.id + colorCodePostFix] = (typeof colRow[colorCodeField] == 'undefined' || colRow[colorCodeField] == null ? '' : colRow[colorCodeField]); 
+                          }
+                      }
                     }        
                 });
                 data.push(row);
+                
             }
-             
-
+            
+           
             $.each(result, function(indx, row) {
                 row.cost = parseInt(row.cost);
                 row.rate = parseInt(row.rate);
@@ -2310,7 +3026,7 @@ var Timeline = {
             // process success
             sforce.apex.execute(WEBSERVICE_NAME, "getTimelineColumns", {
                 estimateId: estimateId
-            }, Timeline.getColumns_Callback);
+            }, Timeline.initCallback);
 
         },
         onFailure: function(error) {
@@ -2444,7 +3160,7 @@ var Timeline = {
                 loader.hide();
                 return;
             }
-
+            if(typeof refreshOverviewPanel === 'function') refreshOverviewPanel();
             sforce.apex.execute(WEBSERVICE_NAME, "getTimelineRows", {
                 estimateId: estimateId
             }, Timeline.getRows_CallBack);
@@ -2611,6 +3327,7 @@ var Timeline = {
             if (Timeline.updateHours_call_register && Timeline.updateHours_call_register[result]){ delete Timeline.updateHours_call_register[result];}
             if (Timeline.updateHours_call_register && JSON.stringify(Timeline.updateHours_call_register) == '{}') {
                 loader.hide();
+                if(typeof refreshOverviewPanel === 'function') refreshOverviewPanel();
                 //sforce.apex.execute(WEBSERVICE_NAME, "getTimelineRows", {
                 //    estimateId: estimateId
                 //}, Timeline.getRows_CallBack);
@@ -2659,10 +3376,54 @@ var Timeline = {
     },
     
     
+    updatePhaseAndColorCode_call_register: {},
+    updatePhaseAndColorCode: function(weekId, phase, colorCode) {
+        loader.show();
+        Timeline.updatePhaseAndColorCode_call_register[weekId] = 'phaseAndColorCode';  
+        sforce.apex.execute(WEBSERVICE_NAME, "updatePhaseAndColorCode", {
+            weekId: weekId,
+            phase: phase,
+            colorCode: colorCode
+        }, Timeline.updatePhaseAndColorCode_Callback);
+        
+    },
+    updatePhaseAndColorCode_Callback: {
+        onSuccess: function(result) {
+            result = (result.length > 0 ? result[0] : result);
+            // check for failure message, show alert and stop
+            if (result.indexOf('Fail') != -1) {
+                var exception = 'INSUFFICIENT_ACCESS_OR_READONLY';
+                if (result.toLowerCase().indexOf(exception.toLowerCase()) != -1) {
+                    alert(result); //CustomAlert.showError('Reparenting Failed: You do not have permission to reparent this scope!!! Please contact scope owner for reparenting!!');    
+                } else {
+                    alert(result);
+                }
+                loader.hide();
+                return;
+            }
+            // if there is no failure; delete respective call registers
+            if (Timeline.updatePhaseAndColorCode_call_register && Timeline.updatePhaseAndColorCode_call_register[result]){ delete Timeline.updatePhaseAndColorCode_call_register[result];}
+            if (Timeline.updatePhaseAndColorCode_call_register && JSON.stringify(Timeline.updatePhaseAndColorCode_call_register) == '{}') {
+                loader.hide();
+                //sforce.apex.execute(WEBSERVICE_NAME, "getTimelineRows", {
+                //    estimateId: estimateId
+                //}, Timeline.getRows_CallBack);
+            }
+            
+            Timeline.renderGrid();
+        },
+        onFailure: function(error) {
+            alert(error);
+            loader.hide();
+        }
+    },
+    
+    
+    
     updatePhase_call_register: {},
     updatePhase: function(weekId, phase) {
         loader.show();
-        Timeline.updatePhase_call_register[weekId] = 'phase';  
+        Timeline.updatePhase_call_register[weekId] = Timeline.fixedRowsTypes.phase.id;  
         sforce.apex.execute(WEBSERVICE_NAME, "updatePhase", {
             weekId: weekId,
             phase: phase
@@ -2699,10 +3460,50 @@ var Timeline = {
             loader.hide();
         }
     },
+    updatePhaseColorCode_call_register: {},
+    updatePhaseColorCode: function(weekId, phaseColorCode) {
+        loader.show();
+        Timeline.updatePhaseColorCode_call_register[weekId] = 'phaseColorCode';  
+        sforce.apex.execute(WEBSERVICE_NAME, "updatePhaseColorCode", {
+            weekId: weekId,
+            phaseColorCode: phaseColorCode
+        }, Timeline.updatePhaseColorCode_Callback);
+        
+    },
+    updatePhaseColorCode_Callback: {
+        onSuccess: function(result) {
+            result = (result.length > 0 ? result[0] : result);
+            // check for failure message, show alert and stop
+            if (result.indexOf('Fail') != -1) {
+                var exception = 'INSUFFICIENT_ACCESS_OR_READONLY';
+                if (result.toLowerCase().indexOf(exception.toLowerCase()) != -1) {
+                    alert(result); //CustomAlert.showError('Reparenting Failed: You do not have permission to reparent this scope!!! Please contact scope owner for reparenting!!');    
+                } else {
+                    alert(result);
+                }
+                loader.hide();
+                return;
+            }
+            // if there is no failure; delete respective call registers
+            if (Timeline.updatePhaseColorCode_call_register && Timeline.updatePhaseColorCode_call_register[result]){ delete Timeline.updatePhaseColorCode_call_register[result];}
+            if (Timeline.updatePhaseColorCode_call_register && JSON.stringify(Timeline.updatePhaseColorCode_call_register) == '{}') {
+                loader.hide();
+                //sforce.apex.execute(WEBSERVICE_NAME, "getTimelineRows", {
+                //    estimateId: estimateId
+                //}, Timeline.getRows_CallBack);
+            }
+            
+            Timeline.renderGrid();
+        },
+        onFailure: function(error) {
+            alert(error);
+            loader.hide();
+        }
+    },
     updateMilestone_call_register: {},
     updateMilestone: function(weekId, milestone) {
         loader.show();
-        Timeline.updateMilestone_call_register[weekId] = 'phase'; 
+        Timeline.updateMilestone_call_register[weekId] = Timeline.fixedRowsTypes.milestone.id; 
         sforce.apex.execute(WEBSERVICE_NAME, "updateMilestone", {
             weekId: weekId,
             milestone: milestone
@@ -2737,6 +3538,278 @@ var Timeline = {
             loader.hide();
         }
     },
+    
+    updateMilestone1_call_register: {},
+    updateMilestone1: function(weekId, milestone1) {
+        loader.show();
+        Timeline.updateMilestone1_call_register[weekId] = Timeline.fixedRowsTypes.milestone1.id; 
+        sforce.apex.execute(WEBSERVICE_NAME, "updateMilestone1", {
+            weekId: weekId,
+            milestone1: milestone1
+        }, Timeline.updateMilestone1_Callback);
+        
+    },
+    updateMilestone1_Callback: {
+        onSuccess: function(result) {
+            result = (result.length > 0 ? result[0] : result);
+            // check for failure message, show alert and stop
+            if (result.indexOf('Fail') != -1) {
+                var exception = 'INSUFFICIENT_ACCESS_OR_READONLY';
+                if (result.toLowerCase().indexOf(exception.toLowerCase()) != -1) {
+                    alert(result); //CustomAlert.showError('Reparenting Failed: You do not have permission to reparent this scope!!! Please contact scope owner for reparenting!!');    
+                } else {
+                    alert(result);
+                }
+                loader.hide();
+                return;
+            }
+            // if there is no failure; delete respective call registers
+            if (Timeline.updateMilestone1_call_register && Timeline.updateMilestone1_call_register[result]){ delete Timeline.updateMilestone1_call_register[result];}
+            if (Timeline.updateMilestone1_call_register && JSON.stringify(Timeline.updateMilestone1_call_register) == '{}') {
+                loader.hide();
+                //sforce.apex.execute(WEBSERVICE_NAME, "getTimelineRows", {
+                //    estimateId: estimateId
+                //}, Timeline.getRows_CallBack);
+            }
+        },
+        onFailure: function(error) {
+            alert(error);
+            loader.hide();
+        }
+    },
+    
+    updateMilestone2_call_register: {},
+    updateMilestone2: function(weekId, milestone2) {
+        loader.show();
+        Timeline.updateMilestone2_call_register[weekId] = Timeline.fixedRowsTypes.milestone2.id; 
+        sforce.apex.execute(WEBSERVICE_NAME, "updateMilestone2", {
+            weekId: weekId,
+            milestone2: milestone2
+        }, Timeline.updateMilestone2_Callback);
+        
+    },
+    updateMilestone2_Callback: {
+        onSuccess: function(result) {
+            result = (result.length > 0 ? result[0] : result);
+            // check for failure message, show alert and stop
+            if (result.indexOf('Fail') != -1) {
+                var exception = 'INSUFFICIENT_ACCESS_OR_READONLY';
+                if (result.toLowerCase().indexOf(exception.toLowerCase()) != -1) {
+                    alert(result); //CustomAlert.showError('Reparenting Failed: You do not have permission to reparent this scope!!! Please contact scope owner for reparenting!!');    
+                } else {
+                    alert(result);
+                }
+                loader.hide();
+                return;
+            }
+            // if there is no failure; delete respective call registers
+            if (Timeline.updateMilestone2_call_register && Timeline.updateMilestone2_call_register[result]){ delete Timeline.updateMilestone2_call_register[result];}
+            if (Timeline.updateMilestone2_call_register && JSON.stringify(Timeline.updateMilestone2_call_register) == '{}') {
+                loader.hide();
+                //sforce.apex.execute(WEBSERVICE_NAME, "getTimelineRows", {
+                //    estimateId: estimateId
+                //}, Timeline.getRows_CallBack);
+            }
+        },
+        onFailure: function(error) {
+            alert(error);
+            loader.hide();
+        }
+    },
+    
+    
+    updateMilestoneColorCode_call_register: {},
+    updateMilestoneColorCode: function(weekId, milestoneColorCode) {
+        loader.show();
+        Timeline.updateMilestoneColorCode_call_register[weekId] = 'milestonecolor'; 
+        
+        sforce.apex.execute(WEBSERVICE_NAME, "updateMilestoneColorCode", {
+                                                                            weekId: weekId,
+                                                                            milestoneColorCode: milestoneColorCode
+                                                                        }, Timeline.updateMilestoneColorCode_Callback);
+        
+    },
+    updateMilestoneColorCode_Callback: {
+        onSuccess: function(result) {
+            result = (result.length > 0 ? result[0] : result);
+            // check for failure message, show alert and stop
+            if (result.indexOf('Fail') != -1) {
+                var exception = 'INSUFFICIENT_ACCESS_OR_READONLY';
+                if (result.toLowerCase().indexOf(exception.toLowerCase()) != -1) {
+                    alert(result); //CustomAlert.showError('Reparenting Failed: You do not have permission to reparent this scope!!! Please contact scope owner for reparenting!!');    
+                } else {
+                    alert(result);
+                }
+                loader.hide();
+                return;
+            }
+            // if there is no failure; delete respective call registers
+            if (Timeline.updateMilestoneColorCode_call_register && Timeline.updateMilestoneColorCode_call_register[result]){ delete Timeline.updateMilestoneColorCode_call_register[result];}
+            if (Timeline.updateMilestoneColorCode_call_register && JSON.stringify(Timeline.updateMilestoneColorCode_call_register) == '{}') {
+                loader.hide();
+                //sforce.apex.execute(WEBSERVICE_NAME, "getTimelineRows", {
+                //    estimateId: estimateId
+                //}, Timeline.getRows_CallBack);
+            }
+        },
+        onFailure: function(error) {
+            alert('ERROR:' + error);
+            loader.hide();
+        }
+    },
+   
+   updateMilestoneColorCode1_call_register: {},
+   updateMilestoneColorCode1: function(weekId, milestoneColorCode1) {
+        loader.show();
+        Timeline.updateMilestoneColorCode1_call_register[weekId] = 'milestonecolor1'; 
+        
+        sforce.apex.execute(WEBSERVICE_NAME, "updateMilestoneColorCode1", {
+                                                                            weekId: weekId,
+                                                                            milestoneColorCode1: milestoneColorCode1
+                                                                        }, Timeline.updateMilestoneColorCode1_Callback);
+        
+    },
+   updateMilestoneColorCode1_Callback: {
+        onSuccess: function(result) {
+            result = (result.length > 0 ? result[0] : result);
+            // check for failure message, show alert and stop
+            if (result.indexOf('Fail') != -1) {
+                var exception = 'INSUFFICIENT_ACCESS_OR_READONLY';
+                if (result.toLowerCase().indexOf(exception.toLowerCase()) != -1) {
+                    alert(result); //CustomAlert.showError('Reparenting Failed: You do not have permission to reparent this scope!!! Please contact scope owner for reparenting!!');    
+                } else {
+                    alert(result);
+                }
+                loader.hide();
+                return;
+            }
+            // if there is no failure; delete respective call registers
+            if (Timeline.updateMilestoneColorCode1_call_register && Timeline.updateMilestoneColorCode1_call_register[result]){ delete Timeline.updateMilestoneColorCode1_call_register[result];}
+            if (Timeline.updateMilestoneColorCode1_call_register && JSON.stringify(Timeline.updateMilestoneColorCode1_call_register) == '{}') {
+                loader.hide();
+                //sforce.apex.execute(WEBSERVICE_NAME, "getTimelineRows", {
+                //    estimateId: estimateId
+                //}, Timeline.getRows_CallBack);
+            }
+        },
+        onFailure: function(error) {
+            alert('ERROR:' + error);
+            loader.hide();
+        }
+    }, 
+   
+   updateMilestoneColorCode2_call_register: {},
+   updateMilestoneColorCode2: function(weekId, milestoneColorCode2) {
+        loader.show();
+        Timeline.updateMilestoneColorCode2_call_register[weekId] = 'milestonecolor2'; 
+        
+        sforce.apex.execute(WEBSERVICE_NAME, "updateMilestoneColorCode2", {
+                                                                            weekId: weekId,
+                                                                            milestoneColorCode2: milestoneColorCode2
+                                                                        }, Timeline.updateMilestoneColorCode2_Callback);
+        
+    },
+   updateMilestoneColorCode2_Callback: {
+        onSuccess: function(result) {
+            result = (result.length > 0 ? result[0] : result);
+            // check for failure message, show alert and stop
+            if (result.indexOf('Fail') != -1) {
+                var exception = 'INSUFFICIENT_ACCESS_OR_READONLY';
+                if (result.toLowerCase().indexOf(exception.toLowerCase()) != -1) {
+                    alert(result); //CustomAlert.showError('Reparenting Failed: You do not have permission to reparent this scope!!! Please contact scope owner for reparenting!!');    
+                } else {
+                    alert(result);
+                }
+                loader.hide();
+                return;
+            }
+            // if there is no failure; delete respective call registers
+            if (Timeline.updateMilestoneColorCode2_call_register && Timeline.updateMilestoneColorCode2_call_register[result]){ delete Timeline.updateMilestoneColorCode2_call_register[result];}
+            if (Timeline.updateMilestoneColorCode2_call_register && JSON.stringify(Timeline.updateMilestoneColorCode2_call_register) == '{}') {
+                loader.hide();
+                //sforce.apex.execute(WEBSERVICE_NAME, "getTimelineRows", {
+                //    estimateId: estimateId
+                //}, Timeline.getRows_CallBack);
+            }
+        },
+        onFailure: function(error) {
+            alert('ERROR:' + error);
+            loader.hide();
+        }
+    },
+   
+    updateColorCode: function(jsonstr) {
+        loader.show();
+        
+        sforce.apex.execute(WEBSERVICE_NAME, "updateColorCode", {
+            jsonstr: jsonstr
+        }, Timeline.updateColorCode_Callback);
+        
+    },
+    
+    updateColorCode_Callback: {
+        onSuccess: function(result) {
+            result = (result.length > 0 ? result[0] : result);
+            // check for failure message, show alert and stop
+            if (result.indexOf('Fail') != -1) {
+                var exception = 'INSUFFICIENT_ACCESS_OR_READONLY';
+                if (result.toLowerCase().indexOf(exception.toLowerCase()) != -1) {
+                    alert(result); //CustomAlert.showError('Reparenting Failed: You do not have permission to reparent this scope!!! Please contact scope owner for reparenting!!');    
+                } else {
+                    alert(result);
+                }
+                loader.hide();
+                return;
+            }
+            
+            loader.hide();
+            //sforce.apex.execute(WEBSERVICE_NAME, "getTimelineRows", {
+            //    estimateId: estimateId
+            //}, Timeline.getRows_CallBack);
+            Timeline.renderGrid();
+        },
+        onFailure: function(error) {
+            alert(error);
+            loader.hide();
+        }
+    },
+    
+    updateMilestoneWeeks: function(jsonstr) {
+        loader.show();
+        
+        sforce.apex.execute(WEBSERVICE_NAME, "updateMilestoneWeeks", {
+            jsonstr: jsonstr
+        }, Timeline.updateMilestoneWeeks_Callback);
+        
+    },
+    
+    updateMilestoneWeeks_Callback: {
+        onSuccess: function(result) {
+            result = (result.length > 0 ? result[0] : result);
+            // check for failure message, show alert and stop
+            if (result.indexOf('Fail') != -1) {
+                var exception = 'INSUFFICIENT_ACCESS_OR_READONLY';
+                if (result.toLowerCase().indexOf(exception.toLowerCase()) != -1) {
+                    alert(result); //CustomAlert.showError('Reparenting Failed: You do not have permission to reparent this scope!!! Please contact scope owner for reparenting!!');    
+                } else {
+                    alert(result);
+                }
+                loader.hide();
+                return;
+            }
+            
+            loader.hide();
+            //sforce.apex.execute(WEBSERVICE_NAME, "getTimelineRows", {
+            //    estimateId: estimateId
+            //}, Timeline.getRows_CallBack);
+            Timeline.renderGrid();
+        },
+        onFailure: function(error) {
+            alert(error);
+            loader.hide();
+        }
+    },
+    
     autoFill: function(jsonstr) {
         loader.show();
         sforce.apex.execute(WEBSERVICE_NAME, "autoFill", {
@@ -2759,6 +3832,7 @@ var Timeline = {
                 return;
             }
             loader.hide();
+            if(typeof refreshOverviewPanel === 'function') refreshOverviewPanel();
             //sforce.apex.execute(WEBSERVICE_NAME, "getTimelineRows", {
             //    estimateId: estimateId
             //}, Timeline.getRows_CallBack);

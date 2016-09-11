@@ -13,15 +13,14 @@ public with sharing abstract class E2_Master {
   public boolean isEditable{get;set;}
   private static final string URL_KEY_PSR_ID = 'psr_id';
   public string psrId{get;set;}
-  
+  //constructor 
   public E2_Master(){
     this.isEditable = true;     
   }
-  
+  //method to check edit access on the estimate 
   public void validateAccess(CMC_Presales_LOE__c estimate){
      this.psrId = E2_Constants.BLANK;
      
-    
     if(estimate.id <> NULL){
       //this.isEditable = true;
       List<CMC_Presales_LOE__c> estimateList = E2_DataUtil.getEstimateDetailForAccess(estimate.id);

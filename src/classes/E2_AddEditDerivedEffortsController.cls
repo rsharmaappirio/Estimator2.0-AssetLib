@@ -13,14 +13,15 @@ public with sharing class E2_AddEditDerivedEffortsController extends E2_Master {
   public List<DerivedEffort> clonnedDerivedEffortList{get;set;}
   public String deffortTemplateIds{get;set;}
   public String deffortGroupName{get;set;}
-  
+  //constructor
   public E2_AddEditDerivedEffortsController(ApexPages.StandardController std) {
     this.estimate = (CMC_Presales_LOE__c)std.getRecord();
     this.clonnedDerivedEffortList = new List<DerivedEffort>();
   }
-  
+  //page action method on loading of page
   public PageReference pageAction(){
     super.validateAccess(this.estimate);
+    //if estimate id is null then return, else display derived effort 
     if(this.estimate.id == NULL){
         return null;        
     }else{
@@ -30,7 +31,7 @@ public with sharing class E2_AddEditDerivedEffortsController extends E2_Master {
     }
     return null;    
   }
-  
+  //save method
   public PageReference save(){
     system.debug('in save method');
     Savepoint sp = Database.setSavepoint();        
@@ -47,7 +48,7 @@ public with sharing class E2_AddEditDerivedEffortsController extends E2_Master {
     pg.setRedirect(true);
     return pg;      
   }
-  
+  //method to remove derived efforts
   public PageReference removeDerivedEffort(){
     Savepoint sp = Database.setSavepoint();        
     try{
@@ -63,7 +64,7 @@ public with sharing class E2_AddEditDerivedEffortsController extends E2_Master {
     }
     return null;
   }
-
+  //method to clone derived efforts
   public PageReference cloneDerivedEffort() {
     if(!String.isBlank(deffortTemplateIds)) {
         save();
@@ -71,14 +72,14 @@ public with sharing class E2_AddEditDerivedEffortsController extends E2_Master {
     }
     return null;
   }
-  
+  //call build capacity 
   public PageReference buildCapacity() {
     E2_CapacityController.reBuildCapacity(this.estimate);
     PageReference pg = Page.E2_Capacity;
     pg.getParameters().put('id', this.estimate.id);    
     return pg; 
   }
-  
+  //utility method to get derived Efforts Template for a group Id
   private void getDerivedEffortTemplates(string groupId) {
     clonnedDerivedEffortList.clear();
     for(E2_Derived_Effort_Group__c dG : E2_DataUtil.getDerivedEffortGroupById(groupId)) {
@@ -95,7 +96,7 @@ public with sharing class E2_AddEditDerivedEffortsController extends E2_Master {
     }
     clonnedDerivedEffortList.addAll(combinedderivedEfforts.values());
   }
-  
+  //wrapper class for derived effort
   public class DerivedEffort{
     
     public E2_Derived_Effort__c derivedEffort{get;set;}
@@ -109,7 +110,7 @@ public with sharing class E2_AddEditDerivedEffortsController extends E2_Master {
     public Decimal includeWhenHrs{get;set;}
     public Decimal allocationMin{get;set;}
     public decimal derivedHrs{get;set;}
-    
+    //constructor
     public DerivedEffort(E2_Derived_Effort__c derivedEffort){
         this.derivedEffort = derivedEffort;
         this.name = derivedEffort.Name;
@@ -123,7 +124,7 @@ public with sharing class E2_AddEditDerivedEffortsController extends E2_Master {
         this.derivedHrs = derivedEffort.Derived_Hrs__c;
         this.allocationMin = derivedEffort.Allocation_Min__c;
     }
-    
+    //method to add Phase
     public void addPhase(E2_Derived_Effort__c derivedEffort) {
         if(this.toPhase.indexOf(derivedEffort.To_Phase__c) == -1)
         this.toPhase += E2_Constants.COMMA + E2_Constants.SPACE + derivedEffort.To_Phase__c;

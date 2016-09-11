@@ -16,6 +16,7 @@ public with sharing class E2_ScopeQuestionAnswerManager {
     // Question wrapper list for question and answer 
 	public List<Question> listQuestions {get;set;}
 	
+	// constructor 
 	public E2_ScopeQuestionAnswerManager() {
 		listQuestions = new List<Question>();
 		this.changecomplexty = E2_Constants.BLANK;
@@ -23,6 +24,7 @@ public with sharing class E2_ScopeQuestionAnswerManager {
 		this.scopeToDeactivate = E2_Constants.BLANK;
 	}
 	
+	// method to save questions 
 	public pagereference saveQuestion(String errorMessage, string dmlOperationMessage) {
         this.changecomplexty = E2_Constants.BLANK;
 		this.scopeToActivate = E2_Constants.BLANK;
@@ -86,7 +88,6 @@ public with sharing class E2_ScopeQuestionAnswerManager {
                 }
                 upsert e2Answers;
                 set<Id> answersId = new set<Id>();
-                //system.assertEquals(answerScopeMap,NULL);
                 list<E2_Action_Scope__c> answerScopes = new list<E2_Action_Scope__c>();
                 for(E2_Answer__c answer : answerScopeMap.keySet()) {
                 	if(answer.Id != NULL) {
@@ -119,9 +120,7 @@ public with sharing class E2_ScopeQuestionAnswerManager {
         return null;             
     }   
     
-    /**
-     * Method to get answer and question to insert, update and delete
-     */
+    // Method to get answer and question to insert, update and delete
     public void updateQuestionUpsertList(map<string,E2_Question__c> questionToUpsert,
                                             map<string,List<E2_Answer__c>> answerToUpsert,
                                             List<E2_Answer__c> answerToDelete,
@@ -177,6 +176,7 @@ public with sharing class E2_ScopeQuestionAnswerManager {
         }
     }
     
+    // Method to retrieve question 
     public void retriveScopeQuestion() {
         this.listQuestions.clear();
         map<Id,Answer> answermap = new map<Id,Answer>();
@@ -204,11 +204,13 @@ public with sharing class E2_ScopeQuestionAnswerManager {
         }        
     }
     
+    // Method to add new question
     public pagereference addNewQuestion() {
         this.listQuestions.add(new Question(new E2_Question__c(Scope__c = scope.Id, Is_Active__c = true)));
         return null;
     }
     
+    // wrapper class for question
     public class Question {
         public boolean isDeleted{get;set;}
         public boolean isCloned{get;set;}
@@ -248,7 +250,7 @@ public with sharing class E2_ScopeQuestionAnswerManager {
                 }
             }                
         }
-        
+        // method to add answer
         public pagereference addAnswer() {
         	this.isEdit = true;        	           
             if(e2question.Type__c == 'Yes/No') {
@@ -261,19 +263,19 @@ public with sharing class E2_ScopeQuestionAnswerManager {
                 this.e2answers.add(new Answer(answer2));
                 this.sequence = 2;
             } else if(e2question.Type__c != 'Summary' && this.e2answers.size() == 0) {
-                for(integer index = 1;index <= 5;index++) {
+                for(integer index = 1;index <= 3;index++) {
                     E2_Answer__c answer = new E2_Answer__c(Is_Active__c = true,Sequence__c = index);
                     this.e2answers.add(new Answer(answer));
                 }
-                this.sequence = 5;
-            } else {
+                this.sequence = 3;
+            } /*else {
             	for(Answer answer : this.e2answers) {
             		answer.isDeleted = true;
             	}
-            }
+            }*/
             return null;
         }
-        
+        // method to add new answer instance in answer 
         public pagereference addNewAnswerInstance() {
         	this.sequence = this.sequence + 1;
         	E2_Answer__c answer = new E2_Answer__c(Is_Active__c = true,Sequence__c = this.sequence);
@@ -281,13 +283,24 @@ public with sharing class E2_ScopeQuestionAnswerManager {
             this.isEdit = true;
         	return null;
         } 
-        
+        // method to remove 
         public pagereference remove(){
             this.isDeleted = true;
             return null;            
+        }
+        
+        public pagereference markEdit() {
+        	this.isEdit = true;
+        	return null;
+        }
+        
+        public pagereference removeEditMode() {
+        	this.isEdit = false;
+        	return null;
         }        
     }
     
+    // wrapper class for Answer
     public class Answer {
         public boolean isDeleted{get;set;}
         public boolean isCloned{get;set;}
@@ -318,7 +331,7 @@ public with sharing class E2_ScopeQuestionAnswerManager {
           } 
             this.e2answer = e2answer;  
         }
-        
+        // method to remove 
         public pagereference remove(){
             this.isDeleted = true;
             return null;            

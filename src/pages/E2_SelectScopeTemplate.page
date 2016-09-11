@@ -102,6 +102,16 @@
                 width: 22px;
                 float:left;
             }
+            a.close-button{
+                background: url({!$Resource.E2_SLDS1}/assets/icons/action/remove_60.png) no-repeat scroll center right / 22px 22px;
+                background-color: transparent;
+                display:block;
+                height: 22px;
+                width: 22px;
+            }
+            .slds-icon-action-remove-relationship {
+                background-color: #ef6e64;
+            }
          </style>
       </head>
       <body>
@@ -119,7 +129,7 @@
                <apex:param value="" name="scopeName" assignTo="{!scopeName}"></apex:param>
             </apex:actionFunction>
             <apex:actionFunction name="addOrRemoveFavScope" action="{!addOrRemoveFavScope}" 
-               oncomplete="SelectScopeTempate.search_complete();refreshFrame('{!selectedScopeId}');" rerender="scopePanel,myScopePanel,templateCount,favoriteCount">
+               oncomplete="SelectScopeTempate.search_complete();refreshFrame('{!selectedScopeId}');AddScopeTree.destroyTree();scopesPills.markPillsChecked();" rerender="scopePanel,myScopePanel,templateCount,favoriteCount">
                <apex:param value="" name="scopeId" assignTo="{!selectedScopeId}"></apex:param>
                <apex:param value="" name="isFav" assignTo="{!isFavourite}"></apex:param>
             </apex:actionFunction>
@@ -312,14 +322,6 @@
                                                                     <a href="javascript:void(0);" title="Add scope" onclick="scopesPills.addScopeFromVF('{!sc1.scope.id}','{!sc1.scope.Name}');AddScopeTree.updateTreeState();" id="{!sc1.scope.id}href" class="addup_button"></a>
                                                                 </apex:outputPanel>
                                                             </apex:column>
-                                                            <apex:column >
-                                                                <apex:facet name="header">
-                                                                    <label class="slds-button slds-button--icon-bare"></label>
-                                                                </apex:facet>
-                                                                <apex:outputPanel layout="none">
-                                                                    <a href="javascript:void(0);" title="Add/Remove favorite" class="{!IF(sc1.isFavorite,'favStar','display:none')}" onclick="showhideFavorite(this);" id="{!sc1.scope.id}markFav" scope-id="{!sc1.scope.id}"></a>    
-                                                                </apex:outputPanel>
-                                                            </apex:column>
                                                             <apex:column styleClass="slds-truncate">
                                                                 <apex:facet name="header">
                                                                     <apex:commandLink styleClass="slds-button slds-button--icon-bare" action="{!sortList}" reRender="myScopePanel" onclick="spinner.show();" oncomplete="spinner.hide();">Name&nbsp;&nbsp;
@@ -355,6 +357,14 @@
                                                                     </apex:commandLink>
                                                                 </apex:facet>
                                                                 <apex:outputPanel layout="none">{!sc1.scope.LOE_Hrs__c}</apex:outputPanel>
+                                                            </apex:column>
+                                                            <apex:column >
+                                                                <apex:facet name="header">
+                                                                    <label class="slds-button slds-button--icon-bare"></label>
+                                                                </apex:facet>
+                                                                <apex:outputPanel styleClass="slds-icon_container slds-icon-action-remove-relationship slds-icon_container--circle" style="padding:2px!important;">
+                                                                    <a href="javascript:void(0);" title="Remove favorite" class="close-button" onclick="showhideFavorite(this);" id="{!sc1.scope.id}markFav" scope-id="{!sc1.scope.id}"></a>    
+                                                                </apex:outputPanel>
                                                             </apex:column>
                                                         </apex:dataTable>
                                                         <apex:outputPanel layout="none" rendered="{!favScopePaging.totalPage>1}">

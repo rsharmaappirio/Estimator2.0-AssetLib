@@ -20,7 +20,8 @@ public with sharing class E2_AddNewScopeTemplateController {
     private static final string URL_VALUE_TRUE = 'true';
 
     public string clipboardData{get;set;}
-
+    
+    // constructor 
     public E2_AddNewScopeTemplateController(ApexPages.StandardController std) {
        this.scope = (E2_Scope__c)std.getRecord();
        this.childScopes = new List<Scope>();
@@ -30,11 +31,8 @@ public with sharing class E2_AddNewScopeTemplateController {
        this.dmlOperationMessage = E2_Constants.DML_OPERATION_MESSAGE_FAIL;
        this.clipboardData = E2_Constants.BLANK;
     }
-
-
-
     
-    
+    // property class to create clipboard info 
     public class ClipboardInfo{
         public string property1{get;set;}   
         public string property2{get;set;}   
@@ -45,9 +43,7 @@ public with sharing class E2_AddNewScopeTemplateController {
         public List<ClipboardInfo> list1{get;set;}      
     }
     
-   
-
-    
+    // method to process clip board data 
     public pagereference processClipboardData(){
          String StringIn = this.clipboardData;
          
@@ -59,16 +55,16 @@ public with sharing class E2_AddNewScopeTemplateController {
              StringIn = '{"list1":' + StringIn + '}';
              ClipboardInfoList infoList = (ClipboardInfoList)JSON.deserialize(StringIn, ClipboardInfoList.class);
              for(ClipboardInfo info : infoList.list1){
-                this.childScopes.add(new Scope(new E2_Scope__c(Description__c = info.property2, E2_Assumption__c = info.property3 , Is_Active__c = true, Name = info.property1, Complexity__c = E2_Constants.MEDIUM), getEffortsInstanceList()));
+                this.childScopes.add(new Scope(new E2_Scope__c(Description__c = info.property2, E2_Assumption__c = info.property3 , Is_Active__c = true, 
+                                                               Name = info.property1, Complexity__c = E2_Constants.MEDIUM), getEffortsInstanceList()));
              }      
          }
-         
-        
-         
+  
         this.clipboardData = E2_Constants.BLANK;
         return null;
     }
-
+    
+    // method for page action 
     public PageReference pageAction(){
         this.scopeGrpId = ApexPages.CurrentPage().getParameters().get(E2_Constants.URL_KEY_SCOPEGROUP_ID);
         // New
@@ -87,7 +83,7 @@ public with sharing class E2_AddNewScopeTemplateController {
         return null;
     }
     
-    
+    // method to add new scope 
     public pagereference addNewScope(){
         if(this.childScopes.size() > 0){
           this.childScopes.add(0, new Scope(new E2_Scope__c(Is_Active__c = true, Complexity__c = E2_Constants.MEDIUM), getEffortsInstanceList()));
@@ -97,7 +93,7 @@ public with sharing class E2_AddNewScopeTemplateController {
         return null;                
     }
     
-    
+    // method to save scope records 
     public pagereference saveScope(){
         List<E2_Scope__c> scopeListToUpsert = new List<E2_Scope__c>();        
         List<E2_Effort__c> masterScope_Efforts = new List<E2_Effort__c>();        
@@ -191,6 +187,7 @@ public with sharing class E2_AddNewScopeTemplateController {
         return null;                
     }
     
+    // method to reset child scopes 
     public void resetChildScopesOnException(){
         for(Scope sc : childScopes){ 
                string scope_id = sc.scope.id;
@@ -205,9 +202,9 @@ public with sharing class E2_AddNewScopeTemplateController {
                     }
                 }
             }
-        
     }
     
+    // method to populate records 
     public void populateViewRecords(){
         Id scopeId = this.scope.id;
         Set<Id>  childScopeIds = new Set<Id>();                
@@ -232,6 +229,7 @@ public with sharing class E2_AddNewScopeTemplateController {
         return efforts;
     }
     
+    // wrapper class for Scope 
     public class Scope{
         public string key{get;set;}
         public E2_Scope__c scope{get;set;}
@@ -249,14 +247,11 @@ public with sharing class E2_AddNewScopeTemplateController {
                 complexity = scope.Complexity__c;
             }
             for(Effort effort : this.efforts){
-                
                 if(effort.isDeleted == false){ 
                      if(complexity.toLowerCase() == E2_Constants.MEDIUM && effort.effort.Effort_Hrs__c != null) hrs = hrs + effort.effort.Effort_Hrs__c;
                      if(complexity.toLowerCase() == E2_Constants.HIGH && effort.effort.Complexity_Factor_High__c != null && effort.effort.Effort_Hrs__c != null) hrs = hrs + (effort.effort.Effort_Hrs__c + (effort.effort.Effort_Hrs__c * (effort.effort.Complexity_Factor_High__c/100)));
                      if(complexity.toLowerCase() == E2_Constants.LOW && effort.effort.Complexity_Factor_Low__c != null && effort.effort.Effort_Hrs__c != null) hrs = hrs + (effort.effort.Effort_Hrs__c - (effort.effort.Effort_Hrs__c * (effort.effort.Complexity_Factor_Low__c/100)));
                 }
-                
-                
             }
             return hrs;
         }
@@ -281,26 +276,27 @@ public with sharing class E2_AddNewScopeTemplateController {
                 this.efforts.add(new Effort(effort));
             }           
         }
-        
+        // method to reload
         public pagereference reload(){
             return null;            
         }
-        
+        // method to change complexity
         public pagereference changeComplexity(){
             return null;
         }
-        
+        // method to remove scope 
         public pagereference remove(){
             this.isDeleted = true;
             return null;            
         }
-        
+        // method to add new effort 
         public pagereference addNewEffort(){
             this.efforts.add(new Effort(new E2_Effort__c(Complexity_Factor_High__c = 0, Complexity_Factor_Low__c = 0, Effort_Hrs__c = 0)));
             return null;
         }
     }
     
+    //wrapper class for effort 
     public class Effort{
         public boolean isDeleted{get;set;}
         public string key{get;set;}
@@ -323,7 +319,7 @@ public with sharing class E2_AddNewScopeTemplateController {
           } 
           this.effort = effort;                     
         }
-        
+        // method to remove effort 
         public pagereference remove(){
             this.isDeleted = true;
             return null;            

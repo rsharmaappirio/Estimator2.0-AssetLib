@@ -203,4 +203,50 @@ public class E2_DataUtil {
                                      FROM E2_Scope__c
                                      WHERE Id IN: scopeIds];
   }
+  
+   public static List<E2_Favourite_Scope__c> getFavScopeForCurrentUser(){
+      return [SELECT Id,Unique_Scope_User_Id__c 
+                FROM E2_Favourite_Scope__c 
+                WHERE User__c =: UserInfo.getUserId()];
+  }
+  
+  public static List<E2_Favourite_Scope__c> getFavScopeForCurrentUserAndScopeId(String scopeId){
+      return [SELECT Id,Scope__r.RecordTypeId 
+                FROM E2_Favourite_Scope__c 
+		        WHERE Scope__c =: scopeId AND User__c =: UserInfo.getUserId()];
+  }
+  
+  public static User getPermissionSetAssignmentForUser(List<PermissionSet> permissionSetIds){
+      return [SELECT Id, Profile.Name,
+		        (SELECT Id FROM PermissionSetAssignments WHERE PermissionSetId IN: permissionSetIds)
+		        FROM User
+		        WHERE Id = :userinfo.getUserId()];
+  }
+  
+  public static List<PermissionSet> getPermissionSet(){
+      return [SELECT Id, Name
+			    FROM PermissionSet
+			    WHERE Name =: E2_Constants.STM_PERMISSION_SET];
+  }
+  
+  public static List<E2_Estimate_Rate_Card__c> getEstimateRateCardRecs(id estimateId){
+     return [SELECT Id, Resource_Role__c, Estimate__c, Region__c, 
+    				Practice__c, Code__c, Rate_Card__c, Resource_Cost__c,
+    				Bill_Rate__c, Discounted_Rate__c, Category__c,
+    				Rate_Card__r.pse__Average_Cost_Rate__c, Rate_Card__r.pse__Suggested_Bill_Rate__c 
+    				FROM E2_Estimate_Rate_Card__c 
+    				WHERE Estimate__c =: estimateId
+    				ORDER BY Region__c ASC, Resource_Role__c ASC];
+  }
+  
+  public static List<pse__Rate_Card__c> getpseRateCardRecs(Set<Id>rateCardIds, String currencyCode){
+     return [SELECT Id, pse__Average_Cost_Rate__c, 
+					pse__Practice__r.Name, Code__c, 
+		            pse__Region__r.Name, pse__Role__c, pse__Suggested_Bill_Rate__c 
+		            FROM pse__Rate_Card__c 
+		            WHERE CurrencyISOCode =: currencyCode 
+		            AND ID NOT IN : rateCardIds];
+  }
+  
+  
 }

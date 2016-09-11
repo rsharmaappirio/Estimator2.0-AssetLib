@@ -7,6 +7,38 @@
 *  =====================================================================*/
 global with sharing class E2_TimelineWS {
     
+    webservice static string updateMilestoneColorCode1(string weekId, string milestoneColorCode1){
+       return  E2_TimelineWSManager.updateMilestoneColorCode1(weekId, milestoneColorCode1);    
+    }
+    
+    webservice static string updateMilestoneColorCode2(string weekId, string milestoneColorCode2){
+       return  E2_TimelineWSManager.updateMilestoneColorCode2(weekId, milestoneColorCode2);    
+    }
+    webservice static string updateMilestone1(string weekId, string milestone1){
+       return  E2_TimelineWSManager.updateMilestone1(weekId, milestone1);   
+    }
+    
+    webservice static string updateMilestone2(string weekId, string milestone2){
+       return  E2_TimelineWSManager.updateMilestone2(weekId, milestone2);    
+    }
+    
+    
+    webservice static string updatePhaseAndColorCode(string weekId, string phase, string colorCode){
+       return  E2_TimelineWSManager.updatePhaseAndColorCode(weekId, phase, colorCode);  
+    }
+    
+    webservice static string updateColorCode(string jsonstr){
+        return E2_TimelineWSManager.updateColorCode( jsonstr); 
+    }
+    
+    webservice static string updatePhaseColorCode(string weekId, string phaseColorCode){
+       return E2_TimelineWSManager.updatePhaseColorCode( weekId,  phaseColorCode);  
+    }
+    
+    webservice static string updateMilestoneColorCode(string weekId, string milestoneColorCode){
+       return E2_TimelineWSManager.updateMilestoneColorCode( weekId, milestoneColorCode);  
+    }
+    
     webservice static string updateSkill(string estimateId, string resourceId, string skill){
         return E2_TimelineWSManager.updateSkill( estimateId,  resourceId,  skill);
     }
@@ -77,12 +109,16 @@ global with sharing class E2_TimelineWS {
     
     
     webservice static List<E2_TimelineRow> getTimelineRows(string estimateId){
-        return E2_TimelineWSManager.getTimelineRows( estimateId);
+        return E2_TimelineWSManager.getTimelineRows(estimateId);
     }
     
     
     webservice static List<E2_TimelineColumn> getTimelineColumns(string estimateId){
         return E2_TimelineWSManager.getTimelineColumns(estimateId);
+    }
+    
+    webservice static string updateMilestoneWeeks(string jsonstr){
+        return E2_TimelineWSManager.updateMilestoneWeeks(jsonstr); 
     }
     
     global class E2_TimelineRow{
@@ -93,6 +129,7 @@ global with sharing class E2_TimelineWS {
        webservice integer order;
        webservice integer cost;
        webservice List<E2_TimelineRowColumn> colRows;
+       webservice string resourceRateCardRole;
        
        public E2_TimelineRow(string id, string resource, string skill, integer rate, integer order, integer cost, List<E2_TimelineRowColumn> colRows){
           this.id = id;
@@ -102,6 +139,11 @@ global with sharing class E2_TimelineWS {
           this.order = order;
           this.cost = cost;
           this.colRows = colRows;
+       }
+       
+       public E2_TimelineRow(string id, string resource, string resourceRateCardRole, string skill, integer rate, integer order, integer cost, List<E2_TimelineRowColumn> colRows){
+          this(id, resource, skill, rate, order, cost, colRows);
+          this.resourceRateCardRole = resourceRateCardRole;
        }
     }
     
@@ -136,6 +178,12 @@ global with sharing class E2_TimelineWS {
         webservice string weekName;
         webservice string phase;
         webservice string milestone;
+        webservice string phaseColorCode;
+        webservice string milestoneColorCode;
+        webservice string milestone1;
+        webservice string milestoneColorCode1;
+        webservice string milestone2;
+        webservice string milestoneColorCode2;
         public E2_TimelineColumn(string id, 
                                  string name,
                                  string field,
@@ -171,6 +219,62 @@ global with sharing class E2_TimelineWS {
                 this.milestone = milestone;           
         
         }
+        
+        public E2_TimelineColumn(string id, 
+                                 string name,
+                                 string field,
+                                 integer width,
+                                 string behavior,
+                                 string editor,
+                                 string groupName,
+                                 integer order,
+                                 boolean selectable,
+                                 boolean resizable,
+                                 string cssClass,
+                                 string header,
+                                 string sDate,
+                                 string weekName,
+                                 string phase,
+                                 string milestone,
+                                 string phaseColorCode,
+                                 string milestoneColorCode){
+                                 
+                this(id, name, field, width, behavior, editor, groupName, order, selectable, resizable, cssClass, header, sDate, weekName, phase, milestone);
+                this.phaseColorCode = phaseColorCode;
+                this.milestoneColorCode = milestoneColorCode;
+        
+        }
+        
+        public E2_TimelineColumn(string id, 
+                                 string name,
+                                 string field,
+                                 integer width,
+                                 string behavior,
+                                 string editor,
+                                 string groupName,
+                                 integer order,
+                                 boolean selectable,
+                                 boolean resizable,
+                                 string cssClass,
+                                 string header,
+                                 string sDate,
+                                 string weekName,
+                                 string phase,
+                                 string milestone,
+                                 string phaseColorCode,
+                                 string milestoneColorCode,
+                                 string milestone1,
+                                 string milestoneColorCode1,
+                                 string milestone2,
+                                 string milestoneColorCode2){
+                                 
+                this(id, name, field, width, behavior, editor, groupName, order, selectable, resizable, cssClass, header, sDate, weekName, phase, milestone, phaseColorCode, milestoneColorCode);
+                this.milestone1 = milestone1;
+                this.milestone2 = milestone2;
+                this.milestoneColorCode1 = milestoneColorCode1;
+                this.milestoneColorCode2 = milestoneColorCode2;
+        
+        }
      } 
      
      public class ResourceWrapper{
@@ -182,6 +286,19 @@ global with sharing class E2_TimelineWS {
          public string resourceId;
          public string weekId;
          public integer hours;
+     }
+     
+     public class ColorCode{
+         public string weekId;
+         public string value;
+         public string type;
+     }
+     
+     public class MilestoneWeekWrapper{
+         public string weekId;
+         public string value;
+         public string colorCode;
+         public string type;
      }
         
 }

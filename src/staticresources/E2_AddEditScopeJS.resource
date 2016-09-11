@@ -891,6 +891,7 @@ var AddEditScope = {
 		    allChildScopes.push($childnode.original.id);
 		 });
 		 var scopesString = allChildScopes.toString();
+		 //AddEditScope.reload_frame('/apex/E2_EditScope?id='+scope_id, scope_id + AddEditScope.ENDS_WITH);
 		 if(scopesString != '' && (changeComplexity != '' || scopeToActivate != '' || scopeToDeactivate != '')) {
 		     $(loadSpinner).show();
 		     sforce.apex.execute("E2_Estimator_WS", "updateScopesStatus", {

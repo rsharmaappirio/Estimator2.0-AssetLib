@@ -21,10 +21,6 @@
         <type>Default</type>
     </actionOverrides>
     <actionOverrides>
-        <actionName>Follow</actionName>
-        <type>Default</type>
-    </actionOverrides>
-    <actionOverrides>
         <actionName>List</actionName>
         <type>Default</type>
     </actionOverrides>
@@ -57,7 +53,7 @@
     <enableSearch>true</enableSearch>
     <enableSharing>true</enableSharing>
     <enableStreamingApi>true</enableStreamingApi>
-    <externalSharingModel>Read</externalSharingModel>
+    <externalSharingModel>ReadWrite</externalSharingModel>
     <fields>
         <fullName>Complexity__c</fullName>
         <description>Complexity (High, Medium, Low)</description>
@@ -65,7 +61,8 @@
         <globalPicklist>E2_Complexity</globalPicklist>
         <inlineHelpText>Complexity of this scope(High, Medium, Low)</inlineHelpText>
         <label>Complexity</label>
-        <trackFeedHistory>false</trackFeedHistory>
+        <required>false</required>
+        <trackFeedHistory>true</trackFeedHistory>
         <trackHistory>false</trackHistory>
         <trackTrending>false</trackTrending>
         <type>Picklist</type>
@@ -154,7 +151,7 @@
         <externalId>false</externalId>
         <inlineHelpText>Is this scope active?</inlineHelpText>
         <label>Active?</label>
-        <trackFeedHistory>false</trackFeedHistory>
+        <trackFeedHistory>true</trackFeedHistory>
         <trackHistory>false</trackHistory>
         <trackTrending>false</trackTrending>
         <type>Checkbox</type>
@@ -180,7 +177,7 @@
         <precision>10</precision>
         <required>false</required>
         <scale>0</scale>
-        <trackFeedHistory>false</trackFeedHistory>
+        <trackFeedHistory>true</trackFeedHistory>
         <trackHistory>false</trackHistory>
         <trackTrending>false</trackTrending>
         <type>Number</type>
@@ -196,7 +193,7 @@
         <referenceTo>E2_Scope__c</referenceTo>
         <relationshipName>Child_Scopes</relationshipName>
         <required>false</required>
-        <trackFeedHistory>false</trackFeedHistory>
+        <trackFeedHistory>true</trackFeedHistory>
         <trackHistory>false</trackHistory>
         <trackTrending>false</trackTrending>
         <type>Lookup</type>
@@ -238,7 +235,8 @@
             <restrictedPicklist>true</restrictedPicklist>
             <sorted>false</sorted>
         </picklist>
-        <trackFeedHistory>false</trackFeedHistory>
+        <required>false</required>
+        <trackFeedHistory>true</trackFeedHistory>
         <trackHistory>false</trackHistory>
         <trackTrending>false</trackTrending>
         <type>Picklist</type>
@@ -279,7 +277,8 @@
             <restrictedPicklist>true</restrictedPicklist>
             <sorted>false</sorted>
         </picklist>
-        <trackFeedHistory>false</trackFeedHistory>
+        <required>false</required>
+        <trackFeedHistory>true</trackFeedHistory>
         <trackHistory>false</trackHistory>
         <trackTrending>false</trackTrending>
         <type>Picklist</type>
@@ -515,7 +514,7 @@ IF(NOT(ISBLANK(Parent_Scope__c)),Parent_Scope__c, NULL)))))))))))</formula>
         <searchFilterFields>NAME</searchFilterFields>
         <searchFilterFields>RECORDTYPE</searchFilterFields>
     </searchLayouts>
-    <sharingModel>Read</sharingModel>
+    <sharingModel>ReadWrite</sharingModel>
     <validationRules>
         <fullName>MandatoryComplexity</fullName>
         <active>true</active>

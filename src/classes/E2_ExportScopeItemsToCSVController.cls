@@ -1,10 +1,20 @@
+/**=====================================================================
+ * Appirio, Inc
+ * Name: E2_ExportScopeItemsToCSVController
+ * Description: Controller class to export scope items as CSV 
+ * Created Date: 
+ * Created By: Rahul Jain (Appirio)
+ * 
+ * Date Modified      Modified By                  Description of the update
+ *                      
+*  =====================================================================*/
 public with sharing class E2_ExportScopeItemsToCSVController {
   public string header{get;set;}
   public string headerXLS{get;set;}
   public List<ScopeWrapper> lstScopeWrapper {get; set;}
   public CMC_Presales_LOE__c estimate {get;set;}
   
-  
+  // constructor 
   public E2_ExportScopeItemsToCSVController(ApexPages.StandardController std){
     this.estimate = (CMC_Presales_LOE__c)std.getRecord();
     lstScopeWrapper = new List<ScopeWrapper>();
@@ -12,6 +22,7 @@ public with sharing class E2_ExportScopeItemsToCSVController {
     headerXLS = E2_Constants.SCOPE_XLS_HEADER;
   }
   
+  // page action method 
   public void pageAction(){
     List<E2_Scope__c> lstScopeItems = E2_DataUtil.getActiveChildScopesOfEstimate(String.valueOf(estimate.Id));
     for(E2_Scope__c scope : lstScopeItems){
@@ -27,6 +38,7 @@ public with sharing class E2_ExportScopeItemsToCSVController {
     }
   }  
   
+  // wrapper class for scope 
   public class ScopeWrapper{
     public string parentScope {get; set;}
     public string scopeName {get; set;}

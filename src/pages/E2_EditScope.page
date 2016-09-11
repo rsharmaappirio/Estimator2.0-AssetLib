@@ -332,7 +332,7 @@
                         </div>
                     </apex:outputPanel>
                     <apex:pageMessages />
-                    <apex:actionfunction action="{!saveScope}" name="AddOrUpdate" />
+                    <apex:actionfunction action="{!saveScope}" name="AddOrUpdate"/>
                     <apex:actionfunction action="{!updateFormStatus}" name="updateFormStatus" rerender="is_Dirty"/>
                     <apex:actionfunction action="{!addBulkEfforts}" name="addBulkEfforts" />
                     <div class="slds-page-header" role="banner">
@@ -412,9 +412,8 @@
                                                 </div>
 
                                                 <Br/>
-                                                <div class="slds-grid">
-                                                    <apex:outputPanel layout="none" rendered="{!IF($User.Id == childScope.scope.CreatedById, true, false)}">
-                                                        <div class="slds-col slds-size--1-of-3">
+                                                <div class="slds-grid">                                                    
+                                                        <div class="slds-col slds-size--1-of-2">
                                                             <div class="slds-form-element">
                                                                 <div class="slds-form-element__control">
                                                                     <label class="slds-checkbox">
@@ -425,8 +424,7 @@
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                    </apex:outputPanel>
-                                                    <div class="slds-col slds-size--1-of-3">
+                                                    <div class="slds-col slds-size--1-of-2">
                                                         <div class="slds-form-element">
                                                             <div class="slds-form-element__control">
                                                                 <label class="slds-checkbox">
@@ -437,11 +435,25 @@
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <div class="slds-col slds-size--1-of-3">
+                                                    </div>
+
+                                                <Br/>
+                                                <div class="slds-grid">
+                                                    <div class="slds-col slds-size--1-of-2">
                                                         <div class="slds-form-element">
                                                             <label class="slds-form-element__label">Created By</label>
                                                             <div class="slds-form-element__control">
                                                                 <apex:outputText value="{!E2_Scope__c.CreatedBy.Name}" />
+
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="slds-col slds-size--1-of-2">
+                                                        <div class="slds-form-element">
+                                                            <label class="slds-form-element__label">Last Modified By</label>
+                                                            <div class="slds-form-element__control">
+                                                                <apex:outputText value="{!scope.LastModifiedBy.Name}" rendered="{!!ISBLANK(scope.LastModifiedBy.Name)}"/>
+                                                                <apex:outputText value="{!scope.LastModifiedBy.FirstName} {!scope.LastModifiedBy.LastName}" rendered="{!ISBLANK(scope.LastModifiedBy.Name)}"/>
 
                                                             </div>
                                                         </div>
@@ -634,7 +646,7 @@
                                     <apex:outputpanel layout="none" rendered="{!!question.isDeleted}">
                                         <div class="slds-grid slds-wrap slds-grid--pull-padded"  style="border-top: 1px solid #d8dde6;" id="{!question.e2question.Id}">
                                             <div class="slds-col--padded slds-size--8-of-9 whitespace_normal {!IF(question.isCloned,'','edit-button')}" id="{!question.e2question.Id}questionText" style="{!IF(OR(question.e2question.Id == NULL,question.isEdit),'display:none;','')}width: 90%;" title="{!question.e2question.Question_Text__c}">
-                                                Q.&nbsp;<apex:outputfield value="{!question.e2question.Question_Text__c}"/>
+                                               Q.&nbsp;<apex:outputfield value="{!question.e2question.Question_Text__c}"/>
                                             </div>
                                             <!-- apex:outputText rendered="{!!question.isCloned}">
                                             <div class="slds-col--padded slds-size--8-of-9 whitespace_normal " id="{!question.e2question.Id}questionInput" style="{!IF(OR(question.e2question.Id == NULL,question.isEdit),'display:block;','display:none;')}width: 85%;" title="{!question.e2question.Question_Text__c}">
@@ -908,6 +920,8 @@
             <input type="hidden" value="{!E2_Scope__c.Presales_LOE__c}" />
             <input type="hidden" value="{!E2_Scope__c.Scope_Flag__c}" />
             <input type="hidden" value="{!E2_Scope__c.CreatedBy.Name}" />
+            <input type="hidden" value="{!E2_Scope__c.LastModifiedById}" />
+            <input type="hidden" value="{!E2_Scope__c.LastModifiedBy.Name}" />
             <apex:inputhidden value="{!is_Dirty}" id="is_Dirty" />
             <apex:inputhidden value="{!dmlOperationMessage}" id="dmlMessage" />
             <apex:inputhidden value="{!assetsRecsJson}" id="existingAssetRecs" />

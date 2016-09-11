@@ -103,11 +103,23 @@
                   </div>
               </td>
               <td class="slds-truncate" style="vertical-align: top">
-                   <div class="slds-form-element">
-                     <label class="slds-form-element__label" for="text-input-101">Opportunity</label>
-                     <div class="slds-form-element__control">
-                        <apex:outputLink value="/{!psr.Opportunity__c}">{!psr.Opportunity_Name__c}</apex:outputLink>
-                     </div>
+              	 <div class="slds-grid">
+                      <div class="slds-col">
+                          <div class="slds-form-element">
+                             <label class="slds-form-element__label" for="text-input-02">Opportunity</label>
+                             <div class="slds-form-element__control">
+                                <apex:outputLink value="/{!psr.Opportunity__c}">{!psr.Opportunity_Name__c}</apex:outputLink>
+                             </div>
+                          </div>
+                      </div>
+                      <div class="slds-col">
+                          <div class="slds-form-element">
+                             <label class="slds-form-element__label" for="text-input-02">Type</label>
+                             <div class="slds-form-element__control"> 
+                               <apex:outputField value="{!estimate.Type__c}"/>
+                             </div>
+                          </div>
+                      </div>
                   </div>
               </td>
             </tr>

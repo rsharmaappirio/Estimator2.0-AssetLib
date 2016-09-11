@@ -1,5 +1,16 @@
+/**=====================================================================
+ * Appirio, Inc
+ * Name: E2_Estimator_Manager
+ * Description: 
+ * Created Date: July 7th, 2016
+ * Created By: 
+ * 
+ * Date Modified      Modified By                  Description of the update
+ *                      
+*  =====================================================================*/
 public with sharing class E2_Estimator_Manager {
     
+    //method to generate Derived Hours based on estimate Id and E2_Derived_Effort__c
     public static void generateDerivedHours(Id estimateId,List<E2_Derived_Effort__c> e2DerivedEfforts) {    	
     	if(estimateId!=null){
        		Map<String, Decimal> idrolephaseToHoursMap = new Map<String, Decimal>();
@@ -27,7 +38,7 @@ public with sharing class E2_Estimator_Manager {
 	       	}  
     	}
     }
-    
+    //method to get derived hours if Role or Phase does not exist 
     private static Decimal derivedhrsWithoutOfRoleOrOfPhase(Map<String, Decimal> idrolephaseToHoursMap,string partialKey) {
     	decimal hrs = 0;
     	for(string idroleKey : idrolephaseToHoursMap.KeySet()) {
@@ -36,7 +47,7 @@ public with sharing class E2_Estimator_Manager {
     	}
     	return hrs;
     }
-    
+    //method to get derived hours if Role and Phase does not exist 
     private static Decimal derivedhrsWithoutOfRoleAndOfPhase(Map<String, Decimal> idrolephaseToHoursMap) {
     	decimal hrs = 0;
     	for(decimal idroleKey : idrolephaseToHoursMap.values()) {
@@ -44,7 +55,7 @@ public with sharing class E2_Estimator_Manager {
     	}
     	return hrs;
     }
-    
+    //method to load efforts based on complexity 
     private static void loadEfforts(Set<Id> estimateIds, 
     								Map<String, Decimal> idrolephaseToHoursMap) {
           for(AggregateResult result : 
@@ -65,7 +76,7 @@ public with sharing class E2_Estimator_Manager {
     }
     
     
-    
+    //method to get Appirio Way Phase 
     public static Set<String> getAppirioWayPhases(){
 	    Set<String> phases = new Set<String>();
 	    for(Schema.PicklistEntry f :  E2_Capacity__c.Phase__c.getDescribe().getPicklistValues()) {
@@ -109,7 +120,6 @@ public with sharing class E2_Estimator_Manager {
 		    	newEstimateRateCards.add(estimateRC);		
 			}
 			if(!newEstimateRateCards.isEmpty()) {
-			    // always use exception handling for any dml
 			    try{
 				   insert newEstimateRateCards;
 			    }catch(Exception ex){

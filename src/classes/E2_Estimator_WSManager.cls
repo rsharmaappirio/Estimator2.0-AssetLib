@@ -75,6 +75,7 @@ public class E2_Estimator_WSManager {
         return nodeList;
     }
     
+    //method to get formated scope name 
     public static string getFormatedScopeName(E2_Scope__c scope){
         string name = scope.name, complexity = scope.Complexity__c, sType = scope.Scope_Item_Type__c, flag = scope.Scope_Flag__c; decimal hrs = scope.LOE_Hrs__c;
         if(hrs == 0) {
@@ -112,6 +113,7 @@ public class E2_Estimator_WSManager {
                        .replace(E2_Constants.NODE_ADD_CLASS, scope.Is_Active__c ? E2_Constants.BLANK : E2_Constants.NODE_CSS_CLASS);  
     }
     
+    //method to reparent scopes 
     public static string reparentScope(string scopeId, string parentId){
        if(parentId == E2_Constants.HASH_TAG) parentId = null;
        if(scopeId == E2_Constants.BLANK) return 'Failed to move: Current scope not identified!!!';
@@ -123,6 +125,7 @@ public class E2_Estimator_WSManager {
        return scopeId; 
     }
     
+    //method to delete scope 
     public static string deleteScope(string scopeId, string parentId){
        if(parentId == E2_Constants.HASH_TAG) parentId = null;
        if(scopeId == E2_Constants.BLANK) return 'Failed to delete: Current scope not identified!!!';
@@ -137,6 +140,7 @@ public class E2_Estimator_WSManager {
        return scopeId;
     }
     
+    //method to get parent node with efforts 
     public static List<E2_TreeNode> getParentNodesWithEffortsOnEstimateId(string estimateId){
         List<E2_Scope__c> scopeList = new List<E2_Scope__c>();
         List<E2_TreeNode> nodeList = new List<E2_TreeNode>();
@@ -153,7 +157,8 @@ public class E2_Estimator_WSManager {
         }
         return nodeList;
     }
-           
+    
+    //method to get immediate child node with efforts        
     public static List<E2_TreeNode> getImmediateChildNodesWithEffortsOnScopeId(string scopeId){
         List<E2_TreeNode> nodeList = new List<E2_TreeNode>();
         boolean hasChildren = false;             
@@ -300,6 +305,7 @@ public class E2_Estimator_WSManager {
         }
     }
     
+    //method to get child scope details 
     public static E2_TreeNodeMap getChildScopeDetailNodes(string parentId) {
         E2_TreeNodeMap scopeIdToNodeList;
         List<E2_TreeNode> nodeList = new List<E2_TreeNode>();
@@ -313,6 +319,7 @@ public class E2_Estimator_WSManager {
         return scopeIdToNodeList;  
     }
     
+    //method to get scope detail nodes 
     public static E2_TreeNodeMap getScopeDetailNodes(string scopeId){
         List<E2_TreeNode> nodeList = new List<E2_TreeNode>();
         List<E2_Scope__c> scopes =  E2_DataUtil_WS.getScopeChildList(scopeId);
@@ -333,6 +340,7 @@ public class E2_Estimator_WSManager {
         return scopeIdToNodeList;            
     }
     
+    //method to get clonned nodes template 
     public static String getClonedNodesTemplate(string scopeId, string scopeGrpId, string parentScopeId){
         parentScopeId = (parentScopeId == null || parentScopeId == E2_Constants.BLANK ? E2_Constants.HASH_TAG : parentScopeId);
         Id recTypeId = E2_RecordTypeClass.getId(E2_Constants.E2_SCOPE_API_NAME, E2_Constants.SCOPE_RT_TEMPLATE);
@@ -414,6 +422,7 @@ public class E2_Estimator_WSManager {
         return scopeIdToNodeList;    
     }*/
     
+    //method to update scope flag to colors based on flag value 
     public static string updateScopeFlag(string scopeId, string flagValue){
         string flag = null;
         if(flagValue.toLowerCase() == 'flagred'){
@@ -497,6 +506,7 @@ public class E2_Estimator_WSManager {
 	  	return assetWrapperMap;
     }
     
+    //method to get all the existing assets for a Scope 
     public static String getExistingAssetsForScope(string scopeId){
         String assetsRecsJson;
         Map<Id, E2_Recommended_Asset__c> recommendedAssetsMap = new Map<Id, E2_Recommended_Asset__c>();
@@ -549,6 +559,7 @@ public class E2_Estimator_WSManager {
         return assetsRecsJson;
     }
     
+    //method to update scope status as active or inactive 
     public static string updateScopesStatus(string complexity, string scopeToActivate, string scopeToDeactivate,
     										string allscopesIds) {
     	list<E2_Scope__c> scopesToUpdate = new list<E2_Scope__c>();
@@ -577,6 +588,7 @@ public class E2_Estimator_WSManager {
     	return 'Success';
     }
     
+    //wrapper class for scope 
     public class ScopeWrapper{
     	public string scopeId;
     	public string displayOrder;

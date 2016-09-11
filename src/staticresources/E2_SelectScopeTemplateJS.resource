@@ -53,8 +53,10 @@
     		    IS_REMOVE_EVENT : false,
 	        	removePills : function(pillId) {
 	            	$( "#pillContainer" ).children( "#"+pillId ).replaceWith("");
-	            	$( "#"+pillId+"href" ).addClass("addup_button");
-					$( "#"+pillId+"href" ).removeClass("added_button");
+					$( "[id='"+pillId+"href']" ).each(function() {
+                        $(this).addClass("addup_button");
+                        $(this).removeClass("added_button");
+                    });
 	        	},
 	        	addScopeFromVF : function(scopeId,scopeName) {
 	        	    if($( "#pillContainer" ).children( "#"+scopeId ).length) {
@@ -71,8 +73,10 @@
 	        		if($( "#pillContainer" ).children( "#"+scopeId ).length) {
 						// Do nothing
 					} else {
-					    $( "#"+scopeId+"href" ).removeClass("addup_button");
-					    $( "#"+scopeId+"href" ).addClass("added_button");
+					    $( "[id='"+scopeId+"href']" ).each(function() {
+                              $(this).removeClass("addup_button");
+                              $(this).addClass("added_button");
+                            });
 	                	var pillsString ='<span class="slds-pill" id="'+scopeId+'">'+
 	                                  	 '<a href="javascript:void(0);" id="pillsDiv" scope-id="'+scopeId+'">'+
 	                                  	 '<span class="slds-pill__label">'+scopeName+'</span></a>'+
@@ -89,9 +93,10 @@
 	        	        console.log($( "#pillContainer" ).children().length);
 	        	        for(var index =0;index < $( "#pillContainer" ).children().length;index++) {
 	        	            var span = $( "#pillContainer" ).children()[index];
-	        	            console.log($(span).attr("Id"));
-	        	            $( "#"+$(span).attr("Id")+"href" ).removeClass("addup_button");
-					        $( "#"+$(span).attr("Id")+"href" ).addClass("added_button");
+	        	            $( "[id='"+$(span).attr("Id")+"href']" ).each(function() {
+                              $(this).removeClass("addup_button");
+                              $(this).addClass("added_button");
+                            });
 	        	        }
 	        	    }
 	        	}

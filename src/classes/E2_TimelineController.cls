@@ -9,18 +9,44 @@
       
 *  =====================================================================*/
 public with sharing class E2_TimelineController extends E2_Master {
+    
   public CMC_Presales_LOE__c estimate {get;set;}
   public List<E2_Estimate_Rate_Card__c> estimateRateCards{get;set;}
-  
+  public string renderOptions_PhasesJSON{get;set;}
+  public string capacityNeeds_JSON{get;set;}
   
   public E2_TimelineController (ApexPages.StandardController std) {
+    // constructor : use to initiate the variable
     this.estimate = (CMC_Presales_LOE__c)std.getRecord();
     this.estimateRateCards = new List<E2_Estimate_Rate_Card__c>();
-    this.estimate.Discount_Percent__c = this.estimate.Discount_Percent__c == NULL ? 0 : this.estimate.Discount_Percent__c;
+    this.estimate.Discount_Percent__c = (this.estimate.Discount_Percent__c == NULL ? 0 : this.estimate.Discount_Percent__c);
+    // populate renderOptions_PhasesJSON field
+    populateRenderOptions();
+  }
+  
+  
+  public void populateRenderOptions(){
+     // method to populate the renderOptions_PhasesJSON variable with phases 
+     // and color code utilize in the phase column/row of the grid
+     
+     
+     Schema.DescribeFieldResult fieldResult = E2_Effort__c.Phase__c.getDescribe();
+     List<Schema.PicklistEntry> ple = fieldResult.getPicklistValues();
+     Map<String, String> phaseColorCodeMap = E2_Constants.PHASE_COLORCODE_MAP;
+     
+     // TODO: For first instance we are not moving these wild characters in constants; as these characters defines the 
+     // logic behind what is happening...
+     this.renderOptions_PhasesJSON = '{';
+     for( Schema.PicklistEntry f : ple){
+      string lineitem = '"' + f.getLabel() + '" : "' + (phaseColorCodeMap.containsKey(f.getLabel()) ? phaseColorCodeMap.get(f.getLabel()) : '') + '"';
+      this.renderOptions_PhasesJSON += (this.renderOptions_PhasesJSON == '{' ? '' : ',') + lineitem;
+     }
+     this.renderOptions_PhasesJSON += '}';
   }
   
   
   public pagereference refreshOverviewPanel(){
+     // method to refresh overview panel - Estimate Summary Section above the grid
      this.estimate = [SELECT id, Name, Service_Fees__c,
                         Service_Costs__c,
                         Service_Margin__c,                
@@ -37,53 +63,88 @@ public with sharing class E2_TimelineController extends E2_Master {
                        FROM CMC_Presales_LOE__c 
                        WHERE Id = :estimate.id];
       
-      this.estimate.Discount_Percent__c = this.estimate.Discount_Percent__c == NULL ? 0 : this.estimate.Discount_Percent__c;
+      this.estimate.Discount_Percent__c = (this.estimate.Discount_Percent__c == NULL ? 0 : this.estimate.Discount_Percent__c);
       
       return null;
   }
   
+  
   public void changeDiscount(){
-      update this.estimate;
+      // this method gets invoked when user changes or update the discount input in Estimate 
+      // Summary above the grid. 
+      try{
+        update this.estimate;
+      }catch(Exception ex){
+        ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, ex.getMessage()));  
+      }
       refreshOverviewPanel(); 
   }
   
+  
   public PageReference pageAction(){
+    // method for page action 
     super.validateAccess(this.estimate);
+    populateCapacityNeeds();
     this.estimateRateCards = E2_Estimator_Manager.getEstimateRateCards(this.estimate.Id, this.estimate.CurrencyISOCode);
     return null;
   }
   
-  public E2_Estimate_Rate_Card__c getEstimateRateCard(pse__Rate_Card__c rateCard, String currencyCode){
-    E2_Estimate_Rate_Card__c estimateRC = new E2_Estimate_Rate_Card__c();
-		estimateRC.Estimate__c = estimate.id;
-		estimateRC.Resource_Role__c = rateCard.pse__Role__c;
-    estimateRC.Region__c = rateCard.pse__Region__r.Name;
-    estimateRC.Practice__c = rateCard.pse__Practice__r.Name;
-		estimateRC.Code__c = rateCard.Code__c;
-		estimateRC.Rate_Card__c = rateCard.Id;
-		estimateRC.CurrencyISOCode = currencyCode;
-		estimateRC.Resource_Cost__c = rateCard.pse__Average_Cost_Rate__c;
-		estimateRC.Bill_Rate__c = rateCard.pse__Suggested_Bill_Rate__c;
-		estimateRC.Discounted_Rate__c = rateCard.pse__Suggested_Bill_Rate__c;
-    estimateRC.Category__c = rateCard.pse__Region__r.Name;
-    return estimateRC;
+  public void populateCapacityNeeds() {
+      // method to populate the capacityNeeds_JSON variable with Phase hours
+      // Role hours and total capacity needs from Capicity needs calculated 
+      // from Scopes
+    this.capacityNeeds_JSON = '{';
+    
+    string phaseHours_JSON = '{';
+    for(AggregateResult groupedResults : [SELECT SUM(Hours__c) Hours, Phase__c  FROM E2_Capacity__c WHERE Estimator__c =: this.estimate.Id  GROUP BY Phase__c]) {
+        string phaseHour = '"' + string.valueOf(groupedResults.get('Phase__c')).toLowerCase() + '" : "' + Integer.valueOf(groupedResults.get('Hours')) + '"';
+        phaseHours_JSON += (phaseHours_JSON == '{' ? '' : ',') + phaseHour;
+    }
+    phaseHours_JSON += '},';
+    this.capacityNeeds_JSON += '"PhaseHours" : '+ phaseHours_JSON;
+    string roleHours_JSON = '{';
+    for(AggregateResult groupedResults : [SELECT SUM(Hours__c) Hours, Role__c  FROM E2_Capacity__c WHERE Estimator__c =: this.estimate.Id  GROUP BY Role__c]) {
+        string roleHour = '"' + string.valueOf(groupedResults.get('Role__c')).toLowerCase() + '" : "' + Integer.valueOf(groupedResults.get('Hours')) + '"';
+        roleHours_JSON += (roleHours_JSON == '{' ? '' : ',') + roleHour;
+    }
+    roleHours_JSON += '},';
+    this.capacityNeeds_JSON += '"RoleHours" : '+ roleHours_JSON;
+    AggregateResult[] totalHours = [SELECT SUM(Hours__c) Hours FROM E2_Capacity__c WHERE Estimator__c =: this.estimate.Id];
+    this.capacityNeeds_JSON += '"TotalHours" : "' + (totalHours[0].get('Hours') == NULL ? '' : ''+Integer.valueOf(totalHours[0].get('Hours'))) + '"';
+    this.capacityNeeds_JSON += '}';
   }
   
+   
+  public E2_Estimate_Rate_Card__c getEstimateRateCard(pse__Rate_Card__c rateCard, String currencyCode){
+       // method to get instance of estimate rate card object with the ratecard record association.
+        E2_Estimate_Rate_Card__c estimateRC = new E2_Estimate_Rate_Card__c();
+    		estimateRC.Estimate__c = estimate.id;
+    		estimateRC.Resource_Role__c = rateCard.pse__Role__c;
+            estimateRC.Region__c = rateCard.pse__Region__r.Name;
+            estimateRC.Practice__c = rateCard.pse__Practice__r.Name;
+    		estimateRC.Code__c = rateCard.Code__c;
+    		estimateRC.Rate_Card__c = rateCard.Id;
+    		estimateRC.CurrencyISOCode = currencyCode;
+    		estimateRC.Resource_Cost__c = rateCard.pse__Average_Cost_Rate__c;
+    		estimateRC.Bill_Rate__c = rateCard.pse__Suggested_Bill_Rate__c;
+    		estimateRC.Discounted_Rate__c = rateCard.pse__Suggested_Bill_Rate__c;
+        estimateRC.Category__c = rateCard.pse__Region__r.Name;
+        return estimateRC;
+  }
+  
+  
   public PageReference refreshRateCardRatesAndCost(){
-      
+      // this method is invoked by clicking on set cost & rates button
+      // this method readjust the billing rate and the cost rate on estimate resources; estimate rate card records
+      // associated to current estimate. 
+      // TODO: Do we need to record the changes in the practice or region etc
        if(estimate.CurrencyISOCode <> NULL){
            Set<Id> rateCardIds = new Set<Id>();
            string currencyCode = estimate.CurrencyISOCode;
            List<E2_Estimate_Rate_Card__c> newRateCardsToInsert = new List<E2_Estimate_Rate_Card__c>();
            List<E2_Estimate_Rate_Card__c> rateCardsToUpdate = new List<E2_Estimate_Rate_Card__c>();
            
-           List<E2_Estimate_Rate_Card__c> estimateRateCards = [SELECT Id, Resource_Role__c, Estimate__c, Region__c, 
-    															Practice__c, Code__c, Rate_Card__c, Resource_Cost__c,
-    															Bill_Rate__c, Discounted_Rate__c, Category__c,
-    															Rate_Card__r.pse__Average_Cost_Rate__c, Rate_Card__r.pse__Suggested_Bill_Rate__c 
-    															FROM E2_Estimate_Rate_Card__c 
-    															WHERE Estimate__c =: estimate.id
-    															ORDER BY Region__c ASC, Resource_Role__c ASC];
+           List<E2_Estimate_Rate_Card__c> estimateRateCards = E2_DataUtil.getEstimateRateCardRecs(estimate.Id);
     		
     		// create a set of existing rate card ids													
     	    for(E2_Estimate_Rate_Card__c erateCard : estimateRateCards){
@@ -92,12 +153,7 @@ public with sharing class E2_TimelineController extends E2_Master {
     		
     		
     		// check that no new rate card entries exist in the system for this selected currency.	
-			for(pse__Rate_Card__c rateCard : [SELECT Id, pse__Average_Cost_Rate__c, 
-											                  pse__Practice__r.Name, Code__c, 
-		                                	  pse__Region__r.Name, pse__Role__c, pse__Suggested_Bill_Rate__c 
-		                                	  FROM pse__Rate_Card__c 
-		                                	  WHERE CurrencyISOCode =: currencyCode 
-		                                	  AND ID NOT IN : rateCardIds]) {
+			for(pse__Rate_Card__c rateCard : E2_DataUtil.getpseRateCardRecs(rateCardIds, currencyCode)) {
 		    	newRateCardsToInsert.add(getEstimateRateCard(rateCard, currencyCode));
 			}
 			
@@ -123,30 +179,30 @@ public with sharing class E2_TimelineController extends E2_Master {
     	    }
     	    
     	    
-    	    if(!rateCardsToUpdate.isEmpty()){
-    	        update rateCardsToUpdate;
+    	    try{
+        	    if(!rateCardsToUpdate.isEmpty()){
+        	        update rateCardsToUpdate;
+        	    }
+        	    
+        	    if(!newRateCardsToInsert.isEmpty()){
+        	        insert newRateCardsToInsert;
+        	    }
+        	    
+        	    this.estimateRateCards = E2_DataUtil.getEstimateRateCardRecs(estimate.Id);
+        	    
+        		updateEstimateResources();
+    	    }catch(Exception ex){
+    	        ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, ex.getMessage()));  
     	    }
-    	    
-    	    if(!newRateCardsToInsert.isEmpty()){
-    	        insert newRateCardsToInsert;
-    	    }
-    	    
-    	    this.estimateRateCards = [SELECT Id, Resource_Role__c, Estimate__c, Region__c, 
-    									Practice__c, Code__c, Rate_Card__c, Resource_Cost__c,
-    									Bill_Rate__c, Discounted_Rate__c, Category__c,
-    									Rate_Card__r.pse__Average_Cost_Rate__c, Rate_Card__r.pse__Suggested_Bill_Rate__c 
-    									FROM E2_Estimate_Rate_Card__c 
-    									WHERE Estimate__c =: estimate.id
-    									ORDER BY Region__c ASC, Resource_Role__c ASC];
-    									
-    		updateEstimateResources();
     	
        }
       return null;
   }
   
+  
   public PageReference updateEstimateRateCards(){
-     
+      // When save button is clicked 
+      
       if(!this.estimateRateCards.isEmpty()){
         // Create a savepoint 
         // we don't want to save/update estimate rate cards, when there is a failure in the update
@@ -161,11 +217,17 @@ public with sharing class E2_TimelineController extends E2_Master {
             System.debug('Error in update of estimate rate cards:' + ex.getMessage());
         }
       }
-      pageAction();
+      
+      //pageAction();
+      // TODO: Check whey are are setting back the estimate rate card records.
+      //this.estimateRateCards = E2_Estimator_Manager.getEstimateRateCards(this.estimate.Id, this.estimate.CurrencyISOCode);
+      
       return null;
   }
   
   public void updateEstimateResources(){
+    // method that helps in updating the existing estimate resources related to current estimate
+    // with the updated/new billing rate and the cost rate.
     Map<String, E2_Estimate_Rate_Card__c> roleRateMap = new Map<String, E2_Estimate_Rate_Card__c>();
     List<CMC_Estimate_Resource__c> lstEstimateResourcesToUpdate = new List<CMC_Estimate_Resource__c>();
     
@@ -198,11 +260,5 @@ public with sharing class E2_TimelineController extends E2_Master {
     if(!lstEstimateResourcesToUpdate.isEmpty())   update lstEstimateResourcesToUpdate; 
     
   }
-  
-  public PageReference buildCapacity() {
-    E2_CapacityController.reBuildCapacity(this.estimate);
-    PageReference pg = Page.E2_Capacity;
-    pg.getParameters().put('id', this.estimate.id);    
-    return pg; 
-  }
+ 
 }

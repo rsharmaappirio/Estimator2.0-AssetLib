@@ -31,8 +31,9 @@ public with sharing class E2_SelectScopeTemplateController {
   public Boolean isFavourite {get;set;}
   public Id selectedScopeId {get;set;}
   
-  public String sortDirection = 'ByAsc'; //Sort Order
-  public String sortExp = 'ByScopeName'; //initial sort field
+  public String sortDirection = 'ByAsc';
+  // initial sort field
+  public String sortExp = 'ByScopeName';
 
   public String sortExpression {
     get {
@@ -47,6 +48,7 @@ public with sharing class E2_SelectScopeTemplateController {
     }
   }
   
+  // property to get sort direction 
   public String getSortDirection() {
     if (sortExpression == null || sortExpression == '')
         return 'ASC';
@@ -54,6 +56,7 @@ public with sharing class E2_SelectScopeTemplateController {
         return sortDirection;
   }
   
+  // propert to get scope name 
   public string scopeName { 
     get {
       if (scopeName == null)
@@ -65,6 +68,7 @@ public with sharing class E2_SelectScopeTemplateController {
   
   public string scopeGroup { get;set; }
   
+  // property to set scope groups as picklist on the page 
   public List<SelectOption> scopeGroups {
     get {
         if(scopeGroups == null) {
@@ -87,7 +91,7 @@ public with sharing class E2_SelectScopeTemplateController {
     favScopeList = new List<E2_ScopeWrapper>();
     isTemplatePage = false;
     isFavourite = false;
-    if(ApexPages.currentPage().getParameters().get('templatepage')!=null) {
+    if(ApexPages.currentPage().getParameters().get('templatepage') != null) {
         isTemplatePage = true;
     }
     pageAction();
@@ -109,6 +113,7 @@ public with sharing class E2_SelectScopeTemplateController {
     addPaginationOnFormList();
   }  
   
+  // utility method to get scopelist based on scope name and group 
   private void getTemplateScope(String scopeName,String groupId) {
     List<E2_Scope__c> scopes = Database.query(E2_DataUtil.getScopesOnTemplateScopeSearchTemplate(scopeName, groupId, 
                                                                     rtTemplateId));
@@ -122,6 +127,7 @@ public with sharing class E2_SelectScopeTemplateController {
     }
   }
   
+  // utility method to get the favorite scopes based on scope name and group 
   private void getMyScope(String scopeName, string groupId) {
     system.debug('===userId>>>'+UserInfo.getUserId());
     List<E2_Favourite_Scope__c> scopes = Database.query(E2_DataUtil.getFavScopesOnTemplateScopeSearchByUser(
@@ -134,7 +140,7 @@ public with sharing class E2_SelectScopeTemplateController {
     }    
   }
   
-  //fetch existing scope records on click of 'Search' button
+  // method to fetch existing scope records on click of 'Search' button
   public void searchScopeRecords() {
     E2_ScopeWrapper.sortBy = E2_ScopeWrapper.SORT_BY.ByScopeName;
     if(!isTemplatePage) {
@@ -149,8 +155,7 @@ public with sharing class E2_SelectScopeTemplateController {
     addPaginationOnFormList();
   }
   
-  //Add pagination on Form list 
-  // PaginationUtility class to used for pagination.
+  // method to add pagination on Form list 
   public void addPaginationOnFormList() {
      conList.clear(); 
     selectedCon = 0;
@@ -166,8 +171,9 @@ public with sharing class E2_SelectScopeTemplateController {
     favScopeList = getWrapperList(tempList);
     conList.add(favScopePaging);
   }
-   
-   private List<E2_ScopeWrapper> getWrapperList(List<Object> currentList) {
+  
+  // utility method to get scope wrapper  
+  private List<E2_ScopeWrapper> getWrapperList(List<Object> currentList) {
      List<E2_ScopeWrapper> scpList = new List<E2_ScopeWrapper>();
      for(Object obj : currentList) {
         scpList.add((E2_ScopeWrapper)obj);
@@ -175,6 +181,7 @@ public with sharing class E2_SelectScopeTemplateController {
      return scpList;
   }
   
+  // method to display scope list and favorite scope list 
   public PageReference getList() {
     try {       
       if(selectedCon < conList.size()) {
@@ -189,7 +196,7 @@ public with sharing class E2_SelectScopeTemplateController {
     return null;
   }
   
-  //clear result
+  // method to clear result
   public PageReference resetResults() {
      scopeName = null;
      scopeGroup = null;
@@ -197,8 +204,9 @@ public with sharing class E2_SelectScopeTemplateController {
      favScopeList.clear();
      pageAction();
      return null;
-   } 
+  } 
   
+  // method to sort list 
   public PageReference sortList() {
       if(sortExp=='ByComplexity'){
         E2_ScopeWrapper.sortBy = E2_ScopeWrapper.SORT_BY.ByComplexity;
@@ -229,6 +237,7 @@ public with sharing class E2_SelectScopeTemplateController {
     return null;   
   }
   
+  // method to add/remove favorite scope  
   public PageReference addOrRemoveFavScope(){
   	try{
 		if(selectedScopeId != null){
@@ -239,9 +248,7 @@ public with sharing class E2_SelectScopeTemplateController {
 		        insert favSC;
 		 	} else {
 		    	E2_Favourite_Scope__c favSC = null;
-		        for(E2_Favourite_Scope__c fsc : [SELECT Id,Scope__r.RecordTypeId FROM E2_Favourite_Scope__c 
-		                                           WHERE Scope__c =: selectedScopeId 
-		                                           AND User__c =: UserInfo.getUserId()]){  
+		        for(E2_Favourite_Scope__c fsc : E2_DataUtil.getFavScopeForCurrentUserAndScopeId(selectedScopeId)){  
 		          favSC = fsc;	          
 		        }
 		        if(favSC != null) {
@@ -260,6 +267,7 @@ public with sharing class E2_SelectScopeTemplateController {
       }
       return null; 
     }
+    
     //I-232473: code to display scopes after addition or removal of fav on page
     public void markFavScopeWithPagination(){
       E2_ScopeWrapper.sortBy = E2_ScopeWrapper.SORT_BY.ByScopeName;

@@ -60,9 +60,9 @@ public class E2_EditScopeControllerTest {
       E2_EditScopeController controller = new E2_EditScopeController(stdController);
     
       controller.pageAction();
-      System.assertEquals(controller.childScopes.size(), 1, '1 child scope should be added in list as master');     
+      System.assert(controller.childScope <> null, '1 child scope should be added in list as master');     
       
-      E2_EditScopeController.Scope scope_wrap = controller.childScopes[0];
+      E2_EditScopeController.Scope scope_wrap = controller.childScope;
       scope_wrap.addNewEffort();
       scope_wrap.addNewEffort();
       scope_wrap.hasClonedEfforts = true;
@@ -132,15 +132,15 @@ public class E2_EditScopeControllerTest {
       E2_EditScopeController controller = new E2_EditScopeController(stdController);
     
       controller.pageAction();
-      System.assertEquals(controller.childScopes.size(), 1, '1 child scope should be added in list'); 
-      for(E2_Scope__c sc : E2_DataUtil.getScopeAndChildrenOnScopeIdForEditScope(scope1.id)){
-            controller.childScopes.add(new E2_EditScopeController.Scope(sc, sc.Efforts__r));            
-      }  
-      System.assertEquals(controller.childScopes.size(), 2, '1 more child scope should be added in list'); 
+      System.assert(controller.childScope <> null, '1 child scope should be added in list'); 
+      /*for(E2_Scope__c sc : E2_DataUtil.getScopeAndChildrenOnScopeIdForEditScope(scope1.id)){
+            controller.childScope.add(new E2_EditScopeController.Scope(sc, sc.Efforts__r));            
+      }*/  
+      System.assert(controller.childScope <> null, '1 more child scope should be added in list'); 
         
-        for( E2_EditScopeController.Scope scope_wrap : controller.childScopes)  {
+      /*for( E2_EditScopeController.Scope scope_wrap : controller.childScope)  {
             scope_wrap.remove();
-        }
+      }*/
         
       controller.saveScope();     
       System.assertEquals([SELECT Id FROM E2_Scope__c].size(), 0, 'both scopes should have been removed');
@@ -187,23 +187,23 @@ public class E2_EditScopeControllerTest {
       E2_EditScopeController controller = new E2_EditScopeController(stdController);
     
       controller.pageAction();
-      System.assertEquals(controller.childScopes.size(), 1, '1 child scope should be added in list'); 
-      for(E2_Scope__c sc : E2_DataUtil.getScopeAndChildrenOnScopeIdForEditScope(scope1.id)){
+      System.assert(controller.childScope <> null, '1 child scope should be added in list'); 
+      /*for(E2_Scope__c sc : E2_DataUtil.getScopeAndChildrenOnScopeIdForEditScope(scope1.id)){
             controller.childScopes.add(new E2_EditScopeController.Scope(sc, sc.Efforts__r));            
-      }  
-      System.assertEquals(controller.childScopes.size(), 2, '1 more child scope should be added in list'); 
-      controller.childScopes.addAll(controller.childScopes);  
-      System.assertEquals(controller.childScopes.size(), 4, '1 more child scope should be added in list'); 
+      } */ 
+      System.assert(controller.childScope <> null, '1 more child scope should be added in list'); 
+      //controller.childScopes.addAll(controller.childScopes);  
+      //System.assertEquals(controller.childScopes.size(), 4, '1 more child scope should be added in list'); */
                
       controller.saveScope();     
       System.assertEquals([SELECT Id FROM E2_Scope__c].size(), 2, 'both scopes should not have been removed');
       system.assertEquals([SELECT Id FROM E2_Favourite_Scope__c WHERE Scope__c =:scope1.Id].size(), 0); 
-      controller.childScopes.clear();  
+      //controller.childScopes.clear();  
       controller.pageAction();
-      System.assertEquals(controller.childScopes.size(), 1, '1 child scope should be added in list'); 
-      for( E2_EditScopeController.Scope scope_wrap : controller.childScopes)  {
+      System.assert(controller.childScope <> null, '1 child scope should be added in list'); 
+      /*for( E2_EditScopeController.Scope scope_wrap : controller.childScopes)  {
          scope_wrap.efforts.addAll(scope_wrap.efforts);   
-      } 
+      } */
       controller.saveScope();  
 
        

@@ -49,14 +49,9 @@ public with sharing class E2_EditScopeTemplateController {
         }
         
         //I-227260 : code to hide Favourite for Scope Template Manager
-        List<PermissionSet> permissionSetsAllowed = [SELECT Id, Name
-			                                                 FROM PermissionSet
-			                                                 WHERE Name =: E2_Constants.STM_PERMISSION_SET];
+        List<PermissionSet> permissionSetsAllowed = E2_DataUtil.getPermissionSet();
         
-		    User currentUser = [SELECT Id, Profile.Name,
-		                          (SELECT Id FROM PermissionSetAssignments WHERE PermissionSetId IN: permissionSetsAllowed)
-		                          FROM User
-		                          WHERE Id = :userinfo.getUserId()];
+		User currentUser = E2_DataUtil.getPermissionSetAssignmentForUser(permissionSetsAllowed);
 		      if (currentUser.PermissionSetAssignments.size() > 0) {
 		        showFavForSTMPermissionSet = false;
 		      }
@@ -66,6 +61,7 @@ public with sharing class E2_EditScopeTemplateController {
         return null;
     }
     
+    // method to upsert or delete scope 
     public pagereference saveScope(){
         List<E2_Scope__c> scopeListToUpsert = new List<E2_Scope__c>();       
         List<E2_Effort__c> masterScope_Efforts = new List<E2_Effort__c>();        
@@ -78,7 +74,7 @@ public with sharing class E2_EditScopeTemplateController {
         
         List<E2_Recommended_Asset__c> assetsToInsert = new List<E2_Recommended_Asset__c>();
         List<E2_Recommended_Asset__c> assetsToDelete = new List<E2_Recommended_Asset__c>();
-        
+        //code to insert or delete assets 
         if(assetsRecsJson != '' && assetsRecsJson.length() > 0){
             Map<String, Object> assetsMap =  (Map<String, Object>) JSON.deserializeUntyped(assetsRecsJson);
             for(String assetId : assetsMap.keySet()){
@@ -170,6 +166,7 @@ public with sharing class E2_EditScopeTemplateController {
         return null;             
     }
     
+    // method to reset child scopes 
     public void resetChildScopesOnException(){       
        for(Scope sc : childScopes){ 
                string scope_id = sc.scope.id;
@@ -188,10 +185,12 @@ public with sharing class E2_EditScopeTemplateController {
     
     }
     
+    //method to add new question 
     public pagereference addNewQuestion() {
     	return scopeQuestionManager.addNewQuestion();
     }
     
+    // method to populate records 
     public void populateViewRecords(){
         Id scopeId = this.scope.id;        
         for(E2_Scope__c scope : E2_DataUtil.getScopeAndChildrenOnScopeIdForEditScope(scopeId)){                
@@ -205,6 +204,7 @@ public with sharing class E2_EditScopeTemplateController {
         return efforts;
     }
     
+    // method to add bulk efforts 
     public PageReference addBulkEfforts(){
         if(effortsJson != null && effortsJson.length() > 0){
             List<E2_EffortsWrapper> lstEffortsWrapper = (List<E2_EffortsWrapper>)JSON.deserialize(effortsJson, List<E2_EffortsWrapper>.class);
@@ -222,6 +222,7 @@ public with sharing class E2_EditScopeTemplateController {
         return null;
     }
     
+    //wrapper class for Scope
     public class Scope{
         public string key{get;set;}
         public E2_Scope__c scope{get;set;}
@@ -274,26 +275,27 @@ public with sharing class E2_EditScopeTemplateController {
                 this.efforts.add(new Effort(effort));
             }           
         }
-        
+        //method to reload 
         public pagereference reload(){
             return null;            
         }
-        
+        //method to change complexity 
         public pagereference changeComplexity(){
             return null;
         }
-        
+        //method to remove scope 
         public pagereference remove(){
             this.isDeleted = true;
             return null;            
         }
-        
+        //method to add new effort 
         public pagereference addNewEffort(){
             this.efforts.add(new Effort(new E2_Effort__c(Complexity_Factor_High__c = 0, Complexity_Factor_Low__c = 0, Effort_Hrs__c = 0)));
             return null;
         }
     }
     
+    // wrapper class for Effort
     public class Effort{
         public boolean isDeleted{get;set;}
         public string key{get;set;}
@@ -316,7 +318,7 @@ public with sharing class E2_EditScopeTemplateController {
           } 
           this.effort = effort;                     
         }
-        
+        //method to remove effort 
         public pagereference remove(){
             this.isDeleted = true;
             return null;            

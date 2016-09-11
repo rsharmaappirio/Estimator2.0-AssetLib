@@ -11,17 +11,17 @@
 public with sharing class E2_AddEditScopeController extends E2_Master {
   public CMC_Presales_LOE__c estimate {get;set;}
 
-  
+  //constructor
   public E2_AddEditScopeController (ApexPages.StandardController std) {
     this.estimate = (CMC_Presales_LOE__c)std.getRecord();
     
   }
-  
+  //page action method on the page load
   public PageReference pageAction(){
     super.validateAccess(this.estimate);
     return null;
   }
-  
+  //method to call build capacity
   public PageReference buildCapacity() {
   	E2_CapacityController.reBuildCapacity(this.estimate);
     PageReference pg = Page.E2_Capacity;

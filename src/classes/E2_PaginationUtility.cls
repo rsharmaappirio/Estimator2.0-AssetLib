@@ -1,3 +1,13 @@
+/**=====================================================================
+ * Appirio, Inc
+ * Name: E2_PaginationUtility
+ * Description: Utility class for maintaining pagination 
+ * Created Date: July 7th, 2016
+ * Created By: 
+ * 
+ * Date Modified      Modified By                  Description of the update
+ *                      
+*  =====================================================================*/
 public without sharing class E2_PaginationUtility {
   static final Integer DEFAULT_LINKS_AT_A_TIME;
   static final Integer DEFAULT_NUMBER_OF_LINKS_BEFORE_CURRENT;
@@ -14,11 +24,13 @@ public without sharing class E2_PaginationUtility {
   public Integer totalRecords {get; private set;}
   public Integer selectedPageNumber {get; private set;}
   
+  //constructor 
   public E2_PaginationUtility() {
     selectedPageNumber = 1;
     customPaginationList = new List<List<Object>>();
   }
-
+  
+  //method to set pagination
   public List<Object> setPagination(List<Object> customList) {
     customPaginationList.clear();
     totalRecords = customList != null ? customList.size() : 0;
@@ -38,7 +50,8 @@ public without sharing class E2_PaginationUtility {
     }
     return new List<Object>();
   }
-
+  
+  //method to get info of the selected page 
   public List<Object> getPage(Integer selectedPage) {
     if(customPaginationList != null && selectedPage > 0 &&
         selectedPage <= customPaginationList.size()) {
@@ -47,7 +60,8 @@ public without sharing class E2_PaginationUtility {
     }
     return null;
   }
-
+  
+  //method for Next function on the page
   public List<Object> next() {
     Integer nextPage = selectedPageNumber + 1;
     if(customPaginationList != null && nextPage > 0 &&
@@ -57,7 +71,8 @@ public without sharing class E2_PaginationUtility {
     }
     return null;
   }
-
+  
+  //method for Previous function on the page 
   public List<Object> previous() {
     Integer previousPage = selectedPageNumber - 1;
     if(customPaginationList != null && previousPage > 0 &&
@@ -67,7 +82,8 @@ public without sharing class E2_PaginationUtility {
     }
     return null;
   }
-
+  
+  //method for First function on the page 
   public List<Object> first() {
     if(customPaginationList != null &&
         customPaginationList.size() > 1) {
@@ -76,7 +92,8 @@ public without sharing class E2_PaginationUtility {
     }
     return null;
   }
-
+  
+  //method for Last function on the page 
   public List<Object> last() {
     if(customPaginationList != null) {
       selectedPageNumber = totalPage;
@@ -95,9 +112,7 @@ public without sharing class E2_PaginationUtility {
     }
   }
 
-  //----------------------------------------------------------------------------------------------------------------------------------------
   // Method that return the Index number of first record on the page
-  //----------------------------------------------------------------------------------------------------------------------------------------
   public Integer getShowingFrom() {
     if(totalRecords != 0) {
       Integer showingFrom = (selectedPageNumber * pageSize) - pageSize + 1;
@@ -106,9 +121,7 @@ public without sharing class E2_PaginationUtility {
     return 0;
   }
 
-  //----------------------------------------------------------------------------------------------------------------------------------------
   // Method that return the Index number of last record on the page
-  //----------------------------------------------------------------------------------------------------------------------------------------
   public Integer getShowingTo() {
     Integer showingTo = selectedPageNumber * pageSize ;
     if (totalRecords < showingTo) {
@@ -117,9 +130,7 @@ public without sharing class E2_PaginationUtility {
     return showingTo;
   }
 
-  //----------------------------------------------------------------------------------------------------------------------------------------
   // Property which return the list of page links to be display
-  //----------------------------------------------------------------------------------------------------------------------------------------
   public List<Integer> listOfLinks {
     get {
       Integer linkCounter = 0;
@@ -160,9 +171,7 @@ public without sharing class E2_PaginationUtility {
     }
   }
   
-  //----------------------------------------------------------------------------------------------------------------------------------------
     // Property that return true if there are more links (in backward direction) to be display
-    //----------------------------------------------------------------------------------------------------------------------------------------
     public Boolean isMorePrevious {
         get {
             if(listOfLinks.size() > 0 && Integer.valueOf(listOfLinks.get(0)) != 1) {
@@ -173,9 +182,7 @@ public without sharing class E2_PaginationUtility {
         set; 
     }
                 
-    //----------------------------------------------------------------------------------------------------------------------------------------
-    // Property that return true if there are more links (in forward direction) to be display 
-    //----------------------------------------------------------------------------------------------------------------------------------------
+    // Property that return true if there are more links (in forward direction) to be display
     public Boolean isMoreNext {
     get {
         if(listOfLinks.size() > 0 && Integer.valueOf(listOfLinks.get(listOfLinks.size() - 1)) < totalPage) {
@@ -186,9 +193,7 @@ public without sharing class E2_PaginationUtility {
     set;
     }
     
-    //----------------------------------------------------------------------------------------------------------------------------------------
     // Property that return full list of all records
-    //----------------------------------------------------------------------------------------------------------------------------------------
     public List<Object> getRecordsList() {
         List<Object> listOfRecords = new List<Object>();
         for(List<Object> pagewiseList : customPaginationList) {

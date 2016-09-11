@@ -523,11 +523,6 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>false</editable>
-        <field>E2_Favourite_Scope__c.Scope__c</field>
-        <readable>false</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>false</editable>
         <field>E2_Favourite_Scope__c.Unique_Scope_User_Id__c</field>
         <readable>false</readable>
     </fieldPermissions>
