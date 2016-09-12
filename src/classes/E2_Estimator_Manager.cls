@@ -90,13 +90,7 @@ public with sharing class E2_Estimator_Manager {
 	public static List<E2_Estimate_Rate_Card__c> getEstimateRateCards(Id estimateId, string currencyCode) {
 	  List<E2_Estimate_Rate_Card__c> newEstimateRateCards = new List<E2_Estimate_Rate_Card__c>();
 	  
-	  List<E2_Estimate_Rate_Card__c> estimateRateCards = [SELECT Id, Resource_Role__c, Estimate__c, Region__c, Rate_Card__r.pse__Region__c, Rate_Card__r.pse__Practice__c, 
-															Practice__c, Code__c, Rate_Card__c, Resource_Cost__c,
-															Bill_Rate__c,Discounted_Rate__c, Category__c 
-															FROM E2_Estimate_Rate_Card__c 
-															WHERE Estimate__c =: estimateId
-															ORDER BY Practice__c ASC, Region__c ASC, Resource_Role__c ASC];
-		
+	  List<E2_Estimate_Rate_Card__c> estimateRateCards = E2_DataUtil.getEstimateRateCardRecs(estimateId);
 															
 		if(estimateRateCards.isEmpty() && !String.isBlank(currencyCode)) {			
 			for(pse__Rate_Card__c rateCard : [SELECT Id, pse__Average_Cost_Rate__c, 
@@ -122,23 +116,65 @@ public with sharing class E2_Estimator_Manager {
 			if(!newEstimateRateCards.isEmpty()) {
 			    try{
 				   insert newEstimateRateCards;
+				   // QUERYING AGAIN FOR RETURNING THE ORDERED LIST BY REGION & ROLE
+        		   estimateRateCards = E2_DataUtil.getEstimateRateCardRecs(estimateId);
+        		   updateEstimeRateCardJSON(estimateRateCards, estimateId);
 			    }catch(Exception ex){
 			       system.debug('Error in new estimate rate card creation:' + ex.getMessage()); 
 			    }
 			}
-			
-			// QUERYING AGAIN FOR RETURNING THE ORDERED LIST BY REGION & ROLE
-			return [SELECT Id, Resource_Role__c, Estimate__c, Region__c, Rate_Card__r.pse__Region__c, Rate_Card__r.pse__Practice__c, 
-															Practice__c, Code__c, Rate_Card__c, Resource_Cost__c,
-															Bill_Rate__c,Discounted_Rate__c, Category__c 
-															FROM E2_Estimate_Rate_Card__c 
-															WHERE Estimate__c =: estimateId
-															ORDER BY Practice__c ASC, Region__c ASC, Resource_Role__c ASC]; 
-			
-			//return newEstimateRateCards;
 		}
 		return estimateRateCards;
 	
 	}
+	
+	public static void updateEstimeRateCardJSON(List<E2_Estimate_Rate_Card__c> estimateRateCards,Id estimateId) {
+      List<RateCardJSONWrapper> ratecards = new List<RateCardJSONWrapper>();
+      for(E2_Estimate_Rate_Card__c estimateRateCard : estimateRateCards) {
+       ratecards.add(populateRateCard(estimateRateCard));   
+      }
+      if(!ratecards.isEmpty()) {
+          string rt_JSON = JSON.serialize(ratecards);
+          rt_JSON = rt_JSON != null ? rt_JSON.replaceAll('Resource_Cost', 'Resource Cost') : rt_JSON;
+		  rt_JSON = rt_JSON != null ? rt_JSON.replaceAll('Suggested_Cost', 'Suggested Cost') : rt_JSON;
+		  rt_JSON = rt_JSON != null ?rt_JSON.replaceAll('Rate_Card', 'Rate Card') : rt_JSON;
+		  update (new CMC_Presales_LOE__c(Id = estimateId, Ratecard_JSON__c = rt_JSON));
+      }
+     }
+  
+      public static RateCardJSONWrapper populateRateCard(E2_Estimate_Rate_Card__c erc) {
+        RateCardJSONWrapper rateCard = new RateCardJSONWrapper();
+        rateCard.Id = erc.Rate_Card__c;
+        rateCard.Resource_Cost = (erc.Resource_Cost__c).intValue();
+        rateCard.Suggested_Cost = (erc.Resource_Cost__c).intValue();
+        rateCard.Practice = erc.Rate_Card__r.pse__Practice__c;
+        rateCard.PracticeName = erc.Practice__c;
+        rateCard.RegionId = erc.Rate_Card__r.pse__Practice__c;
+        rateCard.RegionName = erc.Region__c;
+        rateCard.Role = erc.Resource_Role__c;
+        rateCard.Rate_Card = (erc.Bill_Rate__c).intValue();
+        rateCard.Rate = (erc.Discounted_Rate__c).intValue();
+        rateCard.CurrencyIsoCode = erc.CurrencyIsoCode;
+        rateCard.Code = erc.Code__c;
+        rateCard.Category = erc.Category__c;
+        return rateCard;
+  }
+  
+  //
+  public class RateCardJSONWrapper {
+        Id Id;
+        Decimal Resource_Cost;//Cost
+        Decimal Suggested_Cost;//cost
+        String Practice;
+        String PracticeName;
+        String RegionId;
+        String RegionName;
+        String Role;
+        Decimal Rate_Card;//Bill_Rate__c
+        Decimal Rate;//Discounted_Rate__c
+        String CurrencyIsoCode;
+        String Code;
+        String Category;
+    }
 	
 }

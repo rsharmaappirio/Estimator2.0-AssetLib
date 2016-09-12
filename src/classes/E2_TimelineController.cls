@@ -16,8 +16,7 @@ public with sharing class E2_TimelineController extends E2_Master {
   public string capacityNeeds_JSON{get;set;}
   public String ratecard_JSON {get;set;}
   public static final string SEPARATOR = ' - ';
-  public List<RateCardJSONWrapper> rcList;
-  
+
   public E2_TimelineController (ApexPages.StandardController std) {
     // constructor : use to initiate the variable
     this.estimate = (CMC_Presales_LOE__c)std.getRecord();
@@ -25,7 +24,6 @@ public with sharing class E2_TimelineController extends E2_Master {
     this.estimate.Discount_Percent__c = (this.estimate.Discount_Percent__c == NULL ? 0 : this.estimate.Discount_Percent__c);
     // populate renderOptions_PhasesJSON field
     populateRenderOptions();
-    rcList = new List<RateCardJSONWrapper>();
   }
   
   
@@ -194,7 +192,7 @@ public with sharing class E2_TimelineController extends E2_Master {
                 }
                 
                 this.estimateRateCards = E2_DataUtil.getEstimateRateCardRecs(estimate.Id);
-                
+                E2_Estimator_Manager.updateEstimeRateCardJSON(this.estimateRateCards, this.estimate.Id);
                 updateEstimateResources();
             }catch(Exception ex){
                 ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, ex.getMessage()));  
@@ -216,7 +214,8 @@ public with sharing class E2_TimelineController extends E2_Master {
         try{
             update this.estimateRateCards;
             // update the rates and cost on the related estimate resources records
-            updateEstimateResources();                                                    
+            updateEstimateResources();
+            E2_Estimator_Manager.updateEstimeRateCardJSON(this.estimateRateCards, this.estimate.Id);
         }catch(Exception ex){
             Database.rollback(sp);
             System.debug('Error in update of estimate rate cards:' + ex.getMessage());
@@ -270,53 +269,4 @@ public with sharing class E2_TimelineController extends E2_Master {
     }
     
   }
-  
-  private RateCardJSONWrapper populateRateCard(E2_Estimate_Rate_Card__c erc) {
-        RateCardJSONWrapper rateCard = new RateCardJSONWrapper();
-        rateCard.Id = erc.Rate_Card__c;
-        rateCard.Resource_Cost = (erc.Resource_Cost__c).intValue();
-        rateCard.Suggested_Cost = (erc.Resource_Cost__c).intValue();
-        rateCard.Practice = erc.Rate_Card__r.pse__Practice__c;
-        rateCard.PracticeName = erc.Practice__c;
-        rateCard.RegionId = erc.Rate_Card__r.pse__Practice__c;
-        rateCard.RegionName = erc.Region__c;
-        rateCard.Role = erc.Resource_Role__c;
-        rateCard.Rate_Card = (erc.Bill_Rate__c).intValue();
-        rateCard.Rate = (erc.Discounted_Rate__c).intValue();
-        rateCard.CurrencyIsoCode = erc.CurrencyIsoCode;
-        rateCard.Code = erc.Code__c;
-        rateCard.Category = erc.Category__c;
-        return rateCard;
-  }
-  
-  public void populateRateCardJSON(pse__Rate_Card__c rateCard, E2_Estimate_Rate_Card__c erc, String currencyCode){
-     /*   this.ratecard_JSON = '{';
-        this.ratecard_JSON += '"Id":"'+ erc.Id + '","Resource Cost":' + erc.Resource_Cost__c + ',"Suggested Cost":' + erc.Resource_Cost__c + ',"Practice":"' + rateCard.pse__Practice__c +'",';
-        this.ratecard_JSON += '"PracticeName":"' + erc.Practice__c + '","RegionId": "' + rateCard.pse__Region__c + '","RegionName":"' +  erc.Region__c + '","Role":"' + erc.Resource_Role__c + '",';
-        this.ratecard_JSON += '"Rate Card":' + erc.Rate_Card__c + ',"Rate":' + erc.Rate_Card__c + ',"CurrencyIsoCode":"' + currencyCode + '", "Code":"' + erc.Code__c + '",';
-        this.ratecard_JSON += '"Category":"' + erc.Category__c + '"';
-        this.ratecard_JSON += '}'; */
-     
-    //rcList =      List<RateCardJSONWrapper>   
-        
-  }
-  
-  //
-  class RateCardJSONWrapper {
-        Id Id;
-        Decimal Resource_Cost;//Cost
-        Decimal Suggested_Cost;//cost
-        String Practice;
-        String PracticeName;
-        String RegionId;
-        String RegionName;
-        String Role;
-        Decimal Rate_Card;//Bill_Rate__c
-        Decimal Rate;//Discounted_Rate__c
-        String CurrencyIsoCode;
-        String Code;
-        String Category;
-        
-        
-    }
 }

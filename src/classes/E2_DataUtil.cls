@@ -233,6 +233,7 @@ public class E2_DataUtil {
      return [SELECT Id, Resource_Role__c, Estimate__c, Region__c, 
     				Practice__c, Code__c, Rate_Card__c, Resource_Cost__c,
     				Bill_Rate__c, Discounted_Rate__c, Category__c,
+    				Rate_Card__r.pse__Region__c, Rate_Card__r.pse__Practice__c, 
     				Rate_Card__r.pse__Average_Cost_Rate__c, Rate_Card__r.pse__Suggested_Bill_Rate__c 
     				FROM E2_Estimate_Rate_Card__c 
     				WHERE Estimate__c =: estimateId
@@ -247,6 +248,4 @@ public class E2_DataUtil {
 		            WHERE CurrencyISOCode =: currencyCode 
 		            AND ID NOT IN : rateCardIds];
   }
-  
-  
 }
