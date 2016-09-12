@@ -1688,7 +1688,7 @@ var Timeline = {
 
         }, {
             id: "selector1",
-            field: "resource",
+            field: "e2Resource",
             name: "Resource",
             behavior: "",
             width: 350,
@@ -2649,30 +2649,14 @@ var Timeline = {
         return '';
         //return 'wait..';
     },
-    onResourcePickListChange: function(e) {
-
-        var optionSelected = $("option:selected", this);
-        var cost = parseInt(optionSelected.attr('cost'));
-        var rate = parseInt(optionSelected.attr('discountedRate'));
-        var role = optionSelected.attr('resource');
-        var estimateRateCardId = optionSelected.attr('estimateRateCardId');
-        
-        var order = 1; //this is just dummy setting here; actually set before calling ajax to server
-        var skill = '';
-        var id = $(this).attr('id');
-        if (id.toLowerCase().indexOf('new') != -1) {
-            Timeline.addRow(estimateId, order, cost, rate, role, skill, estimateRateCardId);
-        } else {
-            Timeline.updateRow(estimateId, id, role, skill, cost, rate,  estimateRateCardId);
-        }
-
-    },
 
    onResourceSelectionChange: function(event, ui, id) {
         
     	var cost = parseInt(ui.item.cost);
     	var rate = parseInt(ui.item.discountedRate);
-    	var role = ui.item.resource;
+    	var role = ui.item.e1resource;
+    	var e2role = ui.item.resource;
+    	var rateCode = ui.item.code;
     	var estimateRateCardId = ui.item.id == 'undefined' ? '' : ui.item.id; 
     	
     	var order = 1; //this is just dummy setting here; actually set before calling ajax to server
@@ -2680,9 +2664,9 @@ var Timeline = {
        
     	
     	if (id.toLowerCase().indexOf('new') != -1) {
-    		Timeline.addRow(estimateId, order, cost, rate, role, skill, estimateRateCardId);
+    		Timeline.addRow(estimateId, order, cost, rate, role, e2role, skill, rateCode, estimateRateCardId);
     	} else {
-    		Timeline.updateRow(estimateId, id, role, skill, cost, rate,  estimateRateCardId);
+    		Timeline.updateRow(estimateId, id, role, e2role, skill, rateCode, cost, rate,  estimateRateCardId);
     	}
     
     },
@@ -2741,18 +2725,21 @@ var Timeline = {
              Timeline.rt_json = [];
             //result = (result.length > 0 ? result[0] : result); 
             $.each(result, function(indx, row) {
-                var resource = row.Practice__c + ' - ' + row.Region__c + ' - ' + row.Resource_Role__c;
+                var e1resource = row.Region__c + ' - ' + row.Resource_Role__c;
+                var resource = row.Practice__c + ' - ' + e1resource;
                 var json_obj = {};
                 json_obj['id'] = row.Id;
                 json_obj['practice'] = row.Practice__c;
                 json_obj['region'] = row.Region__c;
                 json_obj['role'] = row.Resource_Role__c;
+                json_obj['code'] = row.Code__c;
                 // rate card rate
                 json_obj['suggestedRate'] = row.Bill_Rate__c;
                 // custom/editable bill rate
                 json_obj['discountedRate'] = row.Discounted_Rate__c;
                 // resource cost
                 json_obj['cost'] = row.Resource_Cost__c;
+                json_obj['e1resource'] = e1resource;
                 json_obj['resource'] = resource;
                 Timeline.rt_json.push(json_obj);
             });
@@ -3172,8 +3159,8 @@ var Timeline = {
         }
     },
     addRow: function(estimateId, order,
-        cost, rate, role,
-        skill, estimateRateCardId) {
+        cost, rate, role, e2role,
+        skill, rateCode, estimateRateCardId) {
         loader.show();
         sforce.apex.execute(WEBSERVICE_NAME, "addRow", {
             estimateId: estimateId,
@@ -3181,7 +3168,9 @@ var Timeline = {
             cost: cost,
             rate: rate,
             role: role,
+            e2role: e2role,
             skill: skill,
+            rateCode: rateCode,
             estimateRateCardId : estimateRateCardId
         }, Timeline.addRow_Callback);
        
@@ -3212,14 +3201,16 @@ var Timeline = {
         }
     },
     updateRow: function(estimateId, rowId,
-        role,
-        skill,cost,rate,estimateRateCardId) {
+        role, e2role,
+        skill, rateCode, cost,rate,estimateRateCardId) {
         loader.show();
         sforce.apex.execute(WEBSERVICE_NAME, "updateRow", {
             estimateId: estimateId,
             rowId: rowId,
             role: role,
+            e2role: e2role,
             skill: skill,
+            rateCode: rateCode,
             cost: cost, 
             rate: rate,  
             estimateRateCardId: estimateRateCardId

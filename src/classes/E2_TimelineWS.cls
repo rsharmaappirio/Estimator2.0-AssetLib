@@ -70,12 +70,12 @@ global with sharing class E2_TimelineWS {
         return E2_TimelineWSManager.reOrderResources(jsonstr);   
     }
       
-    webservice static string addRow(string estimateId, integer order, integer cost, integer rate, string role, string skill, string estimateRateCardId){
-      return E2_TimelineWSManager.addRow( estimateId,  order, cost,  rate,  role, skill,  estimateRateCardId);
+    webservice static string addRow(string estimateId, integer order, integer cost, integer rate, string role, string e2role, string skill, string rateCode, string estimateRateCardId){
+      return E2_TimelineWSManager.addRow( estimateId,  order, cost,  rate,  role, e2role, skill, rateCode,  estimateRateCardId);
     }
     
-    webservice static string updateRow(string estimateId, string rowId, string role, string skill, integer cost, integer rate, string estimateRateCardId){
-       return E2_TimelineWSManager.updateRow( estimateId,  rowId,  role, skill,  cost,  rate,  estimateRateCardId);
+    webservice static string updateRow(string estimateId, string rowId, string role, string e2role,  string skill, string rateCode, integer cost, integer rate, string estimateRateCardId){
+       return E2_TimelineWSManager.updateRow( estimateId,  rowId,  role, e2role, skill, rateCode,  cost,  rate,  estimateRateCardId);
     }
     
     webservice static string deleteRow(string rowId){
@@ -121,6 +121,11 @@ global with sharing class E2_TimelineWS {
         return E2_TimelineWSManager.updateMilestoneWeeks(jsonstr); 
     }
     
+    //To update hours in bulk on copy and paste to cells - (Vikash - 12th Sep 2016)
+    webservice static string updateResourceWeeks(string jsonstr){
+        return E2_TimelineWSManager.updateResourceWeeks(jsonstr); 
+    }
+    
     global class E2_TimelineRow{
        webservice string id;
        webservice string resource;
@@ -130,6 +135,7 @@ global with sharing class E2_TimelineWS {
        webservice integer cost;
        webservice List<E2_TimelineRowColumn> colRows;
        webservice string resourceRateCardRole;
+       webservice string e2Resource;
        
        public E2_TimelineRow(string id, string resource, string skill, integer rate, integer order, integer cost, List<E2_TimelineRowColumn> colRows){
           this.id = id;
@@ -144,6 +150,11 @@ global with sharing class E2_TimelineWS {
        public E2_TimelineRow(string id, string resource, string resourceRateCardRole, string skill, integer rate, integer order, integer cost, List<E2_TimelineRowColumn> colRows){
           this(id, resource, skill, rate, order, cost, colRows);
           this.resourceRateCardRole = resourceRateCardRole;
+       }
+       
+       public E2_TimelineRow(string id, string resource, string e2Resource, string resourceRateCardRole, string skill, integer rate, integer order, integer cost, List<E2_TimelineRowColumn> colRows){
+          this(id, resource, resourceRateCardRole, skill, rate, order, cost, colRows);
+          this.e2Resource = e2Resource;
        }
     }
     
@@ -299,6 +310,12 @@ global with sharing class E2_TimelineWS {
          public string value;
          public string colorCode;
          public string type;
+     }
+     
+     public class CellWrapper{
+         public string rowId;
+         public string cellId;
+         public string value;
      }
         
 }

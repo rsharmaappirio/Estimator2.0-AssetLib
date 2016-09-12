@@ -90,12 +90,12 @@ public with sharing class E2_Estimator_Manager {
 	public static List<E2_Estimate_Rate_Card__c> getEstimateRateCards(Id estimateId, string currencyCode) {
 	  List<E2_Estimate_Rate_Card__c> newEstimateRateCards = new List<E2_Estimate_Rate_Card__c>();
 	  
-	  List<E2_Estimate_Rate_Card__c> estimateRateCards = [SELECT Id, Resource_Role__c, Estimate__c, Region__c, 
+	  List<E2_Estimate_Rate_Card__c> estimateRateCards = [SELECT Id, Resource_Role__c, Estimate__c, Region__c, Rate_Card__r.pse__Region__c, Rate_Card__r.pse__Practice__c, 
 															Practice__c, Code__c, Rate_Card__c, Resource_Cost__c,
 															Bill_Rate__c,Discounted_Rate__c, Category__c 
 															FROM E2_Estimate_Rate_Card__c 
 															WHERE Estimate__c =: estimateId
-															ORDER BY Region__c ASC, Resource_Role__c ASC];
+															ORDER BY Practice__c ASC, Region__c ASC, Resource_Role__c ASC];
 		
 															
 		if(estimateRateCards.isEmpty() && !String.isBlank(currencyCode)) {			
@@ -128,12 +128,12 @@ public with sharing class E2_Estimator_Manager {
 			}
 			
 			// QUERYING AGAIN FOR RETURNING THE ORDERED LIST BY REGION & ROLE
-			return [SELECT Id, Resource_Role__c, Estimate__c, Region__c, 
+			return [SELECT Id, Resource_Role__c, Estimate__c, Region__c, Rate_Card__r.pse__Region__c, Rate_Card__r.pse__Practice__c, 
 															Practice__c, Code__c, Rate_Card__c, Resource_Cost__c,
 															Bill_Rate__c,Discounted_Rate__c, Category__c 
 															FROM E2_Estimate_Rate_Card__c 
 															WHERE Estimate__c =: estimateId
-															ORDER BY Region__c ASC, Resource_Role__c ASC];
+															ORDER BY Practice__c ASC, Region__c ASC, Resource_Role__c ASC]; 
 			
 			//return newEstimateRateCards;
 		}

@@ -162,10 +162,15 @@ public with sharing class E2_ScopeQuestionAnswerManager {
                 	(string.isBlank(answer.originalBindedScopes) || 
                 	answer.originalBindedScopes != answer.bindedScopes)) {
                 	answerScopeMap.put(answer.e2answer, answer.bindedScopes);
-                }                
-                if(!answerToUpsert.containsKey(mapKey))
-                    answerToUpsert.put(mapKey, new List<E2_Answer__c>());
-                answerToUpsert.get(mapKey).add(answer.e2answer);
+                }
+                if(answer.e2answer.Id != NULL && string.isBlank(answer.e2answer.Answer_Text__c)) {
+                	answer.e2answer.Answer_Text__c = answer.answerstring;
+                }
+                if(!string.isBlank(answer.e2answer.Answer_Text__c)) {               
+	                if(!answerToUpsert.containsKey(mapKey))
+	                    answerToUpsert.put(mapKey, new List<E2_Answer__c>());
+	                answerToUpsert.get(mapKey).add(answer.e2answer);
+                }
             }else if(answer.e2answer.Id != NULL) {
                 answerToDelete.add(answer.e2answer);
             }
@@ -206,7 +211,10 @@ public with sharing class E2_ScopeQuestionAnswerManager {
     
     // Method to add new question
     public pagereference addNewQuestion() {
-        this.listQuestions.add(new Question(new E2_Question__c(Scope__c = scope.Id, Is_Active__c = true)));
+    	if(this.listQuestions.isEmpty())
+        	this.listQuestions.add(new Question(new E2_Question__c(Scope__c = scope.Id, Is_Active__c = true)));
+        else
+        	this.listQuestions.add(0,new Question(new E2_Question__c(Scope__c = scope.Id, Is_Active__c = true)));
         return null;
     }
     
@@ -253,26 +261,13 @@ public with sharing class E2_ScopeQuestionAnswerManager {
         // method to add answer
         public pagereference addAnswer() {
         	this.isEdit = true;        	           
-            if(e2question.Type__c == 'Yes/No') {
-            	for(Answer answer : this.e2answers) {
-            		answer.isDeleted = true;
-            	}
-                E2_Answer__c answer1 = new E2_Answer__c(Answer_Text__c = 'Yes',Is_Active__c = true,Sequence__c = 1);
-                this.e2answers.add(new Answer(answer1));
-                E2_Answer__c answer2 = new E2_Answer__c(Answer_Text__c = 'No',Is_Active__c = true,Sequence__c = 2);
-                this.e2answers.add(new Answer(answer2));
-                this.sequence = 2;
-            } else if(e2question.Type__c != 'Summary' && this.e2answers.size() == 0) {
-                for(integer index = 1;index <= 3;index++) {
+            if(e2question.Type__c != 'Summary' && this.e2answers.size() == 0) {
+                for(integer index = 1;index <= 2;index++) {
                     E2_Answer__c answer = new E2_Answer__c(Is_Active__c = true,Sequence__c = index);
                     this.e2answers.add(new Answer(answer));
                 }
-                this.sequence = 3;
-            } /*else {
-            	for(Answer answer : this.e2answers) {
-            		answer.isDeleted = true;
-            	}
-            }*/
+                this.sequence = 2;
+            }
             return null;
         }
         // method to add new answer instance in answer 
@@ -311,6 +306,7 @@ public with sharing class E2_ScopeQuestionAnswerManager {
         public string bindedScopes{get;set;}
         public string originalBindedScopes{get;set;}
         public E2_Answer__c e2answer{get;set;}
+        public string answerString{get;set;}
         
         public Answer (E2_Answer__c e2answer) {
             this.isDeleted = false;   
@@ -330,6 +326,7 @@ public with sharing class E2_ScopeQuestionAnswerManager {
                 this.key = e2answer.id;
           } 
             this.e2answer = e2answer;  
+            this.answerString = e2answer.Answer_Text__c;
         }
         // method to remove 
         public pagereference remove(){

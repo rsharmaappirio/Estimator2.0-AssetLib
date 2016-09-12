@@ -264,8 +264,8 @@ public class E2_TimelineWSManager {
     
     // method to add rows in CMC_Estimate_Resource__c
     public static string addRow(string estimateId, integer order, 
-                                    integer cost, integer rate, string role,
-                                    string skill, string estimateRateCardId){
+                                    integer cost, integer rate, string role, string e2role,
+                                    string skill, string rateCode, string estimateRateCardId){
        List<CMC_Presales_LOE__c> estimateList = E2_TimelineDataUtil_WS.getCurrencyISOCodeonEstimate(estimateId);
                                              
        try{                             
@@ -274,7 +274,9 @@ public class E2_TimelineWSManager {
                                              Order__c = order, 
                                              Rate__c = rate, 
                                              Role__c = role, 
-                                             Skill__c = skill, 
+                                             E2_Role__c = e2role,
+                                             Skill__c = skill,
+                                             Rate_Code__c = rateCode,
                                              Is_Used_For_Calculations__c = true,
                                              CurrencyIsoCode = estimateList[0].CurrencyIsoCode,
                                              E2_Estimate_Rate_Card__c = (String.isEmpty(estimateRateCardId) ? null : estimateRateCardId));
@@ -286,13 +288,15 @@ public class E2_TimelineWSManager {
     
     // method to update a row in CMC_Estimate_Resource__c
     public static string updateRow(string estimateId, string rowId, 
-                                    string role,
-                                    string skill, integer cost, integer rate, string estimateRateCardId){
+                                    string role, string e2role,
+                                    string skill, string rateCode, integer cost, integer rate, string estimateRateCardId){
        try{                             
          update new CMC_Estimate_Resource__c(id = rowId,                                                                                        
                                              Role__c = role, 
+                                             E2_Role__c = e2role,
                                              Cost__c = cost, 
-                                             Rate__c = rate, 
+                                             Rate__c = rate,
+                                             Rate_Code__c = rateCode,
                                              E2_Estimate_Rate_Card__c = (String.isEmpty(estimateRateCardId) ? null : estimateRateCardId));
        }catch(Exception ex){
          return 'Failed: ' + ex.getMessage();
@@ -542,7 +546,7 @@ public class E2_TimelineWSManager {
             }
             // E2_Constants.ROLE_RESOURCEROLE_MAP
              rows.add(new E2_TimelineWS.E2_TimelineRow(res.id, res.Role__c, 
-                      resourceRole, 
+                      res.E2_Role__c, resourceRole, 
                       res.Skill__c,
                       (res.Rate__c == null ? 0 : res.Rate__c.intValue()),
                       (res.Order__c == null ? 0 : res.Order__c.intValue()),
@@ -635,6 +639,66 @@ public class E2_TimelineWSManager {
         try{
 
          if(!estimateWeeksMap.isEmpty()) update estimateWeeksMap.values();
+         
+        }catch(Exception ex){
+         return 'Failed: ' + ex.getMessage(); 
+        }
+         
+        return 'Success';
+    }
+    
+    // method to bulk update weeks 
+    // To update hours in bulk on copy and paste to cells - (Vikash - 12th Sep 2016)
+   public static string updateResourceWeeks(string jsonstr){
+        List<E2_TimelineWS.CellWrapper> lstWeeks = (List<E2_TimelineWS.CellWrapper>)JSON.deserialize(jsonstr, List<E2_TimelineWS.CellWrapper>.class);
+        
+        Set<String> weekIds = new Set<String>();
+        Set<String> resourceIds = new Set<String>();
+        Map<String, CMC_Estimate_Resource_Week__c> resourceWeekMap = new Map<String, CMC_Estimate_Resource_Week__c>();
+        Map<String, CMC_Estimate_Week__c> estimateWeeksMap = new Map<String, CMC_Estimate_Week__c>();
+        
+        for(E2_TimelineWS.CellWrapper rWeek : lstWeeks){
+            weekIds.add(rWeek.cellId);
+            resourceIds.add(rWeek.rowId);    
+        }
+        
+        for(CMC_Estimate_Resource_Week__c rwW : E2_TimelineDataUtil_WS.getEstimateResourceWeekRecords(weekIds, resourceIds)){
+               string key = rwW.Estimate_Resource__c + '|' + rwW.Estimate_Week__c;
+               resourceWeekMap.put(key, rwW);           
+        }
+        
+        for(E2_TimelineWS.CellWrapper rWeek: lstWeeks){
+            if(!estimateWeeksMap.containsKey(rWeek.cellId))  estimateWeeksMap.put(rWeek.cellId, new CMC_Estimate_Week__c(Id = rWeek.cellId));
+            
+            String rowType = rWeek.rowId;
+            if(rowType.equalsIgnoreCase('milestone')) {
+                CMC_Estimate_Week__c week = estimateWeeksMap.get(rWeek.cellId);
+                week.Milestone__c = rWeek.value;
+                estimateWeeksMap.put(rWeek.cellId, week);
+            }
+            else if(rowType.equalsIgnoreCase('milestone1')) {
+                CMC_Estimate_Week__c week = estimateWeeksMap.get(rWeek.cellId);
+                week.E2_Milestone1__c = rWeek.value;
+                estimateWeeksMap.put(rWeek.cellId, week);
+            }
+            else if(rowType.equalsIgnoreCase('milestone2')) {
+                CMC_Estimate_Week__c week = estimateWeeksMap.get(rWeek.cellId);
+                week.E2_Milestone2__c = rWeek.value;
+                estimateWeeksMap.put(rWeek.cellId, week);
+            }
+            else{
+                String key = rWeek.rowId + '|' + rWeek.cellId;
+                CMC_Estimate_Resource_Week__c week = resourceWeekMap.get(key);
+                week.Hours__c = Integer.valueOf(rWeek.value);
+                resourceWeekMap.put(key, week);
+            }
+            
+        }
+        
+        try{
+
+         if(!estimateWeeksMap.isEmpty()) update estimateWeeksMap.values();
+         if(!resourceWeekMap.isEmpty()) update resourceWeekMap.values();
          
         }catch(Exception ex){
          return 'Failed: ' + ex.getMessage(); 
