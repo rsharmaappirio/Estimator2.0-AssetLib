@@ -1,201 +1,261 @@
-<apex:page standardController="E2_Scope__c" extensions="E2_EditScopeTemplateController" action="{!pageAction}"
-   showHeader="false" standardStylesheets="true" sidebar="false" applyHtmlTag="false" applyBodyTag="false">
-   <html xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-      <head>
-         <title>Edit Scope</title>
-         <link type="text/css" rel="stylesheet" href="{!URLFOR($Resource.cloneany, '/slds/styles/salesforce-lightning-design-system-vf.min.css')}" />
-         <link type="text/css" rel="stylesheet" href="{!URLFOR($Resource.cloneany, '/jstree/themes/proton/style.min.css')}" />
-         <apex:includeScript value="{!URLFOR($Resource.cloneany, '/libs/jquery.js')}" />
-         <apex:includeScript value="{!URLFOR($Resource.cloneany, '/jstree/jstree.min.js')}" />
-         
-         <apex:includeScript value="{!URLFOR($Resource.E2_TypeaheadResources, '/js/typeahead.bundle.js')}"/>
-         <link type="text/css" rel="stylesheet" href="{!URLFOR($Resource.E2_TypeaheadResources, '/css/typeahead.css')}"/>
-         
-         <apex:includeScript value="../../soap/ajax/36.0/connection.js" />
-         <apex:includeScript value="../../soap/ajax/15.0/apex.js" />
-         <script>
-             var treeId = "#relationShipTree";
-             sforce.connection.sessionId='{!GETSESSIONID()}';
-          </script>
-         
-         <apex:includeScript value="{!$Resource.E2_EditScopeTemplateJS}" />
-         <style>
+<apex:page standardController="E2_Scope__c" extensions="E2_EditScopeTemplateController"
+    action="{!pageAction}" showHeader="false" standardStylesheets="true" sidebar="false"
+    applyHtmlTag="false" applyBodyTag="false">
+    <html xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+
+    <head>
+        <title>Edit Scope</title>
+        <link type="text/css" rel="stylesheet" href="{!URLFOR($Resource.cloneany, '/slds/styles/salesforce-lightning-design-system-vf.min.css')}"
+        />
+        <link type="text/css" rel="stylesheet" href="{!URLFOR($Resource.cloneany, '/jstree/themes/proton/style.min.css')}"
+        />
+        <apex:includeScript value="{!URLFOR($Resource.cloneany, '/libs/jquery.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.cloneany, '/jstree/jstree.min.js')}"
+        />
+
+        <apex:includeScript value="{!URLFOR($Resource.E2_TypeaheadResources, '/js/typeahead.bundle.js')}"
+        />
+        <link type="text/css" rel="stylesheet" href="{!URLFOR($Resource.E2_TypeaheadResources, '/css/typeahead.css')}"
+        />
+
+        <apex:includeScript value="../../soap/ajax/36.0/connection.js" />
+        <apex:includeScript value="../../soap/ajax/15.0/apex.js" />
+        <script>
+            var treeId = "#relationShipTree";
+            sforce.connection.sessionId = '{!GETSESSIONID()}';
+
+        </script>
+
+        <apex:includeScript value="{!$Resource.E2_EditScopeTemplateJS}" />
+        <style>
             .top {
-                top:4px;
+                top: 4px;
             }
+            
             .paddingrightThree {
-                padding-right:3px;
+                padding-right: 3px;
             }
-            .slds-grid.slds-estimate-row .slds-col{
-            width:50%;
-            padding:1%;             
-            }  
-            .slds-table{
-            width:100%;
-            }    
-            .slds-selection-background{
-            background-color:#eee;
+            
+            .slds-grid.slds-estimate-row .slds-col {
+                width: 50%;
+                padding: 1%;
             }
-            table tbody tr td select{
-            width:100%;
+            
+            .slds-table {
+                width: 100%;
             }
-            .effort_slide, .story_slide, .assumption_slide{
-            display:block;border-radius: 25px;border-style:solid;min-width: 45px;text-align: center;
+            
+            .slds-selection-background {
+                background-color: #eee;
             }
-            .slide_background-selection{
-            background:#73ad21!important;
-            color:#fff!important; 
+            
+            table tbody tr td select {
+                width: 100%;
             }
-            table tbody tr{
-            vertical-align: top;
+            
+            .effort_slide,
+            .story_slide,
+            .assumption_slide {
+                display: block;
+                border-radius: 25px;
+                border-style: solid;
+                min-width: 45px;
+                text-align: center;
             }
-            .slds-button--right--float{
-            float:right;
+            
+            .slide_background-selection {
+                background: #73ad21!important;
+                color: #fff!important;
             }
-            .slds-float-left{
-            float:left;
+            
+            table tbody tr {
+                vertical-align: top;
             }
-            td.scope-description{  
-            background: url({!$Resource.E2_SLDS1}/assets/icons/utility/edit_60.png) no-repeat scroll 90% 24px / 15px 15px;
-            width:250px;
+            
+            .slds-button--right--float {
+                float: right;
             }
-            td.scope-description:hover{
-            background: url({!$Resource.E2_SLDS1}/assets/icons/utility/edit_60.png) no-repeat scroll 90% 24px / 15px 15px;
-            background-color: #faffbd!important;
+            
+            .slds-float-left {
+                float: left;
             }
-            th.is_favorite{
-            /**background: #eef1f6 url({!$Resource.E2_SLDS1}/assets/icons/standard/endorsement_60.png) no-repeat scroll center center / 25px 25px;**/
-            background: #faffbd url({!$Resource.E2_SLDS1}/assets/icons/action/new_custom11_120.png) no-repeat scroll center center / 25px 25px;
-            padding-left: 0 !important;
-            padding-right: 0 !important;
-            width: 25px;
+            
+            td.scope-description {
+                background: url({!$Resource.E2_SLDS1}/assets/icons/utility/edit_60.png) no-repeat scroll 90% 24px / 15px 15px;
+                width: 250px;
             }
+            
+            td.scope-description:hover {
+                background: url({!$Resource.E2_SLDS1}/assets/icons/utility/edit_60.png) no-repeat scroll 90% 24px / 15px 15px;
+                background-color: #faffbd!important;
+            }
+            
+            th.is_favorite {
+                /**background: #eef1f6 url({!$Resource.E2_SLDS1}/assets/icons/standard/endorsement_60.png) no-repeat scroll center center / 25px 25px;**/
+                background: #faffbd url({!$Resource.E2_SLDS1}/assets/icons/action/new_custom11_120.png) no-repeat scroll center center / 25px 25px;
+                padding-left: 0 !important;
+                padding-right: 0 !important;
+                width: 25px;
+            }
+            
             td.is_favorite {
-            text-align: center;vertical-align: top;
+                text-align: center;
+                vertical-align: top;
             }
-            th.is_active{
-            /**background: #eef1f6 url({!$Resource.E2_SLDS1}/assets/icons/standard/task_60.png) no-repeat scroll center center / 25px 25px;**/
-            background: #faffbd url({!$Resource.E2_SLDS1}/assets/icons/action/new_custom26_60.png) no-repeat scroll center center / 25px 25px;
-            padding-left: 0 !important;
-            padding-right: 0 !important;
-            width: 25px;
+            
+            th.is_active {
+                /**background: #eef1f6 url({!$Resource.E2_SLDS1}/assets/icons/standard/task_60.png) no-repeat scroll center center / 25px 25px;**/
+                background: #faffbd url({!$Resource.E2_SLDS1}/assets/icons/action/new_custom26_60.png) no-repeat scroll center center / 25px 25px;
+                padding-left: 0 !important;
+                padding-right: 0 !important;
+                width: 25px;
             }
+            
             td.is_active {
-            text-align: center;vertical-align: top;
+                text-align: center;
+                vertical-align: top;
             }
-            th.is_cloned{       
-            padding-left: 0 !important;
-            padding-right: 0 !important;
-            width: 25px;
+            
+            th.is_cloned {
+                padding-left: 0 !important;
+                padding-right: 0 !important;
+                width: 25px;
             }
+            
             td.is_cloned {
-            background: #faffbd url({!$Resource.E2_SLDS1}/assets/icons/action/clone_60.png) no-repeat scroll center center / 25px 25px;
+                background: #faffbd url({!$Resource.E2_SLDS1}/assets/icons/action/clone_60.png) no-repeat scroll center center / 25px 25px;
             }
-            a.delete_button{
-            background: url({!$Resource.E2_SLDS1}/assets/icons/utility/delete_60.png) no-repeat scroll center center / 25px 25px;
-            background-color: transparent;
-            height: 25px;
-            width: 25px;
+            
+            a.delete_button {
+                background: url({!$Resource.E2_SLDS1}/assets/icons/utility/delete_60.png) no-repeat scroll center center / 25px 25px;
+                background-color: transparent;
+                height: 25px;
+                width: 25px;
             }
-            span.delete_button{
-            background: url({!$Resource.E2_SLDS1}/assets/icons/utility/delete_60.png) no-repeat scroll center center / 25px 25px;
-            background-color: transparent;
-            height: 25px;
-            width: 25px;
-            cursor:pointer;
+            
+            span.delete_button {
+                background: url({!$Resource.E2_SLDS1}/assets/icons/utility/delete_60.png) no-repeat scroll center center / 25px 25px;
+                background-color: transparent;
+                height: 25px;
+                width: 25px;
+                cursor: pointer;
             }
-            a.edit-button{  
+            
+            a.edit-button {
                 background: url({!$Resource.E2_SLDS1}/assets/icons/utility/edit_60.png) no-repeat scroll center center / 25px 25px;
                 background-color: transparent;
                 height: 25px;
                 width: 25px;
             }
-            a.edit-button1{  
+            
+            a.edit-button1 {
                 background: url({!$Resource.E2_SLDS1}/assets/icons/utility/edit_60.png) no-repeat scroll center center / 15px 15px;
                 background-color: transparent;
                 height: 15px;
                 width: 15px;
             }
-            div.edit-button{
+            
+            div.edit-button {
                 background: url({!$Resource.E2_SLDS1}/assets/icons/utility/edit_60.png) no-repeat scroll center right / 15px 15px;
                 background-color: transparent;
             }
-            span.edit-button{
+            
+            span.edit-button {
                 background: url({!$Resource.E2_SLDS1}/assets/icons/utility/edit_60.png) no-repeat scroll center right / 15px 15px;
                 background-color: transparent;
                 height: 15px;
                 width: 15px;
-                cursor:pointer;
+                cursor: pointer;
             }
-            a.close-button{
+            
+            a.close-button {
                 background: url({!$Resource.E2_SLDS1}/assets/icons/utility/close_60.png) no-repeat scroll center right / 25px 25px;
                 background-color: transparent;
                 height: 25px;
                 width: 25px;
             }
-            span.close-button{
+            
+            span.close-button {
                 background: url({!$Resource.E2_SLDS1}/assets/icons/utility/close_60.png) no-repeat scroll center right / 25px 25px;
                 background-color: transparent;
                 height: 25px;
                 width: 25px;
-                cursor:pointer;
+                cursor: pointer;
             }
+            
             .table-row-display {
                 display: table-row!important;
             }
+            
             .whitespace_normal {
                 white-space: normal!important;
             }
-            td.scope-description ol, td.scope-description ul {
-              list-style: inherit;
+            
+            td.scope-description ol,
+            td.scope-description ul {
+                list-style: inherit;
             }
-            .slds .slds-table tr > td:first-child, .slds .slds-table tr > th:first-child {
+            
+            .slds .slds-table tr > td:first-child,
+            .slds .slds-table tr > th:first-child {
                 padding-left: 2px;
             }
-            .slds .slds-table tr > td:last-child, .slds .slds-table tr > th:last-child {
-               padding-right: 2px;
+            
+            .slds .slds-table tr > td:last-child,
+            .slds .slds-table tr > th:last-child {
+                padding-right: 2px;
             }
-            .slds .slds-table td, .slds .slds-table th {
-               padding:2px;   
-            } 
+            
+            .slds .slds-table td,
+            .slds .slds-table th {
+                padding: 2px;
+            }
+            
             .slds .slds-form-element__label {
-                    color: #54698d;
-                    display: inline-block;
-                    font-size: 75%;
-                    font-weight: bold;
-                    line-height: 1.5;
-                    margin-bottom: 0;
-                    margin-right: 0;
+                color: #54698d;
+                display: inline-block;
+                font-size: 75%;
+                font-weight: bold;
+                line-height: 1.5;
+                margin-bottom: 0;
+                margin-right: 0;
             }
-            div.scope-description ol, div.scope-description ul {
-              list-style: inherit;
+            
+            div.scope-description ol,
+            div.scope-description ul {
+                list-style: inherit;
             }
-             div.scope-description{  
+            
+            div.scope-description {
                 background: url({!$Resource.E2_SLDS1}/assets/icons/utility/edit_60.png) no-repeat scroll 90% 24px / 15px 15px;
-                width:100%;
+                width: 100%;
             }
-            div.scope-description:hover{
+            
+            div.scope-description:hover {
                 background: url({!$Resource.E2_SLDS1}/assets/icons/utility/edit_60.png) no-repeat scroll 90% 24px / 15px 15px;
                 background-color: #faffbd!important;
             }
+            
             .Typeahead {
                 margin: 0 auto;
                 width: 90%;
                 min-width: 300px;
             }
             
-            .Typeahead-hint{
-                border:0px!important;
+            .Typeahead-hint {
+                border: 0px!important;
             }
             
             .ProfileCard-realName {
                 font-weight: 600;
                 font-size: 17px;
             }
-            .slds-custom-badge-background-grey{
+            
+            .slds-custom-badge-background-grey {
                 background-color: #eee!important;
             }
-            .slds .slds-modal__close-custom {    
+            
+            .slds .slds-modal__close-custom {
                 float: right;
                 height: 48px;
                 position: relative;
@@ -204,547 +264,404 @@
                 right: 0px;
                 top: 0px;
             }
-         </style>
-      </head>
-      <body>
-         <apex:form >
+            .slds-width-hundred {
+                width: 100%;
+                float: left;    
+            }
+            .description {
+                    display: none;
+                    position: absolute;
+                    margin-left: 15px;
+                    padding: 4px;
+                    left: 50px;
+                    color: #fff;
+                    background-color: #04844b;
+                    font: 100%/1.5 "Salesforce Sans",Arial,sans-serif;
+                    border-radius: 4px;
+                    text-align: left;
+                    word-wrap: normal;
+                    width: 300px;
+                    z-index:10000;
+                }
+        </style>
+    </head>
+
+    <body>
+        <apex:form >
             <!-- REQUIRED SLDS WRAPPER -->
             <div class="slds">
-              
-               <!-- PAGE HEADER -->
-               <div class="slds-notify_container" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-                style = "display:none;">
-                <div class="slds-notify slds-notify--toast slds-theme--success" id="sldsalertdiv" role="dialog">
-                   <span class="slds-assistive-text">Success</span>
-                   <button class="slds-button slds-button--icon-inverse slds-notify__close">
-                      <svg aria-hidden="true" class="slds-button__icon slds-button__icon--large">
-                         <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!$Resource.E2_SLDS1}/assets/icons/utility-sprite/svg/symbols.svg#close"></use>
-                      </svg>
-                      <span class="slds-assistive-text">Close</span>
-                   </button>
-                   <div class="notify__content slds-grid">
-                      <svg aria-hidden="true" class="slds-icon slds-icon--small slds-m-right--small slds-col slds-no-flex">
-                         <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!$Resource.E2_SLDS1}/assets/icons/utility-sprite/svg/symbols.svg#notification"></use>
-                      </svg>
-                      <div class="slds-col slds-align-middle">
-                         <h2 class="slds-text-heading--small "></h2>
-                      </div>
-                   </div>
+                <!-- PAGE HEADER -->
+                <div role="dialog" class="slds-modal slds-fade-in-open slds-edit-alert" style="display:none;">
+                    <div class="slds-modal__container" tabindex="0">
+                        <div class="slds-modal__header" style="border-bottom:0px!important;">
+                            <h2 class="slds-text-heading--small">Save Hierarchy</h2>
+                        </div>
+                        <div class="slds-modal__content">
+                            <iframe class="slds-card" scrolling="no" id="scopeTreeIframe" src="about:blank" frameborder="0"
+                                style="width:100%;" />
+                        </div>
+                        <div class="slds-modal__footer">
+                            <button class="slds-button slds-button--neutral" onclick="return AddEditQuestionAnswer.hideJSTree();">Done</button>
+                        </div>
+                    </div>
                 </div>
-             </div>
-             <div role="dialog" class="slds-modal slds-fade-in-open slds-edit-alert" style="display:none;">
-            <div class="slds-modal__container" tabindex="0">
-              <div class="slds-modal__header" style="border-bottom:0px!important;">
-                  <h2 class="slds-text-heading--small">Save Hierarchy</h2>
-               </div>
-              <div class="slds-modal__content">
-                  <iframe class="slds-card" scrolling="no" id="scopeTreeIframe" src="about:blank" frameborder="0" style="width:100%;"/>
-                  </div>
-              <div class="slds-modal__footer">
-                <button class="slds-button slds-button--neutral" onclick="return AddEditQuestionAnswer.hideJSTree();">Done</button>
-              </div>
-            </div>
-          </div>
-          <div class="slds-backdrop slds-backdrop--open slds-edit-alert-backdrop" style="display:none;"></div>
-               <!-- / PAGE HEADER -->    
-               <!-- PRIMARY CONTENT WRAPPER -->
-               <div class="myapp">
-                  <apex:pageMessages />
-                  <apex:actionfunction action="{!saveScope}" name="AddOrUpdate"/>
-                  <apex:actionfunction action="{!addBulkEfforts}" name="addBulkEfforts" />
-                  <div class="slds-page-header" role="banner">
-                     <div class="slds-grid">
-                        <div class="slds-col slds-has-flexi-truncate">
-                           <div class="slds-media">
-                              <div class="slds-media__body">
-                                 <p class="slds-text-heading--label"></p>
-                                 <div class="slds-grid">
-                                    <h1 class="slds-page-header__title slds-m-right--small slds-truncate slds-align-middle" title="Record Title">Scope Detail</h1>
-                                 </div>
-                              </div>
-                           </div>
-                        </div>
-                        <div class="slds-col slds-no-flex slds-align-bottom">
-                           <div class="slds-button-group" role="group">
-                              
-                              <apex:commandButton onclick="parent&&parent.AddEditScope&&parent.AddEditScope.reload_frame('/apex/E2_EditScopeTemplate?scopegroup_id={!scopeGrpId}&id={!scope.id}', window.name);return false;" styleClass="slds-button slds-button--neutral" title="Cancel" value="Cancel"/>
-                              <apex:commandButton onclick="return addUpdateScopes();" styleClass="slds-button slds-button--neutral slds-button--brand" title="Save" value="Save" action="{!saveScope}"/>
-                           </div>
-                        </div>
-                     </div>
-                  </div>                 
-                  <div>
-                     <table class="slds-table slds-table--bordered slds-no-row-hover slds-max-medium-table--stacked scope-table">
-                        <tbody>
-                           <apex:repeat value="{!childScopes}" var="childscope">
-                              <apex:outputpanel rendered="{!!childscope.isDeleted}">
-                                <tr class="slds-hint-parent {!IF(childscope.slider_state == '', '', 'slds-selection-background')}">
-
-                                    <td class="slds-truncate slds-size--1-of-3" data-label="Scope Name" title="{!childscope.scope.Name}">
-
-                                       
-                                        <div class="slds-form-element is-required ">
-                                             <label class="slds-form-element__label">Name</label> 
-                                             <div class="slds-form-element__control">
-                                                <apex:inputfield styleclass="slds-input" value="{!childscope.scope.Name}" />
-                                             </div>
-                                             <div class="slds-form-element__help" style="display:none">This field is required</div>
-                                          </div>
-                                       
-                                       <apex:inputHidden id="slider_state" value="{!childscope.slider_state}"/>
-                                       
-                                       
-                                       
-                                       <div class="slds-grid top">
-                                          <div class="slds-col paddingrightThree">
-                                                <div class="slds-form-element is-required " title="{!childscope.scope.Complexity__c}">
-                                                     <label class="slds-form-element__label">Complexity</label>
-                                                     <div class="slds-form-element__control">
-                                                        <apex:inputfield id="scope-complexity" value="{!childscope.scope.Complexity__c}" styleclass="slds-select scope-complexity" rendered="{!NOT(is_View)}" >
-        <!--                                                    <apex:actionSupport event="onchange" action="{!childscope.changeComplexity}"/> -->
-                                                        </apex:inputfield>
-                                                     </div>
-                                                     <div class="slds-form-element__help" style="display:none">This field is required</div>
-                                                </div>
-                                          </div>
-                                          <div class="slds-col">
-                                                <div class="slds-form-element">
-                                                  <label class="slds-form-element__label">Type</label>
-                                                  <div class="slds-form-element__control">
-                                                    
-                                                      <apex:inputfield id="scope-itemtype" styleclass="slds-select scope-itemtype" value="{!childscope.scope.Scope_Item_Type__c}" rendered="{!NOT(is_View)}" />
-                                                    
-                                                  </div>
-                                                </div>
-                                          </div>
-                                       </div>      
-                                        
-                                        <Br/>
+                <div class="slds-backdrop slds-backdrop--open slds-edit-alert-backdrop" style="display:none;"></div>
+                <!-- / PAGE HEADER -->
+                <!-- PRIMARY CONTENT WRAPPER -->
+                <div class="myapp">
+                    <apex:pageMessages />
+                    <apex:actionfunction action="{!saveScope}" name="AddOrUpdate" />
+                    <apex:actionfunction action="{!addBulkEfforts}" name="addBulkEfforts" />
+                    <div class="slds-page-header" role="banner">
+                        <div class="slds-grid">
+                            <div class="slds-col slds-has-flexi-truncate">
+                                <div class="slds-media">
+                                    <div class="slds-media__body">
+                                        <p class="slds-text-heading--label"></p>
                                         <div class="slds-grid">
-                                        <apex:outputPanel layout="none" rendered="{!showFavForSTMPermissionSet}">
-                                          <div class="slds-col">
-                                                <div class="slds-form-element">
-                                                  <div class="slds-form-element__control">
-                                                    <label class="slds-checkbox">
-                                                    
-                                                      <apex:inputfield styleclass="slds-checkbox" value="{!childscope.scope.Is_Favourite__c}" rendered="{!NOT(is_View)}" />
-                                                      <span class="slds-checkbox--faux"></span>
-                                                      <span class="slds-form-element__label">Favorite</span>
-                                                      
-                                                    </label>
-                                                  </div>
-                                                </div>
-                                          </div>
-                                          </apex:outputPanel>
-                                          <div class="slds-col">
-                                             <div class="slds-form-element">
-                                              <div class="slds-form-element__control">
-                                                <label class="slds-checkbox">
-                                                  <apex:inputfield styleclass="slds-checkbox" value="{!childscope.scope.Is_Active__c}" rendered="{!NOT(is_View)}" />
-                                                  <span class="slds-checkbox--faux"></span>
-                                                  <span class="slds-form-element__label">Active</span>
-                                                </label>
-                                              </div>
-                                            </div>
-                                          </div>
+                                            <h1 class="slds-page-header__title slds-m-right--small slds-truncate slds-align-middle"
+                                                title="Record Title">Scope Detail</h1>
                                         </div>
-                                        <apex:inputField id="scope-flag" value="{!childscope.scope.Scope_Flag__c}" style="display:none;"/> 
-                                    </td>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="slds-col slds-no-flex slds-align-bottom">
+                                <div class="slds-button-group" role="group">
+                                    <apex:commandButton onclick="parent&&parent.AddEditScope&&parent.AddEditScope.reload_frame('/apex/E2_EditScopeTemplate?scopegroup_id={!scopeGrpId}&id={!scope.id}', window.name);return false;"
+                                        styleClass="slds-button slds-button--neutral"
+                                        title="Cancel" value="Cancel" />
+                                    <apex:commandButton onclick="return addUpdateScopes();" styleClass="slds-button slds-button--neutral slds-button--brand"
+                                        title="Save" value="Save" action="{!saveScope}"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <table class="slds-table slds-table--bordered slds-no-row-hover slds-max-medium-table--stacked scope-table">
+                            <tbody>
+                                <tr class="slds-hint-parent {!IF(childscope.slider_state == '', '', 'slds-selection-background')}">
+                                    <td class="slds-truncate slds-size--1-of-3" data-label="Scope Name" title="{!childscope.scope.Name}">
+                                        <div class="slds-form-element is-required ">
+                                            <label class="slds-form-element__label">Name</label>
+                                            <div class="slds-form-element__control">
+                                                <apex:inputfield styleclass="slds-input" value="{!childscope.scope.Name}" />
+                                            </div>
+                                            <div class="slds-form-element__help" style="display:none">This field is required</div>
+                                        </div>
+                                        <apex:inputHidden id="slider_state" value="{!childscope.slider_state}" />
+                                        <div class="slds-grid top">
+                                            <div class="slds-col paddingrightThree">
+                                                <div class="slds-form-element is-required " title="{!childscope.scope.Complexity__c}">
+                                                    <label class="slds-form-element__label">Complexity</label>
+                                                    <div class="slds-form-element__control">
+                                                        <apex:inputfield id="scope-complexity" value="{!childscope.scope.Complexity__c}"
+                                                            styleclass="slds-select scope-complexity"
+                                                            rendered="{!NOT(is_View)}">
+                                                        </apex:inputfield>
+                                                    </div>
+                                                    <div class="slds-form-element__help" style="display:none">This field is
+                                                        required
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="slds-col">
+                                                <div class="slds-form-element">
+                                                    <label class="slds-form-element__label">Type</label>
+                                                    <div class="slds-form-element__control">
+                                                        <apex:inputfield id="scope-itemtype" styleclass="slds-select scope-itemtype" value="{!childscope.scope.Scope_Item_Type__c}"
+                                                            rendered="{!NOT(is_View)}"/>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <Br/>
+                                        <div class="slds-grid">                                                    
+                                            <div class="slds-col slds-size--1-of-2">
+                                                <!--<div class="slds-form-element">
+                                                    <div class="slds-form-element__control">
+                                                        <label class="slds-checkbox">
+                                              <apex:inputfield styleclass="slds-checkbox" value="{!childScope.scope.Is_Favourite__c}" rendered="{!NOT(is_View)}" />
+                                              <span class="slds-checkbox--faux"></span>
+                                              <span class="slds-form-element__label">Favorite</span>
+                                            </label>
+                                                    </div>
+                                                </div>-->
+                                            </div>
+                                        <div class="slds-col slds-size--1-of-2">
+                                            <div class="slds-form-element">
+                                                <div class="slds-form-element__control">
+                                                    <label class="slds-checkbox">
+                                      <apex:inputfield styleclass="slds-checkbox" value="{!childScope.scope.Is_Active__c}" rendered="{!NOT(is_View)}" />
+                                      <span class="slds-checkbox--faux"></span>
+                                      <span class="slds-form-element__label">Active</span>
+                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        </div>
 
+                                    <Br/>
+                                    <div class="slds-grid">
+                                        <div class="slds-col slds-size--1-of-2">
+                                            <div class="slds-form-element">
+                                                <label class="slds-form-element__label">Created By</label>
+                                                <div class="slds-form-element__control">
+                                                    <apex:outputText value="{!E2_Scope__c.CreatedBy.Name}" />
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="slds-col slds-size--1-of-2">
+                                            <div class="slds-form-element">
+                                                <label class="slds-form-element__label">Last Modified By</label>
+                                                <div class="slds-form-element__control">
+                                                    <apex:outputText value="{!scope.LastModifiedBy.Name}" rendered="{!!ISBLANK(scope.LastModifiedBy.Name)}"/>
+                                                    <apex:outputText value="{!scope.LastModifiedBy.FirstName} {!scope.LastModifiedBy.LastName}" rendered="{!ISBLANK(scope.LastModifiedBy.Name)}"/>
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                        <apex:inputField id="scope-flag" value="{!childscope.scope.Scope_Flag__c}" style="display:none;"/>
+                                    </td>
                                     <td data-label="" class="slds-truncate slds-size--2-of-3">
-                                       <div class="slds-form-element" style="padding-left:0px;">
-                                                  <label class="slds-form-element__label">Description</label>
-                                                  <div class="slds-form-element__control scope-description">
-                                                      <apex:inputTextarea id="richtext" richtext="true" cols="260" rows="8" value="{!childscope.scope.Description__c}" />
-                                                      <apex:outputText style="padding:inherit;margin:inherit" id="outputtext" value="{!childscope.scope.Description__c}" escape="false"  />
-                                                  </div>
-                                       </div>    
-                                       <div class="slds-form-element"  style="padding-left:0px;">
-                                                  <label class="slds-form-element__label">Assumption</label>
-                                                  <div class="slds-form-element__control scope-description">
-                                                      <apex:inputTextarea id="assumptionRtext" richtext="true" cols="260" rows="8" value="{!childscope.scope.E2_Assumption__c}" />
-                                                      <apex:outputText style="padding:inherit;margin:inherit" id="assumptiontext" value="{!childscope.scope.E2_Assumption__c}" escape="false"  />
-                                                  </div>
-                                       </div>    
-                                       
+                                        <div class="slds-form-element" style="padding-left:0px;">
+                                            <label class="slds-form-element__label">Description</label>
+                                            <div class="slds-form-element__control scope-description">
+                                                <apex:inputTextarea id="richtext" richtext="true" cols="260" rows="8" value="{!childscope.scope.Description__c}"/>
+                                                <apex:outputText style="padding:inherit;margin:inherit" id="outputtext" value="{!childscope.scope.Description__c}" escape="false" />
+                                            </div>
+                                        </div>
+                                        <div class="slds-form-element" style="padding-left:0px;">
+                                            <label class="slds-form-element__label">Assumption</label>
+                                            <div class="slds-form-element__control scope-description">
+                                                <apex:inputTextarea id="assumptionRtext" richtext="true" cols="260" rows="8" value="{!childscope.scope.E2_Assumption__c}"/>
+                                                <apex:outputText style="padding:inherit;margin:inherit" id="assumptiontext" value="{!childscope.scope.E2_Assumption__c}" escape="false" />
+                                            </div>
+                                        </div>
                                     </td>
-                                    <!--td data-label="Assumptions" class="scope-description slds-truncate slds-size--3-of-8">
-                                       
-                                    </td-->
-
-                                 </tr>
-                                 <tr class="slds-selection-background">
-                                    <td colspan="3" style="padding:0px;">
-                                       <div class="effortsdiv" style="margin-top:5px;display:{!IF(childscope.slider_state = 'effort', 'block', 'block')}">
-                                          <span class="slds-badge slds-theme--default slds-float-left">Effort</span>
-                                          <apex:commandbutton styleClass="slds-button slds-button--neutral slds-button--small slds-button--right--float slds-update-scope" title="Add Bulk Efforts" value="Add Bulk Efforts" onclick="EditScope.addBulkEfforts_click(this); return false;"/>
-                                          <apex:commandbutton onclick="return validateData();" styleClass="slds-button slds-button--neutral slds-button--small slds-button--right--float" value="Add Effort" action="{!childscope.AddNewEffort}"/>
-                                          <table class="slds-table slds-table--bordered slds-no-row-hover slds-max-medium-table--stacked ">
-                                             <thead>
-                                                <tr class="slds-text-heading--label slds-truncate slds-selection-background">
-                                                   <!-- <th class="slds-is-sortable is_cloned" scope="col">
-                                                      <div class="slds-truncate"></div>
-                                                   </th> -->
-                                                   <th class="slds-is-sortable" scope="col">
-                                                      <div class="slds-truncate">Name<abbr class="slds-required" title="required">*</abbr></div>
-                                                   </th>
-                                                   <th class="slds-is-sortable" scope="col">
-                                                      <div class="slds-truncate">Low (%)<abbr class="slds-required" title="required">*</abbr></div>
-                                                   </th>
-                                                   <th class="slds-is-sortable" scope="col">
-                                                      <div class="slds-truncate">Effort Hrs<abbr class="slds-required" title="required">*</abbr></div>
-                                                   </th>
-                                                   <th class="slds-is-sortable" scope="col">
-                                                      <div class="slds-truncate">High (%)<abbr class="slds-required" title="required">*</abbr></div>
-                                                   </th>
-                                                   <th class="slds-is-sortable" scope="col">
-                                                      <div class="slds-truncate">Phase<abbr class="slds-required" title="required">*</abbr></div>
-                                                   </th>
-                                                   <th class="slds-is-sortable" scope="col">
-                                                      <div class="slds-truncate">Role<abbr class="slds-required" title="required">*</abbr></div>
-                                                   </th>
-                                                   <th class="slds-is-sortable" scope="col">
-                                                      <div class="slds-truncate">Speciality</div>
-                                                   </th>
-                                                   <th class="slds-is-sortable" scope="col">
-                                                      <div class="slds-truncate"></div>
-                                                   </th>
-                                                </tr>
-                                             </thead>
-                                             <tbody>
-                                                <apex:outputpanel rendered="{!IF(childscope.efforts.size = 0, true, false)}">
-                                                    <tr><td colspan="9">No specified efforts defined!!!</td></tr>                                                                                                       
-                                                </apex:outputpanel>
-                                                <apex:repeat value="{!childscope.efforts}" var="effort">
-                                                   <apex:outputpanel rendered="{!!effort.isDeleted}">
-                                                      <tr class="slds-hint-parent slds-selection-background">
-                                                         <!-- <td data-label="Cloned" class="slds-truncate {!IF(effort.isCloned = true,'is_cloned','')}" title="{!IF(effort.isCloned = true,'This is cloned effort','')}">
-                                                         </td> -->
-                                                         <td class="slds-truncate slds-size--1-of-8 whitespace_normal" data-label="Name"  title="{!effort.effort.Name}">
-                                                            <apex:outputpanel rendered="{!NOT(effort.isCloned)}">
-                                                               <div class="slds-form-element is-required whitespace_normal">
-                                                                  <div class="slds-form-element__control">
-                                                                     <apex:inputfield styleclass="slds-input" value="{!effort.effort.Name}" rendered="{!NOT(effort.isCloned)}"/>
-                                                                  </div>
-                                                                  <div class="slds-form-element__help" style="display:none">This field is required</div>
-                                                               </div>
-                                                            </apex:outputpanel>
-                                                            <apex:outputfield value="{!effort.effort.Name}" rendered="{!effort.isCloned}"/>
-                                                         </td>
-                                                        <td class="slds-truncate slds-size--1-of-8" data-label="Low %">
-                                                            <apex:outputpanel rendered="{!NOT(effort.isCloned)}">
-                                                               <div class="slds-form-element is-required ">
-                                                                  <div class="slds-form-element__control">
-                                                                     <apex:inputfield styleclass="slds-input mandate-numeric" style="width:60px" value="{!effort.effort.Complexity_Factor_Low__c}" rendered="{!NOT(effort.isCloned)}"/>
-                                                                  </div>
-                                                                  <div class="slds-form-element__help" style="display:none">This field is required</div>
-                                                               </div>
-                                                            </apex:outputpanel>
-                                                            <apex:outputfield value="{!effort.effort.Complexity_Factor_Low__c}" rendered="{!effort.isCloned}"/>
-                                                         </td>
-                                                         <td class="slds-truncate slds-size--1-of-8 effortsColumn" data-label="Effort Hrs">
-                                                            <input type="hidden" class="oldhrs" value="{!effort.oldHrs}"/>
-                                                            <div class="slds-form-element is-required ">
-                                                               <div class="slds-form-element__control">
-                                                                  <apex:inputfield styleclass="slds-input mandate-numeric" id="allocationHrs" style="width:60px" value="{!effort.effort.Effort_Hrs__c}" />
-                                                               </div>
-                                                               <div class="slds-form-element__help" style="display:none">This field is required</div>
-                                                            </div>
-                                                            <apex:outputpanel rendered="{!effort.isCloned}">
-                                                               <div class="slds-form-element override-reason" style="{!IF(ISBLANK(effort.effort.Hrs_Override_Reason__c),'display:none;','')}">
-                                                                  <label class="slds-form-element__label" for="textarea-input-01">Override Reason<abbr class="slds-required" title="required">*</abbr></label>                                   
-                                                                  <div class="slds-form-element__control">
-                                                                     <apex:inputfield styleclass="slds-textarea override-reason" value="{!effort.effort.Hrs_Override_Reason__c}"/>
-                                                                  </div>
-                                                                  <div class="slds-form-element__help" style="display:none">This field is required</div>
-                                                               </div>
-                                                            </apex:outputpanel>
-                                                         </td>
-                                                         <td class="slds-truncate slds-size--1-of-8" data-label="High %">
-                                                            <apex:outputpanel rendered="{!NOT(effort.isCloned)}">
-                                                               <div class="slds-form-element is-required ">
-                                                                  <div class="slds-form-element__control">
-                                                                     <apex:inputfield style="width:60px" styleclass="slds-input mandate-numeric" value="{!effort.effort.Complexity_Factor_High__c}" />
-                                                                  </div>
-                                                                  <div class="slds-form-element__help" style="display:none">This field is required</div>
-                                                               </div>
-                                                            </apex:outputpanel>
-                                                            <apex:outputfield value="{!effort.effort.Complexity_Factor_High__c}" rendered="{!effort.isCloned}"/>
-                                                         </td>
-                                                         <td class="slds-truncate slds-size--1-of-8 whitespace_normal" data-label="Phase">
-                                                            <apex:outputpanel rendered="{!NOT(effort.isCloned)}">
-                                                               <div class="slds-form-element is-required">
-                                                                  <div class="slds-form-element__control">
-                                                                     <apex:inputfield styleclass="slds-select" value="{!effort.effort.Phase__c}" rendered="{!NOT(effort.isCloned)}"/>
-                                                                  </div>
-                                                                  <div class="slds-form-element__help"  style="display:none">This field is required</div>
-                                                               </div>
-                                                            </apex:outputpanel>
-                                                            <apex:outputfield value="{!effort.effort.Phase__c}" rendered="{!effort.isCloned}"/>
-                                                         </td>
-                                                         <td class="slds-truncate slds-size--1-of-8 whitespace_normal" data-label="Role">
-                                                            <apex:outputpanel rendered="{!NOT(effort.isCloned)}">
-                                                               <div class="slds-form-element is-required ">
-                                                                  <div class="slds-form-element__control">
-                                                                     <apex:inputfield styleclass="slds-select" value="{!effort.effort.Resource_Role__c}" rendered="{!NOT(effort.isCloned)}"/>
-                                                                  </div>
-                                                                  <div class="slds-form-element__help" style="display:none">This field is required</div>
-                                                               </div>
-                                                            </apex:outputpanel>
-                                                            <apex:outputfield value="{!effort.effort.Resource_Role__c}" rendered="{!effort.isCloned}"/>
-                                                         </td>
-                                                         <td class="slds-size--1-of-8 whitespace_normal" data-label="Speciality">
-                                                            <apex:inputfield styleclass="slds-select" style="width:80%" value="{!effort.effort.Speciality__c}"/>
-                                                             <!-- <apex:outputText value="{!effort.effort.Speciality__r.Name}" rendered="{!effort.isCloned}"/>-->
-                                                         </td>
-                                                         <td class="slds-cell-shrink" data-label="Actions">
-                                                            <apex:commandlink immediate="true" styleClass="delete_button slds-button--right--float" rendered="{!NOT(is_View)}" value="" action="{!effort.remove}"/>
-                                                         </td>
-                                                      </tr>
-                                                   </apex:outputpanel>
-                                                </apex:repeat>
-                                             </tbody>
-                                          </table>
-                                       </div>
-                                    </td>
-                                 </tr>
-                            </apex:outputpanel>
-                                </apex:repeat>
+                                </tr>
                             </tbody>
                         </table>
-                        <!--Start : AddEditQuestion-->
-                        <div id="QuestionanswerDiv" class="slds-m-top--medium slds-selection-background" style="border-bottom: 1px solid #d8dde6;">
-                            <apex:outputPanel id="questionAnswerBlock">
-                            <div style="padding-top:5px;">
-                                <span class="slds-badge slds-theme--default slds-float-left" style="font-weight:bold;">Question &#38; Answer</span>
-                                <apex:outputpanel styleClass="slds-button slds-button--neutral slds-button--small slds-button--right--float" style="cursor:pointer;">
-                                    <apex:outputText value="Add Question"></apex:outputText>
-                                    <apex:actionSupport event="onclick" oncomplete="resetIframeHeight();" action="{!addNewQuestion}" rerender="questionAnswerBlock"/>
-                                </apex:outputpanel>
-                            </div>
-                            <br/><br/>
-                            
-                            <div class="slds-grid slds-wrap slds-grid--pull-padded" id="questionAnswerDiv">
-                                <apex:outputText rendered="{!IF(scopeQuestionManager.listQuestions.size = 0, true, false)}">
-                                <div class="slds-col" style="padding-left:8px;">
-                                    No Q &#38; A records defined.
-                                </div>
-                                </apex:outputText>
-                                <apex:outputText rendered="{!IF(scopeQuestionManager.listQuestions.size = 0, false, true)}">
-                                <div class="slds-col--padded slds-size--1-of-1">
-                                <apex:repeat value="{!scopeQuestionManager.listQuestions}" var="question">
-                                    <apex:outputpanel layout="none" rendered="{!!question.isDeleted}">
-                                        <div class="slds-grid slds-wrap slds-grid--pull-padded"  style="border-top: 1px solid #d8dde6;" id="{!question.e2question.Id}">
-                                            <div class="slds-col--padded slds-size--8-of-9 whitespace_normal" id="{!question.e2question.Id}questionText" style="{!IF(OR(question.e2question.Id == NULL,question.isEdit),'display:none;','')}width: 90%;" title="{!question.e2question.Question_Text__c}">
-                                                <span id="text">Q.&nbsp;<apex:outputfield value="{!question.e2question.Question_Text__c}"/>?</span>
-                                                <apex:outputpanel styleClass="edit-button slds-button--right--float">
-                                                    <apex:actionSupport event="onclick" rerender="" oncomplete="AddEditQuestionAnswer.editQuestion('{!question.e2question.Id}questionText');return false;" action="{!question.markEdit}" />
-                                                </apex:outputpanel>
-                                            </div>
-                                            <div class="slds-col--padded slds-size--8-of-9 whitespace_normal " id="{!question.e2question.Id}questionInput" style="{!IF(OR(question.e2question.Id == NULL,question.isEdit),'display:block;','display:none;')}width: 85%;" title="{!question.e2question.Question_Text__c}">
-                                                <div class="slds-grid slds-wrap slds-grid--pull-padded" style="margin-left:5px;">
-                                                    <div class="slds-col--padded slds-size--5-of-9">
-                                                        <div class="slds-form-element is-required whitespace_normal">
-                                                            <label class="slds-form-element__label">Question</label>
-                                                            <div class="slds-form-element__control">
-                                                                <apex:inputText styleclass="slds-input" id="questionValue" value="{!question.e2question.Question_Text__c}" rendered="{!NOT(question.isCloned)}"/>
-                                                            </div>
-                                                            <div class="slds-form-element__help" style="display:none">This field is required</div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="slds-col--padded slds-size--3-of-9">
-                                                        <div class="slds-form-element is-required whitespace_normal">
-                                                            <label class="slds-form-element__label">Type</label>
-                                                            <div class="slds-form-element__control">
-                                                                <apex:inputField styleclass="slds-select" value="{!question.e2question.Type__c}" rendered="{!NOT(question.isCloned)}">
-                                                                    <apex:actionSupport event="onchange" oncomplete="resetIframeHeight();" action="{!question.addAnswer}" rerender="questionAnswerBlock"/>
-                                                                </apex:inputField>
-                                                            </div>
-                                                            <div class="slds-form-element__help" style="display:none">This field is required</div>
-                                                        </div>
-                                                    </div>
-                                                    <apex:outputText rendered="{!question.e2question.id != NULL}">
-                                                    <div class="slds-col--padded slds-size--1-of-9">
-                                                        <apex:outputpanel styleClass="close-button slds-button--right--float">
-                                                            <apex:actionSupport event="onclick" rerender="" oncomplete="AddEditQuestionAnswer.hideQuestionEditDiv('{!question.e2question.Id}questionInput');return false;" action="{!question.removeEditMode}" />
-                                                        </apex:outputpanel>
-                                                    </div>
-                                                    </apex:outputText>
-                                                </div>
-                                            </div>
-                                            <div class="slds-col--padded slds-size--1-of-9" data-label="Actions">
-                                                <apex:outputpanel styleClass="delete_button slds-button--right--float" rendered="{!OR(NOT(is_View),NOT(question.isCloned))}">
-                                                    <apex:actionSupport event="onclick" action="{!question.remove}" oncomplete="resetIframeHeight();" rerender="questionAnswerBlock"/>
-                                                </apex:outputpanel>
-                                            </div>
-                                            <apex:outputpanel layout="none" rendered="{!question.e2question.Type__c!='Summary'}">
-                                            <div class="slds-col--padded slds-size--1-of-1" id="{!question.e2question.Id}answerInput" style="{!IF(OR(question.e2question.Id == NULL,question.isEdit),'display:block;','display:none;')}">
-                                                <div class="slds-grid slds-wrap slds-grid--pull-padded slds-theme--default" style="margin-bottom:5px;margin-top:5px;">
-                                                        <apex:repeat value="{!question.e2answers}" var="answer">
-                                                           <apex:outputpanel layout="none" rendered="{!!answer.isDeleted}">
-                                                            <div class="slds-col--padded slds-size--1-of-1" id="{!answer.key}answerEditDiv">
-                                                                <div class="slds-grid slds-grid--pull-padded slds-theme--default" style="padding-left:22px;">
-                                                                    <div class="slds-col--padded slds-size--1-of-4" style="margin-left:5px;">
-                                                                <div class="slds-form-element is-required whitespace_normal">
-                                                                    <label class="slds-form-element__label">Answer</label>
-                                                                    <div class="slds-form-element__control"> 
-                                                                        <apex:inputText styleclass="slds-input" id="answerValue" value="{!answer.e2answer.Answer_Text__c}" rendered="{!NOT(answer.isCloned)}"/>
-                                                                    </div>
-                                                                    <div class="slds-form-element__help" style="display:none">This field is required</div>
-                                                                    </div>
-                                                            </div>
-                                                            <div class="slds-col--padded slds-size--1-of-4" style="margin-left:5px;">
-                                                                <div class="slds-form-element whitespace_normal">
-                                                                    <label class="slds-form-element__label">Action</label>
-                                                                    <div class="slds-form-element__control">
-                                                                        <apex:inputfield styleclass="slds-select" id="answerAction" html-displayAnswerDivId="{!answer.Key}ActionScopes" value="{!answer.e2answer.Action__c}" rendered="{!NOT(answer.isCloned)}" onchange="return AddEditQuestionAnswer.showJSTree(this);"/><apex:inputhidden value="{!answer.bindedScopes}" id="bindedScopes" />
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                            <!--<div class="slds-col--padded slds-size--1-of-4" style="margin-left:5px;">
-                                                                <div class="slds-form-element whitespace_normal">
-                                                                    <label class="slds-form-element__label">Effort LOE (%)</label>
-                                                                    <div class="slds-form-element__control">
-                                                                        <apex:inputfield styleclass="slds-input mandate-numeric" id="answerLOE" style="width:60px" value="{!answer.e2answer.Effort_LOE__c}" rendered="{!NOT(answer.isCloned)}"/>
-                                                                    </div>
-                                                               </div>
-                                                            </div> -->
-                                                            <div class="slds-col--padded slds-size--1-of-4" style="margin-left:5px;">
-                                                                <apex:outputpanel styleClass="delete_button slds-button--right--float" style="padding:35px 30px 20px 20px;">
-                                                                <apex:actionSupport event="onclick" action="{!answer.remove}" oncomplete="resetIframeHeight();" rerender="questionAnswerBlock"/>
-                                                                </apex:outputpanel>
-                                                            </div>
-                                                                </div>
-                                                            </div>
-                                                            <div class="slds-col--padded slds-size--1-of-1" id="{!answer.Key}ActionScopes" style="margin-left:5px;{!IF(OR(answer.e2answer.Action__c=='Activate child scope',answer.e2answer.Action__c=='Deactivate child scope'),'display:block;','display:none;')}">
-                                                                <span class="slds-float-left" style="font-weight:bold;">Selected scopes&nbsp;:&nbsp;</span><apex:repeat value="{!answer.bindedActionScopes}" var="bindedActionScopes">
-                                                                        <span class="slds-badge slds-theme--default slds-float-left slds-custom-badge-background-grey" style="font-weight:bold;">{!bindedActionScopes.Scope__r.Name}</span>
+                        <div id="tabpanel">
+                            <ul class="slds-tabs--default__nav" role="tablist">
+                                <li class="slds-tabs--default__item slds-text-heading--label slds-active" title="Efforts"
+                                    role="presentation">
+                                    <a class="slds-tabs--default__link" href="javascript:void(0);" role="tab" tabindex="-1"
+                                        aria-selected="true" aria-controls="tab-default-1"
+                                        id="tab-default-1__item">Efforts&nbsp;</a>
+                                </li>
+                                <li class="slds-tabs--default__item slds-text-heading--label" title="Recommended Assets"
+                                    role="presentation">
+                                    <a class="slds-tabs--default__link" href="javascript:void(0);" role="tab" tabindex="0"
+                                        aria-selected="false" aria-controls="tab-default-2"
+                                        id="tab-default-2__item">Recommended Assets</a>
+                                </li>
+                                <li class="slds-tabs--default__item slds-text-heading--label" title="Questions  &#38; Answers"
+                                    role="presentation">
+                                    <a class="slds-tabs--default__link" href="javascript:void(0);" role="tab" tabindex="1"
+                                        aria-selected="false" aria-controls="tab-default-3"
+                                        id="tab-default-3__item">Questions  &#38; Answers</a>
+                                </li>
+                            </ul>
+                            <div id="tab-default-1" style="padding:0px" class="slds-tabs--default__content slds-show paddingTopZero" role="tabpanel" aria-labelledby="tab-default-1__item">
+                                <table class="slds-table slds-table--bordered slds-no-row-hover slds-max-medium-table--stacked scope-table">
+                                    <tbody>
+                                                <tr class="slds-selection-background">
+                                                    <td colspan="3" style="padding:0px;">
+                                                        <div class="effortsdiv" style="margin-top:5px;display:{!IF(childscope.slider_state = 'effort', 'block', 'block')}">
+                                                            <apex:commandbutton styleClass="slds-button slds-button--neutral slds-button--small slds-button--right--float slds-update-scope"
+                                                                title="Add Bulk Efforts"
+                                                                value="Add Bulk Efforts"
+                                                                onclick="EditScope.addBulkEfforts_click(this); return false;"/>
+                                                            <apex:commandbutton onclick="return validateData();" styleClass="slds-button slds-button--neutral slds-button--small slds-button--right--float"
+                                                                value="Add Effort" action="{!childscope.AddNewEffort}"/>
+                                                            <table class="slds-table slds-table--bordered slds-no-row-hover slds-max-medium-table--stacked ">
+                                                                <thead>
+                                                                    <tr class="slds-text-heading--label slds-truncate slds-selection-background">
+                                                                        <th class="slds-is-sortable" scope="col">
+                                                                            <div class="slds-truncate">Name<abbr class="slds-required" title="required">*</abbr>
+                                                                            </div>
+                                                                        </th>
+                                                                        <th class="slds-is-sortable" scope="col">
+                                                                            <div class="slds-truncate">Low (%)<abbr class="slds-required" title="required">*</abbr>
+                                                                            </div>
+                                                                        </th>
+                                                                        <th class="slds-is-sortable" scope="col">
+                                                                            <div class="slds-truncate">Effort Hrs<abbr class="slds-required" title="required">*</abbr>
+                                                                            </div>
+                                                                        </th>
+                                                                        <th class="slds-is-sortable" scope="col">
+                                                                            <div class="slds-truncate">High (%)<abbr class="slds-required" title="required">*</abbr>
+                                                                            </div>
+                                                                        </th>
+                                                                        <th class="slds-is-sortable" scope="col">
+                                                                            <div class="slds-truncate">Phase<abbr class="slds-required" title="required">*</abbr>
+                                                                            </div>
+                                                                        </th>
+                                                                        <th class="slds-is-sortable" scope="col">
+                                                                            <div class="slds-truncate">Role<abbr class="slds-required" title="required">*</abbr>
+                                                                            </div>
+                                                                        </th>
+                                                                        <th class="slds-is-sortable" scope="col">
+                                                                            <div class="slds-truncate">Speciality</div>
+                                                                        </th>
+                                                                        <th class="slds-is-sortable" scope="col">
+                                                                            <div class="slds-truncate"></div>
+                                                                        </th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    <apex:outputpanel rendered="{!IF(childscope.efforts.size = 0, true, false)}">
+                                                                        <tr>
+                                                                            <td colspan="9">No specified efforts defined!!!</td>
+                                                                        </tr>
+                                                                    </apex:outputpanel>
+                                                                    <apex:repeat value="{!childscope.efforts}" var="effort">
+                                                                        <apex:outputpanel rendered="{!!effort.isDeleted}">
+                                                                            <tr class="slds-hint-parent slds-selection-background">
+                                                                                <td class="slds-truncate slds-size--1-of-8 whitespace_normal" data-label="Name" title="{!effort.effort.Name}">
+                                                                                    <apex:outputpanel rendered="{!NOT(effort.isCloned)}">
+                                                                                        <div class="slds-form-element is-required whitespace_normal">
+                                                                                            <div class="slds-form-element__control">
+                                                                                                <apex:inputfield styleclass="slds-input" value="{!effort.effort.Name}" rendered="{!NOT(effort.isCloned)}"
+                                                                                                />
+                                                                                            </div>
+                                                                                            <div class="slds-form-element__help" style="display:none">This field is required</div>
+                                                                                        </div>
+                                                                                    </apex:outputpanel>
+                                                                                    <apex:outputfield value="{!effort.effort.Name}" rendered="{!effort.isCloned}" />
+                                                                                </td>
+                                                                                <td class="slds-truncate slds-size--1-of-8" data-label="Low %">
+                                                                                    <apex:outputpanel rendered="{!NOT(effort.isCloned)}">
+                                                                                        <div class="slds-form-element is-required ">
+                                                                                            <div class="slds-form-element__control">
+                                                                                                <apex:inputfield styleclass="slds-input mandate-numeric" style="width:60px" value="{!effort.effort.Complexity_Factor_Low__c}"
+                                                                                                    rendered="{!NOT(effort.isCloned)}"/>
+                                                                                            </div>
+                                                                                            <div class="slds-form-element__help" style="display:none">This field is required</div>
+                                                                                        </div>
+                                                                                    </apex:outputpanel>
+                                                                                    <apex:outputfield value="{!effort.effort.Complexity_Factor_Low__c}" rendered="{!effort.isCloned}"/>
+                                                                                </td>
+                                                                                <td class="slds-truncate slds-size--1-of-8 effortsColumn" data-label="Effort Hrs">
+                                                                                    <input type="hidden" class="oldhrs" value="{!effort.oldHrs}" />
+                                                                                    <div class="slds-form-element is-required ">
+                                                                                        <div class="slds-form-element__control">
+                                                                                            <apex:inputfield styleclass="slds-input mandate-numeric" id="allocationHrs" style="width:60px"
+                                                                                                value="{!effort.effort.Effort_Hrs__c}"/>
+                                                                                        </div>
+                                                                                        <div class="slds-form-element__help" style="display:none">This field is required</div>
+                                                                                    </div>
+                                                                                    <apex:outputpanel rendered="{!effort.isCloned}">
+                                                                                        <div class="slds-form-element override-reason" style="{!IF(ISBLANK(effort.effort.Hrs_Override_Reason__c),'display:none;','')}">
+                                                                                            <label class="slds-form-element__label" for="textarea-input-01">Override Reason<abbr class="slds-required" title="required">*</abbr></label>
+                                                                                            <div class="slds-form-element__control">
+                                                                                                <apex:inputfield styleclass="slds-textarea override-reason" value="{!effort.effort.Hrs_Override_Reason__c}"/>
+                                                                                            </div>
+                                                                                            <div class="slds-form-element__help" style="display:none">This field is required</div>
+                                                                                        </div>
+                                                                                    </apex:outputpanel>
+                                                                                </td>
+                                                                                <td class="slds-truncate slds-size--1-of-8" data-label="High %">
+                                                                                    <apex:outputpanel rendered="{!NOT(effort.isCloned)}">
+                                                                                        <div class="slds-form-element is-required ">
+                                                                                            <div class="slds-form-element__control">
+                                                                                                <apex:inputfield style="width:60px" styleclass="slds-input mandate-numeric" value="{!effort.effort.Complexity_Factor_High__c}"/>
+                                                                                            </div>
+                                                                                            <div class="slds-form-element__help" style="display:none">This field is required</div>
+                                                                                        </div>
+                                                                                    </apex:outputpanel>
+                                                                                    <apex:outputfield value="{!effort.effort.Complexity_Factor_High__c}" rendered="{!effort.isCloned}"/>
+                                                                                </td>
+                                                                                <td class="slds-truncate slds-size--1-of-8 whitespace_normal" data-label="Phase">
+                                                                                    <apex:outputpanel rendered="{!NOT(effort.isCloned)}">
+                                                                                        <div class="slds-form-element is-required">
+                                                                                            <div class="slds-form-element__control">
+                                                                                                <apex:inputfield styleclass="slds-select" value="{!effort.effort.Phase__c}" rendered="{!NOT(effort.isCloned)}"/>
+                                                                                            </div>
+                                                                                            <div class="slds-form-element__help" style="display:none">This field is required</div>
+                                                                                        </div>
+                                                                                    </apex:outputpanel>
+                                                                                    <apex:outputfield value="{!effort.effort.Phase__c}" rendered="{!effort.isCloned}"/>
+                                                                                </td>
+                                                                                <td class="slds-truncate slds-size--1-of-8 whitespace_normal" data-label="Role">
+                                                                                    <apex:outputpanel rendered="{!NOT(effort.isCloned)}">
+                                                                                        <div class="slds-form-element is-required ">
+                                                                                            <div class="slds-form-element__control">
+                                                                                                <apex:inputfield styleclass="slds-select" value="{!effort.effort.Resource_Role__c}" rendered="{!NOT(effort.isCloned)}"/>
+                                                                                            </div>
+                                                                                            <div class="slds-form-element__help" style="display:none">This field is required</div>
+                                                                                        </div>
+                                                                                    </apex:outputpanel>
+                                                                                    <apex:outputfield value="{!effort.effort.Resource_Role__c}" rendered="{!effort.isCloned}"
+                                                                                    />
+                                                                                </td>
+                                                                                <td class="slds-size--1-of-8 whitespace_normal" data-label="Speciality">
+                                                                                    <apex:inputfield styleclass="slds-select" style="width:80%" value="{!effort.effort.Speciality__c}"/>
+                                                                                </td>
+                                                                                <td class="slds-cell-shrink" data-label="Actions">
+                                                                                    <apex:commandlink immediate="true" styleClass="delete_button slds-button--right--float" rendered="{!NOT(is_View)}" value="" action="{!effort.remove}"/>
+                                                                                </td>
+                                                                            </tr>
+                                                                        </apex:outputpanel>
                                                                     </apex:repeat>
-                                                                    <a class="edit-button1 slds-button--right--float" href="javascript:void(0);" onclick="AddEditQuestionAnswer.showJSTreeEdit('{!answer.key}answerEditDiv');"> </a>
-                                                            </div>
-                                                            </apex:outputpanel>
-                                                        </apex:repeat>
-                                                        <div class="slds-col--padded slds-size--1-of-1" style="padding-bottom:5px;{!IF(OR(question.e2question.Type__c == '',question.e2question.Type__c == 'Yes/No'),'display:none;','')}">
-                                                            <apex:outputpanel styleClass="btn slds-button slds-button--neutral slds-button--brand slds-button--right--float" style="cursor:pointer;">
-                                                                <apex:outputText value="Add Answer"></apex:outputText>
-                                                                <apex:actionSupport event="onclick" oncomplete="resetIframeHeight();return validateDataQuestion();" action="{!question.addNewAnswerInstance}" rerender="questionAnswerBlock"/>
-                                                            </apex:outputpanel>
+                                                                </tbody>
+                                                            </table>
                                                         </div>
-                                            </div>    
-                                            </div>
-                                            </apex:outputpanel>
-                                            <div class="slds-col--padded slds-size--1-of-1" id="{!question.e2question.Id}answerText" style="{!IF(OR(question.e2question.Id == NULL,question.isEdit),'display:none;','')}">
-                                                <apex:inputhidden value="{!question.selectedAnswer}" id="selectedAnswer" />
-                                                <div class="slds-grid slds-wrap slds-grid--pull-padded slds-theme--default" style="margin-bottom:5px;margin-top:5px;">
-                                                    <apex:outputpanel layout="none" rendered="{!question.e2question.Type__c=='Summary'}">
-                                                        <apex:repeat value="{!question.e2answers}" var="answer">
-                                                            <div class="slds-col--padded slds-size--8-of-9" style="margin-left:5px;">
-                                                                <apex:inputTextarea styleClass="slds-textarea" value="{!answer.e2answer.Answer_Text__c}" html-placeholder="Enter your answer here."/>
-                                                            </div>
-                                                            <div class="slds-col--padded slds-size--1-of-9" data-label="Actions"></div>
-                                                        </apex:repeat>
-                                                    </apex:outputpanel>
-                                                    <apex:outputpanel layout="none" rendered="{!question.e2question.Type__c=='Multi-select'}">
-                                                        <apex:repeat value="{!question.e2answers}" var="answer">
-                                                            <div class="slds-col--padded slds-size--1-of-1" style="margin-left:5px;">
-                                                                <label class="slds-checkbox" id="{!answer.key}">
-                                                                    <apex:outputText rendered="{!answer.e2answer.Is_Selected__c}">
-                                                                        <input id="{!answer.key}" checked="true" type="checkbox" name="{!question.e2question.id}answerscheckbox" questionid="{!question.e2question.id}" value="{!answer.key}" action="{!answer.e2answer.Action__c}" loe="{!answer.e2answer.Effort_LOE__c}" onchange="AddEditQuestionAnswer.showActionAlert(this);"/>
-                                                                    </apex:outputText>
-                                                                    <apex:outputText rendered="{!!answer.e2answer.Is_Selected__c}">
-                                                                        <input id="{!answer.key}" type="checkbox" name="{!question.e2question.id}answerscheckbox" questionid="{!question.e2question.id}" value="{!answer.key}" action="{!answer.e2answer.Action__c}" loe="{!answer.e2answer.Effort_LOE__c}" onchange="AddEditQuestionAnswer.showActionAlert(this);"/>    
-                                                                    </apex:outputText>
-                                                                    <span class="slds-checkbox--faux"></span>
-                                                                    <span class="slds-form-element__label" id="{!answer.key}Text">{!answer.e2answer.Answer_Text__c}</span>
-                                                                </label>
-                                                            </div>
-                                                        </apex:repeat>
-                                                    </apex:outputpanel>
-                                                    <apex:outputpanel layout="none" rendered="{!OR(question.e2question.Type__c == 'Single-select',question.e2question.Type__c=='Yes/No')}">
-                                                        <div class="slds-col--padded slds-size--1-of-1" style="margin-left:5px;">
-                                                            <label class="slds-radio">
-                                                                <input type="radio" name="{!question.e2question.id}answersradio"  questionid="{!question.e2question.id}" checked="true" value="" action="" loe="" onchange="AddEditQuestionAnswer.showActionAlert(this);"/>
-                                                                <span class="slds-radio--faux"></span>
-                                                                <span class="slds-form-element__label">None</span>
-                                                            </label>
-                                                        </div>
-                                                        <apex:repeat value="{!question.e2answers}" var="answer">
-                                                            <div class="slds-col--padded slds-size--1-of-1" style="margin-left:5px;">
-                                                                <label class="slds-radio">
-                                                                    <apex:outputText rendered="{!answer.e2answer.Is_Selected__c}">
-                                                                        <input checked="true" id="{!answer.key}" type="radio" onchange="AddEditQuestionAnswer.showActionAlert(this);" questionid="{!question.e2question.id}" name="{!question.e2question.id}answersradio" value="{!answer.key}" action="{!answer.e2answer.Action__c}" loe="{!answer.e2answer.Effort_LOE__c}"/>
-                                                                    </apex:outputText>
-                                                                    <apex:outputText rendered="{!!answer.e2answer.Is_Selected__c}">
-                                                                        <input id="{!answer.key}" type="radio" onchange="AddEditQuestionAnswer.showActionAlert(this);" questionid="{!question.e2question.id}" name="{!question.e2question.id}answersradio" value="{!answer.key}" action="{!answer.e2answer.Action__c}" loe="{!answer.e2answer.Effort_LOE__c}"/>
-                                                                    </apex:outputText>
-                                                                    <span class="slds-radio--faux"></span>
-                                                                    <span class="slds-form-element__label" id="{!answer.key}Text">{!answer.e2answer.Answer_Text__c}</span>
-                                                                </label>
-                                                            </div>
-                                                        </apex:repeat>
-                                                    </apex:outputpanel>
-                                            </div>    
-                                            </div>
+                                                    </td>
+                                                </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div id="tab-default-2" style="padding:0px" class="slds-tabs--default__content slds-hide paddingTopZero" role="tabpanel" aria-labelledby="tab-default-2__item">
+                                <!-- Recommended Assets section -->
+                                <div id="recommendedAssetsDiv" style="margin-top:10px;display:block;">
+                                    <span class="slds-badge slds-theme--default slds-float-left slds-custom-badge-background-grey"
+                                        style="font-weight:bold;">Recommended Assets</span>
+                                    <br/>
+
+                                    <div class="Typeahead">
+
+                                        <div class="u-posRelative">
+                                            <input class="Typeahead-hint" type="text" readonly="" tabindex="-1" dir="ltr" />
+                                            <input id="searchStr_ele" class="Typeahead-input" type="text" placeholder="Search and Add Assets..."
+                                                name="q" autocomplete="off" spellcheck="false"
+                                                dir="auto" />
+                                            <img class="Typeahead-spinner" src="{!URLFOR($Resource.E2_SLDS1, '/assets/images/spinners/slds_spinner.gif')}"
+                                                style="display: none;" />
                                         </div>
-                                    </apex:outputpanel>    
-                                </apex:repeat>
-                                </div>
-                                </apex:outputText>
-                            </div>
-                            <script>
-                                /*$(function() {
-                                   //AddEditQuestionAnswer.bindEvent(); 
-                                });*/
-                            </script>
-                            </apex:outputPanel>
-                        </div>
-                        <!--End : AddEditQuestion-->
-                        <!-- Recommended Assets section -->
-                        <div id="recommendedAssetsDiv" style="margin-top:10px;display:block;">
-                            <span class="slds-badge slds-theme--default slds-float-left slds-custom-badge-background-grey" style="font-weight:bold;">Recommended Assets</span>
-                            <br/>
-                           
-                            <div class="Typeahead">
+                                        <div class="Typeahead-menu" style="max-height: 350px; overflow-y: auto;">
+                                        </div>
 
-                                <div class="u-posRelative">
-                                    <input class="Typeahead-hint" type="text" readonly="" tabindex="-1" dir="ltr" />
-                                    <input id="searchStr_ele" class="Typeahead-input" type="text" placeholder="Search and Add Assets..." name="q" autocomplete="off" spellcheck="false" dir="auto" />
-                                    <img class="Typeahead-spinner" src="{!URLFOR($Resource.E2_SLDS1, '/assets/images/spinners/slds_spinner.gif')}" style="display: none;" />
-                                    <!--button id="hideTypeahead" type="button" onclick="typeahead_input.hideTypeahead();" class="slds-button slds-button--neutral slds-button--small">Cancel</button-->
-                                </div>
-                                <div class="Typeahead-menu" style="max-height: 350px; overflow-y: auto;">
-                                </div>
+                                    </div>
 
-                            </div>
-
-                            <table id="RecommendedAssetsTable" class="slds-table slds-table--bordered slds-no-row-hover slds-max-medium-table--stacked ">
-                                <thead>
-                                    <tr class="slds-text-heading--label slds-truncate slds-selection-background">
-                                        <th class="slds-is-sortable" scope="col">
-                                            <div class="slds-truncate">Asset Name</div>
-                                        </th>
-                                        <th class="slds-is-sortable" scope="col">
-                                            <div class="slds-truncate">Short Description</div>
-                                        </th>
-                                        <!--th class="slds-is-sortable" scope="col">
-                                            <div class="slds-truncate">Technologies</div>
-                                        </th-->
-                                        <th class="slds-is-sortable" scope="col">
-                                            <div class="slds-truncate">Hours Saved</div>
-                                        </th>
-                                        <th class="slds-is-sortable" scope="col">
-                                            <div class="slds-truncate">Release Stage</div>
-                                        </th>
-                                        <th class="slds-is-sortable" scope="col">
-                                            <div class="slds-truncate"></div>
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <!--apex:outputpanel rendered="{!IF(assetsRecsJson == '', true, false)}">
+                                    <table id="RecommendedAssetsTable" class="slds-table slds-table--bordered slds-no-row-hover slds-max-medium-table--stacked ">
+                                        <thead>
+                                            <tr class="slds-text-heading--label slds-truncate slds-selection-background">
+                                                <th class="slds-is-sortable" scope="col">
+                                                    <div class="slds-truncate">Asset Name</div>
+                                                </th>
+                                                <th class="slds-is-sortable" scope="col">
+                                                    <div class="slds-truncate">Short Description</div>
+                                                </th>
+                                                <th class="slds-is-sortable" scope="col">
+                                                    <div class="slds-truncate">Hours Saved</div>
+                                                </th>
+                                                <th class="slds-is-sortable" scope="col">
+                                                    <div class="slds-truncate">Release Stage</div>
+                                                </th>
+                                                <th class="slds-is-sortable" scope="col">
+                                                    <div class="slds-truncate"></div>
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <!--apex:outputpanel rendered="{!IF(assetsRecsJson == '', true, false)}">
                                         <tr><td colspan="5">No recommended assets!!!</td></tr>                                                                                                       
                                     </apex:outputpanel-->
-                                    <!--apex:repeat value="{!lstExistingAssets}" var="assetRec">
+                                            <!--apex:repeat value="{!lstExistingAssets}" var="assetRec">
                                         <tr id="{!assetRec.id}">
                                             <td data-label="Asset Name">
                                                 <div class="slds-truncate"><a href="/{!assetRec.id}" target="_blank">{!assetRec.assetName}</a></div>
@@ -766,82 +683,313 @@
                                             </td>
                                         </tr>
                                     </apex:repeat-->
-                                </tbody>
-                            </table>
-                        </div>     
-                                 
-                  </div>
-               </div>
-               <!-- / PRIMARY CONTENT WRAPPER -->    
-               <!-- FOOTER -->
-               <div>
-                  <div class="slds-modal__footer page-footer">
-                     
-                  </div>
-                  <footer role="contentinfo" class="slds-p-around--large">
-                     <div class="slds-grid slds-grid--align-spread">
-                        <p class="slds-col">Estimator 2.0</p>
-                        <p class="slds-col">&copy; Appirio</p>
-                     </div>
-                  </footer>
-               </div>
-               <!-- / FOOTER -->     
-               <div id="loadingSpinner" class="slds-spinner_container" style="display: none !important;">
-                  <div class="slds-spinner--brand slds-spinner slds-spinner--large" aria-hidden="false" role="alert">
-                     <div class="slds-spinner__dot-a"></div>
-                     <div class="slds-spinner__dot-b"></div>
-                  </div>
-               </div>
-               
-               <div id="helpModal" class="slds-modal slds-fade-in-open" role="dialog" style="display: none !important;">
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div id="tab-default-3" style="padding:0px" class="slds-tabs--default__content slds-hide paddingTopZero" role="tabpanel" aria-labelledby="tab-default-2__item">
+                                <!--Start : AddEditQuestion-->
+                                        <div class="slds-width-hundred slds-theme--default" style="padding:5px">
+                                            <apex:outputpanel styleClass="slds-button slds-button--neutral slds-button--small slds-button--right--float"
+                                                style="cursor:pointer;">
+                                                <apex:outputText value="Add Question"></apex:outputText>
+                                                <apex:actionSupport event="onclick" onsubmit="showSpinner();" oncomplete="hideSpinner();resetIframeHeight();" action="{!addNewQuestion}"
+                                                    rerender="questionAnswerBlock" />
+                                            </apex:outputpanel>
+                                        </div>
+                                        <br/><br/>
+                                        <div id="QuestionanswerDiv" class="slds-selection-background">
+                                            <apex:outputPanel id="questionAnswerBlock">
+                                        <div class="slds-grid slds-wrap slds-grid--pull-padded" id="questionAnswerDiv">
+                                            <apex:outputText rendered="{!IF(scopeQuestionManager.listQuestions.size = 0, true, false)}">
+                                                <div class="slds-col" style="padding-left:8px;">
+                                                    No Q &#38; A records defined.
+                                                </div>
+                                            </apex:outputText>
+                                            <apex:outputText rendered="{!IF(scopeQuestionManager.listQuestions.size = 0, false, true)}">
+                                                <div class="slds-col--padded slds-size--1-of-1">
+                                                    <apex:repeat value="{!scopeQuestionManager.listQuestions}" var="question">
+                                                        <apex:outputpanel layout="none" rendered="{!!question.isDeleted}">
+                                                            <div class="slds-grid slds-wrap slds-grid--pull-padded" style="border-top: 1px solid #d8dde6;"
+                                                                id="{!question.e2question.Id}">
+                                                                <div class="slds-col--padded slds-size--8-of-9 whitespace_normal" id="{!question.e2question.Id}questionText"
+                                                                    style="{!IF(OR(question.e2question.Id == NULL,question.isEdit),'display:none;','')}width: 90%;"
+                                                                    title="{!question.e2question.Question_Text__c}">
+                                                                    <span id="text"><strong>Question</strong>&nbsp;&nbsp;<apex:outputfield value="{!question.e2question.Question_Text__c}"/>{!IF(CONTAINS(question.e2question.Question_Text__c,'?'),'','?')}</span>
+                                                                    <apex:outputpanel styleClass="edit-button slds-button--right--float">
+                                                                        <apex:actionSupport event="onclick" rerender="" onsubmit="showSpinner();" oncomplete="hideSpinner();AddEditQuestionAnswer.editQuestion('{!question.e2question.Id}questionText');return false;"
+                                                                            action="{!question.markEdit}"
+                                                                        />
+                                                                    </apex:outputpanel>
+                                                                </div>
+                                                                <div class="slds-col--padded slds-size--8-of-9 whitespace_normal " id="{!question.e2question.Id}questionInput"
+                                                                    style="{!IF(OR(question.e2question.Id == NULL,question.isEdit),'display:block;','display:none;')}width: 85%;"
+                                                                    title="{!question.e2question.Question_Text__c}">
+                                                                    <div class="slds-grid slds-wrap slds-grid--pull-padded" style="margin-left:5px;">
+                                                                        <div class="slds-col--padded slds-size--5-of-9">
+                                                                            <div class="slds-form-element is-required whitespace_normal">
+                                                                                <label class="slds-form-element__label">Question</label>
+                                                                                <div class="slds-form-element__control">
+                                                                                    <apex:inputText styleclass="slds-input" id="questionValue" value="{!question.e2question.Question_Text__c}"
+                                                                                        rendered="{!NOT(question.isCloned)}"
+                                                                                    />
+                                                                                </div>
+                                                                                <div class="slds-form-element__help" style="display:none">This field is required</div>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="slds-col--padded slds-size--3-of-9">
+                                                                            <div class="slds-form-element is-required whitespace_normal">
+                                                                                <label class="slds-form-element__label">Type</label>
+                                                                                <div class="slds-form-element__control">
+                                                                                    <apex:inputField styleclass="slds-select" value="{!question.e2question.Type__c}"
+                                                                                        rendered="{!NOT(question.isCloned)}">
+                                                                                        <apex:actionSupport event="onchange" onsubmit="showSpinner();" oncomplete="hideSpinner();resetIframeHeight();" action="{!question.addAnswer}"
+                                                                                            rerender="questionAnswerBlock"
+                                                                                        />
+                                                                                    </apex:inputField>
+                                                                                </div>
+                                                                                <div class="slds-form-element__help" style="display:none">This field is required</div>
+                                                                            </div>
+                                                                        </div>
+                                                                        <apex:outputText rendered="{!question.e2question.id != NULL}">
+                                                                            <div class="slds-col--padded slds-size--1-of-9">
+                                                                                <apex:outputpanel styleClass="close-button slds-button--right--float">
+                                                                                    <apex:actionSupport event="onclick" rerender="" onsubmit="showSpinner();" oncomplete="hideSpinner();AddEditQuestionAnswer.hideQuestionEditDiv('{!question.e2question.Id}questionInput');return false;"
+                                                                                        action="{!question.removeEditMode}"
+                                                                                    />
+                                                                                </apex:outputpanel>
+                                                                            </div>
+                                                                        </apex:outputText>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="slds-col--padded slds-size--1-of-9" data-label="Actions">
+                                                                    <apex:outputpanel styleClass="delete_button slds-button--right--float" rendered="{!OR(NOT(is_View),NOT(question.isCloned))}">
+                                                                        <apex:actionSupport event="onclick" action="{!question.remove}" onsubmit="showSpinner();" oncomplete="hideSpinner();resetIframeHeight();"
+                                                                            rerender="questionAnswerBlock"
+                                                                        />
+                                                                    </apex:outputpanel>
+                                                                </div>
+                                                                <apex:outputpanel layout="none" rendered="{!question.e2question.Type__c!='Summary'}">
+                                                                    <div class="slds-col--padded slds-size--1-of-1" id="{!question.e2question.Id}answerInput"
+                                                                        style="{!IF(OR(question.e2question.Id == NULL,question.isEdit),'display:block;','display:none;')}">
+                                                                        <div class="slds-grid slds-wrap slds-grid--pull-padded slds-theme--default" style="margin-bottom:5px;margin-top:5px;">
+                                                                            <apex:repeat value="{!question.e2answers}" var="answer">
+                                                                                <apex:outputpanel layout="none" rendered="{!!answer.isDeleted}">
+                                                                                    <div class="slds-col--padded slds-size--1-of-1" id="{!answer.key}answerEditDiv">
+                                                                                        <div class="slds-grid slds-grid--pull-padded slds-theme--default" style="padding-left:22px;">
+                                                                                            <div class="slds-col--padded slds-size--1-of-4" style="margin-left:5px;">
+                                                                                                <div class="slds-form-element whitespace_normal">
+                                                                                                    <label class="slds-form-element__label">Answer</label>
+                                                                                                    <div class="slds-form-element__control">
+                                                                                                        <apex:inputText styleclass="slds-input" id="answerValue" value="{!answer.answerString}"
+                                                                                                            rendered="{!NOT(answer.isCloned)}"
+                                                                                                        />
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                            <div class="slds-col--padded slds-size--1-of-4" style="margin-left:5px;">
+                                                                                                <div class="slds-form-element whitespace_normal">
+                                                                                                    <label class="slds-form-element__label">Action</label>
+                                                                                                    <div class="slds-form-element__control">
+                                                                                                        <apex:inputfield styleclass="slds-select" id="answerAction" html-displayAnswerDivId="{!answer.Key}ActionScopes"
+                                                                                                            value="{!answer.e2answer.Action__c}"
+                                                                                                            rendered="{!NOT(answer.isCloned)}"
+                                                                                                            onchange="return AddEditQuestionAnswer.showJSTree(this);"
+                                                                                                        />
+                                                                                                        <apex:inputhidden value="{!answer.bindedScopes}" id="bindedScopes" />
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                            <div class="slds-col--padded slds-size--1-of-4" style="margin-left:5px;">
+                                                                                                <apex:outputpanel styleClass="delete_button slds-button--right--float" style="padding:35px 30px 20px 20px;">
+                                                                                                    <apex:actionSupport event="onclick" action="{!answer.remove}" onsubmit="showSpinner();" oncomplete="hideSpinner();resetIframeHeight();"
+                                                                                                        rerender="questionAnswerBlock"
+                                                                                                    />
+                                                                                                </apex:outputpanel>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                    <div class="slds-col--padded slds-size--1-of-1" id="{!answer.Key}ActionScopes" style="margin-left:5px;{!IF(OR(answer.e2answer.Action__c=='Activate child scope',answer.e2answer.Action__c=='Deactivate child scope'),'display:block;','display:none;')}">
+                                                                                        <span class="slds-float-left" style="font-weight:bold;">Selected scopes&nbsp;:&nbsp;</span>
+                                                                                        <apex:repeat value="{!answer.bindedActionScopes}" var="bindedActionScopes">
+                                                                                            <span class="slds-badge slds-theme--default slds-float-left slds-custom-badge-background-grey"
+                                                                                                style="font-weight:bold;">{!bindedActionScopes.Scope__r.Name}</span>
+                                                                                        </apex:repeat>
+                                                                                        <a class="edit-button1 slds-button--right--float" href="javascript:void(0);" onclick="AddEditQuestionAnswer.showJSTreeEdit('{!answer.key}answerEditDiv');">
+                                                                                        </a>
+                                                                                    </div>
+                                                                                </apex:outputpanel>
+                                                                            </apex:repeat>
+                                                                            <div class="slds-col--padded slds-size--1-of-1" style="padding-bottom:5px;{!IF(OR(question.e2question.Type__c == '',question.e2question.Type__c == 'Yes/No'),'display:none;','')}">
+                                                                                <apex:outputpanel styleClass="btn slds-button slds-button--neutral slds-button--brand slds-button--right--float"
+                                                                                    style="cursor:pointer;">
+                                                                                    <apex:outputText value="Add Answer"></apex:outputText>
+                                                                                    <apex:actionSupport event="onclick" onsubmit="showSpinner();" oncomplete="hideSpinner();resetIframeHeight();return validateDataQuestion();"
+                                                                                        action="{!question.addNewAnswerInstance}"
+                                                                                        rerender="questionAnswerBlock"
+                                                                                    />
+                                                                                </apex:outputpanel>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </apex:outputpanel>
+                                                                <div class="slds-col--padded slds-size--1-of-1" id="{!question.e2question.Id}answerText"
+                                                                    style="{!IF(OR(question.e2question.Id == NULL,question.isEdit),'display:none;','')}">
+                                                                    <apex:inputhidden value="{!question.selectedAnswer}" id="selectedAnswer" />
+                                                                    <div class="slds-grid slds-wrap slds-grid--pull-padded slds-theme--default" style="margin-bottom:5px;margin-top:5px;">
+                                                                        <apex:outputpanel layout="none" rendered="{!question.e2question.Type__c=='Summary'}">
+                                                                            <apex:repeat value="{!question.e2answers}" var="answer">
+                                                                                <div class="slds-col--padded slds-size--8-of-9" style="margin-left:5px;">
+                                                                                    <apex:inputTextarea styleClass="slds-textarea" value="{!answer.e2answer.Answer_Text__c}"
+                                                                                        html-placeholder="Enter your answer here."
+                                                                                    />
+                                                                                </div>
+                                                                                <div class="slds-col--padded slds-size--1-of-9" data-label="Actions"></div>
+                                                                            </apex:repeat>
+                                                                        </apex:outputpanel>
+                                                                        <apex:outputpanel layout="none" rendered="{!question.e2question.Type__c=='Multi-select'}" >
+                                                                            <apex:repeat value="{!question.e2answers}" var="answer">
+                                                                                <div class="slds-col--padded slds-size--1-of-1" style="margin-left:5px;">
+                                                                                    <label class="slds-checkbox" id="{!answer.key}" onmouseover="$(this).children('.description').show();" onmouseout="$(this).children('.description').hide();">
+                                                                                   <apex:outputText rendered="{!!ISBLANK(answer.e2answer.Action__c)}">
+                                                                                <span class="description">Answer will perform following action : {!answer.e2answer.Action__c}</span>
+                                                                                </apex:outputText>
+                                                                    <apex:outputText rendered="{!answer.e2answer.Is_Selected__c}">
+                                                                        <input id="{!answer.key}" checked="true" type="checkbox" name="{!question.e2question.id}answerscheckbox" questionid="{!question.e2question.id}" value="{!answer.key}" action="{!answer.e2answer.Action__c}" loe="{!answer.e2answer.Effort_LOE__c}" onchange="AddEditQuestionAnswer.showActionAlert(this);"/>
+                                                                    </apex:outputText>
+                                                                    <apex:outputText rendered="{!!answer.e2answer.Is_Selected__c}">
+                                                                        <input id="{!answer.key}" type="checkbox" name="{!question.e2question.id}answerscheckbox" questionid="{!question.e2question.id}" value="{!answer.key}" action="{!answer.e2answer.Action__c}" loe="{!answer.e2answer.Effort_LOE__c}" onchange="AddEditQuestionAnswer.showActionAlert(this);"/>    
+                                                                    </apex:outputText>
+                                                                    <span class="slds-checkbox--faux"></span>
+                                                                    <span class="slds-form-element__label" id="{!answer.key}Text">{!answer.e2answer.Answer_Text__c}</span>
+                                                                </label>
+                                                                                </div>
+                                                                            </apex:repeat>
+                                                                        </apex:outputpanel>
+                                                                        <apex:outputpanel layout="none" rendered="{!OR(question.e2question.Type__c == 'Single-select',question.e2question.Type__c=='Yes/No')}">
+                                                                            <div class="slds-col--padded slds-size--1-of-1" style="margin-left:5px;">
+                                                                                <label class="slds-radio">
+                                                                <input type="radio" name="{!question.e2question.id}answersradio"  questionid="{!question.e2question.id}" checked="true" value="" action="" loe="" onchange="AddEditQuestionAnswer.showActionAlert(this);"/>
+                                                                <span class="slds-radio--faux"></span>
+                                                                <span class="slds-form-element__label">None</span>
+                                                            </label>
+                                                                            </div>
+                                                                            <apex:repeat value="{!question.e2answers}" var="answer">
+                                                                                <div class="slds-col--padded slds-size--1-of-1" style="margin-left:5px;">
+                                                                                    <label class="slds-radio" onmouseover="$(this).children('.description').show();" onmouseout="$(this).children('.description').hide();">
+                                                                                   <apex:outputText rendered="{!!ISBLANK(answer.e2answer.Action__c)}">
+                                                                                <span class="description">Answer will perform following action : {!answer.e2answer.Action__c}</span>
+                                                                                </apex:outputText>
+                                                                    <apex:outputText rendered="{!answer.e2answer.Is_Selected__c}">
+                                                                        <input checked="true" id="{!answer.key}" type="radio" onchange="AddEditQuestionAnswer.showActionAlert(this);" questionid="{!question.e2question.id}" name="{!question.e2question.id}answersradio" value="{!answer.key}" action="{!answer.e2answer.Action__c}" loe="{!answer.e2answer.Effort_LOE__c}"/>
+                                                                    </apex:outputText>
+                                                                    <apex:outputText rendered="{!!answer.e2answer.Is_Selected__c}">
+                                                                        <input id="{!answer.key}" type="radio" onchange="AddEditQuestionAnswer.showActionAlert(this);" questionid="{!question.e2question.id}" name="{!question.e2question.id}answersradio" value="{!answer.key}" action="{!answer.e2answer.Action__c}" loe="{!answer.e2answer.Effort_LOE__c}"/>
+                                                                    </apex:outputText>
+                                                                    <span class="slds-radio--faux"></span>
+                                                                    <span class="slds-form-element__label" id="{!answer.key}Text">{!answer.e2answer.Answer_Text__c}</span>
+                                                                    
+                                                                </label>
+                                                                                </div>
+                                                                            </apex:repeat>
+                                                                        </apex:outputpanel>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </apex:outputpanel>
+                                                    </apex:repeat>
+                                                </div>
+                                            </apex:outputText>
+                                        </div>
+                                    </apex:outputPanel>
+                                </div>
+                                <!--End : AddEditQuestion-->
+                            </div>
+                        </div>
+                        </div>
+                </div>
+                <!-- / PRIMARY CONTENT WRAPPER -->
+                <!-- FOOTER -->
+                <div>
+                    <div class="slds-modal__footer page-footer">
+                        <div class="slds-col slds-no-flex slds-align-bottom">
+                                <div class="" role="group">
+                                    <apex:commandButton onclick="parent&&parent.AddEditScope&&parent.AddEditScope.reload_frame('/apex/E2_EditScopeTemplate?scopegroup_id={!scopeGrpId}&id={!scope.id}', window.name);return false;"
+                                        styleClass="slds-button slds-button--neutral"
+                                        title="Cancel" value="Cancel" />
+                                    <apex:commandButton onclick="return addUpdateScopes();" styleClass="slds-button slds-button--neutral slds-button--brand"
+                                        title="Save" value="Save" action="{!saveScope}"/>
+                                </div>
+                            </div>
+                    </div>
+                    <footer role="contentinfo" class="slds-p-around--large">
+                        
+                    </footer>
+                </div>
+                <!-- / FOOTER -->
+                <div id="loadingSpinner" class="slds-spinner_container" style="display: none !important;">
+                    <div class="slds-spinner--brand slds-spinner slds-spinner--large" aria-hidden="false"
+                        role="alert">
+                        <div class="slds-spinner__dot-a"></div>
+                        <div class="slds-spinner__dot-b"></div>
+                    </div>
+                </div>
+
+                <div id="helpModal" class="slds-modal slds-fade-in-open" role="dialog" style="display: none !important;">
                     <div class="slds-modal__container" style="max-width:100%; width:60%; max-height:2600px;">
-                       <div class="slds-modal__header">
-                          <button class="slds-button slds-button--icon-inverse slds-modal__close slds-modal__close-custom" onclick="EditScope.hideAddBulkEffortsModal(); return false;">               
+                        <div class="slds-modal__header">
+                            <button class="slds-button slds-button--icon-inverse slds-modal__close slds-modal__close-custom"
+                                onclick="EditScope.hideAddBulkEffortsModal(); return false;">               
                           <span class="slds-assistive-text">Close</span>
                           </button>
-                          <h2 class="slds-text-heading--medium custom-new-header">Add Bulk Efforts</h2>
-                       </div>
-                       <div class="slds-modal__content">
-                          <div class="slds-text-longform">
-                             <apex:iframe src="about:blank" width="100%" scrolling="true" id="bulkEffortIframe"/>
-                          </div>
-                       </div>
-                       <div class="slds-modal__footer">
-                          <button id="addeffortsbutton" class="slds-button slds-button--neutral" onclick="EditScope.addEfforts(); return false;">Add</button>
-                          <button class="slds-button slds-button--neutral" onclick="EditScope.hideAddBulkEffortsModal(); return false;">Cancel</button>
-                       </div>
+                            <h2 class="slds-text-heading--medium custom-new-header">Add Bulk Efforts</h2>
+                        </div>
+                        <div class="slds-modal__content">
+                            <div class="slds-text-longform">
+                                <apex:iframe src="about:blank" width="100%" scrolling="true" id="bulkEffortIframe"
+                                />
+                            </div>
+                        </div>
+                        <div class="slds-modal__footer">
+                            <button id="addeffortsbutton" class="slds-button slds-button--neutral" onclick="EditScope.addEfforts(); return false;">Add</button>
+                            <button class="slds-button slds-button--neutral" onclick="EditScope.hideAddBulkEffortsModal(); return false;">Cancel</button>
+                        </div>
                     </div>
                 </div>
                 <div id="helpBackdrop" class="slds-backdrop slds-backdrop--open" style="display: none !important;"></div>
             </div>
-            <!-- / REQUIRED SLDS WRAPPER -->    
+            <!-- / REQUIRED SLDS WRAPPER -->
             <!-- PLEASE DONOT REMOVE: This section is important while using standard controller -->
-            <input type="hidden" value="{!E2_Scope__c.Name}"/> 
-            <input type="hidden" value="{!E2_Scope__c.Complexity__c}"/>
-            <input type="hidden" value="{!E2_Scope__c.Description__c}"/>
-            <input type="hidden" value="{!E2_Scope__c.E2_Assumption__c}"/>
-            <input type="hidden" value="{!E2_Scope__c.Parent_Scope__c}"/>
-            <input type="hidden" value="{!E2_Scope__c.Scope_Group__c}"/>
-            <input type="hidden" value="{!E2_Scope__c.Is_Favourite__c}"/>
-            <input type="hidden" value="{!E2_Scope__c.LOE_Hrs__c}"/>
-            <input type="hidden" value="{!E2_Scope__c.Presales_LOE__c}"/>
-            
+            <input type="hidden" value="{!E2_Scope__c.Name}" />
+            <input type="hidden" value="{!E2_Scope__c.Complexity__c}" />
+            <input type="hidden" value="{!E2_Scope__c.Description__c}" />
+            <input type="hidden" value="{!E2_Scope__c.E2_Assumption__c}" />
+            <input type="hidden" value="{!E2_Scope__c.Parent_Scope__c}" />
+            <input type="hidden" value="{!E2_Scope__c.Scope_Group__c}" />
+            <input type="hidden" value="{!E2_Scope__c.Is_Favourite__c}" />
+            <input type="hidden" value="{!E2_Scope__c.LOE_Hrs__c}" />
+            <input type="hidden" value="{!E2_Scope__c.Presales_LOE__c}" />
+            <input type="hidden" value="{!E2_Scope__c.CreatedBy.Name}" />
+            <input type="hidden" value="{!E2_Scope__c.LastModifiedById}" />
+            <input type="hidden" value="{!E2_Scope__c.LastModifiedBy.Name}" />
             <apex:inputhidden value="{!dmlOperationMessage}" id="dmlMessage" />
             <apex:inputhidden value="{!assetsRecsJson}" id="existingAssetRecs" />
             <apex:inputhidden value="{!effortsJson}" id="effortsJson" />
-         </apex:form>
-      </body>
-      <!-- JAVASCRIPT -->
-      <script type="text/javascript">
-         var msg = '{!dmlOperationMessage}'; 
-         var changeComplexity = '{!scopeQuestionManager.changecomplexty}';
-         var scopeToActivate = '{!scopeQuestionManager.scopeToActivate}';
-         var scopeToDeactivate = '{!scopeQuestionManager.scopeToDeactivate}';
-         var scope_sfdc_id = '{!scope.id}';
-         var scope_sfdc_name = '{!JSENCODE(scope.name)}';
-         Typeahead_input.resourceUrl = '{!$Resource.E2_TypeaheadResources}';
-         
-      </script>
-      <!-- / JAVASCRIPT -->    
-   </html>
+        </apex:form>
+    </body>
+    <!-- JAVASCRIPT -->
+    <script type="text/javascript">
+        var msg = '{!dmlOperationMessage}';
+        var changeComplexity = '{!scopeQuestionManager.changecomplexty}';
+        var scopeToActivate = '{!scopeQuestionManager.scopeToActivate}';
+        var scopeToDeactivate = '{!scopeQuestionManager.scopeToDeactivate}';
+        var scope_sfdc_id = '{!scope.id}';
+        var scope_sfdc_name = '{!JSENCODE(scope.name)}';
+        Typeahead_input.resourceUrl = '{!$Resource.E2_TypeaheadResources}';
+
+    </script>
+    <!-- / JAVASCRIPT -->
+
+    </html>
+
 </apex:page>

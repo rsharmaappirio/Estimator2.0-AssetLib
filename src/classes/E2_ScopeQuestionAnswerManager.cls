@@ -23,7 +23,7 @@ public with sharing class E2_ScopeQuestionAnswerManager {
 		this.scopeToActivate = E2_Constants.BLANK;
 		this.scopeToDeactivate = E2_Constants.BLANK;
 	}
-	
+		
 	// method to save questions 
 	public pagereference saveQuestion(String errorMessage, string dmlOperationMessage) {
         this.changecomplexty = E2_Constants.BLANK;
@@ -79,12 +79,14 @@ public with sharing class E2_ScopeQuestionAnswerManager {
                 List<E2_Answer__c> e2Answers = new List<E2_Answer__c>();
                 for(string mapKey : questionToUpsert.KeySet()) {
                     E2_question__c question = questionToUpsert.get(mapKey);
-                    for(E2_Answer__c e2Answer : answerToUpsert.get(mapKey)) {
-                        if(e2Answer.Id == NULL) {
-                            e2Answer.Question__c = question.Id; 
-                        }                       
-                        e2Answers.add(e2Answer);
-                    }
+                    if(answerToUpsert.containsKey(mapKey)) {
+                    	for(E2_Answer__c e2Answer : answerToUpsert.get(mapKey)) {
+	                        if(e2Answer.Id == NULL) {
+	                            e2Answer.Question__c = question.Id; 
+	                        }                       
+	                        e2Answers.add(e2Answer);
+	                    }
+                    }                    
                 }
                 upsert e2Answers;
                 set<Id> answersId = new set<Id>();
@@ -105,11 +107,11 @@ public with sharing class E2_ScopeQuestionAnswerManager {
                 		delete relatedScopes;
                 }
                 if(!answerScopes.isEmpty())
-                	insert answerScopes;
-                
+                	insert answerScopes;                
             }
         }catch(Exception ex){
             Database.rollback(sp);
+            system.assertEquals(ex.getMessage(),NULL);
             errorMessage = ex.getMessage().contains(E2_constants.INSUFFICIENT_ACCESS_OR_READONLY) ? 
                                     E2_Constants.INSUFFICIENT_ERROR_MSSG : 
                                     ex.getMessage();
@@ -137,7 +139,7 @@ public with sharing class E2_ScopeQuestionAnswerManager {
 	                }
 	                if(answer.e2answer.Is_Selected__c != answer.isSelected 
 	                	&& answer.e2answer.Is_Selected__c) {
-	                	if(answer.e2answer.Action__c =='Change Complexity to Low') {
+	                	if(answer.e2answer.Action__c == 'Change Complexity to Low') {
 	                		this.changecomplexty = 'Low';
 	                	}else if(answer.e2answer.Action__c =='Change Complexity to Medium') {
 	                		this.changecomplexty = 'Medium';
@@ -163,13 +165,13 @@ public with sharing class E2_ScopeQuestionAnswerManager {
                 	answer.originalBindedScopes != answer.bindedScopes)) {
                 	answerScopeMap.put(answer.e2answer, answer.bindedScopes);
                 }
-                if(answer.e2answer.Id != NULL && string.isBlank(answer.e2answer.Answer_Text__c)) {
+                if(answer.answerstring != NULL && 
+                   answer.answerstring != '') {
                 	answer.e2answer.Answer_Text__c = answer.answerstring;
-                }
-                if(!string.isBlank(answer.e2answer.Answer_Text__c)) {               
-	                if(!answerToUpsert.containsKey(mapKey))
-	                    answerToUpsert.put(mapKey, new List<E2_Answer__c>());
-	                answerToUpsert.get(mapKey).add(answer.e2answer);
+                	if(!answerToUpsert.containsKey(mapKey)) {
+		            	answerToUpsert.put(mapKey, new List<E2_Answer__c>());
+		            }
+		            answerToUpsert.get(mapKey).add(answer.e2answer);
                 }
             }else if(answer.e2answer.Id != NULL) {
                 answerToDelete.add(answer.e2answer);
@@ -267,6 +269,10 @@ public with sharing class E2_ScopeQuestionAnswerManager {
                     this.e2answers.add(new Answer(answer));
                 }
                 this.sequence = 2;
+            }else if(e2question.Type__c == 'Summary' && this.e2answers.size() > 0) {
+            	for(Answer answer : this.e2answers) {
+            		answer.isDeleted = true;
+            	}
             }
             return null;
         }

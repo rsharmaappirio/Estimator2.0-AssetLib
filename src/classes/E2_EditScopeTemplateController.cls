@@ -11,7 +11,8 @@
 
 public with sharing class E2_EditScopeTemplateController {
     public E2_Scope__c scope{get;set;}
-    public List<Scope> childScopes{get;set;}     
+    public List<Scope> childScopes{get;set;}
+    public Scope childScope{get;set;}
     public boolean is_View{get;set;}
     public string scopeGrpId{get;set;}
     public string dmlOperationMessage{get;set;}
@@ -44,6 +45,7 @@ public with sharing class E2_EditScopeTemplateController {
             ApexPages.addMessage(msg); 
             return null;            
         }else{
+            this.scope.LastModifiedBy = [SELECT Name,Id FROM User WHERE Id=:this.scope.LastModifiedById];
         	scopeQuestionManager.scope = this.scope;
             populateViewRecords();
         }
@@ -91,20 +93,11 @@ public with sharing class E2_EditScopeTemplateController {
         
         // Create a savepoint 
         Savepoint sp = Database.setSavepoint();
+        scopeListToUpsert.add(childScope.scope);
+        this.scope = childScope.scope;
         
-        for(Scope sc : childScopes){
-            if(sc.isDeleted == false){                
-                scopeListToUpsert.add(sc.scope);
-            } else {
-                scopeListToDelete.add(sc.scope);
-            }
-            this.scope = sc.scope;
-        }
-        
-        try{       
-           system.debug('>>>>>SIZE>>>>' + scopeListToUpsert.size()); 
-             
-           if(!scopeListToUpsert.isEmpty()) upsert scopeListToUpsert;
+        try{ 
+            if(!scopeListToUpsert.isEmpty()) upsert scopeListToUpsert;
         }catch(Exception ex){
             Database.rollback(sp);
             resetChildScopesOnException();            
@@ -112,31 +105,18 @@ public with sharing class E2_EditScopeTemplateController {
             ApexPages.addMessage(msg);            
             return null;
         }
-        
-        for(Scope sc : childScopes){        
-            if(sc.isDeleted == false){             
-                    
-                    for(Effort ef : sc.efforts){
-                        if(ef.isDeleted == true){
-                           if(ef.effort.id <> NULL) effortsToDelete.add(ef.effort); 
-                           continue;
-                        }
-                        system.debug('>>ef.effort.scope__c = sc.scope.id>>' + ef.effort.scope__c + '=' +  sc.scope.id);
-                        if(ef.effort.scope__c == null) ef.effort.scope__c = sc.scope.id;
-                        masterScope_Efforts.add(ef.effort);
-                    }
-               
-            }           
+        for(Effort ef : childScope.efforts) {
+            if(ef.isDeleted == true){
+                if(ef.effort.id <> NULL) effortsToDelete.add(ef.effort); 
+                    continue;
+            }
+            if(ef.effort.scope__c == null) ef.effort.scope__c = childScope.scope.id;
+                masterScope_Efforts.add(ef.effort);
         }
-        
         try{
             if(!effortsToDelete.isEmpty()){
               delete effortsToDelete;            
             } 
-        
-            if(!scopeListToDelete.isEmpty()){
-              delete scopeListToDelete;
-            }
  
             if(!masterScope_Efforts.isEmpty()){
                 upsert masterScope_Efforts;
@@ -162,27 +142,26 @@ public with sharing class E2_EditScopeTemplateController {
         if(!string.isBlank(errorMessage)) {
         	msg = new ApexPages.Message(ApexPages.Severity.ERROR, errorMessage);
             ApexPages.addMessage(msg);
-        }        
+        }
+        // Rohit - Set Current user details as last modified by user on scope 
+        User modifiedBy = new User(Id = UserInfo.getUserId(),FirstName = UserInfo.getFirstName(),LastName = UserInfo.getLastName()); 
+        this.scope.LastModifiedBy = modifiedBy;
         return null;             
     }
     
     // method to reset child scopes 
-    public void resetChildScopesOnException(){       
-       for(Scope sc : childScopes){ 
-               string scope_id = sc.scope.id;
-               if(sc.key <> scope_id){
-                  sc.scope.id = null;
-               }
-                
-                for(Effort ef : sc.efforts){
-                    string ef_id = ef.effort.id;
-                    if(ef.key <> ef_id){
-                      ef.effort.id = null;
-                      ef.effort.scope__c = null;
-                    }
-                }
+    public void resetChildScopesOnException() {       
+        string scope_id = childScope.scope.id;
+        if(childScope.key <> scope_id){
+            childScope.scope.id = null;
         }
-    
+        for(Effort ef : childScope.efforts){
+            string ef_id = ef.effort.id;
+            if(ef.key <> ef_id){
+              ef.effort.id = null;
+              ef.effort.scope__c = null;
+            }
+        }
     }
     
     //method to add new question 
@@ -193,8 +172,8 @@ public with sharing class E2_EditScopeTemplateController {
     // method to populate records 
     public void populateViewRecords(){
         Id scopeId = this.scope.id;        
-        for(E2_Scope__c scope : E2_DataUtil.getScopeAndChildrenOnScopeIdForEditScope(scopeId)){                
-               this.childScopes.add(new Scope(scope, scope.Efforts__r));
+        for(E2_Scope__c scope : E2_DataUtil.getScopeAndChildrenOnScopeIdForEditScope(scopeId)){ 
+               this.childScope = new Scope(scope, scope.Efforts__r);
         }
         scopeQuestionManager.retriveScopeQuestion();
     }
@@ -210,7 +189,7 @@ public with sharing class E2_EditScopeTemplateController {
             List<E2_EffortsWrapper> lstEffortsWrapper = (List<E2_EffortsWrapper>)JSON.deserialize(effortsJson, List<E2_EffortsWrapper>.class);
             for(E2_EffortsWrapper effortWrapper : lstEffortsWrapper){
                 if(effortWrapper.hours > 0){
-                    childScopes[0].efforts.add(new Effort(new E2_Effort__c(Complexity_Factor_High__c = 0, 
+                    childScope.efforts.add(new Effort(new E2_Effort__c(Complexity_Factor_High__c = 0, 
                                                                            Complexity_Factor_Low__c = 0, 
                                                                            Effort_Hrs__c = effortWrapper.hours,
                                                                            Name = effortWrapper.phaseName + '-' + effortWrapper.roleName,

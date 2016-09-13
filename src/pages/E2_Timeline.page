@@ -753,7 +753,7 @@
                                                 <div class="" role="group">
                                                     <apex:commandButton onclick="return Timeline.updateEstimateRateCards();" styleClass="slds-button slds-button--neutral slds-button--brand save-button-custom" title="Save" value="Save" action="{!updateEstimateRateCards}" />
                                                     
-                                                    <apex:commandButton onclick="return Timeline.refreshRateCardRatesAndCost();" styleClass="slds-button slds-button--neutral slds-button--brand save-button-custom" title="Refresh Rates & Cost" value="Refresh Rates & Cost" action="{!refreshRateCardRatesAndCost}" />
+                                                    <apex:commandButton onclick="return Timeline.refreshRateCardRatesAndCost();" styleClass="slds-button slds-button--neutral slds-button--brand save-button-custom" title="Refresh Rates & Cost" value="Refresh Rates & Cost" action="{!refreshRateCardRatesAndCost}" rendered="{!$Setup.E2_System_setting__c.Refresh_Ratacard__c}"/>
                                                 </div>
                                             </div>
                                     </div> 

@@ -214,7 +214,7 @@ var Typeahead_input = {
         {
             name: 'assets',
             displayKey: 'name',
-            limit: 10,
+            limit: 20,
             source: function(query, syncResults, asyncResults){
                 Typeahead_input.searchKey = query;
                 var selectedAssets = Typeahead_input.getAlreadyAddedAssetsIds();
@@ -374,14 +374,13 @@ var Typeahead_input = {
     retrieveExistingAssets : function(){
        sforce.apex.execute("E2_Estimator_WS", "getExistingAssetsForScope", 
                             {scopeId: scope_sfdc_id}, function(result){
-                        
-            if(result.length > 0) {
+            if(result !== null && result.length > 0) {
                 var assetsRecsJson = result[0];
                 if (assetsRecsJson !== null && assetsRecsJson !== '' && assetsRecsJson.length > 0) {
                       Typeahead_input.prepareExistingAssetRows(assetsRecsJson);
                 }
                 else{
-                      Typeahead_input.addNoAssetsRow();
+                      Typeahead_input.prepareExistingAssetRows(null);
                 }
             }
             else{
@@ -393,11 +392,11 @@ var Typeahead_input = {
     prepareExistingAssetRows : function(assetsRecsJson){
         var existingAssets = $("input[Id$='existingAssetRecs']").val();
         
-        if(existingAssets.length !== 0){
+        if(existingAssets !== null && existingAssets.length !== 0){
             Typeahead_input.populatedSelectedAssetMap(existingAssets);
         }
         
-        if(assetsRecsJson.length !== 0){
+        if(assetsRecsJson !== null && assetsRecsJson.length !== 0){
             Typeahead_input.populatedSelectedAssetMap(assetsRecsJson);
         }
         
@@ -430,11 +429,12 @@ $( document ).ready(function() {
     validations.load();
     ck_custom_editor.load();
     bindSliders();
-    Typeahead_input.load();
-    Typeahead_input.retrieveExistingAssets();
+    //Typeahead_input.load();
+    //Typeahead_input.retrieveExistingAssets();
     //Question JS
     $('#' + AddEditQuestionAnswer.SCOPE_TREE_IFRAME_ID).attr('src', '/apex/E2_ScopeTree?Id='+scope_sfdc_id);
     //AddEditQuestionAnswer.bindEvent();
+    tabpanel.bindEvents();
     resetIframeHeight();
     //Question JS
     hideSpinner();
@@ -783,7 +783,11 @@ var AddEditQuestionAnswer = {
         var answerText = id.replace('questionText', 'answerText');
         var answerInput = questionInput.replace('questionInput', 'answerInput');
         var questionUpdatedValue = $("#"+questionInput).find("input[id$=questionValue]").val();
-        $(that).find("span#text").html("Q "+questionUpdatedValue);
+        var question = '<strong>Question</strong>  '+questionUpdatedValue;
+        if(questionUpdatedValue.indexOf('?') == -1) {
+            question += '?';
+        }
+        $(that).find("span#text").html(question);
         $("#"+answerInput).find("[id$=answerEditDiv]").each(function(answerText){
             var action = $(this).find("select[id$=answerAction]").val();
             var value = $(this).find("input[id$=answerValue]").val();
@@ -818,10 +822,7 @@ var AddEditQuestionAnswer = {
         if(elementTag) { 
             var questionid = elementTag.attr('questionid');
             var action = elementTag.attr('action');
-            var value = elementTag.attr('value');
-            var loe = elementTag.attr('loe');
              if(action != '' && (($(element).is(":radio") || $(element).is(":checkbox")) && $(element).is(":checked"))) {
-                CustomAlert.show('Selected answer will perform following action : '+action);
                 if(action == 'Change Complexity to Low') {
                     $('select.scope-complexity').val('Low');
                 }else if(action == 'Change Complexity to Medium') {
@@ -839,7 +840,7 @@ var AddEditQuestionAnswer = {
                 });
             }else {
                 if(!$(element).is(":radio") || $(element).is(":checked")) {
-                    selectedAnswers.push(value);
+                    selectedAnswers.push($(element).attr('value'));
                 }
             }
             $('#'+questionid+'answerText').find("input[id$=selectedAnswer]").val(selectedAnswers.toString());
@@ -890,10 +891,6 @@ var AddEditQuestionAnswer = {
     }
 }
 var CustomAlert = {
-    notifyContainerCssSelector: '.slds-notify_container',
-    notifyCloseCssSelector: '.slds-notify__close',
-    notifyMsgCssSelector: '.slds-text-heading--small',
-    notifyTypeCssDiv: '#sldsalertdiv',
     notifyEditContainer: '.slds-edit-alert',
     notifyEditContainerbackdrop: '.slds-edit-alert-backdrop',
     notifyJSTreeHeadingCSS : '.slds-text-heading--small',
@@ -904,79 +901,45 @@ var CustomAlert = {
             $(CustomAlert.notifyJSTreeHeadingCSS).html(CustomAlert.notifyJSTreeHeading);
             $(CustomAlert.notifyEditContainer).show();
         } else {
-            CustomAlert.show('No child scope under current scope hierarchy');
+           alert('No child scope under current scope hierarchy');
         }
     },
     hideJSTree: function() {
         $(CustomAlert.notifyEditContainer).hide();
         $(CustomAlert.notifyEditContainerbackdrop).hide();
-    },
-    show: function(msg) {
-        $(CustomAlert.notifyContainerCssSelector).css({
-            position: 'absolute !important',
-            'opacity': '100',
-            'display': 'block'
-        });
-        $(CustomAlert.notifyTypeCssDiv).removeClass("slds-theme--error");
-        $(CustomAlert.notifyTypeCssDiv).addClass("slds-theme--success");
-        $(CustomAlert.notifyContainerCssSelector).find(CustomAlert.notifyMsgCssSelector).text(msg);
-        $(CustomAlert.notifyContainerCssSelector).find(CustomAlert.notifyCloseCssSelector).unbind("click");
-        $(CustomAlert.notifyContainerCssSelector).find(CustomAlert.notifyCloseCssSelector).bind("click", function() {
-            $(CustomAlert.notifyContainerCssSelector).stop(true, true).fadeTo().slideUp();
-            return false;
-        });
-        window.setTimeout(function() {
-            if ($(CustomAlert.notifyContainerCssSelector).is(":visible")) {
-                $(CustomAlert.notifyContainerCssSelector).fadeTo(500, 0).slideUp(500, function() {
-                    $(this).hide();
-                });
-            }
-        }, 2000);
-    },
-    hide: function() {
-        $(CustomAlert.notifyContainerCssSelector).hide();
     }
 }
-
-var EditScope = {
-    ADD_BULK_EFFORTS_FRAME_ID : 'bulkEffortIframe',
-    
-    addEfforts: function() {
-        var func = document.getElementById(EditScope.ADD_BULK_EFFORTS_FRAME_ID).contentWindow.prepareJson;
-        if (typeof func != 'undefined') {
-            func();
-        }
+var tabpanel = {
+    assetloaded : 0,
+    bindEvents : function(){
+       $('.slds-tabs--default__item').on('click', function(){
+                  $('#'+ $(this).find('a').attr('aria-controls'));
+                  $('#'+ $(this).find('a').attr('aria-controls')).siblings('.slds-tabs--default__content').removeClass('slds-show');
+			      $('#'+ $(this).find('a').attr('aria-controls')).siblings('.slds-tabs--default__content').addClass('slds-hide');
+		          $(this).addClass('slds-active');
+			      $(this).find('a').attr('aria-selected', true);
+			      $('#'+ $(this).find('a').attr('aria-controls')).removeClass('slds-hide');
+			      $('#'+ $(this).find('a').attr('aria-controls')).addClass('slds-show');
+			      if($(this).attr('title')=='Recommended Assets' && tabpanel.assetloaded == 0) {
+			            Typeahead_input.load();
+			            Typeahead_input.retrieveExistingAssets();
+			            tabpanel.assetloaded = 1;
+			      }
+			      $(this).siblings().removeClass('slds-active');
+			      $(this).siblings().find('a').attr('aria-selected', false);
+			      resetIframeHeight();
+		});
     },
-    
-    updateAddEffortsJson: function(jsonStr){
-        $("input[Id$='effortsJson']").val(jsonStr);
-        addBulkEfforts();
-        EditScope.hideAddBulkEffortsModal();
-    },
-    
-    addBulkEfforts_click : function(obj){
-        EditScope.showAddBulkEffortsModal();
-        return false;
-    },
-    
-    showAddBulkEffortsModal : function(){
-        $('#helpModal').show();
-        $('#helpModal').find('#' + EditScope.ADD_BULK_EFFORTS_FRAME_ID).attr('src', '/apex/E2_AddBulkEfforts');
-        $('#helpModal').find('#' + EditScope.ADD_BULK_EFFORTS_FRAME_ID).closest('div.slds-modal__content').scrollTop(0);
-        $('#helpBackdrop').css({'height' : $(window.document).height()});
-        $('#helpBackdrop').show();
-    },
-    
-    hideAddBulkEffortsModal: function() {
-        $('#helpModal').hide();
-        $('#helpModal').find('#' + EditScope.ADD_BULK_EFFORTS_FRAME_ID).attr('src', 'about:blank');
-        $('#helpModal').find('#' + EditScope.ADD_BULK_EFFORTS_FRAME_ID).closest('div.slds-modal__content').scrollTop(0);
-        $('#helpBackdrop').hide();
-    },
-    
-    setHeightOfAddNewModal: function(height) {
-        if ($('#' + EditScope.ADD_BULK_EFFORTS_FRAME_ID).length) {
-            $('#' + EditScope.ADD_BULK_EFFORTS_FRAME_ID).css('height', height + 'px');
-        }
+    activateTab: function(that){
+                    that.addClass('slds-active');
+			        that.find('a').attr('aria-selected', true);
+			        var $contentToShow = $('#'+ that.find('a').attr('aria-controls'));
+			        $contentToShow.removeClass('slds-hide');
+			        $contentToShow.addClass('slds-show');			
+			        that.siblings().removeClass('slds-active');
+			        that.siblings().find('a').attr('aria-selected', false);
+			        $contentToShow.siblings('.slds-tabs--default__content').removeClass('slds-show');
+			        $contentToShow.siblings('.slds-tabs--default__content').addClass('slds-hide');
+        
     }
 }
