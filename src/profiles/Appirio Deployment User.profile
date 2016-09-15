@@ -129,6 +129,14 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>E2_EstimateResource</apexClass>
+        <enabled>false</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>E2_EstimateResourceAPI</apexClass>
+        <enabled>false</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>E2_Estimator_Manager</apexClass>
         <enabled>true</enabled>
     </classAccesses>
@@ -175,6 +183,22 @@
     <classAccesses>
         <apexClass>E2_MasterTest</apexClass>
         <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>E2_MilestoneController</apexClass>
+        <enabled>false</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>E2_MilestoneDataUtil_WS</apexClass>
+        <enabled>false</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>E2_MilestoneWS</apexClass>
+        <enabled>false</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>E2_MilestoneWSManager</apexClass>
+        <enabled>false</enabled>
     </classAccesses>
     <classAccesses>
         <apexClass>E2_PaginationUtility</apexClass>
@@ -225,11 +249,23 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>E2_SyncResourceRequestsController</apexClass>
+        <enabled>false</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>E2_Test_Utils</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
         <apexClass>E2_TimelineController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>E2_TimelineControllerTest</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>E2_TimelineDataUtil_WS</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -239,6 +275,14 @@
     <classAccesses>
         <apexClass>E2_TimelineWSManager</apexClass>
         <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>E2_TimelineWSManagerTest</apexClass>
+        <enabled>false</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>E2_Timeline_WSTest</apexClass>
+        <enabled>false</enabled>
     </classAccesses>
     <classAccesses>
         <apexClass>E2_TreeNode</apexClass>
@@ -261,6 +305,16 @@
         <enabled>false</enabled>
     </classAccesses>
     <custom>true</custom>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>CMC_Estimate_Resource__c.E2_Estimate_Rate_Card__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>CMC_Estimate_Resource__c.E2_Role__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
         <field>CMC_Presales_LOE__c.E2_AE__c</field>
@@ -483,6 +537,31 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>E2_Estimate_Milestone_Week__c.TextColorCode__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>E2_Estimate_Milestone_Week__c.Text__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>E2_Estimate_Milestone__c.Milestone1__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>E2_Estimate_Milestone__c.Milestone2__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>E2_Estimate_Milestone__c.Order__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>E2_Estimate_Rate_Card__c.Bill_Rate__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -529,6 +608,21 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>E2_Favourite_Scope__c.User__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>E2_Milestone_Library__c.Description__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>E2_Milestone_Library__c.Is_Active__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>E2_Milestone_Library__c.Practice__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -626,6 +720,26 @@
         <field>E2_Scope__c.Ultimate_Parent_Scope__c</field>
         <readable>true</readable>
     </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>E2_Timeline_Milestone__c.Is_Active__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>E2_Timeline_Milestone__c.Milestone1__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>E2_Timeline_Milestone__c.Milestone2__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>E2_Timeline_Milestone__c.Order__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
     <layoutAssignments>
         <layout>E2_Capacity__c-E2 Capacity Layout</layout>
     </layoutAssignments>
@@ -716,6 +830,15 @@
         <allowEdit>false</allowEdit>
         <allowRead>true</allowRead>
         <modifyAllRecords>false</modifyAllRecords>
+        <object>E2_Milestone_Library__c</object>
+        <viewAllRecords>true</viewAllRecords>
+    </objectPermissions>
+    <objectPermissions>
+        <allowCreate>false</allowCreate>
+        <allowDelete>false</allowDelete>
+        <allowEdit>false</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>false</modifyAllRecords>
         <object>E2_Scope_Group__c</object>
         <viewAllRecords>false</viewAllRecords>
     </objectPermissions>
@@ -726,6 +849,15 @@
         <allowRead>true</allowRead>
         <modifyAllRecords>true</modifyAllRecords>
         <object>E2_Scope__c</object>
+        <viewAllRecords>true</viewAllRecords>
+    </objectPermissions>
+    <objectPermissions>
+        <allowCreate>false</allowCreate>
+        <allowDelete>false</allowDelete>
+        <allowEdit>false</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>false</modifyAllRecords>
+        <object>E2_Timeline_Milestone__c</object>
         <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <pageAccesses>
@@ -785,8 +917,12 @@
         <enabled>true</enabled>
     </pageAccesses>
     <pageAccesses>
+        <apexPage>E2_Milestone</apexPage>
+        <enabled>true</enabled>
+    </pageAccesses>
+    <pageAccesses>
         <apexPage>E2_ScopeTree</apexPage>
-        <enabled>false</enabled>
+        <enabled>true</enabled>
     </pageAccesses>
     <pageAccesses>
         <apexPage>E2_SelectDerivedEffortTemplate</apexPage>
@@ -798,6 +934,10 @@
     </pageAccesses>
     <pageAccesses>
         <apexPage>E2_SelectScopeTemplateTmpmgr</apexPage>
+        <enabled>true</enabled>
+    </pageAccesses>
+    <pageAccesses>
+        <apexPage>E2_SyncResourceRequests</apexPage>
         <enabled>true</enabled>
     </pageAccesses>
     <pageAccesses>

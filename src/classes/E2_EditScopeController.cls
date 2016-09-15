@@ -26,7 +26,7 @@ public with sharing class E2_EditScopeController {
     public E2_EditScopeController(ApexPages.StandardController std) {
        // constructor for the page tied to standard controller	
        this.scope = (E2_Scope__c)std.getRecord();
-       this.scope.LastModifiedBy = [SELECT Name,Id FROM User WHERE Id=:this.scope.LastModifiedById];
+       //this.scope.LastModifiedBy = [SELECT Name,Id FROM User WHERE Id=:this.scope.LastModifiedById];
        this.childScope = new Scope();
        this.is_View = false;       
        this.dmlOperationMessage = E2_Constants.DML_OPERATION_MESSAGE_FAIL;
@@ -45,6 +45,7 @@ public with sharing class E2_EditScopeController {
         	this.errorMessage = 'No scope defined to edit!!!';
             return null;            
         }else{
+          this.scope.LastModifiedBy = [SELECT Name,Id FROM User WHERE Id=:this.scope.LastModifiedById];
         	getUserFavoriteScopes();
         	scopeQuestionManager.scope = this.scope;
             populateViewRecords();            

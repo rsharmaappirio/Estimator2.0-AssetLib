@@ -243,10 +243,22 @@ public class E2_Estimator_WSManager {
         	insert assetList;
         }
         if(!questionsmap.isEmpty()) {
+        	List<E2_Answer__c> allAnswers = E2_DataUtil_WS.getAnswersDetails(questionsmap.KeySet());
+        	set<Id> questionsIds = questionsmap.KeySet();
+        	for(Id questionsId : questionsIds) {
+        		Boolean hasAnswers = false;
+        		for(E2_Answer__c sourceAnswer : allAnswers) {
+        			if(sourceAnswer.Question__c == questionsId) {
+        				hasAnswers = true;
+        			}
+        		} 
+        		if(hasAnswers == false)
+        			questionsmap.remove(questionsId);
+        	}
         	insert questionsmap.values();
         	map<id,E2_Answer__c> answersList = new map<id,E2_Answer__c>();
         	map<id,List<E2_Action_Scope__c>> actionScopes = new map<id,List<E2_Action_Scope__c>>();
-        	for(E2_Answer__c sourceAnswer : E2_DataUtil_WS.getAnswersDetails(questionsmap.KeySet())) {
+        	for(E2_Answer__c sourceAnswer : allAnswers) {
         		E2_Answer__c clonedAnswer = sourceAnswer.clone(false, true, false, false);
         		clonedAnswer.Question__c = questionsmap.get(sourceAnswer.Question__c).Id;
         		clonedAnswer.Source_Answer__c = sourceAnswer.Id;

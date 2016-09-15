@@ -283,6 +283,10 @@
                     width: 300px;
                     z-index:10000;
                 }
+                .slds-active .slds-tabs--default__link {
+                    color: #0070d2!important;
+                    box-shadow: #0070d2 0 -1px 0 inset;
+                }
         </style>
     </head>
 
@@ -301,7 +305,8 @@
                                 style="width:100%;" />
                         </div>
                         <div class="slds-modal__footer">
-                            <button class="slds-button slds-button--neutral" onclick="return AddEditQuestionAnswer.hideJSTree();">Done</button>
+                            <button class="slds-button slds-button--neutral" onclick="return AddEditQuestionAnswer.cancelAnswerAction();">Cancel</button>
+                            <button class="slds-button slds-button--neutral slds-button--brand" onclick="return AddEditQuestionAnswer.hideJSTree();">Done</button>
                         </div>
                     </div>
                 </div>
@@ -700,13 +705,14 @@
                                         <br/><br/>
                                         <div id="QuestionanswerDiv" class="slds-selection-background">
                                             <apex:outputPanel id="questionAnswerBlock">
-                                        <div class="slds-grid slds-wrap slds-grid--pull-padded" id="questionAnswerDiv">
+                                        
                                             <apex:outputText rendered="{!IF(scopeQuestionManager.listQuestions.size = 0, true, false)}">
-                                                <div class="slds-col" style="padding-left:8px;">
-                                                    No Q &#38; A records defined.
+                                                <div class="slds-grid" id="questionAnswerDiv">
+                                                    <div class="slds-col">&nbsp;No Q &#38; A records defined.</div>
                                                 </div>
                                             </apex:outputText>
                                             <apex:outputText rendered="{!IF(scopeQuestionManager.listQuestions.size = 0, false, true)}">
+                                                <div class="slds-grid slds-wrap slds-grid--pull-padded" id="questionAnswerDiv">
                                                 <div class="slds-col--padded slds-size--1-of-1">
                                                     <apex:repeat value="{!scopeQuestionManager.listQuestions}" var="question">
                                                         <apex:outputpanel layout="none" rendered="{!!question.isDeleted}">
@@ -754,7 +760,7 @@
                                                                         <apex:outputText rendered="{!question.e2question.id != NULL}">
                                                                             <div class="slds-col--padded slds-size--1-of-9">
                                                                                 <apex:outputpanel styleClass="close-button slds-button--right--float">
-                                                                                    <apex:actionSupport event="onclick" rerender="" onsubmit="showSpinner();" oncomplete="hideSpinner();AddEditQuestionAnswer.hideQuestionEditDiv('{!question.e2question.Id}questionInput');return false;"
+                                                                                    <apex:actionSupport event="onclick" rerender="questionAnswerBlock" onsubmit="showSpinner();" oncomplete="hideSpinner();AddEditQuestionAnswer.hideQuestionEditDiv('{!question.e2question.Id}questionInput');return false;"
                                                                                         action="{!question.removeEditMode}"
                                                                                     />
                                                                                 </apex:outputpanel>
@@ -840,7 +846,7 @@
                                                                         <apex:outputpanel layout="none" rendered="{!question.e2question.Type__c=='Summary'}">
                                                                             <apex:repeat value="{!question.e2answers}" var="answer">
                                                                                 <div class="slds-col--padded slds-size--8-of-9" style="margin-left:5px;">
-                                                                                    <apex:inputTextarea styleClass="slds-textarea" value="{!answer.e2answer.Answer_Text__c}"
+                                                                                    <apex:inputTextarea html-maxlength="999" styleClass="slds-textarea" value="{!answer.answerString}"
                                                                                         html-placeholder="Enter your answer here."
                                                                                     />
                                                                                 </div>
@@ -899,8 +905,8 @@
                                                         </apex:outputpanel>
                                                     </apex:repeat>
                                                 </div>
+                                                </div>
                                             </apex:outputText>
-                                        </div>
                                     </apex:outputPanel>
                                 </div>
                                 <!--End : AddEditQuestion-->

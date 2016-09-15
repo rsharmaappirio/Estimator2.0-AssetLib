@@ -655,7 +655,10 @@ public class E2_TimelineWSManager {
         Set<String> weekIds = new Set<String>();
         Set<String> resourceIds = new Set<String>();
         Map<String, CMC_Estimate_Resource_Week__c> resourceWeekMap = new Map<String, CMC_Estimate_Resource_Week__c>();
-        Map<String, CMC_Estimate_Week__c> estimateWeeksMap = new Map<String, CMC_Estimate_Week__c>();
+        List<CMC_Estimate_Resource_Week__c> lstToInsert = new List<CMC_Estimate_Resource_Week__c>();
+        List<CMC_Estimate_Resource_Week__c> lstToUpdate = new List<CMC_Estimate_Resource_Week__c>();
+        List<CMC_Estimate_Week__c> lstWeekToUpdate = new List<CMC_Estimate_Week__c>();
+        
         
         for(E2_TimelineWS.CellWrapper rWeek : lstWeeks){
             weekIds.add(rWeek.cellId);
@@ -664,42 +667,39 @@ public class E2_TimelineWSManager {
         
         for(CMC_Estimate_Resource_Week__c rwW : E2_TimelineDataUtil_WS.getEstimateResourceWeekRecords(weekIds, resourceIds)){
                string key = rwW.Estimate_Resource__c + '|' + rwW.Estimate_Week__c;
-               resourceWeekMap.put(key, rwW);           
+               resourceWeekMap.put(key, rwW); 
         }
         
+        
         for(E2_TimelineWS.CellWrapper rWeek: lstWeeks){
-            if(!estimateWeeksMap.containsKey(rWeek.cellId))  estimateWeeksMap.put(rWeek.cellId, new CMC_Estimate_Week__c(Id = rWeek.cellId));
             
             String rowType = rWeek.rowId;
             if(rowType.equalsIgnoreCase('milestone')) {
-                CMC_Estimate_Week__c week = estimateWeeksMap.get(rWeek.cellId);
-                week.Milestone__c = rWeek.value;
-                estimateWeeksMap.put(rWeek.cellId, week);
-            }
-            else if(rowType.equalsIgnoreCase('milestone1')) {
-                CMC_Estimate_Week__c week = estimateWeeksMap.get(rWeek.cellId);
-                week.E2_Milestone1__c = rWeek.value;
-                estimateWeeksMap.put(rWeek.cellId, week);
-            }
-            else if(rowType.equalsIgnoreCase('milestone2')) {
-                CMC_Estimate_Week__c week = estimateWeeksMap.get(rWeek.cellId);
-                week.E2_Milestone2__c = rWeek.value;
-                estimateWeeksMap.put(rWeek.cellId, week);
-            }
-            else{
+                lstWeekToUpdate.add(new CMC_Estimate_Week__c ( id = rWeek.cellId, Milestone__c = rWeek.value));
+            }else if(rowType.equalsIgnoreCase('milestone1')) {
+                lstWeekToUpdate.add(new CMC_Estimate_Week__c ( id = rWeek.cellId, E2_Milestone1__c = rWeek.value));
+            }else if(rowType.equalsIgnoreCase('milestone2')) {
+                lstWeekToUpdate.add(new CMC_Estimate_Week__c ( id = rWeek.cellId, E2_Milestone2__c = rWeek.value));
+            }else{
                 String key = rWeek.rowId + '|' + rWeek.cellId;
-                CMC_Estimate_Resource_Week__c week = resourceWeekMap.get(key);
-                week.Hours__c = Integer.valueOf(rWeek.value);
-                resourceWeekMap.put(key, week);
+                if(resourceWeekMap.containsKey(key)){
+                    CMC_Estimate_Resource_Week__c eRW = resourceWeekMap.get(key);
+                    eRW.Hours__c = Integer.valueOf(rWeek.value.trim()); 
+                    lstToUpdate.add(eRW);
+                }else{
+                    CMC_Estimate_Resource_Week__c eRW = new CMC_Estimate_Resource_Week__c(Hours__c = Integer.valueOf(rWeek.value.trim()), Estimate_Resource__c = rWeek.rowId, Estimate_Week__c = rWeek.cellId);
+                    lstToInsert.add(eRW);
+                }
+                
+                
             }
             
         }
         
         try{
-
-         if(!estimateWeeksMap.isEmpty()) update estimateWeeksMap.values();
-         if(!resourceWeekMap.isEmpty()) update resourceWeekMap.values();
-         
+         if(!lstWeekToUpdate.isEmpty()) update lstWeekToUpdate;
+         if(!lstToUpdate.isEmpty()) update lstToUpdate;
+         if(!lstToInsert.isEmpty()) insert lstToInsert;
         }catch(Exception ex){
          return 'Failed: ' + ex.getMessage(); 
         }

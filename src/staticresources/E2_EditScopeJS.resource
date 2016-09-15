@@ -239,7 +239,7 @@ var Typeahead_input = {
         {
             name: 'assets',
             displayKey: 'name',
-            //limit: 20,
+            limit: 20,
             source: function(query, syncResults, asyncResults){
                 Typeahead_input.searchKey = query;
                 var selectedAssets = Typeahead_input.getAlreadyAddedAssetsIds();
@@ -390,10 +390,11 @@ var Typeahead_input = {
         return existingAssetIds;
     },
     
-    populatedSelectedAssetMap : function(suggestions){
+    populatedSelectedAssetMap : function(suggestions, isWebServiceRecord){
         $.each(JSON.parse(suggestions), function(index, element) {
                 if(typeof Typeahead_input.selectedAssetsMap[element.id] == 'undefined'){
-                    Typeahead_input.selectedAssetsMap[element.id] = element;
+                    if(isWebServiceRecord || (!isWebServiceRecord && element.isExisting != 'true'))
+                        Typeahead_input.selectedAssetsMap[element.id] = element;
                 }
                 else if(Typeahead_input.selectedAssetsMap[element.id].isDeleted == 'false' && element.isDeleted == 'true'){
                     Typeahead_input.selectedAssetsMap[element.id].isDeleted = 'true';
@@ -425,11 +426,11 @@ var Typeahead_input = {
         var existingAssets = $("input[Id$='existingAssetRecs']").val();
         
         if(assetsRecsJson !== null && assetsRecsJson.length !== 0){
-            Typeahead_input.populatedSelectedAssetMap(assetsRecsJson);
+            Typeahead_input.populatedSelectedAssetMap(assetsRecsJson, true);
         }
         
         if(existingAssets !== null && existingAssets.length !== 0){
-            Typeahead_input.populatedSelectedAssetMap(existingAssets);
+            Typeahead_input.populatedSelectedAssetMap(existingAssets, false);
         }
         
         var hasValidAsset = false; 
@@ -466,14 +467,8 @@ $(document).ready(function() {
     ck_custom_editor.load();
     // save warning initiation
     TrackScopeUpdates.load();
-    
-    //$('.Typeahead-input').val(scope_sfdc_name);
-    Typeahead_input.load();
-    Typeahead_input.retrieveExistingAssets();
+    tabpanel.bindEvents();
     bindSliders();
-    //Question JS : Comment as not needed in Estimate scope
-    //$('#' + AddEditQuestionAnswer.SCOPE_TREE_IFRAME_ID).attr('src', '/apex/E2_ScopeTree?Id='+scope_sfdc_id);
-    //AddEditQuestionAnswer.bindEvent();
     hideSpinner();
     flag_controller.load();
     
@@ -755,7 +750,7 @@ var TrackScopeUpdates = {
             TrackScopeUpdates.save_trigged = false;
         }
         // attach change event handler to all input fields except the assets search input.
-        $("input, select").not(TrackScopeUpdates.assets_search_input_client_id).bind('change',function(e){
+        $("input, select, textarea[id$=answersummary]").not(TrackScopeUpdates.assets_search_input_client_id).bind('change',function(e){
                 TrackScopeUpdates.markJSDirty();
         });
         $(".delete_button, .slds-update-scope").bind('click',function(e){
@@ -868,74 +863,6 @@ var validationQuestionTraverse = function(){
 	});
 }
 var AddEditQuestionAnswer = {
-    SCOPE_TREE_IFRAME_ID : 'scopeTreeIframe',
-    setHeightOfEditScopeModal: function(height) {
-        if ($('#' + AddEditQuestionAnswer.SCOPE_TREE_IFRAME_ID).length) {
-            $('#' + AddEditQuestionAnswer.SCOPE_TREE_IFRAME_ID).css('height', height + 'px');
-        }
-    },
-    bindEvent : function() {
-        $("[id$=questionText]").on('dblclick', function() {
-            var id = $(this).attr('id');
-            var questionInput = id.replace('questionText', 'questionInput');
-            var answerText = id.replace('questionText', 'answerText');
-            var answerInput = questionInput.replace('questionInput', 'answerInput');
-                $(document).find("[id$=answerInput]").not("#"+answerInput).not("#answerInput").hide();
-                $(document).find("[id$=answerText]").not("#"+answerText).not("#answerText").show();
-                $(document).find("[id$=questionInput]").not("#"+questionInput).not("#questionInput").hide();
-                $(document).find("[id$=questionText]").not(this).not("#questionText").show("fast", function() {
-                    AddEditQuestionAnswer.updateQuestionContent(this);
-                });
-            $("#"+answerInput).show();
-            $("#"+answerText).hide();
-            $(this).siblings( "#"+questionInput ).show();
-            $(this).hide();
-            resetIframeHeight();
-        });
-    },
-    hideQuestionEditDiv : function(id) {
-        var questionText = id.replace('questionInput', 'questionText');
-        var that = "#"+questionText;
-        var answerText = questionText.replace('questionText', 'answerText');
-        var answerInput = id.replace('questionInput', 'answerInput');
-        AddEditQuestionAnswer.updateQuestionContent(that);
-        $(that).show();
-        $("#"+id).hide();
-        $("#"+answerInput).hide();
-        $("#"+answerText).show();
-        resetIframeHeight();
-    },
-    updateQuestionContent : function(that) {
-        var id = $(that).attr('id');
-        var questionInput = id.replace('questionText', 'questionInput');
-        var answerText = id.replace('questionText', 'answerText');
-        var answerInput = questionInput.replace('questionInput', 'answerInput');
-        var questionUpdatedValue = $("#"+questionInput).find("input[id$=questionValue]").val();
-        $(that).html("Q "+questionUpdatedValue);
-        $("#"+answerInput).find("[id$=answerEditDiv]").each(function(answerText){
-            var action = $(this).find("select[id$=answerAction]").val();
-            var value = $(this).find("input[id$=answerValue]").val();
-            var loe = $(this).find("input[id$=answerLOE]").val();
-            var answerId = $(this).attr('id').replace('answerEditDiv', '');
-            $("#"+answerId).attr( "action", action );
-            $("#"+answerId).attr( "loe", loe );
-            $("#"+answerId+'Text').html( value );
-        });
-    },
-    showEditQuestionRow : function(id) {
-        $("tr#"+id).each(function() {
-            if($(this).hasClass( "table-row-display" ))
-                $(this).removeClass('table-row-display');
-            else
-                $(this).addClass('table-row-display');
-        });
-        resetIframeHeight();
-        return false;
-    },
-    checkSelectedQuestionType : function(that) {
-        $(that).next().click();
-        return false;
-    },
     showActionAlert : function(element) {
         var elementTag;
         if($(element).is("select")) {
@@ -946,10 +873,7 @@ var AddEditQuestionAnswer = {
         if(elementTag) { 
             var questionid = elementTag.attr('questionid');
             var action = elementTag.attr('action');
-            var value = elementTag.attr('value');
-            var loe = elementTag.attr('loe');
-             if(action && action != '' && (($(element).is(":radio") || $(element).is(":checkbox")) && $(element).is(":checked"))) {
-                CustomAlert.show('Selected answer will perform following action : '+action);
+             if(action != '' && (($(element).is(":radio") || $(element).is(":checkbox")) && $(element).is(":checked"))) {
                 if(action == 'Change Complexity to Low') {
                     $('select.scope-complexity').val('Low');
                 }else if(action == 'Change Complexity to Medium') {
@@ -967,101 +891,44 @@ var AddEditQuestionAnswer = {
                 });
             }else {
                 if(!$(element).is(":radio") || $(element).is(":checked")) {
-                    selectedAnswers.push(value);
+                    selectedAnswers.push($(element).attr('value'));
                 }
             }
             $('#'+questionid+'answerText').find("input[id$=selectedAnswer]").val(selectedAnswers.toString());
         }
-    },
-    answerActionElement : null,
-    showJSTree : function(that) {
-        if($(that).val() == 'Deactivate child scope' || $(that).val() == 'Activate child scope') {
-            AddEditQuestionAnswer.answerActionElement = that;
-            CustomAlert.showJSTree();
-            document.getElementById(AddEditQuestionAnswer.SCOPE_TREE_IFRAME_ID).contentWindow.AddScopeTree.updateTreeState($(AddEditQuestionAnswer.answerActionElement).next("[id$=bindedScopes]").val());
-        }else {
-            var displayAnswerDivId = $(that).attr("displayAnswerDivId");
-            $("#"+displayAnswerDivId).hide();
-        }
-        return false;
-    },
-     showJSTreeEdit : function(id) {
-        AddEditQuestionAnswer.answerActionElement = $("#"+id).find("select[id$=answerAction]");
-        CustomAlert.showJSTree();
-        document.getElementById(AddEditQuestionAnswer.SCOPE_TREE_IFRAME_ID).contentWindow.AddScopeTree.updateTreeState($(AddEditQuestionAnswer.answerActionElement).next("[id$=bindedScopes]").val());
-    },
-    hideJSTree : function() {
-        var bindedScopeIds = document.getElementById(AddEditQuestionAnswer.SCOPE_TREE_IFRAME_ID).contentWindow.AddScopeTree.getselectedTreeNode();
-        var scopeNameString = '<span class="slds-float-left" style="font-weight:bold;">Selected scopes : </span>';
-        var selectedScopesNames = document.getElementById(AddEditQuestionAnswer.SCOPE_TREE_IFRAME_ID).contentWindow.AddScopeTree.getselectedTreeNodeNames();
-        var displayAnswerDivId = $(AddEditQuestionAnswer.answerActionElement).attr("displayAnswerDivId");
-        if(selectedScopesNames && selectedScopesNames.length) {
-            $.each(selectedScopesNames, function(indx, name) {
-                scopeNameString += '<span class="slds-badge slds-theme--default slds-float-left slds-custom-badge-background-grey" style="font-weight:bold;">'+name+'</span>';
-            });
-        }else if(selectedScopesNames) {
-            scopeNameString += '<span class="slds-badge slds-theme--default slds-float-left slds-custom-badge-background-grey" style="font-weight:bold;">'+selectedScopesNames+'</span>';
-        }
-        var id = displayAnswerDivId.replace('ActionScopes', 'answerEditDiv');
-         scopeNameString += '<a class="edit-button1 slds-button--right--float" href="javascript:void(0);" onclick="AddEditQuestionAnswer.showJSTreeEdit(\''+id+'\');"> </a>';
-        
-        $("#"+displayAnswerDivId).html(scopeNameString);
-        if(selectedScopesNames) {
-            $("#"+displayAnswerDivId).show();
-        }else {
-            $("#"+displayAnswerDivId).hide();
-        }
-        $(AddEditQuestionAnswer.answerActionElement).next("[id$=bindedScopes]").val(bindedScopeIds);
-        console.log($(AddEditQuestionAnswer.answerActionElement).next("[id$=bindedScopes]").val());
-        CustomAlert.hideJSTree();
-        return false;
     }
 }
-var CustomAlert = {
-    notifyContainerCssSelector: '.slds-notify_container',
-    notifyCloseCssSelector: '.slds-notify__close',
-    notifyMsgCssSelector: '.slds-text-heading--small',
-    notifyTypeCssDiv: '#sldsalertdiv',
-    notifyEditContainer: '.slds-edit-alert',
-    notifyEditContainerbackdrop: '.slds-edit-alert-backdrop',
-    notifyJSTreeHeadingCSS : '.slds-text-heading--small',
-    notifyJSTreeHeading : 'Select child scope',
-    showJSTree: function() {
-        if(document.getElementById(AddEditQuestionAnswer.SCOPE_TREE_IFRAME_ID).contentWindow.AddScopeTree.hasChildScope == true) {
-            $(CustomAlert.notifyEditContainerbackdrop).show().css('height', $(document).outerHeight());
-            $(CustomAlert.notifyJSTreeHeadingCSS).html(CustomAlert.notifyJSTreeHeading);
-            $(CustomAlert.notifyEditContainer).show();
-        } else {
-            CustomAlert.show('No child scope under current scope hierarchy');
-        }
+var tabpanel = {
+    assetloaded : 0,
+    bindEvents : function(){
+       $('.slds-tabs--default__item').on('click', function(){
+                  $('#'+ $(this).find('a').attr('aria-controls'));
+                  $('#'+ $(this).find('a').attr('aria-controls')).siblings('.slds-tabs--default__content').removeClass('slds-show');
+			      $('#'+ $(this).find('a').attr('aria-controls')).siblings('.slds-tabs--default__content').addClass('slds-hide');
+		          $(this).addClass('slds-active');
+			      $(this).find('a').attr('aria-selected', true);
+			      $('#'+ $(this).find('a').attr('aria-controls')).removeClass('slds-hide');
+			      $('#'+ $(this).find('a').attr('aria-controls')).addClass('slds-show');
+			      if($(this).attr('title')=='Recommended Assets' && tabpanel.assetloaded == 0) {
+			            Typeahead_input.load();
+			            Typeahead_input.retrieveExistingAssets();
+			            tabpanel.assetloaded = 1;
+			      }
+			      $(this).siblings().removeClass('slds-active');
+			      $(this).siblings().find('a').attr('aria-selected', false);
+			      resetIframeHeight();
+		});
     },
-    hideJSTree: function() {
-        $(CustomAlert.notifyEditContainer).hide();
-        $(CustomAlert.notifyEditContainerbackdrop).hide();
-    },
-    show: function(msg) {
-        $(CustomAlert.notifyContainerCssSelector).css({
-            position: 'absolute !important',
-            'opacity': '100',
-            'display': 'block'
-        });
-        $(CustomAlert.notifyTypeCssDiv).removeClass("slds-theme--error");
-        $(CustomAlert.notifyTypeCssDiv).addClass("slds-theme--success");
-        $(CustomAlert.notifyContainerCssSelector).find(CustomAlert.notifyMsgCssSelector).text(msg);
-        $(CustomAlert.notifyContainerCssSelector).find(CustomAlert.notifyCloseCssSelector).unbind("click");
-        $(CustomAlert.notifyContainerCssSelector).find(CustomAlert.notifyCloseCssSelector).bind("click", function() {
-            $(CustomAlert.notifyContainerCssSelector).stop(true, true).fadeTo().slideUp();
-            return false;
-        });
-        window.setTimeout(function() {
-            if ($(CustomAlert.notifyContainerCssSelector).is(":visible")) {
-                $(CustomAlert.notifyContainerCssSelector).fadeTo(500, 0).slideUp(500, function() {
-                    $(this).hide();
-                });
-            }
-        }, 2000);
-    },
-    hide: function() {
-        $(CustomAlert.notifyContainerCssSelector).hide();
+    activateTab: function(that){
+                    that.addClass('slds-active');
+			        that.find('a').attr('aria-selected', true);
+			        var $contentToShow = $('#'+ that.find('a').attr('aria-controls'));
+			        $contentToShow.removeClass('slds-hide');
+			        $contentToShow.addClass('slds-show');			
+			        that.siblings().removeClass('slds-active');
+			        that.siblings().find('a').attr('aria-selected', false);
+			        $contentToShow.siblings('.slds-tabs--default__content').removeClass('slds-show');
+			        $contentToShow.siblings('.slds-tabs--default__content').addClass('slds-hide');
+        
     }
 }

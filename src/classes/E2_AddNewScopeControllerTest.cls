@@ -16,6 +16,11 @@ public class E2_AddNewScopeControllerTest {
     User sysAdmin = E2_Test_Utils.insertUser(E2_Constants.PROFILE_SYS_ADMIN, true);
     
     System.runAs(sysAdmin){
+        E2_Favourite_Scope__c favSC = new E2_Favourite_Scope__c();
+		favSC.Scope__c = scope.Id;
+        favSC.User__c = UserInfo.getUserId();
+        favSC.Unique_Scope_User_Id__c = scope.Id +'-'+ UserInfo.getUserId();
+       insert favSC;
         //start test
         Test.startTest();    
         PageReference pageRef = Page.E2_AddNewScope;
@@ -76,16 +81,16 @@ public class E2_AddNewScopeControllerTest {
       System.assertEquals(scopeList[0].Efforts__r.size(), 0, 'all efforts should removed');
          
       controller.addNewScope();
-      
       System.assertEquals(controller.childScopes.size(), 2, '1 more child scope should be added in list'); 
         
       for( E2_AddNewScopeController.Scope scope_wrap1 : controller.childScopes)  {
             scope_wrap1.remove();
       }
-        
+      
       controller.saveScope();     
       System.assertEquals([SELECT Id FROM E2_Scope__c WHERE Parent_Scope__c != null].size(), 0, 'both scopes should have been removed');
-        
+      
+       controller.saveScope();  
 
     //stop test
     Test.stopTest(); 
@@ -112,9 +117,10 @@ public class E2_AddNewScopeControllerTest {
     
       controller.pageAction();
       system.assert(controller.is_New == true);
+      controller.childScopes[0].scope.Name ='Test Scope';
+      controller.childScopes[0].scope.Is_Favourite__c = true;
+      controller.addNewScope(); 
       
-      
-      controller.addNewScope();      
       controller.saveScope();  
 
       ApexPages.currentPage().getParameters().remove('estimate_id');

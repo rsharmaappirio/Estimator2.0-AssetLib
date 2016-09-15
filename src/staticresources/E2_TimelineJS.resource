@@ -448,6 +448,7 @@
             if (_self.onBeforeCellRangeSelected.notify(cell) !== false) {
                 if (_grid.canCellBeSelected(cell.row, cell.cell)) {
                     _dragging = true;
+                    //console.log(cell.row + ':' + cell.cell);
                     e.stopImmediatePropagation();
                 }
             }
@@ -466,6 +467,7 @@
                 end: {}
             };
 
+            //_grid.scrollCellIntoView(start.row, start.cell);
             return _decorator.show(new Slick.Range(start.row, start.cell));
         }
 
@@ -484,6 +486,10 @@
             }
 
             dd.range.end = end;
+            //console.log(end.row + ':' + end.cell);
+            
+            // scroll the viewport in case scroll bar is visible
+            _grid.scrollCellIntoView(end.row, end.cell);
             _decorator.show(new Slick.Range(dd.range.start.row, dd.range.start.cell, end.row, end.cell));
         }
 
@@ -762,7 +768,457 @@
 
 }(jQuery));
 
+(function ($) {
+  // register namespace
+  $.extend(true, window, {
+    "Slick": {
+      "CellExternalCopyManager": CellExternalCopyManager
+    }
+  });
 
+
+  function CellExternalCopyManager(options) {
+    /*
+      This manager enables users to copy/paste data from/to an external Spreadsheet application
+      such as MS-Excel® or OpenOffice-Spreadsheet.
+      
+      Since it is not possible to access directly the clipboard in javascript, the plugin uses
+      a trick to do it's job. After detecting the keystroke, we dynamically create a textarea
+      where the browser copies/pastes the serialized data. 
+      
+      options:
+        copiedCellStyle : sets the css className used for copied cells. default : "copied"
+        copiedCellStyleLayerKey : sets the layer key for setting css values of copied cells. default : "copy-manager"
+        dataItemColumnValueExtractor : option to specify a custom column value extractor function
+        dataItemColumnValueSetter : option to specify a custom column value setter function
+        clipboardCommandHandler : option to specify a custom handler for paste actions
+        includeHeaderWhenCopying : set to true and the plugin will take the name property from each column (which is usually what appears in your header) and put that as the first row of the text that's copied to the clipboard
+        bodyElement: option to specify a custom DOM element which to will be added the hidden textbox. It's useful if the grid is inside a modal dialog.
+        onCopyInit: optional handler to run when copy action initializes
+        onCopySuccess: optional handler to run when copy action is complete
+    */
+    var _grid;
+    var _self = this;
+    var _copiedRanges;
+    var _options = options || {};
+    var _copiedCellStyleLayerKey = _options.copiedCellStyleLayerKey || "copy-manager";
+    var _copiedCellStyle = _options.copiedCellStyle || "copied";
+    var _clearCopyTI = 0;
+    var _bodyElement = _options.bodyElement || document.body;
+    var _onCopyInit = _options.onCopyInit || null;
+    var _onCopySuccess = _options.onCopySuccess || null;
+    var _scrollInterval;
+    
+    var keyCodes = {
+      'C': 67,
+      'V': 86,
+      'ESC': 27,
+      'INSERT': 45
+    };
+
+    function init(grid) {
+	  _grid = grid;
+      _grid.onKeyDown.subscribe(handleKeyDown);
+      
+      // we need a cell selection model
+      var cellSelectionModel = grid.getSelectionModel();
+      if (!cellSelectionModel){
+        throw new Error("Selection model is mandatory for this plugin. Please set a selection model on the grid before adding this plugin: grid.setSelectionModel(new Slick.CellSelectionModel())");
+      }
+      // we give focus on the grid when a selection is done on it.
+      // without this, if the user selects a range of cell without giving focus on a particular cell, the grid doesn't get the focus and key stroke handles (ctrl+c) don't work
+      //cellSelectionModel.onSelectedRangesChanged.subscribe(function(e, args){
+      //  _grid.focus();
+     // });
+    }
+
+    function destroy() {
+      _grid.onKeyDown.unsubscribe(handleKeyDown);
+    }
+    
+    function getDataItemValueForColumn(item, columnDef) {
+      if (_options.dataItemColumnValueExtractor) {
+        var dataItemColumnValueExtractorValue = _options.dataItemColumnValueExtractor(item, columnDef);
+
+        if (dataItemColumnValueExtractorValue)
+          return dataItemColumnValueExtractorValue;
+      }
+
+      var retVal = '';
+      //console.log(columnDef.editor); 
+      // if a custom getter is not defined, we call serializeValue of the editor to serialize
+      if (columnDef.editor){
+        var editorArgs = {
+          'container':$("<p>"),  // a dummy container
+          'column':columnDef,
+          'position':{'top':0, 'left':0},  // a dummy position required by some editors
+          'grid':_grid
+        };
+        var editor = new columnDef.editor(editorArgs);
+        editor.loadValue(item);
+        retVal = editor.serializeValue();
+        editor.destroy();
+      }
+      else {
+        retVal = item[columnDef.field];
+      }
+      return retVal;
+    }
+    
+    function setDataItemValueForColumn(item, columnDef, value) {
+      if (_options.dataItemColumnValueSetter) {
+        return _options.dataItemColumnValueSetter(item, columnDef, value);
+      }
+
+      // if a custom setter is not defined, we call applyValue of the editor to unserialize
+      if (columnDef.editor){
+        var editorArgs = {
+          'container':$("body"),  // a dummy container
+          'column':columnDef,
+          'position':{'top':0, 'left':0},  // a dummy position required by some editors
+          'grid':_grid
+        };
+        var editor = new columnDef.editor(editorArgs);
+        editor.loadValue(item);
+        editor.applyValue(item, value);
+        editor.destroy();
+      }
+    }
+    
+    
+    function _createTextBox(innerText){
+      var ta = document.createElement('textarea');
+      var windowScrollTopPosition = $(window).scrollTop();
+      
+      ta.style.position = 'absolute';
+      ta.style.left = '-1000px'; 
+      ta.style.top = '0px';
+      ta.style.zIndex = '-99999';
+      
+      ta.value = innerText;
+      _bodyElement.appendChild(ta); 
+      
+      ta.select();
+      
+      ta.focus();
+      
+      var adjustScrollingPosition = function(){
+          // clear the interval when window scroll matches the origin one
+          if($(window).scrollTop() == windowScrollTopPosition){
+            if(_scrollInterval) window.clearInterval(_scrollInterval);
+          }  
+          // set the scroll top
+          $(window).scrollTop(windowScrollTopPosition); 
+      }
+      // clear the interval if that already exists
+      if(_scrollInterval) window.clearInterval(_scrollInterval);
+      // set the interval again for new operation
+      _scrollInterval = window.setInterval(adjustScrollingPosition, 150);
+      
+      return ta;
+    }
+    
+    function _decodeTabularData(_grid, ta){
+      var columns = _grid.getColumns();
+      var clipText = ta.value;
+      //console.log(clipText);
+      clipText = clipText.trim(); 
+      var clipRows = clipText.split(/[\n\f\r]/); 
+      var clippedRange = [];
+      _bodyElement.removeChild(ta);
+      
+      for (var i = 0; i < clipRows.length; i++) {
+        if (clipRows[i] != "")
+          clippedRange[i] = clipRows[i].split("\t");
+        else
+          clippedRange[i] = [""];
+      }
+      var selectedCell = _grid.getActiveCell();
+      var ranges = _grid.getSelectionModel().getSelectedRanges();
+      var selectedRange = ranges && ranges.length ? ranges[0] : null;   // pick only one selection
+      var activeRow = null;
+      var activeCell = null;
+      
+      if (selectedRange){
+        activeRow = selectedRange.fromRow;
+        activeCell = selectedRange.fromCell;
+      } else if (selectedCell){
+        activeRow = selectedCell.row;
+        activeCell = selectedCell.cell;
+      } else {
+        // we don't know where to paste
+        return;
+      }
+      
+      var oneCellToMultiple = false;
+      var destH = clippedRange.length;
+      var destW = clippedRange.length ? clippedRange[0].length : 0;
+      if (clippedRange.length == 1 && clippedRange[0].length == 1 && selectedRange){
+        oneCellToMultiple = true;
+        destH = selectedRange.toRow - selectedRange.fromRow + 1;
+        destW = selectedRange.toCell - selectedRange.fromCell + 1;
+      }
+      var availableRows = _grid.getData().length - activeRow;
+      var addRows = 0;
+      
+      /**
+      if(availableRows < destH)
+      {
+        var d = _grid.getData();
+        for(addRows = 1; addRows <= destH - availableRows; addRows++)
+          d.push({});
+        _grid.setData(d);
+        _grid.render();
+      }
+      **/
+      var clipCommand = {
+
+        isClipboardCommand: true,
+        clippedRange: clippedRange,
+        oldValues: [],
+        cellExternalCopyManager: _self,
+        _options: _options,
+        setDataItemValueForColumn: setDataItemValueForColumn,
+        markCopySelection: markCopySelection,
+        oneCellToMultiple: oneCellToMultiple,
+        activeRow: activeRow,
+        activeCell: activeCell,
+        destH: destH,
+        destW: destW,
+        desty: activeRow,
+        destx: activeCell,
+        maxDestY: _grid.getDataLength(),
+        maxDestX: _grid.getColumns().length,
+        h: 0,
+        w: 0,
+          
+        execute: function() {
+          this.h = 0;
+          for (var y = 0; y < destH; y++){
+            this.oldValues[y] = [];
+            this.w = 0;
+            this.h++;
+            for (var x = 0; x < destW; x++){
+              this.w++;
+              var desty = activeRow + y;
+              var destx = activeCell + x;
+              
+              if (desty < this.maxDestY && destx < this.maxDestX ) {
+                var nd = _grid.getCellNode(desty, destx);
+                var dt = _grid.getDataItem(desty);
+                this.oldValues[y][x] = dt[columns[destx]['id']];
+                
+                if (oneCellToMultiple)
+                  this.setDataItemValueForColumn(dt, columns[destx], clippedRange[0][0]);
+                else{
+                  //console.log(dt.id);
+                  //console.log(dt + ',' + columns[destx] + ',' + clippedRange[y] + '?' + clippedRange[y][x] + ':' + '');
+                  if(typeof dt.id != 'undefined') this.setDataItemValueForColumn(dt, columns[destx], clippedRange[y] ? clippedRange[y][x] : '');
+                }
+                _grid.updateCell(desty, destx);
+              }
+            }
+          }
+          
+          var bRange = {
+            'fromCell': activeCell,
+            'fromRow': activeRow,
+            'toCell': activeCell + this.w - 1,
+            'toRow': activeRow + this.h - 1
+          }
+
+          this.markCopySelection([bRange]);
+          _grid.getSelectionModel().setSelectedRanges([bRange]);
+          this.cellExternalCopyManager.onPasteCells.notify({ranges: [bRange], clippedRange: clippedRange, oneCellToMultiple : oneCellToMultiple});
+        },
+
+        undo: function() {
+          for (var y = 0; y < destH; y++){
+            for (var x = 0; x < destW; x++){
+              var desty = activeRow + y;
+              var destx = activeCell + x;
+              
+              if (desty < this.maxDestY && destx < this.maxDestX ) {
+                var nd = _grid.getCellNode(desty, destx);
+                var dt = _grid.getDataItem(desty);
+                if (oneCellToMultiple)
+                  this.setDataItemValueForColumn(dt, columns[destx], this.oldValues[0][0]);
+                else
+                  this.setDataItemValueForColumn(dt, columns[destx], this.oldValues[y][x]);
+                _grid.updateCell(desty, destx);
+                _grid.onCellChange.notify({
+                    row: desty,
+                    cell: destx,
+                    item: dt,
+                    grid: _grid
+                });
+              }
+            }
+          }
+          
+          var bRange = {
+            'fromCell': activeCell,
+            'fromRow': activeRow,
+            'toCell': activeCell+this.w-1,
+            'toRow': activeRow+this.h-1
+          }
+
+          this.markCopySelection([bRange]);
+          _grid.getSelectionModel().setSelectedRanges([bRange]);
+          this.cellExternalCopyManager.onPasteCells.notify({ranges: [bRange], clippedRange: clippedRange, oneCellToMultiple : oneCellToMultiple});
+          
+          if(addRows > 1){            
+            var d = _grid.getData();
+            for(; addRows > 1; addRows--)
+              d.splice(d.length - 1, 1);
+            _grid.setData(d);
+            _grid.render();
+          }
+        }
+      };
+
+      if(_options.clipboardCommandHandler) {
+        _options.clipboardCommandHandler(clipCommand);
+      }
+      else {
+        clipCommand.execute();
+      }
+    }
+    
+    
+    function handleKeyDown(e, args) {
+      var ranges;
+      if (!_grid.getEditorLock().isActive() || _grid.getOptions().autoEdit) {
+        if (e.which == keyCodes.ESC) {
+          if (_copiedRanges) {
+            e.preventDefault();
+            clearCopySelection();
+            _self.onCopyCancelled.notify({ranges: _copiedRanges});
+            _copiedRanges = null;
+          }
+        }
+
+        if ((e.which === keyCodes.C || e.which === keyCodes.INSERT) && (e.ctrlKey || e.metaKey) && !e.shiftKey) {    // CTRL+C or CTRL+INS
+          if (_onCopyInit) {
+            _onCopyInit.call();
+          }
+          ranges = _grid.getSelectionModel().getSelectedRanges();
+          if (ranges.length != 0) {
+            _copiedRanges = ranges;
+            markCopySelection(ranges);
+            _self.onCopyCells.notify({ranges: ranges});
+            
+            var columns = _grid.getColumns();
+            var clipText = "";
+
+            for (var rg = 0; rg < ranges.length; rg++){
+                var range = ranges[rg];
+                var clipTextRows = [];
+                for (var i = range.fromRow; i < range.toRow + 1 ; i++){
+                    var clipTextCells = [];
+                    var dt = _grid.getDataItem(i);
+                    
+                    if (clipTextRows == "" && _options.includeHeaderWhenCopying) {
+                        var clipTextHeaders = [];
+                        for (var j = range.fromCell; j < range.toCell + 1 ; j++) {
+                            if (columns[j].name.length > 0)
+                                clipTextHeaders.push(columns[j].name);
+                        }
+                        clipTextRows.push(clipTextHeaders.join("\t"));
+                    }
+
+                    for (var j = range.fromCell; j < range.toCell + 1 ; j++){
+                        clipTextCells.push(getDataItemValueForColumn(dt, columns[j]));
+                    }
+                    clipTextRows.push(clipTextCells.join("\t"));
+                }
+                clipText += clipTextRows.join("\r\n") + "\r\n";
+            }
+            
+            if(window.clipboardData) {
+                window.clipboardData.setData("Text", clipText);
+                return true;
+            }
+            else {
+                var $focus = $(_grid.getActiveCellNode());
+                var ta = _createTextBox(clipText);
+
+                setTimeout(function(){
+                     _bodyElement.removeChild(ta);
+                    // restore focus
+                    if ($focus && $focus.length>0) {
+                        $focus.attr('tabIndex', '-1');
+                        $focus.focus();
+                        $focus.removeAttr('tabIndex');
+                    }
+                }, 150);
+
+                if (_onCopySuccess) {
+                    var rowCount = 0;
+                    // If it's cell selection, use the toRow/fromRow fields
+                    if (ranges.length === 1) {
+                        rowCount = (ranges[0].toRow + 1) - ranges[0].fromRow;
+                    }
+                    else {
+                        rowCount = ranges.length;
+                    }
+                    _onCopySuccess.call(this, rowCount);
+                }
+
+                return false;
+            }
+          }
+        }
+
+        if ((e.which === keyCodes.V && (e.ctrlKey || e.metaKey) && !e.shiftKey || (e.which === keyCodes.INSERT && e.shiftKey && !e.ctrlKey))) {    // CTRL+V or Shift+INS
+            var ta = _createTextBox('');
+            
+            setTimeout(function(){
+                _decodeTabularData(_grid, ta);
+            }, 100);
+            
+            return false;
+        }
+      }
+    }
+
+    function markCopySelection(ranges) {
+
+      clearCopySelection();
+      
+      var columns = _grid.getColumns();
+      var hash = {};
+      for (var i = 0; i < ranges.length; i++) {
+        for (var j = ranges[i].fromRow; j <= ranges[i].toRow; j++) {
+          hash[j] = {};
+          for (var k = ranges[i].fromCell; k <= ranges[i].toCell && k < columns.length; k++) {
+            hash[j][columns[k].id] = _copiedCellStyle;
+          }
+        }
+      }
+      _grid.setCellCssStyles(_copiedCellStyleLayerKey, hash);
+      clearTimeout(_clearCopyTI);
+      _clearCopyTI = setTimeout(function(){
+        _self.clearCopySelection();
+      }, 2000);
+    }
+
+    function clearCopySelection() {
+      _grid.removeCellCssStyles(_copiedCellStyleLayerKey);
+    }
+
+    $.extend(this, {
+      "init": init,
+      "destroy": destroy,
+      "clearCopySelection": clearCopySelection,
+      "handleKeyDown":handleKeyDown,
+      
+      "onCopyCells": new Slick.Event(),
+      "onCopyCancelled": new Slick.Event(),
+      "onPasteCells": new Slick.Event()
+    });
+  }
+})(jQuery);
 
 
 
@@ -1385,11 +1841,26 @@ var CustomAlert = {
     }
 }
 
-
+var makeManageRateCardsCollapsible = function(){
+    $('#manageratecardtable tbody tr.header').click(function(){
+         
+         loadSpinner.show();
+         var that = $(this);
+         setTimeout(function(){
+            that.toggleClass('expand').siblings('tr.' + that.attr('childCss')).toggle("slow", function() {
+              loadSpinner.hide();
+            });  
+         }, 50);
+         
+         
+         
+    });
+}
 
 
 // On DOM Ready
 $(function() {
+    makeManageRateCardsCollapsible();
     tabpanel.bindEvents();
     tabpanel.showTimelineTab();
     // undo shortcut
@@ -1408,6 +1879,9 @@ $(function() {
     $("#contextMenu").click(Timeline.contextMenuClickHandler);
     
     reFreshGrid();
+    
+    
+    loadSpinner.show();
 });
 
 
@@ -1446,7 +1920,8 @@ var gridMainInitiate = function(){
     
     
     /** COPY MANAGER PLUGIN **/
-    var copyManager = new Slick.CellCopyManager();
+    //var copyManager = new Slick.CellCopyManager(); //commented as using CellExternalCopyManager now to enable copy and paste from outside
+    var copyManager = new Slick.CellExternalCopyManager();
     grid.registerPlugin(copyManager);
     copyManager.onPasteCells.subscribe(Timeline.onPasteCellsHandler);
      
@@ -1577,9 +2052,13 @@ var Timeline = {
     capacityneeds_cols_css : {'text-align' : 'center', 'background-color': '#0070d2', 'color' : '#fff', 'font-weight' : 'bold'},
     hoursperphase_cols_css : {'text-align' : 'center', 'background-color': '#0070d2', 'color' : '#fff', 'font-weight' : 'bold'},
     rt_json : [],
+    
+    
     renderGrid: function(){
         grid.render();
     },
+    
+    
     
     
     registerExportToExcel: function(){
@@ -2486,43 +2965,56 @@ var Timeline = {
     
     
     onPasteCellsHandler: function(e, args) {
-        if (args.from.length !== 1 || args.to.length !== 1) {
-            throw "This implementation only supports single range copy and paste operations";
-        }
-        //alert('in');
         
-        var from = args.from[0];
-        var to = args.to[0];
+        var from = args.ranges[0];
+        var to = args.ranges[0];
         var val;
-        // stop user by copying from phase and pasting it to the number formated calculated or other rows
-        // stop user by copying from calculated and pasting it to the phase row
-        if(data[from.fromRow].id == Timeline.fixedRowsTypes.phase.id && to.fromRow != from.fromRow){
-            Timeline.renderGrid();
-            return;
-        }else if(data[to.fromRow].id == Timeline.fixedRowsTypes.phase.id && from.fromRow != to.fromRow){
-            Timeline.renderGrid();    
-            return;
-        }
+        
+        var nodes_order_json = '[';
         
         for (var i = 0; i <= from.toRow - from.fromRow; i++) {
             for (var j = 0; j <= from.toCell - from.fromCell; j++) {
                 if (i <= to.toRow - to.fromRow && j <= to.toCell - to.fromCell) {
 
-                    if(typeof columns[to.fromCell + j].usedForCalculation != 'undefined' && columns[to.fromCell + j].usedForCalculation == true){ 
-                        val = data[from.fromRow + i][columns[from.fromCell + j].field];
-                        //console.log(data[to.fromRow + i].id + ':' + columns[to.fromCell + j].field + ':' + val);
+                    if(typeof columns[to.fromCell + j] && typeof data[(to.fromRow + i)] != 'undefined' && 
+                              typeof columns[to.fromCell + j].usedForCalculation != 'undefined' && 
+                              columns[to.fromCell + j].usedForCalculation == true &&
+                              typeof data[to.fromRow + i].id != 'undefined' && 
+                              typeof columns[to.fromCell + j].field != 'undefined'){ 
                         
-                        data[to.fromRow + i][columns[to.fromCell + j].field] = val;
+                        if(args.oneCellToMultiple){
+                            val = args.clippedRange[0][0];
+                        }
+                        else{
+                            val = args.clippedRange[i][j];
+                        }
+                        
                         var rowId = data[to.fromRow + i].id;
                         var field = columns[to.fromCell + j].field;
                         
-                        Timeline.triggerUpdateCell(field, rowId, val, to.fromRow + i, to.fromCell + j);
+                        if(rowId.toLowerCase() != Timeline.fixedRowsTypes.milestone.id 
+                                && rowId.toLowerCase() != Timeline.fixedRowsTypes.milestone1.id 
+                                && rowId.toLowerCase() != Timeline.fixedRowsTypes.milestone2.id
+                                && (!Timeline.numFieldValidator(val).valid || val == '')){
+                            val = 0;
+                        }
                         
+                        data[to.fromRow + i][columns[to.fromCell + j].field] = val;
+                       
+                        nodes_order_json += '{"rowId":"' + rowId + '", "cellId":"' + field + '", "value":"' + val + '"},';
+                       
                         grid.invalidateRow(to.fromRow + i);
                     }
                 }
             }
         }
+        
+        if (nodes_order_json != '[') {
+            nodes_order_json = nodes_order_json.slice(0, -1);
+            nodes_order_json += ']';
+            Timeline.updateResourceWeeks(nodes_order_json);
+        }
+        
         grid.setData(data);
         Timeline.renderGrid();
 
@@ -2644,7 +3136,7 @@ var Timeline = {
     },
     waitingFormatter : function (row, cell, value, columnDef, dataContext) {
         
-        if(typeof Timeline.fixedRowsTypes[dataContext.id.toLowerCase()] != 'undefined') return '';
+        if(typeof dataContext.id != 'undefined' && typeof Timeline.fixedRowsTypes[dataContext.id.toLowerCase()] != 'undefined') return '';
         
         return '';
         //return 'wait..';
@@ -2975,10 +3467,12 @@ var Timeline = {
             grid.setData(data);
             Timeline.renderGrid();
             //grid.init();
+            loadSpinner.hide();
             loader.hide();
         },
         onFailure: function(error) {
             alert(error);
+            loadSpinner.hide();
             loader.hide();
         }
 
@@ -3842,8 +4336,10 @@ var Timeline = {
     },
     updateEstimateRateCards_complete: function(){
         loadSpinner.hide();
+        makeManageRateCardsCollapsible();
         CustomAlert.show('Rate card has been successfully updated!!!');
         tabpanel.showTimelineTab();
+        if(typeof refreshOverviewPanel === 'function') refreshOverviewPanel();
         reFreshGrid();
     },
     refreshRateCardRatesAndCost: function(){
@@ -3857,8 +4353,10 @@ var Timeline = {
     },
     refreshRateCardRatesAndCost_complete: function(){
         loadSpinner.hide();
+        makeManageRateCardsCollapsible();
         CustomAlert.show('Rate card has been successfully refreshed!!!');
         tabpanel.showTimelineTab();
+        if(typeof refreshOverviewPanel === 'function') refreshOverviewPanel();
         reFreshGrid();
     },
     build: function(){
@@ -3905,6 +4403,39 @@ var Timeline = {
                 estimateId: estimateId
             }, Timeline.initCallback);
 
+        },
+        onFailure: function(error) {
+            alert(error);
+            loader.hide();
+        }
+    },
+    
+    updateResourceWeeks: function(jsonstr) {
+        loader.show();
+        
+        sforce.apex.execute(WEBSERVICE_NAME, "updateResourceWeeks", {
+            jsonstr: jsonstr
+        }, Timeline.updateResourceWeeks_Callback);
+        
+    },
+    
+    updateResourceWeeks_Callback: {
+        onSuccess: function(result) {
+            result = (result.length > 0 ? result[0] : result);
+            // check for failure message, show alert and stop
+            if (result.indexOf('Fail') != -1) {
+                var exception = 'INSUFFICIENT_ACCESS_OR_READONLY';
+                if (result.toLowerCase().indexOf(exception.toLowerCase()) != -1) {
+                    alert(result); //CustomAlert.showError('Reparenting Failed: You do not have permission to reparent this scope!!! Please contact scope owner for reparenting!!');    
+                } else {
+                    alert(result);
+                }
+                loader.hide();
+                return;
+            }
+            
+            loader.hide();
+            Timeline.renderGrid();
         },
         onFailure: function(error) {
             alert(error);

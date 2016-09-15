@@ -237,7 +237,17 @@ public class E2_DataUtil {
     				Rate_Card__r.pse__Average_Cost_Rate__c, Rate_Card__r.pse__Suggested_Bill_Rate__c 
     				FROM E2_Estimate_Rate_Card__c 
     				WHERE Estimate__c =: estimateId
-    				ORDER BY Region__c ASC, Resource_Role__c ASC];
+    				ORDER BY Practice__c ASC, Region__c ASC, Resource_Role__c ASC];
+  }
+  
+  public static List<E2_Estimate_Rate_Card__c> getEstimateRateCards(id estimateId){
+     return [SELECT Id, Resource_Role__c, Estimate__c, Region__c, 
+    				Practice__c, Code__c, Rate_Card__c, Resource_Cost__c,
+    				Bill_Rate__c, Discounted_Rate__c, Category__c,
+    				Rate_Card__r.pse__Region__c, Rate_Card__r.pse__Practice__c 
+    				FROM E2_Estimate_Rate_Card__c 
+    				WHERE Estimate__c =: estimateId
+    				ORDER BY Practice__c ASC, Region__c ASC, Resource_Role__c ASC];
   }
   
   public static List<pse__Rate_Card__c> getpseRateCardRecs(Set<Id>rateCardIds, String currencyCode){
@@ -245,7 +255,39 @@ public class E2_DataUtil {
 					pse__Practice__r.Name, Code__c, 
 		            pse__Region__r.Name, pse__Role__c, pse__Suggested_Bill_Rate__c 
 		            FROM pse__Rate_Card__c 
-		            WHERE CurrencyISOCode =: currencyCode 
-		            AND ID NOT IN : rateCardIds];
+		            WHERE CurrencyISOCode =: currencyCode AND ID NOT IN : rateCardIds AND 
+				    ((pse__Start_Date__c = NULL AND pse__End_Date__c = NULL) OR 
+				    (pse__Start_Date__c <= TODAY AND pse__End_Date__c = NULL) OR 
+				    (pse__End_Date__c >= TODAY AND pse__Start_Date__c = NULL) OR
+				    (pse__Start_Date__c <= TODAY AND pse__End_Date__c >= TODAY))];
+  }
+  
+  public static List<pse__Rate_Card__c> getPSERateCardRecords(string currencyCode) {
+  	return [SELECT Id, pse__Average_Cost_Rate__c,pse__Practice__r.Name, Code__c, Description__c,
+		    pse__Region__r.Name, pse__Role__c, pse__Suggested_Bill_Rate__c 
+		    FROM pse__Rate_Card__c 
+		    WHERE CurrencyISOCode =: currencyCode AND 
+		    ((pse__Start_Date__c = NULL AND pse__End_Date__c = NULL) OR 
+		    (pse__Start_Date__c <= TODAY AND pse__End_Date__c = NULL) OR 
+		    (pse__End_Date__c >= TODAY AND pse__Start_Date__c = NULL) OR
+		    (pse__Start_Date__c <= TODAY AND pse__End_Date__c >= TODAY))];
+  }
+  
+  //To get the templates for milestone scheduling - (Added by - Vikash Goyal - 9/13/2016)
+  public static List<E2_Milestone_Library__c> getMilestoneScheduleTemplates(){
+      return [SELECT Id, Name
+                    FROM E2_Milestone_Library__c 
+                    WHERE Is_Active__c = true
+                    ORDER BY Name];
+  }
+  
+  public static E2_Question__c getE2Questions(Id questionId){
+    return [SELECT Id, Question_Text__c, Scope__c, Source_Question__c, 
+  			Type__c, Is_Active__c, Weighted_Effort_LOE__c,
+  			(SELECT Id, Answer_Text__c, Effort_LOE__c, Is_Selected__c, 
+  			  Sequence__c, Source_Answer__c, Is_Active__c, Question__c, Action__c 
+  			 FROM Answers__r ORDER BY Sequence__c)
+  			 FROM E2_Question__c
+  			 WHERE Id =: questionId];  
   }
 }

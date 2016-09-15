@@ -165,8 +165,8 @@ public with sharing class E2_ScopeQuestionAnswerManager {
                 	answer.originalBindedScopes != answer.bindedScopes)) {
                 	answerScopeMap.put(answer.e2answer, answer.bindedScopes);
                 }
-                if(answer.answerstring != NULL && 
-                   answer.answerstring != '') {
+                if((answer.answerstring != NULL && 
+                   answer.answerstring != '') || question.e2question.Type__c == 'Summary') {
                 	answer.e2answer.Answer_Text__c = answer.answerstring;
                 	if(!answerToUpsert.containsKey(mapKey)) {
 		            	answerToUpsert.put(mapKey, new List<E2_Answer__c>());
@@ -226,39 +226,13 @@ public with sharing class E2_ScopeQuestionAnswerManager {
         public boolean isCloned{get;set;}
         public boolean isEdit{get;set;}
         public String key{get;set;}
+        public string qType{get;set;}
         public E2_Question__c e2question{get;set;}
         public list<Answer> e2answers{get;set;}
         public string selectedAnswer{get;set;}
         public integer sequence{get;set;}
         public Question (E2_Question__c e2question) {
-            this.isDeleted = false;   
-            this.isCloned = false;
-            this.isEdit = false;
-            this.sequence = 0;
-            this.selectedAnswer = E2_Constants.BLANK;
-            if(e2question.Source_Question__c <> NULL){
-                this.isCloned = true;           
-            }
-            if(e2question.id == null){    
-                Blob hash2 = Crypto.generateDigest(E2_Constants.MD5, Blob.valueOf(E2_Constants.STRING_1000 + String.valueOf(Datetime.now().formatGMT(E2_Constants.DATETIME_FORMAT_YYYYMMDD))));            
-                this.key = EncodingUtil.convertToHex(hash2);
-            }else{
-                this.key = e2question.id;
-          } 
-            this.e2question = e2question;  
-            this.e2answers = new list<Answer>();
-            if(e2question.Answers__r != NULL && !e2question.Answers__r.isEmpty()) {
-                for(E2_Answer__c answer : e2question.Answers__r) {
-                    this.e2answers.add(new Answer(answer));
-                    this.sequence = Integer.valueOf(answer.Sequence__c);
-                    if(answer.Is_Selected__c) {
-                        selectedAnswer += answer.id+E2_Constants.COMMA;
-                    }
-                }
-                if(!string.isblank(selectedAnswer)) {
-                    selectedAnswer = selectedAnswer.removeEnd(E2_Constants.COMMA);
-                }
-            }                
+          getQuestionAndAnswer(e2question);                  
         }
         // method to add answer
         public pagereference addAnswer() {
@@ -269,11 +243,18 @@ public with sharing class E2_ScopeQuestionAnswerManager {
                     this.e2answers.add(new Answer(answer));
                 }
                 this.sequence = 2;
-            }else if(e2question.Type__c == 'Summary' && this.e2answers.size() > 0) {
+            }else if(e2question.Type__c == 'Summary') {
+            	for(Answer answer : this.e2answers) {
+            		answer.isDeleted = true;
+            	}
+            	E2_Answer__c answer = new E2_Answer__c(Is_Active__c = true,Sequence__c = 1);
+                this.e2answers.add(new Answer(answer));
+            } else if(qType == 'Summary' && e2question.Type__c != 'Summary' && this.e2answers.size() > 0) {
             	for(Answer answer : this.e2answers) {
             		answer.isDeleted = true;
             	}
             }
+            qType = e2question.Type__c;
             return null;
         }
         // method to add new answer instance in answer 
@@ -296,10 +277,67 @@ public with sharing class E2_ScopeQuestionAnswerManager {
         }
         
         public pagereference removeEditMode() {
+          E2_Question__c e2questiontemp = E2_DataUtil.getE2Questions(e2question.Id);
         	this.isEdit = false;
+        	getQuestionAndAnswer(e2questiontemp);
+        	mapAnswerWithQuestion();
         	return null;
-        }        
+        } 
+        
+        private void getQuestionAndAnswer(E2_Question__c e2question){
+            this.isDeleted = false;   
+            this.isCloned = false;
+            this.isEdit = false;
+            this.sequence = 0;
+            this.selectedAnswer = E2_Constants.BLANK;
+            if(e2question.Source_Question__c <> NULL){
+                this.isCloned = true;           
+            }
+            if(e2question.id == null){    
+                Blob hash2 = Crypto.generateDigest(E2_Constants.MD5, Blob.valueOf(E2_Constants.STRING_1000 + String.valueOf(Datetime.now().formatGMT(E2_Constants.DATETIME_FORMAT_YYYYMMDD))));            
+                this.key = EncodingUtil.convertToHex(hash2);
+            }else{
+                this.key = e2question.id;
+          } 
+            this.e2question = e2question;  
+            this.qType = e2question.Type__c;
+            this.e2answers = new list<Answer>();
+            if(e2question.Answers__r != NULL && !e2question.Answers__r.isEmpty()) {
+                for(E2_Answer__c answer : e2question.Answers__r) {
+                    this.e2answers.add(new Answer(answer));
+                    this.sequence = Integer.valueOf(answer.Sequence__c);
+                    if(answer.Is_Selected__c) {
+                        selectedAnswer += answer.id+E2_Constants.COMMA;
+                    }
+                }
+                if(!string.isblank(selectedAnswer)) {
+                    selectedAnswer = selectedAnswer.removeEnd(E2_Constants.COMMA);
+                }
+            }
+            
+        }
+        
+        private void mapAnswerWithQuestion(){
+		      map<Id,Answer> answermap = new map<Id,Answer>();
+		      for(Answer answer : e2answers) {
+		        answermap.put(answer.e2answer.Id, answer);
+		      }
+		          
+		      if(!answermap.isEmpty()) {
+		          for(E2_Action_Scope__c actionScopes : E2_DataUtil.getRelatedScopes(answermap.KeySet())) {
+		            Answer answer = answermap.get(actionScopes.Answer__c);
+		            answer.bindedActionScopes.add(actionScopes);
+		            if(answer.bindedScopes.length() >=15) {
+		              answer.bindedScopes = answer.bindedScopes+E2_Constants.COMMA+actionScopes.Scope__c;
+		            }else {
+		              answer.bindedScopes = actionScopes.Scope__c;
+		            }
+		            answer.originalBindedScopes = answer.bindedScopes;
+		          }
+           }
+        }
     }
+    
     
     // wrapper class for Answer
     public class Answer {

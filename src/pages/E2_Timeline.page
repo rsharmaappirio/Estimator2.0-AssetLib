@@ -627,6 +627,20 @@
                         color: #000000 !important;
                         /**border-style: dashed;**/
                     }
+                    
+                    .header .sign:after{
+                      content:"+";
+                      display:inline-block;      
+                    }
+                    .header.expand .sign:after{
+                      content:"-";
+                    }
+                    
+                    .slds *::-moz-selection {
+                        background: #3297fd none repeat scroll 0 0;
+                        color: #ffffff;
+                        text-shadow: none;
+                    }
             </style>
             <apex:form >
                 <apex:pageMessages />
@@ -644,11 +658,9 @@
                         <li class="slds-tabs--default__item slds-text-heading--label " title="Manage Ratecard" role="presentation">
                             <a class="slds-tabs--default__link" href="javascript:void(0);" role="tab" tabindex="0" aria-selected="false" aria-controls="tab-default-2" id="tab-default-2__item">Manage Ratecard&nbsp;</a>
                         </li>
-                         <!--li class="slds-tabs--default__item slds-text-heading--label " title="Capacity Needs" role="presentation">
-                            <a class="slds-tabs--default__link" href="javascript:void(0);" role="tab" tabindex="0" aria-selected="false" aria-controls="tab-default-3" id="tab-default-3__item">Capacity Needs&nbsp;</a>
-                        </li-->
+                         
                     </ul>
-                    <div id="tab-default-1" style="padding:0px" class="slds-tabs--default__content slds-hide paddingTopZero" role="tabpanel" aria-labelledby="tab-default-1__item">
+                    <div id="tab-default-1" style="padding:0px" class="slds-tabs--default__content slds-show paddingTopZero" role="tabpanel" aria-labelledby="tab-default-1__item">
                         <div id="manage_timeline_div">
                         
                                 <div class="slds-grid"> <!--style="width:48%;"-->
@@ -746,8 +758,8 @@
                                    
                         </div>
                     </div>
-                    <div id="tab-default-2" style="padding:0px" class="slds-tabs--default__content slds-show paddingTopZero" role="tabpanel" aria-labelledby="tab-default-2__item">
-                       <apex:outputPanel layout="block" id="ratecard_table">
+                    <div id="tab-default-2" style="padding:0px" class="slds-tabs--default__content slds-hide paddingTopZero" role="tabpanel" aria-labelledby="tab-default-2__item">
+                         <apex:outputPanel layout="block" id="ratecard_table">
                                      <div class="slds-modal__footer">
                                              <div class="slds-col slds-no-flex slds-align-bottom">
                                                 <div class="" role="group">
@@ -757,12 +769,9 @@
                                                 </div>
                                             </div>
                                     </div> 
-                                     <table class="slds-table slds-max-medium-table--stacked">
+                                     <table id="manageratecardtable" class="slds-table slds-max-medium-table--stacked">
                                         <thead>
                                            <tr class="slds-text-heading--label">
-                                              <th class="slds-is-sortable" scope="col">
-                                                 <div class="slds-truncate">Practice</div>
-                                              </th> 
                                               <th class="slds-is-sortable" scope="col">
                                                  <div class="slds-truncate">Region</div>
                                               </th>
@@ -788,14 +797,15 @@
                                            </tr>
                                         </thead>
                                         <tbody>
+                                            
+                                            <apex:variable var="rcID" value="" />
                                             <apex:repeat value="{!estimateRateCards}" var="estimateratecard">
-                                            <apex:variable var="rcID" value="{!estimateratecard.Id}" /> 
-                                                 <tr class="slds-hint-parent">
-                                                    <td class="slds-truncate " data-label="Practice">
-                                                        <apex:outputfield value="{!estimateratecard.Practice__c}"/>
-                                                    </td> 
+                                                 <apex:outputText rendered="{!!(rcID == estimateratecard.Practice__c)}">
+                                                     <tr childCss="child_{!SUBSTITUTE(estimateratecard.Practice__c, " ", "")}" class="header expand header_{!SUBSTITUTE(estimateratecard.Practice__c, " ", "")}"><td colspan="8" style="cursor:pointer;background-color:#eeeeee;color:#000000;font-weight:bold;font-style:italic;"><span class="sign"></span> &nbsp; Practice: {!estimateratecard.Practice__c} &nbsp; </td></tr>
+                                                 </apex:outputText>
+                                                 <tr class="slds-hint-parent child_{!SUBSTITUTE(estimateratecard.Practice__c, " ", "")}">
                                                     <td class="slds-truncate " data-label="Region">
-                                                        <apex:outputfield value="{!estimateratecard.Region__c}"/>
+                                                      <apex:outputfield value="{!estimateratecard.Region__c}"/>
                                                     </td>
                                                     <td class="slds-truncate " data-label="Role">
                                                         <apex:outputfield value="{!estimateratecard.Resource_Role__c}"/>
@@ -820,7 +830,10 @@
                                                     <td class="slds-cell-shrink" data-label="Actions">
                                                     </td>
                                                  </tr>
+                                                 
+                                                 <apex:variable var="rcID" value="{!estimateratecard.Practice__c}" />
                                              </apex:repeat>
+                                             
                                         </tbody>
                                     </table>
                                     <div class="slds-modal__footer page-footer">
@@ -830,11 +843,9 @@
                                                 </div>
                                             </div>
                                     </div>
-                       </apex:outputPanel>                
+                          </apex:outputPanel>             
                     </div>
-                    <!--div id="tab-default-3" style="padding:0px" class="slds-tabs--default__content slds-show paddingTopZero" role="tabpanel" aria-labelledby="tab-default-3__item">
-                                       
-                    </div-->
+                    
                 </div> 
                 
                 
@@ -894,7 +905,7 @@
                   
                   
                   
-                  <li style="background-color: #00FFFF;border-color:#00FFFF; " data="#00FFFF">&nbsp;</li>
+                  <li style="background-color: #00CCCC;border-color:#00CCCC; " data="#00CCCC">&nbsp;</li>
                   <li style="background-color: #00FFFF;border-color:#00FFFF; " data="#00FFFF">&nbsp;</li>
                   <li style="background-color: #C0C0C0;border-color:#C0C0C0; " data="#C0C0C0">&nbsp;</li>
                   <li style="background-color: #A0522D;border-color:#A0522D; " data="#A0522D">&nbsp;</li>

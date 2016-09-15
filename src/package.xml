@@ -36,6 +36,8 @@
         <members>E2_EditScopeTemplateControllerTest</members>
         <members>E2_EffortsWrapper</members>
         <members>E2_EffortsWrapperTest</members>
+        <members>E2_EstimateResource</members>
+        <members>E2_EstimateResourceAPI</members>
         <members>E2_Estimator_Manager</members>
         <members>E2_Estimator_ManagerTest</members>
         <members>E2_Estimator_WS</members>
@@ -48,6 +50,10 @@
         <members>E2_ManageTemplateDerivedEffortCtrTest</members>
         <members>E2_Master</members>
         <members>E2_MasterTest</members>
+        <members>E2_MilestoneController</members>
+        <members>E2_MilestoneDataUtil_WS</members>
+        <members>E2_MilestoneWS</members>
+        <members>E2_MilestoneWSManager</members>
         <members>E2_PaginationUtility</members>
         <members>E2_PaginationUtilityTest</members>
         <members>E2_RecordTypeClass</members>
@@ -60,10 +66,15 @@
         <members>E2_SelectDerivedEffortTemplateController</members>
         <members>E2_SelectScopeTemplateController</members>
         <members>E2_SelectScopeTemplateControllerTest</members>
+        <members>E2_SyncResourceRequestsController</members>
         <members>E2_Test_Utils</members>
         <members>E2_TimelineController</members>
+        <members>E2_TimelineControllerTest</members>
+        <members>E2_TimelineDataUtil_WS</members>
         <members>E2_TimelineWS</members>
         <members>E2_TimelineWSManager</members>
+        <members>E2_TimelineWSManagerTest</members>
+        <members>E2_Timeline_WSTest</members>
         <members>E2_TreeNode</members>
         <members>E2_TreeNodeMap</members>
         <members>E2_TreeNodeMapTest</members>
@@ -91,10 +102,12 @@
         <members>E2_ExportScopeItemsToCSV</members>
         <members>E2_ExportScopeItemstoXLS</members>
         <members>E2_ManageTemplateDerivedEffort</members>
+        <members>E2_Milestone</members>
         <members>E2_ScopeTree</members>
         <members>E2_SelectDerivedEffortTemplate</members>
         <members>E2_SelectScopeTemplate</members>
         <members>E2_SelectScopeTemplateTmpmgr</members>
+        <members>E2_SyncResourceRequests</members>
         <members>E2_Template</members>
         <members>E2_Timeline</members>
         <name>ApexPage</name>
@@ -104,6 +117,8 @@
         <name>ApexTrigger</name>
     </types>
     <types>
+        <members>CMC_Estimate_Resource__c.E2_Estimate_Rate_Card__c</members>
+        <members>CMC_Estimate_Resource__c.E2_Role__c</members>
         <members>CMC_Presales_LOE__c.E2_AE__c</members>
         <members>CMC_Presales_LOE__c.E2_Date_Scoped__c</members>
         <members>CMC_Presales_LOE__c.E2_Derived_Effort_Template__c</members>
@@ -135,10 +150,15 @@
         <members>E2_Derived_Effort_Group__c</members>
         <members>E2_Derived_Effort__c</members>
         <members>E2_Effort__c</members>
+        <members>E2_Estimate_Milestone_Week__c</members>
+        <members>E2_Estimate_Milestone__c</members>
         <members>E2_Estimate_Rate_Card__c</members>
         <members>E2_Favourite_Scope__c</members>
+        <members>E2_Milestone_Library__c</members>
+        <members>E2_Practice_Skills_Mappings__c</members>
         <members>E2_Scope_Group__c</members>
         <members>E2_Scope__c</members>
+        <members>E2_Timeline_Milestone__c</members>
         <name>CustomObject</name>
     </types>
     <types>

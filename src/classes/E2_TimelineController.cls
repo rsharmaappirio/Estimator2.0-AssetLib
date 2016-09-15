@@ -99,20 +99,26 @@ public with sharing class E2_TimelineController extends E2_Master {
     this.capacityNeeds_JSON = '{';
     
     string phaseHours_JSON = '{';
-    for(AggregateResult groupedResults : [SELECT SUM(Hours__c) Hours, Phase__c  FROM E2_Capacity__c WHERE Estimator__c =: this.estimate.Id  GROUP BY Phase__c]) {
+    for(AggregateResult groupedResults : [SELECT SUM(Hours__c) Hours, Phase__c  
+                                          FROM E2_Capacity__c WHERE Estimator__c =: this.estimate.Id  
+                                          GROUP BY Phase__c]) {
         string phaseHour = '"' + string.valueOf(groupedResults.get('Phase__c')).toLowerCase() + '" : "' + Integer.valueOf(groupedResults.get('Hours')) + '"';
         phaseHours_JSON += (phaseHours_JSON == '{' ? '' : ',') + phaseHour;
     }
     phaseHours_JSON += '},';
     this.capacityNeeds_JSON += '"PhaseHours" : '+ phaseHours_JSON;
     string roleHours_JSON = '{';
-    for(AggregateResult groupedResults : [SELECT SUM(Hours__c) Hours, Role__c  FROM E2_Capacity__c WHERE Estimator__c =: this.estimate.Id  GROUP BY Role__c]) {
+    for(AggregateResult groupedResults : [SELECT SUM(Hours__c) Hours, Role__c  
+                                          FROM E2_Capacity__c WHERE Estimator__c =: this.estimate.Id  
+                                          GROUP BY Role__c]) {
         string roleHour = '"' + string.valueOf(groupedResults.get('Role__c')).toLowerCase() + '" : "' + Integer.valueOf(groupedResults.get('Hours')) + '"';
         roleHours_JSON += (roleHours_JSON == '{' ? '' : ',') + roleHour;
     }
     roleHours_JSON += '},';
     this.capacityNeeds_JSON += '"RoleHours" : '+ roleHours_JSON;
-    AggregateResult[] totalHours = [SELECT SUM(Hours__c) Hours FROM E2_Capacity__c WHERE Estimator__c =: this.estimate.Id];
+    AggregateResult[] totalHours = [SELECT SUM(Hours__c) Hours 
+                                    FROM E2_Capacity__c 
+                                    WHERE Estimator__c =: this.estimate.Id];
     this.capacityNeeds_JSON += '"TotalHours" : "' + (totalHours[0].get('Hours') == NULL ? '' : ''+Integer.valueOf(totalHours[0].get('Hours'))) + '"';
     this.capacityNeeds_JSON += '}';
   }
@@ -191,7 +197,7 @@ public with sharing class E2_TimelineController extends E2_Master {
                     insert newRateCardsToInsert;
                 }
                 
-                this.estimateRateCards = E2_DataUtil.getEstimateRateCardRecs(estimate.Id);
+                this.estimateRateCards = E2_DataUtil.getEstimateRateCards(estimate.Id);
                 E2_Estimator_Manager.updateEstimeRateCardJSON(this.estimateRateCards, this.estimate.Id);
                 updateEstimateResources();
             }catch(Exception ex){

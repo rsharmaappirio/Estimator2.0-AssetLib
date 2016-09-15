@@ -33,7 +33,7 @@ public class E2_EditScopeTemplateControllerTest {
   }
   
   public static testmethod void testEditScope(){
-    scope = [SELECT Id FROM E2_Scope__c];
+    scope = [SELECT Id, LastModifiedById FROM E2_Scope__c];
     estimate = [SELECT Id FROM CMC_Presales_LOE__c];
     effortLst = [SELECT Id FROM E2_Effort__c WHERE Scope__c = :scope.Id];
     User sysAdmin = E2_Test_Utils.insertUser(E2_Constants.PROFILE_SYS_ADMIN, true);
@@ -55,9 +55,8 @@ public class E2_EditScopeTemplateControllerTest {
             ApexPages.StandardController stdController = new ApexPages.StandardController(scope);
             E2_EditScopeTemplateController controller = new E2_EditScopeTemplateController(stdController);
             controller.pageAction();
-            system.assertEquals(controller.childScopes.size(), 1, '1 child scope should be added in list as master');     
       
-                  E2_EditScopeTemplateController.Scope scope_wrap = controller.childScopes[0];
+                  E2_EditScopeTemplateController.Scope scope_wrap = controller.childScope;
                   scope_wrap.addNewEffort();
                   scope_wrap.addNewEffort();
                   scope_wrap.hasClonedEfforts = true;
@@ -108,7 +107,7 @@ public class E2_EditScopeTemplateControllerTest {
    public static testmethod void testEditScope2(){
     
       
-    scope = [SELECT Id FROM E2_Scope__c];
+    scope = [SELECT Id, LastModifiedById FROM E2_Scope__c];
     estimate = [SELECT Id FROM CMC_Presales_LOE__c];
     effortLst = [SELECT Id FROM E2_Effort__c WHERE Scope__c = :scope.Id];
     User sysAdmin = E2_Test_Utils.insertUser(E2_Constants.PROFILE_SYS_ADMIN, true);
@@ -129,31 +128,17 @@ public class E2_EditScopeTemplateControllerTest {
       E2_EditScopeTemplateController controller = new E2_EditScopeTemplateController(stdController);
     
       controller.pageAction();
-      system.assertEquals(controller.childScopes.size(), 1, '1 child scope should be added in list'); 
-      for(E2_Scope__c sc : E2_DataUtil.getScopeAndChildrenOnScopeIdForEditScope(scope1.id)){
-            controller.childScopes.add(new E2_EditScopeTemplateController.Scope(sc, sc.Efforts__r));            
-      }  
-      system.assertEquals(controller.childScopes.size(), 2, '1 more child scope should be added in list'); 
-        
-        for( E2_EditScopeTemplateController.Scope scope_wrap : controller.childScopes)  {
-            scope_wrap.remove();
-        }
       
       system.assertEquals(controller.showFavForSTMPermissionSet, true);  
-      controller.saveScope();     
-      system.assertEquals([SELECT Id FROM E2_Scope__c].size(), 0, 'both scopes should have been removed');
-      
-     
+      controller.saveScope();          
        
     //stop test
     Test.stopTest(); 
     } 
   }
   
-  public static testmethod void testEditScope3(){
-    
-      
-    scope = [SELECT Id FROM E2_Scope__c];
+  public static testmethod void testEditScope3(){ 
+    scope = [SELECT Id, LastModifiedById FROM E2_Scope__c];
     estimate = [SELECT Id FROM CMC_Presales_LOE__c];
     effortLst = [SELECT Id FROM E2_Effort__c WHERE Scope__c = :scope.Id];
     User sysAdmin = E2_Test_Utils.insertUser(E2_Constants.PROFILE_SYS_ADMIN, true);
@@ -184,25 +169,14 @@ public class E2_EditScopeTemplateControllerTest {
       E2_EditScopeTemplateController controller = new E2_EditScopeTemplateController(stdController);
     
       controller.pageAction();
-      System.assertEquals(controller.childScopes.size(), 1, '1 child scope should be added in list'); 
-      for(E2_Scope__c sc : E2_DataUtil.getScopeAndChildrenOnScopeIdForEditScope(scope1.id)){
-            controller.childScopes.add(new E2_EditScopeTemplateController.Scope(sc, sc.Efforts__r));            
-      }  
-      system.assertEquals(controller.childScopes.size(), 2, '1 more child scope should be added in list'); 
-      controller.childScopes.addAll(controller.childScopes);  
-      system.assertEquals(controller.childScopes.size(), 4, '1 more child scope should be added in list'); 
-               
+      system.assert(controller.childScope <> null, '1 child scope should be added in list');
+       
+      controller.childScope.scope.Is_Favourite__c = true;        
       controller.saveScope();     
-      system.assertEquals([SELECT Id FROM E2_Scope__c].size(), 2, 'both scopes should not have been removed');
       
-      controller.childScopes.clear();  
-      controller.pageAction();
-      system.assertEquals(controller.childScopes.size(), 1, '1 child scope should be added in list'); 
-      for( E2_EditScopeTemplateController.Scope scope_wrap : controller.childScopes)  {
-         scope_wrap.efforts.addAll(scope_wrap.efforts);   
-      } 
-      controller.saveScope();  
-
+      system.assertNotEquals([SELECT Id FROM E2_Favourite_Scope__c WHERE Scope__c =:scope.Id].size(), 1); 
+      
+      controller.addNewQuestion();                 
        
     //stop test
     Test.stopTest(); 
@@ -210,7 +184,7 @@ public class E2_EditScopeTemplateControllerTest {
   }
   
   public static testmethod void testEditScopeWithAssets(){
-    scope = [SELECT Id FROM E2_Scope__c];
+    scope = [SELECT Id, LastModifiedById FROM E2_Scope__c];
     estimate = [SELECT Id FROM CMC_Presales_LOE__c];
     recommendedAsset = [SELECT Scope__c, Asset__c FROM E2_Recommended_Asset__c];
     

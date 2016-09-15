@@ -363,15 +363,20 @@ var Typeahead_input = {
         return existingAssetIds;
     },
     
-    populatedSelectedAssetMap : function(suggestions){
+    populatedSelectedAssetMap : function(suggestions, isWebServiceRecord){
         $.each(JSON.parse(suggestions), function(index, element) {
-                if(typeof Typeahead_input.selectedAssetsMap[element.id] == 'undefined'){
-                    Typeahead_input.selectedAssetsMap[element.id] = element;
+                if(typeof Typeahead_input.selectedAssetsMap[element.id] == 'undefined'){ 
+                    if(isWebServiceRecord || (!isWebServiceRecord && element.isExisting != 'true'))
+                        Typeahead_input.selectedAssetsMap[element.id] = element;
+                }
+                else if(Typeahead_input.selectedAssetsMap[element.id].isDeleted == 'false' && element.isDeleted == 'true'){
+                    Typeahead_input.selectedAssetsMap[element.id].isDeleted = 'true';
                 }
         });
     },
     
     retrieveExistingAssets : function(){
+       Typeahead_input.selectedAssetsMap = {};
        sforce.apex.execute("E2_Estimator_WS", "getExistingAssetsForScope", 
                             {scopeId: scope_sfdc_id}, function(result){
             if(result !== null && result.length > 0) {
@@ -392,12 +397,12 @@ var Typeahead_input = {
     prepareExistingAssetRows : function(assetsRecsJson){
         var existingAssets = $("input[Id$='existingAssetRecs']").val();
         
-        if(existingAssets !== null && existingAssets.length !== 0){
-            Typeahead_input.populatedSelectedAssetMap(existingAssets);
+        if(assetsRecsJson !== null && assetsRecsJson.length !== 0){
+            Typeahead_input.populatedSelectedAssetMap(assetsRecsJson, true);
         }
         
-        if(assetsRecsJson !== null && assetsRecsJson.length !== 0){
-            Typeahead_input.populatedSelectedAssetMap(assetsRecsJson);
+        if(existingAssets !== null && existingAssets.length !== 0){
+            Typeahead_input.populatedSelectedAssetMap(existingAssets, false);
         }
         
         var hasValidAsset = false; 
@@ -410,6 +415,9 @@ var Typeahead_input = {
         
         if(hasValidAsset){
             Typeahead_input.removeNoAssetsRow();
+        }
+        else{
+            Typeahead_input.addNoAssetsRow();
         }
         $("input[Id$='existingAssetRecs']").val(JSON.stringify(Typeahead_input.selectedAssetsMap));
     },
@@ -872,20 +880,31 @@ var AddEditQuestionAnswer = {
             $.each(selectedScopesNames, function(indx, name) {
                 scopeNameString += '<span class="slds-badge slds-theme--default slds-float-left slds-custom-badge-background-grey" style="font-weight:bold;">'+name+'</span>';
             });
-        }else if(selectedScopesNames) {
-            scopeNameString += '<span class="slds-badge slds-theme--default slds-float-left slds-custom-badge-background-grey" style="font-weight:bold;">'+selectedScopesNames+'</span>';
+        } else {
+            alert("Child scopes required for selected answer action.");
+            return false;
         }
         var id = displayAnswerDivId.replace('ActionScopes', 'answerEditDiv');
          scopeNameString += '<a class="edit-button1 slds-button--right--float" href="javascript:void(0);" onclick="AddEditQuestionAnswer.showJSTreeEdit(\''+id+'\');"> </a>';
         
         $("#"+displayAnswerDivId).html(scopeNameString);
-        if(selectedScopesNames) {
+        if(selectedScopesNames && selectedScopesNames.length) {
             $("#"+displayAnswerDivId).show();
         }else {
             $("#"+displayAnswerDivId).hide();
         }
         $(AddEditQuestionAnswer.answerActionElement).next("[id$=bindedScopes]").val(bindedScopeIds);
         console.log($(AddEditQuestionAnswer.answerActionElement).next("[id$=bindedScopes]").val());
+        CustomAlert.hideJSTree();
+        return false;
+    },
+    cancelAnswerAction : function() {
+        var bindedScope = $(AddEditQuestionAnswer.answerActionElement).next("[id$=bindedScopes]").val();
+        var displayAnswerDivId = $(AddEditQuestionAnswer.answerActionElement).attr("displayAnswerDivId");
+        if(bindedScope == '') {
+            $(AddEditQuestionAnswer.answerActionElement).val('');
+            $("#"+displayAnswerDivId).hide();
+        }
         CustomAlert.hideJSTree();
         return false;
     }

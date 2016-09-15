@@ -90,14 +90,10 @@ public with sharing class E2_Estimator_Manager {
 	public static List<E2_Estimate_Rate_Card__c> getEstimateRateCards(Id estimateId, string currencyCode) {
 	  List<E2_Estimate_Rate_Card__c> newEstimateRateCards = new List<E2_Estimate_Rate_Card__c>();
 	  
-	  List<E2_Estimate_Rate_Card__c> estimateRateCards = E2_DataUtil.getEstimateRateCardRecs(estimateId);
+	  List<E2_Estimate_Rate_Card__c> estimateRateCards = E2_DataUtil.getEstimateRateCards(estimateId);
 															
 		if(estimateRateCards.isEmpty() && !String.isBlank(currencyCode)) {			
-			for(pse__Rate_Card__c rateCard : [SELECT Id, pse__Average_Cost_Rate__c, 
-											  pse__Practice__r.Name, Code__c, Description__c,
-		                                	  pse__Region__r.Name, pse__Role__c, pse__Suggested_Bill_Rate__c 
-		                                	  FROM pse__Rate_Card__c 
-		                                	  WHERE CurrencyISOCode =: currencyCode]) {
+			for(pse__Rate_Card__c rateCard : E2_DataUtil.getPSERateCardRecords(currencyCode)) {
 		                                	      
 				E2_Estimate_Rate_Card__c estimateRC = new E2_Estimate_Rate_Card__c();
 				estimateRC.Estimate__c = estimateId;
@@ -117,7 +113,7 @@ public with sharing class E2_Estimator_Manager {
 			    try{
 				   insert newEstimateRateCards;
 				   // QUERYING AGAIN FOR RETURNING THE ORDERED LIST BY REGION & ROLE
-        		   estimateRateCards = E2_DataUtil.getEstimateRateCardRecs(estimateId);
+        		   estimateRateCards = E2_DataUtil.getEstimateRateCards(estimateId);
         		   updateEstimeRateCardJSON(estimateRateCards, estimateId);
 			    }catch(Exception ex){
 			       system.debug('Error in new estimate rate card creation:' + ex.getMessage()); 
@@ -149,7 +145,7 @@ public with sharing class E2_Estimator_Manager {
         rateCard.Suggested_Cost = (erc.Resource_Cost__c).intValue();
         rateCard.Practice = erc.Rate_Card__r.pse__Practice__c;
         rateCard.PracticeName = erc.Practice__c;
-        rateCard.RegionId = erc.Rate_Card__r.pse__Practice__c;
+        rateCard.RegionId = erc.Rate_Card__r.pse__Region__c;
         rateCard.RegionName = erc.Region__c;
         rateCard.Role = erc.Resource_Role__c;
         rateCard.Rate_Card = (erc.Bill_Rate__c).intValue();
