@@ -257,9 +257,9 @@
             
             .slds .slds-modal__close-custom {
                 float: right;
-                height: 48px;
+                height: 30px;
                 position: relative;
-                width: 48px;
+                width: 30px;
                 background: #eee url({!$Resource.E2_SLDS1}/assets/icons/action/close_60.png) no-repeat scroll center center / 25px 25px;
                 right: 0px;
                 top: 0px;
@@ -736,9 +736,7 @@
                                                                             <div class="slds-form-element is-required whitespace_normal">
                                                                                 <label class="slds-form-element__label">Question</label>
                                                                                 <div class="slds-form-element__control">
-                                                                                    <apex:inputText styleclass="slds-input" id="questionValue" value="{!question.e2question.Question_Text__c}"
-                                                                                        rendered="{!NOT(question.isCloned)}"
-                                                                                    />
+                                                                                    <apex:inputText styleclass="slds-input" id="questionValue" value="{!question.e2question.Question_Text__c}"/>
                                                                                 </div>
                                                                                 <div class="slds-form-element__help" style="display:none">This field is required</div>
                                                                             </div>
@@ -747,8 +745,7 @@
                                                                             <div class="slds-form-element is-required whitespace_normal">
                                                                                 <label class="slds-form-element__label">Type</label>
                                                                                 <div class="slds-form-element__control">
-                                                                                    <apex:inputField styleclass="slds-select" value="{!question.e2question.Type__c}"
-                                                                                        rendered="{!NOT(question.isCloned)}">
+                                                                                    <apex:inputField styleclass="slds-select" value="{!question.e2question.Type__c}">
                                                                                         <apex:actionSupport event="onchange" onsubmit="showSpinner();" oncomplete="hideSpinner();resetIframeHeight();" action="{!question.addAnswer}"
                                                                                             rerender="questionAnswerBlock"
                                                                                         />
@@ -769,7 +766,7 @@
                                                                     </div>
                                                                 </div>
                                                                 <div class="slds-col--padded slds-size--1-of-9" data-label="Actions">
-                                                                    <apex:outputpanel styleClass="delete_button slds-button--right--float" rendered="{!OR(NOT(is_View),NOT(question.isCloned))}">
+                                                                    <apex:outputpanel styleClass="delete_button slds-button--right--float" rendered="{!NOT(is_View)}">
                                                                         <apex:actionSupport event="onclick" action="{!question.remove}" onsubmit="showSpinner();" oncomplete="hideSpinner();resetIframeHeight();"
                                                                             rerender="questionAnswerBlock"
                                                                         />
@@ -787,9 +784,7 @@
                                                                                                 <div class="slds-form-element whitespace_normal">
                                                                                                     <label class="slds-form-element__label">Answer</label>
                                                                                                     <div class="slds-form-element__control">
-                                                                                                        <apex:inputText styleclass="slds-input" id="answerValue" value="{!answer.answerString}"
-                                                                                                            rendered="{!NOT(answer.isCloned)}"
-                                                                                                        />
+                                                                                                        <apex:inputText styleclass="slds-input" id="answerValue" value="{!answer.answerString}"/>
                                                                                                     </div>
                                                                                                 </div>
                                                                                             </div>
@@ -799,9 +794,7 @@
                                                                                                     <div class="slds-form-element__control">
                                                                                                         <apex:inputfield styleclass="slds-select" id="answerAction" html-displayAnswerDivId="{!answer.Key}ActionScopes"
                                                                                                             value="{!answer.e2answer.Action__c}"
-                                                                                                            rendered="{!NOT(answer.isCloned)}"
-                                                                                                            onchange="return AddEditQuestionAnswer.showJSTree(this);"
-                                                                                                        />
+                                                                                                            onchange="return AddEditQuestionAnswer.showJSTree(this);"/>
                                                                                                         <apex:inputhidden value="{!answer.bindedScopes}" id="bindedScopes" />
                                                                                                     </div>
                                                                                                 </div>

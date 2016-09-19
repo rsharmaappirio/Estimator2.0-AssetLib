@@ -349,7 +349,51 @@ public with sharing class E2_Test_Utils {
     }
     return resWeek;                                                                          
     
-  
   }
+  
+  //insert E2_Estimate_Milestone__c
+  public static E2_Estimate_Milestone__c insertEstimateMilestone(String estimateId, Boolean isInsert){
+    E2_Estimate_Milestone__c milestone = new E2_Estimate_Milestone__c(Estimate__c = estimateId, Milestone1__c = 'Test milestone 1', 
+                                                        Milestone2__c = 'Test milestone 2', Order__c = 10);
+    if(isInsert) {
+      insert milestone;
+    }
+    return milestone;                                                     
+                                                        
+  }
+  
+  //insert E2_Estimate_Milestone_Week__c
+  public static E2_Estimate_Milestone_Week__c insertMilestoneWeek(Id milestoneId, Id weekId, Boolean isInsert){
+    E2_Estimate_Milestone_Week__c milestoneWk = new E2_Estimate_Milestone_Week__c(Estimate_Milestone__c = milestoneId, Estimate_Week__c = weekId, 
+                                                         TextColorCode__c = 'Red'); 
+    if(isInsert) {
+      insert milestoneWk;
+    }
+    return milestoneWk;                                                         
+  }
+  
+  //insert E2_Milestone_Library__c
+  public static E2_Milestone_Library__c insertMilestoneLibrary (Boolean isInsert){
+    E2_Milestone_Library__c milestoneLib = new E2_Milestone_Library__c(Name = 'Test Milestone 1', Is_Active__c = true);
+    
+    if(isInsert) {
+      insert milestoneLib;
+    }
+    return milestoneLib; 
+    
+  }
+  
+  //insert E2_Timeline_Milestone__c
+  public static E2_Timeline_Milestone__c insertTimelineMilestone (Id milestoneLibId, Boolean isInsert){
+    E2_Timeline_Milestone__c TLMilestone = new E2_Timeline_Milestone__c(E2_Milestone_Library__c = milestoneLibId, Is_Active__c = true, 
+                                                            Milestone1__c = 'Test Milestone 1', Milestone2__c = 'Test Milestone 2',  Order__c = 10);  
+    
+    if(isInsert) {
+      insert TLMilestone;
+    }
+    return TLMilestone; 
+    
+  }
+  
 
 }

@@ -94,10 +94,13 @@ public with sharing class E2_ScopeQuestionAnswerManager {
                 for(E2_Answer__c answer : answerScopeMap.keySet()) {
                 	if(answer.Id != NULL) {
                 		answersId.add(answer.Id);
-                		for(String scopeId : answerScopeMap.get(answer).split(E2_Constants.COMMA)) {
+                		string actionsScopes =  answerScopeMap.get(answer);
+                		if(!string.isBlank(actionsScopes)) {
+                		for(String scopeId : actionsScopes.split(E2_Constants.COMMA)) {
                 			answerScopes.add(new E2_Action_Scope__c(Answer__c = answer.Id,
                 									Scope__c = scopeId,
                 									Unique_Key__c = answer.Id+scopeId));
+                		}
                 		}
                 	}
                 }
@@ -111,7 +114,6 @@ public with sharing class E2_ScopeQuestionAnswerManager {
             }
         }catch(Exception ex){
             Database.rollback(sp);
-            system.assertEquals(ex.getMessage(),NULL);
             errorMessage = ex.getMessage().contains(E2_constants.INSUFFICIENT_ACCESS_OR_READONLY) ? 
                                     E2_Constants.INSUFFICIENT_ERROR_MSSG : 
                                     ex.getMessage();
@@ -160,10 +162,15 @@ public with sharing class E2_ScopeQuestionAnswerManager {
 	                	}
 	                }
                 }
-                if(!string.isBlank(answer.bindedScopes) && 
-                	(string.isBlank(answer.originalBindedScopes) || 
-                	answer.originalBindedScopes != answer.bindedScopes)) {
-                	answerScopeMap.put(answer.e2answer, answer.bindedScopes);
+                if(answer.e2answer.Action__c =='Activate child scope' || 
+                   answer.e2answer.Action__c =='Deactivate child scope') {
+	                  if(!string.isBlank(answer.bindedScopes) && 
+	                  (string.isBlank(answer.originalBindedScopes) || 
+	                  answer.originalBindedScopes != answer.bindedScopes)) {
+	                  answerScopeMap.put(answer.e2answer, answer.bindedScopes);
+	                }
+                } else if(!string.isBlank(answer.originalBindedScopes)) {
+                  answerScopeMap.put(answer.e2answer, E2_Constants.BLANK);
                 }
                 if((answer.answerstring != NULL && 
                    answer.answerstring != '') || question.e2question.Type__c == 'Summary') {

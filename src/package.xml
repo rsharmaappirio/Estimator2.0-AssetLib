@@ -145,6 +145,8 @@
         <name>CustomLabel</name>
     </types>
     <types>
+        <members>E2_Action_Scope__c</members>
+        <members>E2_Answer__c</members>
         <members>E2_Capacity__c</members>
         <members>E2_DashboardSettings__c</members>
         <members>E2_Derived_Effort_Group__c</members>
@@ -156,8 +158,10 @@
         <members>E2_Favourite_Scope__c</members>
         <members>E2_Milestone_Library__c</members>
         <members>E2_Practice_Skills_Mappings__c</members>
+        <members>E2_Question__c</members>
         <members>E2_Scope_Group__c</members>
         <members>E2_Scope__c</members>
+        <members>E2_Timeline_Milestone__c</members>
         <members>E2_Timeline_Milestone__c</members>
         <name>CustomObject</name>
     </types>

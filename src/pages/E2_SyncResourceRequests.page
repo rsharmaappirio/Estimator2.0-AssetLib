@@ -1,0 +1,78 @@
+<apex:page standardController="Opportunity" extensions="E2_SyncResourceRequestsController" title="Create/Edit Resource Requests from PSR">
+   <div align="right"><img src="https://www.appirio.com/img/PoweredByAppirioLogo2010.gif" /></div>
+ 	 <br />
+
+<div style="position: relative;">
+    <apex:outputpanel >
+        <apex:actionstatus id="status">
+            <apex:facet name="start">
+                <div class="waitingSearchDiv" id="el_loading" style="background-color: #fbfbfb;
+                       height: 100%;opacity:0.65;width:100%;"> 
+                    <div class="waitingHolder" style="top: 74.2px; width: 91px;">
+                        <img class="waitingImage" src="/img/loading.gif" title="Please Wait..." />
+                        <span class="waitingDescription">Loading...</span>
+                    </div>
+                </div>
+            </apex:facet>
+        </apex:actionstatus>
+    </apex:outputpanel>
+ 
+ <apex:outputPanel id="out">
+ 
+  <apex:pageBlock title="Create/Edit Resource Requests from PSR - for {!Opportunity.Name}" rendered="{!!workDone}">
+  <i>Take resource data from a Presales Request's CMC Estimate to Create/Update Resource Requests under this Opportunity</i><br /><br />
+	  <apex:form >
+        <apex:outputLabel style="font-weight: bold; padding-right:1em" value="Presales Request" for="mgr"></apex:outputLabel>
+		  <apex:selectList size="1" value="{!selectedPSR}">
+	        <apex:selectOptions value="{!PresalesRequests}"/>
+	     </apex:selectList>
+	     <br/>
+	    <apex:commandButton value="Select PSR" action="{!selectPSR}" rerender="out" status="status"/><br />
+	    <i>Presales Requests with Estimates can be selected above</i><br />
+	  </apex:form>
+  </apex:pageBlock> 
+  
+ 
+    
+    <apex:pageBlock title="Resource Requests - Create/Edit Preview" rendered="{!selectedPSR!=null && !workDone}">
+      <apex:pageBlockTable value="{!resourceRequests}" var="rr">
+      <apex:column headerValue="Action" value="{! actions[rr.Estimate_Resource_Id__c]}" />
+      <apex:column value="{!rr.pse__Region__c}"/>
+      <apex:column value="{!rr.pse__Resource_Role__c}"/>
+      <apex:column value="{!rr.pse__Start_Date__c}"/>
+      <apex:column value="{!rr.pse__End_Date__c}"/>
+      <apex:column value="{!rr.pse__SOW_Hours__c}"/>
+      <apex:column value="{!rr.pse__Primary_Skill_Certification__c}"/>
+      <apex:column value="{!rr.pse__Requested_Bill_Rate__c}"/>
+      <apex:column value="{!rr.pse__Practice__c}"/>
+      <apex:column value="{!rr.pse__Status__c}"/>
+      </apex:pageBlockTable>
+    </apex:pageBlock>
+    
+    <apex:pageBlock >
+     <apex:form >   
+    	<apex:commandButton rendered="{!!workDone}" value="Cancel" action="{!cancel}" status="status"/>&nbsp;
+    	<apex:commandButton rendered="{!selectedPSR!=null && !workDone}" value="{!dynamicButtonName}" rerender="out" action="{!syncData}" status="status"/>
+   	 	<apex:commandButton rendered="{!workDone}" value="Return to Opportunity" action="{!cancel}" status="status"/>
+   	 </apex:form>
+    </apex:pageBlock>
+    
+     <apex:pageBlock title="Resource Requests changed as follows" rendered="{!workDone}">
+      <apex:pageBlockTable value="{!endResults}" var="rr">
+      <apex:column value="{!rr.pse__Region__c}"/>
+      <apex:column value="{!rr.pse__Resource_Role__c}"/>
+      <apex:column value="{!rr.pse__Start_Date__c}"/>
+      <apex:column value="{!rr.pse__End_Date__c}"/>
+      <apex:column value="{!rr.pse__SOW_Hours__c}"/> 
+      <apex:column value="{!rr.pse__Primary_Skill_Certification__c}"/>
+      <apex:column value="{!rr.pse__Requested_Bill_Rate__c}"/>
+      <apex:column value="{!rr.pse__Practice__c}"/>
+      <apex:column value="{!rr.pse__Status__c}"/>
+      </apex:pageBlockTable>
+    </apex:pageBlock>
+    
+    </apex:outputPanel>
+   <br />
+  <i>By Will Supinski, &copy; Appirio</i>
+  </div>
+</apex:page>

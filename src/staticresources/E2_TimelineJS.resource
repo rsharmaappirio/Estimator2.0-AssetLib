@@ -659,27 +659,36 @@
                            
                             cell = $(this).find('div.slick-cell.' + 'l' + indx);
                            
+                           
+                            // rowData.push({ value: (cell.find('div').length ? cell.find('div').text() : cell.text()), metadata: { style: styles["cellstyles"].id}});
                             
-                            rowData.push({ value: (cell.find('div').length ? cell.find('div').text() : cell.text()), metadata: { style: stylesheet.createFormat({
-                                                                                                                                                        			font: { 
-                                                                                                                                                        				bold: false,
-                                                                                                                                                        				size: 12,
-                                                                                                                                                        				color: rgbToHexForExcel_Color(cell.css('color'))
-                                                                                                                                                        			}, 
-                                                                                                                                                        			fill: {
-                                                                                                                                                        				type: 'pattern',
-                                                                                                                                                        				patternType: 'solid',
-                                                                                                                                                        				fgColor: rgbToHexForExcel_BgColor(cell.css('background-color'))
-                                                                                                                                                        			},
-                                                                                                                                                        			alignment: {
-                                                                                                                                                                        horizontal: cell.css('text-align')
-                                                                                                                                                                    }
-                                                                                                                                                        		}).id 
-                                
-                                                                                                                                } 
-                                
-                                       });
-                                        
+                            
+                            
+                            var metaformat = {
+                                    			font: { 
+                                    				bold: false,
+                                    				size: 12,
+                                    				color: rgbToHexForExcel_Color((
+                                                                    				    cell.css('color') == 'transparent' || cell.css('color') == '' ? 
+                                                                    				    cell.parent('.slick-row').css('color') : 
+                                                                    				    cell.css('color')))
+                                    			}, 
+                                    			fill: {
+                                    				type: 'pattern',
+                                    				patternType: 'solid',
+                                    				fgColor: rgbToHexForExcel_BgColor((
+                                                                    				    cell.css('background-color') == 'transparent' || cell.css('background-color') == '' ? 
+                                                                    				    cell.parent('.slick-row').css('background-color') : 
+                                                                    				    cell.css('background-color')))
+                                    			},
+                                    			alignment: {
+                                                    horizontal: cell.css('text-align')
+                                                }
+                                   		};
+                           
+                            
+                            rowData.push({ value: (cell.find('div').length ? cell.find('div').text() : cell.text()), metadata: { style: stylesheet.createFormat(metaformat).id }});
+                                     
                                       
                         }else if(typeof cell != 'undefined'){
                             
@@ -689,12 +698,18 @@
                                                                                                                                                         			font: { 
                                                                                                                                                         				bold: false,
                                                                                                                                                         				size: 12,
-                                                                                                                                                        				color: rgbToHexForExcel_Color(cell.css('color'))
+                                                                                                                                                        				color: rgbToHexForExcel_Color((
+                                                                                                                                                                                        				    cell.css('color') == 'transparent' || cell.css('color') == '' ? 
+                                                                                                                                                                                        				    cell.parent('.slick-row').css('color') : 
+                                                                                                                                                                                        				    cell.css('color')))
                                                                                                                                                         			}, 
                                                                                                                                                         			fill: {
                                                                                                                                                         				type: 'pattern',
                                                                                                                                                         				patternType: 'solid',
-                                                                                                                                                        				fgColor: rgbToHexForExcel_BgColor(cell.css('background-color'))
+                                                                                                                                                        				fgColor: rgbToHexForExcel_BgColor((
+                                                                                                                                                                                        				    cell.css('background-color') == 'transparent' || cell.css('background-color') == '' ? 
+                                                                                                                                                                                        				    cell.parent('.slick-row').css('background-color') : 
+                                                                                                                                                                                        				    cell.css('background-color')))
                                                                                                                                                         			},
                                                                                                                                                         			alignment: {
                                                                                                                                                                         horizontal: cell.css('text-align')
@@ -921,9 +936,13 @@
     function _decodeTabularData(_grid, ta){
       var columns = _grid.getColumns();
       var clipText = ta.value;
-      //console.log(clipText);
-      clipText = clipText.trim(); 
-      var clipRows = clipText.split(/[\n\f\r]/); 
+      
+      // below line support when pasting from excel;
+      // from excel you always get trailing new line charater 
+      clipText = clipText.replace(/[\n\f\r]$/, '');
+      
+      var clipRows = clipText.split(/[\n\f\r]/);
+      console.log(clipRows);
       var clippedRange = [];
       _bodyElement.removeChild(ta);
       
@@ -1437,7 +1456,8 @@ function PhaseSelectionEditor(args) {
     var scope = this;
 
     this.init = function () {
-      $input = $("<INPUT type=text class='editor-percentcomplete' />");
+      //$input = $("<INPUT type=text class='editor-percentcomplete' readonly/>");
+      $input = $("<INPUT type=text class='editor-percentcomplete'/>");
       $input.width($(args.container).innerWidth() - 25);
       $input.appendTo(args.container);
 
@@ -1462,6 +1482,10 @@ function PhaseSelectionEditor(args) {
         
         e.stopPropagation();
         $input.focus().select();
+        // add new line to remove the picker phase selection 
+        // after user selection on phase
+        //$input.remove();
+        $picker.remove();
         return false;
       })
     };
@@ -1523,9 +1547,22 @@ function AutoCompleteEditor(args) {
       $input.appendTo(args.container)
             .keydown(function(e){
                 if(e.which == 37 || e.which == 39 || e.which == 38 || e.which == 40 || e.which == 13){
+                    
                     // Don't propogate the event to the document
                     if (e.stopPropagation) {
                         e.stopPropagation();   // W3C model
+                        e.preventDefault();
+                    } else {
+                          e.cancelBubble = true; // IE model
+                    }
+                }
+            }).keypress(function(e){
+                if(e.which == 37 || e.which == 39 || e.which == 38 || e.which == 40 || e.which == 13){
+                    
+                    // Don't propogate the event to the document
+                    if (e.stopPropagation) {
+                        e.stopPropagation();   // W3C model
+                        e.preventDefault();
                     } else {
                           e.cancelBubble = true; // IE model
                     }
@@ -1767,7 +1804,7 @@ var loadSpinner = {
     client_id : '#loadingSpinner',
     
     show: function(){
-        $(loadSpinner.client_id).show().css('height', $(document).outerHeight());
+        $(loadSpinner.client_id).show().css('height', $(document).outerHeight()).css('z-index', 99999);
     },
     
     hide: function(){
@@ -1857,9 +1894,32 @@ var makeManageRateCardsCollapsible = function(){
     });
 }
 
+function preventEnterSubmit(e) {
+    if (e.which == 13) {
+        var $targ = $(e.target);
+
+        if (!$targ.is("textarea") && !$targ.is(":button,:submit")) {
+            var focusNext = false;
+            $(this).find(":input:visible:not([disabled],[readonly]), a").each(function(){
+                if (this === e.target) {
+                    focusNext = true;
+                }
+                else if (focusNext){
+                    $(this).focus();
+                    return false;
+                }
+            });
+
+            return false;
+        }
+    }
+}
+
+
 
 // On DOM Ready
 $(function() {
+    //$("#form").keypress(preventEnterSubmit);
     makeManageRateCardsCollapsible();
     tabpanel.bindEvents();
     tabpanel.showTimelineTab();
@@ -1950,7 +2010,9 @@ var gridMainInitiate = function(){
     // bind context menu
     grid.onContextMenu.subscribe(Timeline.onContextMenuHandler);
     
-    
+    //$('#myGrid').on('blur', 'input.editor-text', function() {
+   //     Slick.GlobalEditorLock.commitCurrentEdit();
+   // });
     
     Timeline.renderGrid();
     
@@ -2048,14 +2110,49 @@ var Timeline = {
     fixedColumns : 5,
     maxHours : 40,
     calcuation_cols_css : {'text-align' : 'center', 'background-color': '#666666', 'color' : '#ffffff', 'font-weight' : 'bold'},
-    highlight_cols_css : {'text-align' : 'center', 'background-color': '#ff0000', 'color' : '#0070d2', 'font-weight' : 'bold'},
+    highlight_cols_css : {'text-align' : 'center', 'background-color': '#000080', 'color' : '#ffffff', 'font-weight' : 'bold'},
     capacityneeds_cols_css : {'text-align' : 'center', 'background-color': '#0070d2', 'color' : '#fff', 'font-weight' : 'bold'},
     hoursperphase_cols_css : {'text-align' : 'center', 'background-color': '#0070d2', 'color' : '#fff', 'font-weight' : 'bold'},
     rt_json : [],
     
     
     renderGrid: function(){
+        grid.setCellCssStyles("label_highlights", {
+           1: {
+                move: "slds-weekname-cell",
+                id: "slds-weekname-cell",
+                selector1: "slds-weekname-cell",
+                skill: "slds-weekname-cell",
+                autofill: "slds-weekname-cell"
+               }
+               ,
+            2: {
+                move: "slds-milestones-cell",
+                id: "slds-milestones-cell",
+                selector1: "slds-milestones-cell",
+                skill: "slds-milestones-cell",
+                autofill: "slds-milestones-cell"
+               },
+             3: {
+                move: "slds-milestones-cell",
+                id: "slds-milestones-cell",
+                selector1: "slds-milestones-cell",
+                skill: "slds-milestones-cell",
+                autofill: "slds-milestones-cell"
+               },
+                4: {
+                move: "slds-milestones-cell",
+                id: "slds-milestones-cell",
+                selector1: "slds-milestones-cell",
+                skill: "slds-milestones-cell",
+                autofill: "slds-milestones-cell"
+               }
+        });
+        
         grid.render();
+        
+        
+        
     },
     
     
@@ -2135,7 +2232,7 @@ var Timeline = {
             id: "move",
             name: "",
             field: "move",
-            width: 20,
+            width: 15,
             behavior: "selectAndMove",
             selectable: false,
             resizable: false,
@@ -2150,7 +2247,7 @@ var Timeline = {
             id: "id",
             name: "",
             field: "id",
-            width: 20,
+            width: 15,
             behavior: "",
             selectable: false,
             resizable: false,
@@ -2161,7 +2258,7 @@ var Timeline = {
             headerCssClass: "Fixed-Header-Style",
             order: null,
             formatter: function(row, cell, value, columnDef, dataContext) {
-                return "<a style='color:#4996D0; text-decoration:none;cursor:pointer' rowId='" + dataContext.id + "' onclick='Timeline.deleteRow(this);'>Del</a>";
+                return "<a href='javascript:void(0);' title='Delete' class='delete_button' style='color:#4996D0; text-decoration:none;cursor:pointer' rowId='" + dataContext.id + "' onclick='Timeline.deleteRow(this);'>&nbsp;</a>";
             }
             ,notUsedForCalculation : true
 
@@ -2184,8 +2281,8 @@ var Timeline = {
         },{
             id: "skill",
             field: "skill",
-            name: "Notes",
-            width: 50,
+            name: "Notes", 
+            width: 100,
             selectable: false,
             resizable: true,
             focusable : true,
@@ -2201,7 +2298,7 @@ var Timeline = {
             field: "autofill",
             name: "",
             behavior: "",
-            width: 45,
+            width: 15,
             selectable: false,
             resizable: false,
             focusable : true,
@@ -2216,7 +2313,8 @@ var Timeline = {
                     //  return "";
                     //}
                     if(typeof Timeline.fixedRowsTypes[data[row].id] != 'undefined' || dataContext.id == '') return "";
-                    return "<button style='color:#4996D0; height: 16px;line-height: 16px;' rowId='" + dataContext.id + "' onclick='return false;'>Auto</button>";
+                    //return "<button style='color:#4996D0; height: 16px;line-height: 16px;' rowId='" + dataContext.id + "' onclick='return false;'>Auto</button>";
+                    return "<a href='javascript:void(0);' title='Auto fill hours' class='setup_button' style='color:#4996D0;' rowId='" + dataContext.id + "' onclick='return false;'>&nbsp;</a>";
               }
               ,editor: AutoFillEditor
         }];
@@ -2313,12 +2411,12 @@ var Timeline = {
                     id: "rate",
                     name: "Rate",
                     field: "rate",
-                    //width: 50,
+                    width: 100,
                     selectable: false,
                     resizable: true,
                     focusable : false,
                     order: null
-                    ,cssClass : "slds-calculated-cell"
+                    ,cssClass : "slds-weekname-cell"// "slds-calculated-cell"
                     ,headerCssClass: "Fixed-Header-Style"
                     ,notUsedForCalculation : true
                     ,formatter: function(row, cell, value, columnDef, dataContext) {
@@ -2343,12 +2441,12 @@ var Timeline = {
                     id: "cost",
                     name: "Cost",
                     field: "cost",
-                    //width: 50,
+                    width: 100,
                     selectable: false,
                     resizable: true,
                     focusable : false,
                     order: null
-                    ,cssClass : "slds-calculated-cell"
+                    ,cssClass : "slds-weekname-cell"// "slds-calculated-cell"
                     ,headerCssClass: "Fixed-Header-Style"
                     ,notUsedForCalculation : true
                     ,formatter: function(row, cell, value, columnDef, dataContext) {
@@ -2373,12 +2471,12 @@ var Timeline = {
                     id: "cost_price",
                     name: "Total Cost",
                     field: "cost_price",
-                    //width: 50,
+                    width: 100,
                     selectable: false,
                     resizable: true,
                     focusable : false,
                     order: null
-                    ,cssClass : "slds-calculated-cell"
+                    ,cssClass : "slds-weekname-cell"// "slds-calculated-cell"
                     ,headerCssClass: "Fixed-Header-Style"
                     ,notUsedForCalculation : true
                     ,formatter: Timeline.waitingFormatter
@@ -2410,12 +2508,12 @@ var Timeline = {
                     id: "selling_price",
                     name: "Total Price",
                     field: "selling_price",
-                    //width: 50,
+                    width: 100,
                     selectable: false,
                     resizable: true,
                     focusable : false,
                     order: null
-                    ,cssClass : "slds-calculated-cell"
+                    ,cssClass : "slds-weekname-cell"//"slds-calculated-cell"
                     ,headerCssClass: "Fixed-Header-Style"
                     ,notUsedForCalculation : true
                     ,formatter: Timeline.waitingFormatter
@@ -2539,7 +2637,7 @@ var Timeline = {
                   
                    var metadata =  {
                       selectable: false,
-                      cssClasses: "custom-fix-row",
+                      //cssClasses: "custom-fix-row",
                       "columns": {
                                         "id": {
                                                   formatter: function(row, cell, value, columnDef, dataContext) {
@@ -2590,7 +2688,7 @@ var Timeline = {
                              metadata.columns[colItem.field].colspan = colspan; // added for colspan
                         }
                     });
-                    
+                    //metadata['cssClasses'] = 'slds-milestones-cell';
                     return metadata;
                     
                 }else if(typeof data[row] != 'undefined' && data[row].id == Timeline.fixedRowsTypes.phase.id){
@@ -2649,7 +2747,7 @@ var Timeline = {
                              metadata.columns[colItem.field].colspan = colspan; // added for colspan
                         }
                     });
-                    
+                    metadata['cssClasses'] = 'slds-capacityperphase-cell';
                     return metadata;
                     
                 }else if(typeof data[row] != 'undefined' && data[row].id == Timeline.fixedRowsTypes.hoursperphase.id){
@@ -2679,9 +2777,17 @@ var Timeline = {
                              metadata.columns[colItem.field].colspan = colspan; // added for colspan
                         }
                     });
-                    
+                    metadata['cssClasses'] = 'slds-hoursperphase-cell';
                     return metadata;
                     
+                }else if(typeof data[row] != 'undefined' && data[row].id == Timeline.fixedRowsTypes.total.id){
+                    
+                   metadata['cssClasses'] = 'slds-weekname-cell';
+                   return metadata;
+                }else if(typeof data[row] != 'undefined' && data[row].id == Timeline.fixedRowsTypes.weekname.id){
+                    
+                   metadata['cssClasses'] = 'slds-weekname-cell';
+                   return metadata;
                 }else if(typeof data[row] != 'undefined' && typeof Timeline.fixedRowsTypes[data[row].id] != 'undefined'){
                     return metadata;
                 }
@@ -2697,7 +2803,7 @@ var Timeline = {
       
      
       
-      if(Timeline.fixedRowsTypes[data[cell.row].id] == 'undefined'){
+      if(typeof Timeline.fixedRowsTypes[data[cell.row].id] == 'undefined'){
           return; // if not an fixed header row
       }
       
@@ -2903,7 +3009,7 @@ var Timeline = {
     
     triggerUpdateCell: function(field, rowId, val, row, cell){
         
-        
+        val = val.replace(/"/g, '\\"');
         if(rowId.toLowerCase() == Timeline.fixedRowsTypes.phase.id){
             
             var cellNode = grid.getCellNode(row, cell);
@@ -2995,7 +3101,7 @@ var Timeline = {
                         if(rowId.toLowerCase() != Timeline.fixedRowsTypes.milestone.id 
                                 && rowId.toLowerCase() != Timeline.fixedRowsTypes.milestone1.id 
                                 && rowId.toLowerCase() != Timeline.fixedRowsTypes.milestone2.id
-                                && (!Timeline.numFieldValidator(val).valid || val == '')){
+                                && ((val != undefined && !Timeline.numFieldValidator(val).valid) || val == '')){
                             val = 0;
                         }
                         
@@ -3100,7 +3206,7 @@ var Timeline = {
     onCellChangeHandler: function(e, args){
         var field = grid.getColumns()[args.cell].field;
         
-        if (field != 'resource' && field != 'autofill') {
+        if (field != 'e2Resource' && field != 'autofill') {
             var item = args.item;
             var column = args.cell;
             var row = args.row;
@@ -3169,7 +3275,8 @@ var Timeline = {
             var sum = 0;
             $.each(columns, function(indx1, colItem) {
                 if(indx1 >= Timeline.fixedColumns && typeof colItem.usedForCalculation != 'undefined' && colItem.usedForCalculation){
-                    sum += parseInt(isNaN(rowData[colItem.field]) ? 0 : rowData[colItem.field]);
+                    //sum += parseInt(isNaN(rowData[colItem.field]) ? 0 : rowData[colItem.field]);
+                    sum += (typeof rowData[colItem.field] == 'undefined' || rowData[colItem.field] == '' ? 0 : parseInt(rowData[colItem.field]));
                 }
             });
             //console.log(str);
@@ -3181,7 +3288,9 @@ var Timeline = {
         var colData = columns.slice(Timeline.fixedColumns);
         $.each(rowData, function(indx, rowItem) {
             $.each(colData, function(indx1, colItem) {
-               if(!colItem.notUsedForCalculation) sum += (typeof rowItem[colItem.id] == 'undefined' || rowItem[colItem.id] == ''? 0 : parseInt(rowItem[colItem.id]));
+               if(!colItem.notUsedForCalculation) {
+                   sum += (typeof rowItem[colItem.id] == 'undefined' || rowItem[colItem.id] == ''? 0 : parseInt(rowItem[colItem.id]));
+               }
             });
         });
         return sum;
@@ -3302,7 +3411,7 @@ var Timeline = {
                          $.each(rowData, function(indx, rowItem) {
                             sum += (typeof rowItem[colDef.id] == 'undefined' || rowItem[colDef.id] == ''? 0 : parseInt(rowItem[colDef.id]));
                          });
-                         $(cellNode).empty().html(sum).css({'text-align' : 'center', 'background-color': '#666666', 'color' : '#fff'});
+                         $(cellNode).empty().html(sum);//.css({'text-align' : 'center', 'background-color': '#666666', 'color' : '#fff'});
                      }
                      
                      
@@ -3312,7 +3421,7 @@ var Timeline = {
                          var sum = 0;
                          //console.log(data[Timeline.fixedRowsTypes.phase.rowIndex]);
                          var selectedPhase = data[Timeline.fixedRowsTypes.phase.rowIndex][colDef.id];
-                         if(selectedPhase != ''){
+                         if(typeof selectedPhase != 'undefined' && selectedPhase != ''){
                              $(cellNode).css({'text-align' : 'center', 'background-color': (typeof renderOptions_Phases[selectedPhase] == 'undefined' ? '' : renderOptions_Phases[selectedPhase]), 'color' : '#fff'});
                              selectedPhase = selectedPhase.toLowerCase();
                              if(typeof capacityNeeds_JSON != 'undefined' && 
@@ -3333,13 +3442,16 @@ var Timeline = {
                                  var sum = 0;
                                  var selectedPhase = data[Timeline.fixedRowsTypes.phase.rowIndex][colDef.id];
                                  if(selectedPhase != ''){
-                                     
                                      var rowData = data.slice(Timeline.fixedRows);
                                      var colData = columns.slice(Timeline.fixedColumns);
                                      $.each(rowData, function(indx, rowItem) {
                                         var row_sum = 0; 
                                         $.each(colData, function(indx1, colItem) {
-                                           if(data[Timeline.fixedRowsTypes.phase.rowIndex][colItem.id].toLowerCase() == selectedPhase.toLowerCase() && (typeof colItem.notUsedForCalculation == 'undefined' || !colItem.notUsedForCalculation)) {
+                                           if(typeof selectedPhase != 'undefined' && 
+                                                       typeof data[Timeline.fixedRowsTypes.phase.rowIndex] != 'undefined' && 
+                                                       typeof data[Timeline.fixedRowsTypes.phase.rowIndex][colItem.id] != 'undefined' && 
+                                                       data[Timeline.fixedRowsTypes.phase.rowIndex][colItem.id].toLowerCase() == selectedPhase.toLowerCase() && 
+                                                       (typeof colItem.notUsedForCalculation == 'undefined' || !colItem.notUsedForCalculation)) {
                                                row_sum += (typeof rowItem[colItem.id] == 'undefined' || rowItem[colItem.id] == ''? 0 : parseInt(rowItem[colItem.id]));
                                            }       
                                         });
@@ -3351,7 +3463,7 @@ var Timeline = {
                                       $(cellNode).css({'text-align' : 'center', 'background-color': '', 'color' : ''});  
                                       $(cellNode).empty().html('');
                                  }
-                                 //$(cellNode).empty().html(sum).css(Timeline.hoursperphase_cols_css);
+                                 //$(cellNode).empty().css(Timeline.hoursperphase_cols_css);
                      }
                      
                      
@@ -3359,7 +3471,13 @@ var Timeline = {
                       if(typeof meta_info != 'undefined'){
                           var colorCodePostFix = meta_info.colorcodepostfix;
                           var apply_css = meta_info.apply_css;
-                          if(typeof colorCodePostFix != 'undefined' && typeof apply_css != 'undefined' && apply_css == true){
+                          
+                          if(meta_info.id == Timeline.fixedRowsTypes.phase.id){
+                              $(cellNode).css({'background-color': '', 'color' : '#000000'});
+                              var phase_value = data[row][colDef.id];
+                              if(typeof renderOptions_Phases != 'undefined' && typeof phase_value != 'undefined' && typeof renderOptions_Phases[phase_value] != 'undefined') $(cellNode).css({'background-color': renderOptions_Phases[phase_value], 'color' : '#FFFFFF'});
+                            
+                          }else if(typeof colorCodePostFix != 'undefined' && typeof apply_css != 'undefined' && apply_css == true){
                                var backgroundColor = data[row][colDef.id + colorCodePostFix]; 
                                $(cellNode).css({'background-color': '', 'color' : '#000000'}); 
                                if(typeof backgroundColor != 'undefined') $(cellNode).css({'text-align' : 'center', 'background-color': backgroundColor, 'color' : (backgroundColor == '' ? '#000' : '#eee')});

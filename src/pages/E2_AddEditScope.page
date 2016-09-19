@@ -1,3 +1,10 @@
+<!-- 
+  Appirio, Inc
+ * Name: E2_AddEditScope
+ * Description: This page has the tree hierarchy and edit scope section (Heart of scoping, sizing)
+ * Change Log:
+   09/15: RJ: Added new inline style '' on html element with id = tab-default-2 and two BRs underneath to resolve issue no. I-235370 
+-->
 <apex:page standardController="CMC_Presales_LOE__c" extensions="E2_AddEditScopeController" action="{!pageAction}"
    showHeader="false" standardStylesheets="true" sidebar="false" applyHtmlTag="false" applyBodyTag="false">
    <apex:composition template="E2_Template">
@@ -140,9 +147,13 @@
                                             <div id="tab-default-1" style="padding:0px" class="slds-tabs--default__content slds-hide paddingTopZero" role="tabpanel" aria-labelledby="tab-default-1__item">
                                                 <div id="edit_scope_div"></div>
                                             </div>
-                                            <div id="tab-default-2" style="padding:0px" class="slds-tabs--default__content slds-show paddingTopZero" role="tabpanel" aria-labelledby="tab-default-2__item">
+                                            <div id="tab-default-2" style="padding:0px;height: 500px;overflow: auto;" class="slds-tabs--default__content slds-show paddingTopZero" role="tabpanel" aria-labelledby="tab-default-2__item">
                                                <chatter:feed entityId="{!estimate.id}" showPublisher="true" onComplete="custom_chatter.oncomplete();" />
-                                               <!-- CHATTER - tab-default-2 ; please make sure that chatter feedtracking is enabled through setup for this object -->                   
+                                               <!-- CHATTER - tab-default-2 ; please make sure that chatter feedtracking is enabled through setup for this object -->
+                                               <br/>
+                                               <br/>
+                                               <br/>
+                                               <br/>
                                             </div>
                                         </div>  
                                                    

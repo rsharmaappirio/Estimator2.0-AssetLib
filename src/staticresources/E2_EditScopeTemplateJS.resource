@@ -962,3 +962,45 @@ var tabpanel = {
         
     }
 }
+var EditScope = {
+    ADD_BULK_EFFORTS_FRAME_ID : 'bulkEffortIframe',
+    
+    addEfforts: function() {
+        var func = document.getElementById(EditScope.ADD_BULK_EFFORTS_FRAME_ID).contentWindow.prepareJson;
+        if (typeof func != 'undefined') {
+            func();
+        }
+    },
+    
+    updateAddEffortsJson: function(jsonStr){
+        $("input[Id$='effortsJson']").val(jsonStr);
+        addBulkEfforts();
+        EditScope.hideAddBulkEffortsModal();
+    },
+    
+    addBulkEfforts_click : function(obj){
+        EditScope.showAddBulkEffortsModal();
+        return false;
+    },
+    
+    showAddBulkEffortsModal : function(){
+        $('#helpModal').show();
+        $('#helpModal').find('#' + EditScope.ADD_BULK_EFFORTS_FRAME_ID).attr('src', '/apex/E2_AddBulkEfforts');
+        $('#helpModal').find('#' + EditScope.ADD_BULK_EFFORTS_FRAME_ID).closest('div.slds-modal__content').scrollTop(0);
+        $('#helpBackdrop').css({'height' : $(window.document).height()});
+        $('#helpBackdrop').show();
+    },
+    
+    hideAddBulkEffortsModal: function() {
+        $('#helpModal').hide();
+        $('#helpModal').find('#' + EditScope.ADD_BULK_EFFORTS_FRAME_ID).attr('src', 'about:blank');
+        $('#helpModal').find('#' + EditScope.ADD_BULK_EFFORTS_FRAME_ID).closest('div.slds-modal__content').scrollTop(0);
+        $('#helpBackdrop').hide();
+    },
+    
+    setHeightOfAddNewModal: function(height) {
+        if ($('#' + EditScope.ADD_BULK_EFFORTS_FRAME_ID).length) {
+            $('#' + EditScope.ADD_BULK_EFFORTS_FRAME_ID).css('height', height + 'px');
+        }
+    }
+}

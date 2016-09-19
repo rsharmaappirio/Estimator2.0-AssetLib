@@ -283,9 +283,9 @@
             }
             .slds .slds-modal__close-custom {    
                 float: right;
-                height: 48px;
+                height: 30px;
                 position: relative;
-                width: 48px;
+                width: 30px;
                 background: #eee url({!$Resource.E2_SLDS1}/assets/icons/action/close_60.png) no-repeat scroll center center / 25px 25px;
                 right: 0px;
                 top: 0px;

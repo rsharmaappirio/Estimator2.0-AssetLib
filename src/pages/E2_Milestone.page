@@ -8,7 +8,7 @@
  * Date Modified      Modified By                  Description of the update
 *  =====================================================================
 -->
-<apex:page standardController="CMC_Presales_LOE__c" extensions="E2_TimelineController" action="{!pageAction}" 
+<apex:page standardController="CMC_Presales_LOE__c" extensions="E2_MilestoneController" action="{!pageAction}" 
    showHeader="false" standardStylesheets="true" sidebar="false" applyHtmlTag="false" applyBodyTag="false">
     <apex:stylesheet value="{!$Resource.E2_SlickGrid}/slick.grid.css" />
     <apex:stylesheet value="{!$Resource.E2_SlickGrid}/css/smoothness/jquery-ui-1.8.24.custom.css" />
@@ -44,59 +44,21 @@
                         baseUrl: '{!$Resource.E2_SlickGrid}/lib/js'  //give the location of the folder which contains require, excel-builder, etc
                     });
     </script>
-    <script type="text/javascript" src="{!$Resource.E2_TimelineJS}"></script>
+    <script type="text/javascript" src="{!$Resource.E2_MilestoneJS}"></script>
     
     <apex:composition template="E2_Template">
-        <apex:define name="title">Timeline</apex:define>
+        <apex:define name="title">Schedule Milestone</apex:define>
         <apex:define name="header">
             <c:E2_PermissionMessage rendered="{!NOT(isEditable)}" />
-            <c:E2_Header psr_id="{!psrId}" step="7" />
+            <c:E2_Header psr_id="{!psrId}" step="6" />
         </apex:define>
         <apex:define name="body">
             <style rel="stylesheet" type="text/css">
-                a.delete_button, a.delete_button:hover, a.delete_button:active, a.delete_button:focus{
-                    background: transparent url({!$Resource.E2_SLDS1}/assets/icons/utility/delete_60.png) no-repeat scroll center center / 15px 15px;
-                    height: 15px;
-                    width: 15px;
-                    display:block;
-                    text-decoration: none;
-                    outline: none; 
-                }
-                a.push_button{
-                    background: transparent url({!$Resource.E2_SLDS1}/assets/icons/utility/push_60.png) no-repeat scroll center center / 15px 15px;
-                    height: 15px;
-                    width: 15px;
-                    display:block;
-                }
-                a.replace_button{
-                    
-                    background: transparent url({!$Resource.E2_SLDS1}/assets/icons/utility/replace_60.png) no-repeat scroll center center / 15px 15px;
-                    height: 15px;
-                    width: 15px;
-                    display:block;
-                }
-                a.setup_button, a.setup_button:hover, a.setup_button:active, a.setup_button:focus{
-                    
-                    background: transparent url({!$Resource.E2_SLDS1}/assets/icons/utility/setup_60.png) no-repeat scroll center center / 15px 15px;
-                    height: 15px;
-                    width: 15px;
-                    display:block;
-                    text-decoration: none;
-                    outline: none; 
-                }
-                
-                a.excel_button, a.excel_button:hover, a.excel_button:active, a.excel_button:focus{
-                    background: transparent url({!$Resource.E2_SLDS1}/assets/icons/doctype/excel_60.png) no-repeat scroll center center / 25px 25px;
-                    height: 25px;
-                    width: 25px;
-                    display:block;
-                    text-decoration: none;
-                    outline: none; 
-                }
-                
-                
                 /**.reallyHidden { display: none !important;}**/
                 .Fixed-Header-Style{font-weight:bold;}
+                .custom-cell{text-align:center;}
+                .milestone1{text-align:center;font-weight:bold;}
+                .milestone2{text-align:right;font-weight:bold;}
                 .custom-fix-row{
                     background-color: #eee!important;
                     border-color: #ccc!important;
@@ -208,6 +170,12 @@
                     left: 650px;
                 }
                 /* Individual cell styles */
+                
+                .slick-cell{
+                    white-space: normal;
+                    font-size:8pt;
+                }
+                
                 
                 .slick-cell.task-name {
                     font-weight: bold;
@@ -388,9 +356,8 @@
                 }
                 
                 .editor-autofill-wrapper {
-                    /**background: beige;**/
-                    background:#fafafa;
-                    padding: 20px 20px;
+                    background: beige;
+                    padding: 20px 8px;
                     width: 100%;
                     height: 24px;
                     border: 1px solid gray;
@@ -563,33 +530,6 @@
                     color: #fff!important;
                 }
                 
-                .slds-milestones-cell { 
-                    text-align: center!important;
-                    background-color: #aaaaaa!important;
-                    color: #fff!important;
-                }
-                
-                .slds-capacityperphase-cell { 
-                    text-align: center!important;
-                    background-color: #0070d2!important;
-                    color: #fff!important;
-                }
-                .slds-hoursperphase-cell { 
-                    text-align: center!important;
-                    background-color: #0070d2!important;
-                    color: #fff!important;
-                }
-                .slds-totalhrsperweek-cell { 
-                    text-align: center!important;
-                    background-color: #666666!important;
-                    color: #fff!important;
-                }
-                .slds-weekname-cell { 
-                    text-align: center!important;
-                    background-color: #666666!important;
-                    color: #fff!important;
-                }
-                
                  /**body {width:100%; height:100%; overflow:auto; margin:0; }**/
                  /**html {width:100%; height:100%; overflow:auto; }**/
                  
@@ -667,11 +607,11 @@
                       border: 1px solid gray;
                       padding: 2px;
                       display: inline-block;
-                      min-width: 100px;
+                      min-width: 120px;
                       -moz-box-shadow: 2px 2px 2px silver;
                       -webkit-box-shadow: 2px 2px 2px silver;
                       z-index: 99999;
-                      max-width: 120px;
+                      max-width: 180px;
                     }
                 
                     #contextMenu li {
@@ -697,14 +637,6 @@
                         /**border-style: dashed;**/
                     }
                     
-                    .header .sign:after{
-                      content:"+";
-                      display:inline-block;      
-                    }
-                    .header.expand .sign:after{
-                      content:"-";
-                    }
-                    
                     .slds *::-moz-selection {
                         background: #3297fd none repeat scroll 0 0;
                         color: #ffffff;
@@ -713,24 +645,8 @@
             </style>
             <apex:form >
                 <apex:pageMessages />
-                <apex:actionfunction name="updateEstimateRateCards" action="{!updateEstimateRateCards}" oncomplete="Timeline.updateEstimateRateCards_complete();" rerender="ratecard_table"/>
-                <apex:actionfunction name="refreshRateCardRatesAndCost" action="{!refreshRateCardRatesAndCost}" oncomplete="Timeline.refreshRateCardRatesAndCost_complete();" rerender="ratecard_table"/>
-                <apex:actionfunction name="refreshOverviewPanel" action="{!refreshOverviewPanel}" rerender="overview_panel"/>
-                <apex:actionfunction name="changeDiscount" action="{!changeDiscount}" rerender="overview_panel"/>
                 
-                
-                <div id="tabpanel">
-                    <ul class="slds-tabs--default__nav" role="tablist">
-                        <li class="slds-tabs--default__item slds-text-heading--label slds-active" title="Manage Timeline" role="presentation">
-                            <a class="slds-tabs--default__link" href="javascript:void(0);" role="tab" tabindex="-1" aria-selected="true" aria-controls="tab-default-1" id="tab-default-1__item">Timeline&nbsp;</a>
-                        </li>
-                        <li class="slds-tabs--default__item slds-text-heading--label " title="Manage Ratecard" role="presentation">
-                            <a class="slds-tabs--default__link" href="javascript:void(0);" role="tab" tabindex="0" aria-selected="false" aria-controls="tab-default-2" id="tab-default-2__item">Manage Ratecard&nbsp;</a>
-                        </li>
-                         
-                    </ul>
-                    <div id="tab-default-1" style="padding:0px" class="slds-tabs--default__content slds-show paddingTopZero" role="tabpanel" aria-labelledby="tab-default-1__item">
-                        <div id="manage_timeline_div">
+                <div id="manage_timeline_div">
                         
                                 <div class="slds-grid"> <!--style="width:48%;"-->
                                  <div class="slds-col--padded">       
@@ -764,59 +680,35 @@
                                                           <option value="80">80</option>
                                                           <option value="90">90</option>
                                                           <option value="100">100</option>
+                                                          <option value="110">110</option>
+                                                          <option value="120">120</option>
+                                                          <option value="130">130</option>
+                                                          <option value="140">140</option>
+                                                          <option value="150">150</option>
                                                      </select> 
                                                  </div>
                                               </div>
                                             </td><td style="vertical-align:bottom">
-                                                <input type="submit" onclick="return Timeline.build();" class="slds-button slds-button--neutral slds-button--brand save-button-custom" title="Build" value="Build"/>
+                                                <input type="submit" onclick="return Milestone.build();" class="slds-button slds-button--neutral slds-button--brand save-button-custom" title="Build" value="Build"/>
                                             </td></tr>
                                         </tbody>    
                                       </table>
-                                      
-                                      
                                   </div>
-                                  <div id="overview_div" class="slds-col--padded" style="width:50%"> 
-                                    <apex:outputpanel id="overview_panel">
-                                        <table style="width:100%" id="overview-table">
-                                            <thead>
-                                                <tr>
-                                                    <th colspan="3">ESTIMATE SUMMARY</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <tr>
-                                                    <td><span class="overview-label">Services Fees:</span>&nbsp;<apex:outputfield value="{!estimate.Service_Fees__c}"/></td>
-                                                    <td><span class="overview-label">Services Cost:</span>&nbsp;<apex:outputfield value="{!estimate.Service_Costs__c}"/></td>
-                                                    <td><span class="overview-label">Services Margin:</span>&nbsp;<apex:outputfield value="{!estimate.Service_Margin__c}"/></td>
-                                                </tr>
-                                                <tr>
-                                                    <td><span class="overview-label">Calculated Fees:</span>&nbsp;{!CMC_Presales_LOE__c.CurrencyIsoCode}&nbsp;<apex:outputfield value="{!estimate.Calculated_Fees__c}"/></td>
-                                                    <td><span class="overview-label">Calculated Costs:</span>&nbsp;{!CMC_Presales_LOE__c.CurrencyIsoCode}&nbsp;<apex:outputfield value="{!estimate.Calculated_Costs__c}"/></td>
-                                                    <td><span class="overview-label">Calculated Margin:</span>&nbsp;<apex:outputfield value="{!estimate.Calculated_Margin__c}"/></td>
-                                                </tr>
-                                                <tr>
-                                                    <td><span class="overview-label">Discount:</span>&nbsp;<apex:inputfield onchange="changeDiscount();return false;" styleClass="slds-input" style="line-height: 20px;min-height: 20px;width: 40px;" value="{!estimate.Discount_Percent__c}"/>%</td>
-                                                    <td><span class="overview-label">Discount Amt:</span>&nbsp;{!CMC_Presales_LOE__c.CurrencyIsoCode}&nbsp;<apex:outputfield value="{!estimate.Discount_Amount__c}"/></td>
-                                                    <td></td>
-                                                </tr>
-                                                <tr>
-                                                    <td><span class="overview-label">As Sold Margin:</span>&nbsp;<apex:outputfield value="{!estimate.As_Sold_Margin__c}"/></td>
-                                                    <td><span class="overview-label">Blended (List) Rate:</span>&nbsp;<apex:outputfield value="{!estimate.Blended_Rate_Number__c}"/></td>
-                                                    <td><span class="overview-label">Offshore Blend:</span>&nbsp;<apex:outputfield value="{!estimate.Offshore_Blend__c}"/></td>
-                                                </tr>
-                                                <tr>
-                                                    <td><span class="overview-label">Total Fees:</span>&nbsp;{!CMC_Presales_LOE__c.CurrencyIsoCode}&nbsp;<apex:outputfield value="{!estimate.Total_Fees__c}"/></td>
-                                                    <td><span class="overview-label">Total:</span>&nbsp;{!CMC_Presales_LOE__c.CurrencyIsoCode}&nbsp;<apex:outputfield value="{!estimate.Final_Total__c}"/></td>
-                                                    <td></td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
+                                  <div id="overview_div" class="slds-col--padded"> 
+                                    <apex:outputpanel id="overview_panel" style="vertical-align:bottom;display:block;float:right;">
+                                        <apex:outputLabel styleclass="slds-form-element__label" for="MilestoneTemplate" value="Add from template"/>
+                                        <apex:selectList id="MilestoneTemplate" label="Add from template"  styleclass="slds-select" value="{!selectedTemplate}" size="1" onchange="Milestone.addFromTemplate(this.value);">
+                                            <apex:selectOptions value="{!AvailableMilestoneSchTemplates}" />
+                                        </apex:selectList>
+                                        <!--input type="submit" onclick="return Milestone.addFromTemplate('sfdc');" class="slds-button slds-button--neutral slds-button--brand save-button-custom" title="SFDC Milestone Schedule Template" value="SFDC Milestone Sch. Template"/>
+                                        <input type="submit" onclick="return Milestone.addFromTemplate('workday');" class="slds-button slds-button--neutral slds-button--brand save-button-custom" title="Workday Milestone Schedule Template" value="Workday Milestone Sch. Template"/-->
                                     </apex:outputpanel>
                                   </div>
                                 </div>  
-                                
+                               <br/>    
                                <a id='downloadLink'></a>
-                               <a id="" href="javascript:void(0);" class="excel_button" style=" padding-bottom: 2px;" title="Download Grid in Excel Format" onclick="return Timeline.downloadExcel_Click();">&nbsp;</a>
+                               <a id="" href="javascript:void(0);" onclick="return Milestone.downloadExcel_Click();">Download Grid (XLSX)</a>&nbsp;|&nbsp;
+                               <a id="" href="javascript:void(0);" onclick="return Milestone.deleteAllRows();">Delete All Rows</a>
                                <!--input type="submit" onclick="return Timeline.downloadExcel_Click();" class="slds-button slds-button--neutral slds-button--brand save-button-custom" title="Download Excel" value="Download Excel"/-->
                                
                                <div style="position:relative">
@@ -826,96 +718,8 @@
                                 </div>
                                    
                         </div>
-                    </div>
-                    <div id="tab-default-2" style="padding:0px" class="slds-tabs--default__content slds-hide paddingTopZero" role="tabpanel" aria-labelledby="tab-default-2__item">
-                         <apex:outputPanel layout="block" id="ratecard_table">
-                                     <div class="slds-modal__footer">
-                                             <div class="slds-col slds-no-flex slds-align-bottom">
-                                                <div class="" role="group">
-                                                    <apex:commandButton onclick="return Timeline.updateEstimateRateCards();" styleClass="slds-button slds-button--neutral slds-button--brand save-button-custom" title="Save" value="Save" action="{!updateEstimateRateCards}" />
-                                                    
-                                                    <apex:commandButton onclick="return Timeline.refreshRateCardRatesAndCost();" styleClass="slds-button slds-button--neutral slds-button--brand save-button-custom" title="Refresh Rates & Cost" value="Refresh Rates & Cost" action="{!refreshRateCardRatesAndCost}" rendered="{!$Setup.E2_System_setting__c.Refresh_Ratacard__c}"/>
-                                                </div>
-                                            </div>
-                                    </div> 
-                                     <table id="manageratecardtable" class="slds-table slds-max-medium-table--stacked">
-                                        <thead>
-                                           <tr class="slds-text-heading--label">
-                                              <th class="slds-is-sortable" scope="col">
-                                                 <div class="slds-truncate">Region</div>
-                                              </th>
-                                              <th class="slds-is-sortable" scope="col">
-                                                 <div class="slds-truncate">Role</div>
-                                              </th>
-                                              <th class="slds-is-sortable" scope="col">
-                                                 <div class="slds-truncate">Rate Card</div>
-                                              </th>
-                                              <th class="slds-is-sortable" scope="col">
-                                                 <div class="slds-truncate">Rate</div>
-                                              </th>
-                                              <th class="slds-is-sortable" scope="col">
-                                                 <div class="slds-truncate">Resource Cost</div>
-                                              </th>
-                                              <th class="slds-is-sortable" scope="col">
-                                                 <div class="slds-truncate">Rate Card Margin</div>
-                                              </th>
-                                              <th class="slds-is-sortable" scope="col">
-                                                 <div class="slds-truncate">Rate Margin</div>
-                                              </th>
-                                              <th class="slds-cell-shrink"></th>
-                                           </tr>
-                                        </thead>
-                                        <tbody>
-                                            
-                                            <apex:variable var="rcID" value="" />
-                                            <apex:repeat value="{!estimateRateCards}" var="estimateratecard">
-                                                 <apex:outputText rendered="{!!(rcID == estimateratecard.Practice__c)}">
-                                                     <tr childCss="child_{!SUBSTITUTE(estimateratecard.Practice__c, " ", "")}" class="header expand header_{!SUBSTITUTE(estimateratecard.Practice__c, " ", "")}"><td colspan="8" style="text-transform: uppercase;cursor:pointer;background-color:#eeeeee;color:#000000;font-weight:bold;font-style:italic;"><span class="sign"></span> &nbsp; Practice: {!estimateratecard.Practice__c} &nbsp; </td></tr>
-                                                 </apex:outputText>
-                                                 <tr class="slds-hint-parent child_{!SUBSTITUTE(estimateratecard.Practice__c, " ", "")}">
-                                                    <td class="slds-truncate " data-label="Region">
-                                                      <apex:outputfield value="{!estimateratecard.Region__c}"/>
-                                                    </td>
-                                                    <td class="slds-truncate " data-label="Role">
-                                                        <apex:outputfield value="{!estimateratecard.Resource_Role__c}"/>
-                                                    </td>
-                                                    <td class="slds-truncate " data-label="Rate Card">
-                                                         <apex:outputfield value="{!estimateratecard.Bill_Rate__c}"/>
-                                                    </td>
-                                                    <td class="slds-truncate " data-label="Rate">
-                                                        <apex:inputfield style="width:30%" styleClass="slds-input" value="{!estimateratecard.Discounted_Rate__c}"/>
-                                                    </td>
-                                                    <td class="slds-truncate " data-label="Resource Cost">
-                                                        <apex:outputfield value="{!estimateratecard.Resource_Cost__c}"/>
-                                                    </td>
-                                                     <td class="slds-truncate " data-label="Rate Card Margin">
-                                                        <apex:outputtext value="{!ROUND(1-(estimateratecard.Resource_Cost__c/estimateratecard.Bill_Rate__c), 2)}"/>
-                                                    </td>
-                                                   
-                                                    <td class="slds-truncate " data-label="Rate Margin">
-                                                        <apex:outputtext value="{!ROUND(1-(estimateratecard.Resource_Cost__c/estimateratecard.Discounted_Rate__c), 2)}"/>
-                                                    </td>
-                                                    
-                                                    <td class="slds-cell-shrink" data-label="Actions">
-                                                    </td>
-                                                 </tr>
-                                                 
-                                                 <apex:variable var="rcID" value="{!estimateratecard.Practice__c}" />
-                                             </apex:repeat>
-                                             
-                                        </tbody>
-                                    </table>
-                                    <div class="slds-modal__footer page-footer">
-                                             <div class="slds-col slds-no-flex slds-align-bottom">
-                                                <div class="" role="group">
-                                                    <apex:commandButton onclick="return Timeline.updateEstimateRateCards();" styleClass="slds-button slds-button--neutral slds-button--brand save-button-custom" title="Save" value="Save" action="{!updateEstimateRateCards}" />
-                                                </div>
-                                            </div>
-                                    </div>
-                          </apex:outputPanel>             
-                    </div>
-                    
-                </div> 
+                
+                 
                 
                 
                 <div id="loadingSpinner" class="slds-spinner_container" style="display: none !important;">
@@ -951,10 +755,21 @@
                 <ul id="contextMenu" style="display:none;position:absolute">
                   <span><button id="merge_btn" onclick="return false;" data="MERGE">Merge</button></span>    
                   <span><button id="unmerge_btn" onclick="return false;" data="UNMERGE">UnMerge</button></span>
+                  <span><button id="clear_btn" onclick="return false;" data="CLEAR">Clear</button></span>
                   <br/>
                   <b>Apply Background:</b>
+                  <br/>
                   <li title="Default Color" style="background-color:transparent;border-color:black;" data="">&nbsp;</li>
                   <li style="background-color: #9B4175;border-color:#9B4175;" data="#9B4175">&nbsp;</li>
+                  
+                  
+                  <li style="background-color: #8db3e2;border-color:#8db3e2;" data="#8db3e2">&nbsp;</li>
+                  <li style="background-color: #f79646;border-color:#f79646;" data="#f79646">&nbsp;</li>
+                  <li style="background-color: #1f497d;border-color:#1f497d;" data="#1f497d">&nbsp;</li>
+                  <li style="background-color: #9bbb59;border-color:#9bbb59;" data="#9bbb59">&nbsp;</li>
+                  <li style="background-color: #f7ffa9;border-color:#f7ffa9;" data="#f7ffa9">&nbsp;</li>
+                  <li style="background-color: #c0504d;border-color:#c0504d;" data="#c0504d">&nbsp;</li>
+                  
                   
                   
                   <li style="background-color: #556B2F;border-color:#556B2F; " data="#556B2F">&nbsp;</li>
@@ -1042,8 +857,7 @@
             <script type="text/javascript">
                 var estimateId = '{!estimate.id}';
                 var currency_code = '{!CMC_Presales_LOE__c.CurrencyIsoCode}';
-                var renderOptions_Phases = {!renderOptions_PhasesJSON};
-                var capacityNeeds_JSON = {!capacityNeeds_JSON};
+                
             </script>
             
         </apex:define>

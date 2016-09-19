@@ -10,7 +10,15 @@
 public class E2_TimelineWSManager {
     
    public static final string SEPARATOR = ' - ';    
-    
+   public static final integer NO_OF_DAYS_IN_WEEK = 7;    
+   public static final string PHASE_TEXT = 'phase';
+   public static final string MILESTONE_TEXT = 'milestone';
+   public static final string MILESTONE1_TEXT = 'milestone1';
+   public static final string MILESTONE2_TEXT = 'milestone2';
+   public static final string KEY_SEPARATOR = '|';
+   public static final string WEEKNAME_PREFIX = 'Week';
+   
+   
    // method to get estimate rate card for an estimate 
    public static List<E2_Estimate_Rate_Card__c> getEstimateRateCards(string estimateId){
         List<E2_Estimate_Rate_Card__c> estimateRateCards = E2_TimelineDataUtil_WS.getEstimateRateCards(estimateId);
@@ -23,26 +31,26 @@ public class E2_TimelineWSManager {
         Map<String, CMC_Estimate_Week__c> estimateWeeksMap = new Map<String, CMC_Estimate_Week__c>();
         for(E2_TimelineWS.ColorCode cCode: lstColorCodes){
             if(!estimateWeeksMap.containsKey(cCode.weekId))  estimateWeeksMap.put(cCode.weekId, new CMC_Estimate_Week__c(Id = cCode.weekId));
-            if(cCode.type == 'phase'){
+            if(cCode.type == PHASE_TEXT){
                 CMC_Estimate_Week__c week = estimateWeeksMap.get(cCode.weekId);
                 week.E2_PhaseColorCode__c = cCode.value;
                 estimateWeeksMap.put(cCode.weekId, week);
             } 
             
-            if(cCode.type == 'milestone') {
+            if(cCode.type == MILESTONE_TEXT) {
                 CMC_Estimate_Week__c week = estimateWeeksMap.get(cCode.weekId);
                 week.E2_MilestoneColorCode__c = cCode.value;
                 estimateWeeksMap.put(cCode.weekId, week);
             }
             
-            if(cCode.type == 'milestone1') {
+            if(cCode.type == MILESTONE1_TEXT) {
                 CMC_Estimate_Week__c week = estimateWeeksMap.get(cCode.weekId);
                 week.E2_Milestone1ColorCode__c = cCode.value;
                 estimateWeeksMap.put(cCode.weekId, week);
             }
             
             
-            if(cCode.type == 'milestone2') {
+            if(cCode.type == MILESTONE2_TEXT) {
                 CMC_Estimate_Week__c week = estimateWeeksMap.get(cCode.weekId);
                 week.E2_Milestone2ColorCode__c = cCode.value;
                 estimateWeeksMap.put(cCode.weekId, week);
@@ -216,12 +224,12 @@ public class E2_TimelineWSManager {
         
         for(CMC_Estimate_Resource_Week__c rwW : E2_TimelineDataUtil_WS.getEstimateResourceWeekRecords(weekIds, resourceIds)){
                
-               string key = rwW.Estimate_Resource__c + '|' + rwW.Estimate_Week__c;
+               string key = rwW.Estimate_Resource__c + KEY_SEPARATOR + rwW.Estimate_Week__c;
                resourceWeekMap.put(key, rwW);           
         }
         
          for(E2_TimelineWS.ResourceWeekWrapper rwW : lstResourceWeekWrapper){
-            string key = rwW.resourceId + '|' + rwW.weekId;
+            string key = rwW.resourceId + KEY_SEPARATOR + rwW.weekId;
             integer hours = rwW.hours;
             system.debug('==rwW.weekId'+rwW.weekId);
             if(resourceWeekMap.containsKey(key)){
@@ -320,28 +328,57 @@ public class E2_TimelineWSManager {
         List<CMC_Estimate_Week__c> estimateWeeksToDelete = new List<CMC_Estimate_Week__c>();
         
         boolean incrementalUpdateRequired = false;
-        integer noOfColumnsToDelete = -1;
-        boolean dateUpdateRequired = false;
+        //integer noOfColumnsToDelete = 1;
+        boolean dateUpdateRequiredForSucceedingRecords = false;
+        Date newStartDate; 
+        Decimal newOrder; 
         for(CMC_Estimate_Week__c estimateWeek : E2_TimelineDataUtil_WS.getEstimateWeekRecords(estimateId)){
             
+            // we don't need to process or update records whose order or start date is less than the current week
             if(incrementalUpdateRequired){
-               if(dateUpdateRequired) estimateWeek.Date__c = estimateWeek.Date__c.addDays(7 * noOfColumnsToDelete);
-               estimateWeek.Order__c = estimateWeek.Order__c + noOfColumnsToDelete;
-               estimateWeek.Name = 'Week' + estimateWeek.Order__c;
-               estimateWeeksToUpsert.add(estimateWeek);               
+               //if(dateUpdateRequiredForSucceedingRecords) estimateWeek.Date__c = estimateWeek.Date__c.addDays(NO_OF_DAYS_IN_WEEK * (-noOfColumnsToDelete));
+               if(dateUpdateRequiredForSucceedingRecords){
+                   // set the new start date for this record
+                   estimateWeek.Date__c = newStartDate;
+                   // reset newStartDate variable with date + 7 days
+                   newStartDate = estimateWeek.Date__c.addDays(NO_OF_DAYS_IN_WEEK);
+               } 
+               //check that order is already populated
+               if(estimateWeek.Order__c <> NULL){
+                   //estimateWeek.Order__c = estimateWeek.Order__c - noOfColumnsToDelete;
+                   // set the new order for this record
+                   estimateWeek.Order__c = newOrder;
+                   // reset newOrder variable with +1 increment
+                   newOrder = estimateWeek.Order__c + 1;
+                   // set the week name with the order
+                   estimateWeek.Name = WEEKNAME_PREFIX + estimateWeek.Order__c;
+                   estimateWeeksToUpsert.add(estimateWeek);               
+               }
             }
-
+            
+            //delete the selected week record   
             if(estimateWeek.id == weekId){
                estimateWeeksToDelete.add(estimateWeek);
-               if(estimateWeek.Order__c > 1) dateUpdateRequired = true;
+               // if selected week record order is greater than 1 
+               //if(estimateWeek.Order__c <> NULL && estimateWeek.Order__c.intValue() > 1) dateUpdateRequiredForSucceedingRecords = true;
+               
+               // set the newOrder of succeeding record based on this records order
+               newOrder = estimateWeek.Order__c;
+               if(estimateWeek.Order__c <> NULL && estimateWeek.Order__c.intValue() > 1){
+                 // set the new start date to this records date for the succeeding records
+                 newStartDate = estimateWeek.Date__c;
+                 dateUpdateRequiredForSucceedingRecords = true;  
+               } 
                incrementalUpdateRequired = true;
             }                                    
         }
         
         // process insert/update in database           
         try{ 
-           delete estimateWeeksToDelete;                               
-           upsert estimateWeeksToUpsert;
+           if(!estimateWeeksToDelete.isEmpty()) delete estimateWeeksToDelete;                               
+           if(!estimateWeeksToUpsert.isEmpty()) upsert estimateWeeksToUpsert;
+           
+           resetOrderOnEstimateWeeks(estimateId);
         }catch(Exception ex){
            return 'Failed: ' + ex.getMessage();
         }                                                                                         
@@ -354,55 +391,90 @@ public class E2_TimelineWSManager {
                                                    string weekId, 
                                                    integer noOfColumnsToAdd){                                                   
         List<CMC_Estimate_Week__c> estimateWeeksToUpsert = new List<CMC_Estimate_Week__c>();
-        List<CMC_Estimate_Week__c> estimateWeeksToUpdate = new List<CMC_Estimate_Week__c>();
+        
         boolean incrementalUpdateRequired = false;
-        boolean decrementalUpdateRequired = true;
+        boolean dateUpdateRequiredForSucceedingRecords = false;
+        //boolean decrementalUpdateRequired = true;
+        
+        // retrieve all the existing estimate week records in the ascending order of start date
         for(CMC_Estimate_Week__c estimateWeek : E2_TimelineDataUtil_WS.getEstimateWeekRecords(estimateId)){
             
             if(incrementalUpdateRequired){
-               //estimateWeek.Date__c = estimateWeek.Date__c.addDays(7 * noOfColumnsToAdd);
+               // change the succeeding dates only when adding in between the columns
+               // if it is first column selected then we don't need to change the dates
+               if(dateUpdateRequiredForSucceedingRecords) estimateWeek.Date__c = estimateWeek.Date__c.addDays(NO_OF_DAYS_IN_WEEK * noOfColumnsToAdd);
+               
                estimateWeek.Order__c = estimateWeek.Order__c + noOfColumnsToAdd;
-               estimateWeek.Name = 'Week' + estimateWeek.Order__c;
+               estimateWeek.Name = WEEKNAME_PREFIX + estimateWeek.Order__c;
                estimateWeeksToUpsert.add(estimateWeek);               
             }
             
             
             if(estimateWeek.id == weekId){
+                
+                
+               if(estimateWeek.Order__c <> NULL && estimateWeek.Order__c.intValue() > 1){
+                   estimateWeek.Date__c = estimateWeek.Date__c.addDays(NO_OF_DAYS_IN_WEEK * (noOfColumnsToAdd));
+                   dateUpdateRequiredForSucceedingRecords = true;
+               }       
                
-               //estimateWeek.Date__c = estimateWeek.Date__c.addDays(7 * noOfColumnsToAdd);
+               
+               // inrement the order with the number of columns now adding at left position
                estimateWeek.Order__c = estimateWeek.Order__c + noOfColumnsToAdd;
-               estimateWeek.Name = 'Week' + estimateWeek.Order__c;
+               // change week name with the new order
+               estimateWeek.Name = WEEKNAME_PREFIX + estimateWeek.Order__c;
+               // add in to upsert list
                estimateWeeksToUpsert.add(estimateWeek);  
                
                integer order = estimateWeek.Order__c.intValue();
                Date sDate = estimateWeek.Date__c;
                
-               for(integer indx = 1; indx <= noOfColumnsToAdd; indx++){                   
-                  estimateWeeksToUpsert.add(createTimelineColumnOverload(estimateId, sDate.addDays(7 * (-indx)), order - indx, 'Week' + (order - indx)));               
+               for(integer indx = 1; indx <= noOfColumnsToAdd; indx++){   
+                  integer newOrderToBeAssigned = (order - indx);
+                  System.debug('>>>>' + NO_OF_DAYS_IN_WEEK * (-indx));
+                  Date newDateToBeAssinged = sDate.addDays(NO_OF_DAYS_IN_WEEK * (-indx));
+                  System.debug('>>>>>>>>' + newDateToBeAssinged);
+                  System.debug('>>>>>>>>' + newOrderToBeAssigned);
+                  estimateWeeksToUpsert.add(createTimelineColumnOverload(estimateId, newDateToBeAssinged, newOrderToBeAssigned, WEEKNAME_PREFIX + newOrderToBeAssigned));               
                }
                incrementalUpdateRequired = true;
-               decrementalUpdateRequired = false;
+               //decrementalUpdateRequired = false;
             }
             
-            if(decrementalUpdateRequired){
-               estimateWeek.Date__c = estimateWeek.Date__c.addDays(7 * (-noOfColumnsToAdd));
-               estimateWeek.Order__c = estimateWeek.Order__c - noOfColumnsToAdd;
-               estimateWeek.Name = 'Week' + estimateWeek.Order__c;
-               estimateWeeksToUpsert.add(estimateWeek);
-            }
+            //if(decrementalUpdateRequired){
+               // the order and week name of the columns will remain the same
+               // only date will get subtracted to the no. of weeks adding at left side
+               
+               //estimateWeek.Date__c = estimateWeek.Date__c.addDays(NO_OF_DAYS_IN_WEEK * (-noOfColumnsToAdd));
+               //estimateWeek.Order__c = estimateWeek.Order__c - noOfColumnsToAdd;
+               //estimateWeek.Name = WEEKNAME_PREFIX + estimateWeek.Order__c;
+               //estimateWeeksToUpsert.add(estimateWeek);
+            //}
                                                  
         }
         
         // process insert/update in database           
         try{                                
-           upsert estimateWeeksToUpsert;
+           if(!estimateWeeksToUpsert.isEmpty()) upsert estimateWeeksToUpsert;
+           //resetOrderOnEstimateWeeks(estimateId);
            
+           
+        }catch(Exception ex){
+           return 'Failed: ' + ex.getMessage();
+        }                                                                                         
+        return 'Success';
+    }
+    
+    
+    public static void resetOrderOnEstimateWeeks(string estimateId){
+           List<CMC_Estimate_Week__c> estimateWeeksToUpdate = new List<CMC_Estimate_Week__c>();
            integer displayOrder = 1;
-           for(CMC_Estimate_Week__c eW : [SELECT Id, Order__c
+           for(CMC_Estimate_Week__c eW : [SELECT Id, Name, Order__c
                                           FROM CMC_Estimate_Week__c                                                    
                                           WHERE Estimate__c = :estimateId
                                           ORDER BY Date__c ASC]){
                  eW.Order__c = displayOrder;
+                 eW.Name = WEEKNAME_PREFIX + eW.Order__c;
                  displayOrder++;
                  estimateWeeksToUpdate.add(eW); 
            }
@@ -410,12 +482,8 @@ public class E2_TimelineWSManager {
            if(!estimateWeeksToUpdate.isEmpty()){
                update estimateWeeksToUpdate;
            }
-           
-        }catch(Exception ex){
-           return 'Failed: ' + ex.getMessage();
-        }                                                                                         
-        return 'Success';
     }
+    
     
     // method to add more columns on right
     public static string addMoreColumnsOnRight(string estimateId, 
@@ -426,9 +494,9 @@ public class E2_TimelineWSManager {
         for(CMC_Estimate_Week__c estimateWeek : E2_TimelineDataUtil_WS.getEstimateWeekRecords(estimateId)){
             
             if(incrementalUpdateRequired){
-               estimateWeek.Date__c = estimateWeek.Date__c.addDays(7 * noOfColumnsToAdd);
+               estimateWeek.Date__c = estimateWeek.Date__c.addDays(NO_OF_DAYS_IN_WEEK * noOfColumnsToAdd);
                estimateWeek.Order__c = estimateWeek.Order__c + noOfColumnsToAdd;
-               estimateWeek.Name = 'Week' + estimateWeek.Order__c;
+               estimateWeek.Name = WEEKNAME_PREFIX + estimateWeek.Order__c;
                estimateWeeksToUpsert.add(estimateWeek);               
             }
             
@@ -437,7 +505,7 @@ public class E2_TimelineWSManager {
                integer order = estimateWeek.Order__c.intValue();
                Date sDate = estimateWeek.Date__c;
                for(integer indx = 1; indx <= noOfColumnsToAdd; indx++){                   
-                  estimateWeeksToUpsert.add(createTimelineColumnOverload(estimateId, sDate.addDays(7 * indx), order + indx, 'Week' + (order + indx)));               
+                  estimateWeeksToUpsert.add(createTimelineColumnOverload(estimateId, sDate.addDays(NO_OF_DAYS_IN_WEEK * indx), order + indx, WEEKNAME_PREFIX + (order + indx)));               
                }
                incrementalUpdateRequired = true;
             }                                    
@@ -446,6 +514,7 @@ public class E2_TimelineWSManager {
         // process insert/update in database           
         try{                                
            upsert estimateWeeksToUpsert;
+           //resetOrderOnEstimateWeeks(estimateId);
         }catch(Exception ex){
            return 'Failed: ' + ex.getMessage();
         }                                                                                         
@@ -457,8 +526,21 @@ public class E2_TimelineWSManager {
         List<CMC_Estimate_Week__c> estimateWeeksToUpsert = new List<CMC_Estimate_Week__c>();
         Date startDate = date.valueOf(sDate);
         
+        List<CMC_Estimate_Week__c> existingList = [SELECT Id, Order__c
+                                          FROM CMC_Estimate_Week__c                                                    
+                                          WHERE Estimate__c = :estimateId
+                                          ORDER BY Date__c ASC];
+                                          
+        // No need to build new weeks when there are weeks already defined.
+        // build feature is just used to create fist time weeks and than this feature doesn't 
+        // need to work.
+        if(!existingList.isEmpty()){
+            return 'Success';
+        }
+        
+        
         for(integer indx = 0; indx < noOfColumnsToAdd; indx++){
-            estimateWeeksToUpsert.add(createTimelineColumnOverload(estimateId, startDate.addDays(7 * indx), indx + 1, 'Week' + (indx + 1)));
+            estimateWeeksToUpsert.add(createTimelineColumnOverload(estimateId, startDate.addDays(NO_OF_DAYS_IN_WEEK * indx), indx + 1, WEEKNAME_PREFIX + (indx + 1)));
         }
         
         // process insert/update in database           
@@ -483,8 +565,8 @@ public class E2_TimelineWSManager {
         Integer index = 0;
         for(CMC_Estimate_Week__c estimateWeek : E2_TimelineDataUtil_WS.getEstimateWeekRecords(estimateId)){
                                                  
-             estimateWeek.Date__c = startDate.addDays(7 * index);
-             estimateWeek.Name = 'Week' + (index + 1);
+             estimateWeek.Date__c = startDate.addDays(NO_OF_DAYS_IN_WEEK * index);
+             estimateWeek.Name = WEEKNAME_PREFIX + (index + 1);
              estimateWeek.Order__c = index + 1;
              estimateWeeksToUpsert.add(estimateWeek);
              index++;
@@ -559,7 +641,7 @@ public class E2_TimelineWSManager {
     // method to get timeline columns
     public static List<E2_TimelineWS.E2_TimelineColumn> getTimelineColumns(string estimateId){
         List<E2_TimelineWS.E2_TimelineColumn> columns = new List<E2_TimelineWS.E2_TimelineColumn>();        
-        integer width = 50;
+        integer width = 60;
         string behavior = '';
         string editor = '';
         string groupName = 'none';        
@@ -572,9 +654,11 @@ public class E2_TimelineWSManager {
              
               Date weekDate = estimateWeek.Date__c;
               string sDate = weekDate.month() + '/' + weekDate.day() + '/' + weekDate.year(); 
-              string name = weekDate.month() + '/' + weekDate.day();                                 
+              string name = weekDate.month() + '/' + weekDate.day();
+              string nameWithYear = weekDate.month() + '/' + weekDate.day() + '/' + String.valueOf(weekDate.year()).right(2);
               columns.add(new E2_TimelineWS.E2_TimelineColumn(estimateWeek.id, 
-                                            name,
+                                            //name,
+                                            nameWithYear,
                                             estimateWeek.id,
                                             width,
                                             behavior,
@@ -606,21 +690,21 @@ public class E2_TimelineWSManager {
         Map<String, CMC_Estimate_Week__c> estimateWeeksMap = new Map<String, CMC_Estimate_Week__c>();
         for(E2_TimelineWS.MilestoneWeekWrapper mWeek: lstMilestoneWeeks){
             if(!estimateWeeksMap.containsKey(mWeek.weekId))  estimateWeeksMap.put(mWeek.weekId, new CMC_Estimate_Week__c(Id = mWeek.weekId));
-            if(mWeek.type == 'phase'){
+            if(mWeek.type == PHASE_TEXT){
                 CMC_Estimate_Week__c week = estimateWeeksMap.get(mWeek.weekId);
                 week.Phase__c = mWeek.value;
                 week.E2_PhaseColorCode__c = mWeek.colorCode;
                 estimateWeeksMap.put(mWeek.weekId, week);
             } 
             
-            if(mWeek.type == 'milestone') {
+            if(mWeek.type == MILESTONE_TEXT) {
                 CMC_Estimate_Week__c week = estimateWeeksMap.get(mWeek.weekId);
                 week.Milestone__c = mWeek.value;
                 week.E2_MilestoneColorCode__c = mWeek.colorCode;
                 estimateWeeksMap.put(mWeek.weekId, week);
             }
             
-            if(mWeek.type == 'milestone1') {
+            if(mWeek.type == MILESTONE1_TEXT) {
                 CMC_Estimate_Week__c week = estimateWeeksMap.get(mWeek.weekId);
                 week.E2_Milestone1__c = mWeek.value;
                 week.E2_Milestone1ColorCode__c = mWeek.colorCode;
@@ -628,7 +712,7 @@ public class E2_TimelineWSManager {
             }
             
             
-            if(mWeek.type == 'milestone2') {
+            if(mWeek.type == MILESTONE2_TEXT) {
                 CMC_Estimate_Week__c week = estimateWeeksMap.get(mWeek.weekId);
                 week.E2_Milestone2__c = mWeek.value;
                 week.E2_Milestone2ColorCode__c = mWeek.colorCode;
@@ -666,7 +750,7 @@ public class E2_TimelineWSManager {
         }
         
         for(CMC_Estimate_Resource_Week__c rwW : E2_TimelineDataUtil_WS.getEstimateResourceWeekRecords(weekIds, resourceIds)){
-               string key = rwW.Estimate_Resource__c + '|' + rwW.Estimate_Week__c;
+               string key = rwW.Estimate_Resource__c + KEY_SEPARATOR + rwW.Estimate_Week__c;
                resourceWeekMap.put(key, rwW); 
         }
         
@@ -674,14 +758,14 @@ public class E2_TimelineWSManager {
         for(E2_TimelineWS.CellWrapper rWeek: lstWeeks){
             
             String rowType = rWeek.rowId;
-            if(rowType.equalsIgnoreCase('milestone')) {
+            if(rowType.equalsIgnoreCase(MILESTONE_TEXT)) {
                 lstWeekToUpdate.add(new CMC_Estimate_Week__c ( id = rWeek.cellId, Milestone__c = rWeek.value));
-            }else if(rowType.equalsIgnoreCase('milestone1')) {
+            }else if(rowType.equalsIgnoreCase(MILESTONE1_TEXT)) {
                 lstWeekToUpdate.add(new CMC_Estimate_Week__c ( id = rWeek.cellId, E2_Milestone1__c = rWeek.value));
-            }else if(rowType.equalsIgnoreCase('milestone2')) {
+            }else if(rowType.equalsIgnoreCase(MILESTONE2_TEXT)) {
                 lstWeekToUpdate.add(new CMC_Estimate_Week__c ( id = rWeek.cellId, E2_Milestone2__c = rWeek.value));
             }else{
-                String key = rWeek.rowId + '|' + rWeek.cellId;
+                String key = rWeek.rowId + KEY_SEPARATOR + rWeek.cellId;
                 if(resourceWeekMap.containsKey(key)){
                     CMC_Estimate_Resource_Week__c eRW = resourceWeekMap.get(key);
                     eRW.Hours__c = Integer.valueOf(rWeek.value.trim()); 
