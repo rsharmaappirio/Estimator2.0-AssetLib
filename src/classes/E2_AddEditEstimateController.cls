@@ -45,6 +45,8 @@ public class E2_AddEditEstimateController extends E2_Master{
     currencyList = getCurrencyValuesFromRateCard();
     if(this.estimate.id == null){
       psr_id = ApexPages.currentPage().getParameters().get(URL_KEY_PSR_ID);
+      // set the default currency iso code for this estimate
+      this.estimate.CurrencyISOCode = E2_Constants.CURRENCY_ISO_CODE_USD;
     }else{
       psr_id = this.estimate.Presales_Request__c;
     }

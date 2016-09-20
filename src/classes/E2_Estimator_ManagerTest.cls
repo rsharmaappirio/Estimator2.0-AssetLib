@@ -1,8 +1,10 @@
 @isTest(seeAllData=false)
 public class E2_Estimator_ManagerTest {
+    public static pse__Rate_Card__c rateCard;
 
     public static testmethod void testManager(){
-      
+    rateCard = [SELECT Id FROM pse__Rate_Card__c];
+    
     User sysAdmin = E2_Test_Utils.insertUser(E2_Constants.PROFILE_SYS_ADMIN, true);
     
     System.runAs(sysAdmin){
@@ -12,6 +14,7 @@ public class E2_Estimator_ManagerTest {
             List<E2_Derived_Effort__c> derivedEffortsTemplate = 
                                     E2_DataUtil.getDerivedEffort(estimate.E2_Derived_Effort_Template__c);
             E2_Estimator_Manager.generateDerivedHours(estimate.Id, derivedEffortsTemplate);
+            List<E2_Estimate_Rate_Card__c> lstRateCard = E2_Estimator_Manager.getEstimateRateCards(estimate.Id, E2_Constants.CURRENCY_ISO_CODE_USD) ;
         Test.stopTest();  
      }
   }
@@ -65,5 +68,11 @@ public class E2_Estimator_ManagerTest {
     effortLst.add(effort3);
     effortLst.add(effort4);
     insert effortLst; 
+    
+    pse__Region__c region = E2_Test_Utils.insertRegion(true);
+    pse__Practice__c practice = E2_Test_Utils.insertPractice(true);
+    
+    rateCard = E2_Test_Utils.insertRateCard(acc.Id, region.Id, practice.Id, true);
+    
   }
 }

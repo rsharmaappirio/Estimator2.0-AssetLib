@@ -12,7 +12,8 @@ public class E2_MilestoneWSManager {
    public static final string SEPARATOR = '|';    
    public static final string TEXT_SEPARATOR = '-';  
    public static final string DATE_SLASH = '/'; 
-   
+   public static final string MILESTONE1_ID = 'milestone1';
+   public static final string MILESTONE2_ID = 'milestone2';
    
     
     public static string addFromTemplate(string selectedTemplate, string estimateId){
@@ -176,6 +177,8 @@ public class E2_MilestoneWSManager {
         Map<String, E2_Estimate_Milestone_Week__c> milestoneWeekMap = new Map<String, E2_Estimate_Milestone_Week__c>();
         List<E2_Estimate_Milestone_Week__c> lstToInsert = new List<E2_Estimate_Milestone_Week__c>();
         List<E2_Estimate_Milestone_Week__c> lstToUpdate = new List<E2_Estimate_Milestone_Week__c>();
+        List<E2_Estimate_Milestone__c> lstMilestoneToInsert = new List<E2_Estimate_Milestone__c>();
+        List<E2_Estimate_Milestone__c> lstMilestoneToUpdate = new List<E2_Estimate_Milestone__c>();
         
         for(E2_MilestoneWS.RowColumnWrapper rwW : lstColorCodes){
             
@@ -193,19 +196,26 @@ public class E2_MilestoneWSManager {
             string key = rwW.rowId + SEPARATOR + rwW.weekId;
             string text = rwW.value;
             
-            if(milestoneWeekMap.containsKey(key)){
-                E2_Estimate_Milestone_Week__c eRW = milestoneWeekMap.get(key);
-                eRW.Text__c = text;
-                lstToUpdate.add(eRW);
+            if(rwW.weekId == MILESTONE1_ID && String.isNotBlank(rwW.rowId)){
+               lstMilestoneToUpdate.add(new E2_Estimate_Milestone__c( id = rwW.rowId, Milestone1__c = text));
+            }else if(rwW.weekId == MILESTONE2_ID && String.isNotBlank(rwW.rowId)){
+               lstMilestoneToUpdate.add(new E2_Estimate_Milestone__c( id = rwW.rowId, Milestone2__c = text)); 
             }else{
-                E2_Estimate_Milestone_Week__c eRW = new E2_Estimate_Milestone_Week__c(Text__c = text, Estimate_Milestone__c = rwW.rowId, Estimate_Week__c = rwW.weekId);
-                lstToInsert.add(eRW);
+                if(milestoneWeekMap.containsKey(key)){
+                    E2_Estimate_Milestone_Week__c eRW = milestoneWeekMap.get(key);
+                    eRW.Text__c = text;
+                    lstToUpdate.add(eRW);
+                }else{
+                    E2_Estimate_Milestone_Week__c eRW = new E2_Estimate_Milestone_Week__c(Text__c = text, Estimate_Milestone__c = rwW.rowId, Estimate_Week__c = rwW.weekId);
+                    lstToInsert.add(eRW);
+                }
             }
         }
         
        try{
           if(!lstToUpdate.isEmpty()) update lstToUpdate;
           if(!lstToInsert.isEmpty()) insert lstToInsert;
+          if(!lstMilestoneToUpdate.isEmpty()) update lstMilestoneToUpdate;
        }catch(Exception ex){
           return 'Failed: ' + ex.getMessage();
        }        

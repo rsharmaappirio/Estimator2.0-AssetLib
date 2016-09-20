@@ -54,6 +54,56 @@
         </apex:define>
         <apex:define name="body">
             <style rel="stylesheet" type="text/css">
+                a.delete_button, a.delete_button:hover, a.delete_button:active, a.delete_button:focus{
+                    background: transparent url({!$Resource.E2_SLDS1}/assets/icons/utility/delete_60.png) no-repeat scroll center center / 15px 15px;
+                    height: 15px;
+                    width: 15px;
+                    display:block;
+                    text-decoration: none;
+                    outline: none; 
+                }
+                a.push_button{
+                    background: transparent url({!$Resource.E2_SLDS1}/assets/icons/utility/push_60.png) no-repeat scroll center center / 15px 15px;
+                    height: 15px;
+                    width: 15px;
+                    display:block;
+                }
+                a.replace_button{
+                    
+                    background: transparent url({!$Resource.E2_SLDS1}/assets/icons/utility/replace_60.png) no-repeat scroll center center / 15px 15px;
+                    height: 15px;
+                    width: 15px;
+                    display:block;
+                }
+                a.setup_button, a.setup_button:hover, a.setup_button:active, a.setup_button:focus{
+                    
+                    background: transparent url({!$Resource.E2_SLDS1}/assets/icons/utility/setup_60.png) no-repeat scroll center center / 15px 15px;
+                    height: 15px;
+                    width: 15px;
+                    display:block;
+                    text-decoration: none;
+                    outline: none; 
+                }
+                
+                a.excel_button, a.excel_button:hover, a.excel_button:active, a.excel_button:focus{
+                    background: transparent url({!$Resource.E2_SLDS1}/assets/icons/doctype/excel_60.png) no-repeat scroll center center / 25px 25px;
+                    height: 25px;
+                    width: 25px;
+                    display:block;
+                    text-decoration: none;
+                    outline: none; 
+                }
+                
+                a.delete_button_big, a.delete_button_big:hover, a.delete_button_big:active, a.delete_button_big:focus{
+                    background: transparent url({!$Resource.E2_SLDS1}/assets/icons/utility/delete_60.png) no-repeat scroll center center / 25px 25px;
+                    height: 25px;
+                    width: 25px;
+                    display:block;
+                    text-decoration: none;
+                    outline: none; 
+                }
+                
+            
                 /**.reallyHidden { display: none !important;}**/
                 .Fixed-Header-Style{font-weight:bold;}
                 .custom-cell{text-align:center;}
@@ -707,8 +757,9 @@
                                 </div>  
                                <br/>    
                                <a id='downloadLink'></a>
-                               <a id="" href="javascript:void(0);" onclick="return Milestone.downloadExcel_Click();">Download Grid (XLSX)</a>&nbsp;|&nbsp;
-                               <a id="" href="javascript:void(0);" onclick="return Milestone.deleteAllRows();">Delete All Rows</a>
+                               <!--a id="" href="javascript:void(0);" onclick="return Milestone.downloadExcel_Click();">Download Grid (XLSX)</a-->
+                               <a id="" href="javascript:void(0);" class="excel_button" style=" padding-bottom: 2px;display:inline-block;" title="Download grid in Excel format" onclick="return Milestone.downloadExcel_Click();">&nbsp;</a>
+                               <a id="" href="javascript:void(0);" class="delete_button_big" style=" padding-bottom: 2px;display:inline-block;" title="Remove all Rows in grid" onclick="return Milestone.deleteAllRows();">&nbsp;</a> 
                                <!--input type="submit" onclick="return Timeline.downloadExcel_Click();" class="slds-button slds-button--neutral slds-button--brand save-button-custom" title="Download Excel" value="Download Excel"/-->
                                
                                <div style="position:relative">

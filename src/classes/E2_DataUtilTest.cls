@@ -10,10 +10,17 @@ public class E2_DataUtilTest {
     public static E2_Derived_Effort_Group__c derEffGroup;
     public static List<E2_Derived_Effort__c> derivedEfforts;
     public static E2_Capacity__c capacity;
+    public static E2_Question__c question;
+    public static E2_Answer__c answer;
+    public static User sysAdmin = E2_Test_Utils.insertUser(E2_Constants.PROFILE_SYS_ADMIN, true);
+    public static E2_Favourite_Scope__c fav_scope;
+    public static pse__Rate_Card__c rateCard;
+    public static E2_Estimate_Rate_Card__c estimateRC;
+    public static E2_Milestone_Library__c milestoneLib;
+    public static E2_Action_Scope__c actionScope;
+    public static PermissionSet permission;
         
     public static testmethod void testE2_TreeNode() {
-    User sysAdmin = E2_Test_Utils.insertUser(E2_Constants.PROFILE_SYS_ADMIN, true);
-    
     
     System.runAs(sysAdmin){
         createTestData();
@@ -29,6 +36,15 @@ public class E2_DataUtilTest {
             derEffGroup = [SELECT Id FROM E2_Derived_Effort_Group__c];
             derivedEfforts = [SELECT Id FROM E2_Derived_Effort__c ];
             capacity = [SELECT ID FROM E2_Capacity__c];
+            question = [SELECT Id FROM E2_Question__c];
+            answer = [SELECT Id FROM E2_Answer__c];
+            fav_scope = [SELECT Id, User__c, Scope__c FROM E2_Favourite_Scope__c];
+            rateCard = [SELECT Id FROM pse__Rate_Card__c];
+            estimateRC = [SELECT Id FROM E2_Estimate_Rate_Card__c];
+            milestoneLib = [SELECT Id FROM E2_Milestone_Library__c ];
+            actionScope = [SELECT Id FROM E2_Action_Scope__c];
+            permission = [SELECT Id FROM PermissionSet WHERE Name = :E2_Constants.STM_PERMISSION_SET];
+             
             Set<Id> estimateIds = new Set<Id>();
             estimateIds.add(estimate.Id);
             List<Presales_Request__c> psrs = E2_dataUtil.getPSRDetailOnPsrId(psr.Id);
@@ -54,6 +70,37 @@ public class E2_DataUtilTest {
             List<E2_Recommended_Asset__c> lstRecommendedAssets = E2_DataUtil.getRecommendedAssetsForScope(scopeTemplate.Id);
             system.assertEquals(lstRecommendedAssets.size(), 1);
             system.assertNotEquals(E2_DataUtil.getAssetsMap(new Set<Id>{lstRecommendedAssets[0].Asset__c}), null);
+            List<E2_Scope__c> lstScope = E2_DataUtil.getActiveChildScopesOfEstimate(estimate.Id);
+            system.assertEquals(lstScope.size(), 2);
+            
+            lstScope = E2_DataUtil.getScopesOnTemplate(scopeTemplate.Id);
+            system.assertEquals(lstScope.size(), 1);
+            system.assertEquals(E2_DataUtil.getScopeQuestions(favScope.Id).size(), 1);
+            Set<Id> scopeId = new Set<Id>();
+            scopeId.add(favScope.Id);
+            system.assertEquals(E2_DataUtil.getParentScopeIds(scopeId).size(), 1);
+            
+            List<E2_Favourite_Scope__c> favscopeLst =  E2_DataUtil.getFavScopeForCurrentUser();
+            system.assertEquals(favscopeLst.size(), 1);
+            favscopeLst = E2_DataUtil.getFavScopeForCurrentUserAndScopeId(fav_scope.Id);
+            system.assertNotEquals(favscopeLst.size(), 1);
+            system.assertEquals(E2_DataUtil.getEstimateRateCardRecs(estimate.Id).size(), 1);
+            system.assertEquals(E2_DataUtil.getEstimateRateCards(estimate.Id).size(), 1);
+            Set<Id> rateCardIds = new Set<Id>();
+            rateCardIds.add(rateCard.Id);
+            system.assertEquals(E2_DataUtil.getpseRateCardRecs(rateCardIds, E2_Constants.CURRENCY_ISO_CODE_USD).size(), 0);
+            system.assertEquals(E2_DataUtil.getPSERateCardRecords(E2_Constants.CURRENCY_ISO_CODE_USD).size(), 1);
+            system.assert(E2_DataUtil.getE2Questions(question.Id) <> null);
+            system.assertEquals(E2_DataUtil.getMilestoneScheduleTemplates().size(), 1);
+            set<Id> answers = new set<Id>();
+            answers.add(answer.Id);
+            system.assertEquals(E2_DataUtil.getRelatedScopes(answers) .size(), 1);
+            system.assertEquals(E2_DataUtil.getPermissionSet().size(), 1);
+            List<PermissionSet> permissionSetIds = new List<PermissionSet>();
+            permissionSetIds.add(permission);
+            User testUser = E2_DataUtil.getPermissionSetAssignmentForUser(permissionSetIds);
+            system.assert(testUser <> null);
+            
         Test.stopTest();
     }
    }
@@ -115,5 +162,22 @@ public class E2_DataUtilTest {
       	insert lstAssets;
       	
       	E2_Recommended_Asset__c recommendedAsset = E2_Test_Utils.insertRecommendedAsset(scopeTemplate.id, lstAssets[0].id, true);
+      	
+      	question = E2_Test_Utils.insertQuestions(favScope.Id, true);
+      	answer = E2_Test_Utils.insertAnswer(question.Id, true);
+      	
+      	fav_scope = new E2_Favourite_Scope__c(Scope__c = favScope.Id, User__c = sysAdmin.Id);
+      	insert fav_scope;
+      	
+      	pse__Region__c region = E2_Test_Utils.insertRegion(true);
+        pse__Practice__c practice = E2_Test_Utils.insertPractice(true);
+    
+        rateCard = E2_Test_Utils.insertRateCard(acc.Id, region.Id, practice.Id, true);
+        estimateRC = E2_Test_Utils.insertEstimateRateCard(estimate.Id, true);
+        
+        milestoneLib = E2_Test_Utils.insertMilestoneLibrary(true);
+        actionScope = new E2_Action_Scope__c(Answer__c = answer.Id, Scope__c = favScope.Id);
+        insert actionScope;
+        
     }
 }

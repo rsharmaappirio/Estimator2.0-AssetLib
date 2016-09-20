@@ -241,7 +241,7 @@ public class E2_DataUtil {
   }
   
   public static List<E2_Estimate_Rate_Card__c> getEstimateRateCards(id estimateId){
-     return [SELECT Id, Resource_Role__c, Estimate__c, Region__c, 
+     return [SELECT Id, Resource_Role__c, Estimate__c, Region__c, CurrencyIsoCode,
     				Practice__c, Code__c, Rate_Card__c, Resource_Cost__c,
     				Bill_Rate__c, Discounted_Rate__c, Category__c,
     				Rate_Card__r.pse__Region__c, Rate_Card__r.pse__Practice__c 

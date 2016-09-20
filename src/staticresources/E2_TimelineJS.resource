@@ -2314,7 +2314,7 @@ var Timeline = {
                     //}
                     if(typeof Timeline.fixedRowsTypes[data[row].id] != 'undefined' || dataContext.id == '') return "";
                     //return "<button style='color:#4996D0; height: 16px;line-height: 16px;' rowId='" + dataContext.id + "' onclick='return false;'>Auto</button>";
-                    return "<a href='javascript:void(0);' title='Auto fill hours' class='setup_button' style='color:#4996D0;' rowId='" + dataContext.id + "' onclick='return false;'>&nbsp;</a>";
+                    return "<a href='javascript:void(0);' title='Double click to auto fill hours' class='setup_button' style='color:#4996D0;' rowId='" + dataContext.id + "' onclick='return false;'>&nbsp;</a>";
               }
               ,editor: AutoFillEditor
         }];
@@ -2348,9 +2348,9 @@ var Timeline = {
                     }
                 },{
                     id: "capacityneedshours",
-                    name: "Capacity Needs",
+                    name: "Capacity Needs (Hrs)",
                     field: "capacityneedshours",
-                    width: 100,
+                    width: 130,
                     selectable: false,
                     resizable: true,
                     focusable : false,
@@ -2362,13 +2362,15 @@ var Timeline = {
                     ,asyncPostRender: function(cellNode, row, dataContext, colDef) {
                         //console.log('postrender');
                         if(row < Timeline.fixedRows){
-                            if(data[row].id == Timeline.fixedRowsTypes.capacityneedsperphase.id){
+                            if(data[row].id == Timeline.fixedRowsTypes.milestone2.id){
+                                $(cellNode).empty().html('# Hours Scoped').css(Timeline.highlight_cols_css);
+                            }else if(data[row].id == Timeline.fixedRowsTypes.capacityneedsperphase.id){
                                 
                                 var totalHours = 0;
                                 if(typeof capacityNeeds_JSON != 'undefined' && typeof capacityNeeds_JSON.TotalHours != 'undefined'){
                                     totalHours = capacityNeeds_JSON.TotalHours;
                                 }
-                                 $(cellNode).empty().html(totalHours).css(Timeline.highlight_cols_css);
+                                $(cellNode).empty().html(totalHours).css(Timeline.highlight_cols_css);
                                  
                             }else if(data[row].id == Timeline.fixedRowsTypes.total.id){
                                 
@@ -2604,7 +2606,7 @@ var Timeline = {
                       }, 'capacityneedsperphase' : {
                           id : 'capacityneedsperphase',
                           defaultValue : 0
-                          , rowLabel: 'CAPACITY NEEDS PER PHASE'
+                          , rowLabel: 'CAPACITY NEEDS PER PHASE (Hrs)'
                           , enableColorCodeContextMenu : false,
                           apply_css : false
                           ,editable : false
@@ -2613,7 +2615,7 @@ var Timeline = {
                       },'hoursperphase' : {
                           id : 'hoursperphase',
                           defaultValue : 0
-                          , rowLabel: 'HOURS PER PHASE'
+                          , rowLabel: 'HOURS PER PHASE (Hrs)'
                           , enableColorCodeContextMenu : false,
                           apply_css : false
                           ,editable : false
@@ -2622,7 +2624,7 @@ var Timeline = {
                       }, 'total' : {
                           id : 'total',
                           defaultValue : 0
-                          , rowLabel: 'TOTAL HRS/WEEK'
+                          , rowLabel: 'TOTAL PER WEEK (Hrs)'
                           , enableColorCodeContextMenu : false,
                           apply_css : false
                           ,editable : false

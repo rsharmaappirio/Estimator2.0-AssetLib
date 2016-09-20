@@ -165,12 +165,13 @@ public with sharing class E2_TimelineController extends E2_Master {
             for(pse__Rate_Card__c rateCard : E2_DataUtil.getpseRateCardRecs(rateCardIds, currencyCode)) {
                 newRateCardsToInsert.add(getEstimateRateCard(rateCard, currencyCode));
             }
-            
+            system.debug('estimateRateCards>>' +estimateRateCards);
             //update the estimate rate card values 
             for(E2_Estimate_Rate_Card__c erateCard : estimateRateCards){
                 boolean hasChanged = false;
                 // when original rate does not match bill rate 
                 if(erateCard.Bill_Rate__c <> erateCard.Rate_Card__r.pse__Suggested_Bill_Rate__c){
+                    system.debug('erateCard>>' +erateCard);
                     if(erateCard.Bill_Rate__c == erateCard.Discounted_Rate__c){
                         erateCard.Discounted_Rate__c = erateCard.Rate_Card__r.pse__Suggested_Bill_Rate__c;
                     }
@@ -179,6 +180,7 @@ public with sharing class E2_TimelineController extends E2_Master {
                 }
                 // when original cost doesn't match the resource cost
                 if(erateCard.Resource_Cost__c <> erateCard.Rate_Card__r.pse__Average_Cost_Rate__c){
+                    system.debug('erateCard==>>' +erateCard);
                     erateCard.Resource_Cost__c = erateCard.Rate_Card__r.pse__Average_Cost_Rate__c;
                     hasChanged = true;
                 }
