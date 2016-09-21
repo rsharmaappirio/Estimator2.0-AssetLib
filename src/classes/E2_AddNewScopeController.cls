@@ -154,6 +154,8 @@ public with sharing class E2_AddNewScopeController {
 		   // Code moved after scope upsert to get id of new scopes
 		   for(E2_Scope__c scope : scopeListToUpsert) {
 		   	String uniqueKey = scope.Id +'-'+ UserInfo.getUserId();
+		   	system.debug('uniqueKey>>'+uniqueKey);
+		   	system.debug('scope.Is_Favourite__c>>'+scope.Is_Favourite__c);
             if(scope.Is_Favourite__c == true && !favScopes.containsKey(uniqueKey)){
 		    	E2_Favourite_Scope__c favSC = new E2_Favourite_Scope__c();
 				favSC.Scope__c = scope.Id;

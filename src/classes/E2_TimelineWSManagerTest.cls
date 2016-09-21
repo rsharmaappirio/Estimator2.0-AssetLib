@@ -6,6 +6,8 @@ public class E2_TimelineWSManagerTest {
   public static CMC_Estimate_Resource__c resource;
   public static CMC_Estimate_Week__c week;
   public static CMC_Estimate_Resource_Week__c resWeek;
+  public static E2_Estimate_Milestone__c milestone;
+  public static E2_Estimate_Milestone_Week__c milestoneWeek;
   
   //test method
   public static testmethod void testWSMangerMethods(){
@@ -15,6 +17,9 @@ public class E2_TimelineWSManagerTest {
     resource = [SELECT Id FROM CMC_Estimate_Resource__c];
     week = [SELECT Id FROM CMC_Estimate_Week__c];
     resWeek = [SELECT Id FROM CMC_Estimate_Resource_Week__c];
+    milestone = [SELECT Id FROM E2_Estimate_Milestone__c ];
+    milestoneWeek = [SELECT Id FROM E2_Estimate_Milestone_Week__c ];
+      
     User sysAdmin = E2_Test_Utils.insertSysAdminUser(true);    
     System.runAs(sysAdmin){
       //start test
@@ -25,8 +30,8 @@ public class E2_TimelineWSManagerTest {
         system.assert(rcList.size() > 0);
         string phase = E2_TimelineWSManager.updatePhase(week.Id, 'Plan');
         system.assert(phase <> null);
-        string milestone = E2_TimelineWSManager.updateMilestone(week.Id, null);
-        system.assert(milestone <> null);
+        string milestoneStr = E2_TimelineWSManager.updateMilestone(week.Id, null);
+        system.assert(milestoneStr <> null);
         
         String jsonColor1 = '[{"weekId":"' + week.id + '", "value":"Green", "type":"phase"}]';
 	    string colorStr1 = E2_TimelineWSManager.updateColorCode(jsonColor1);
@@ -118,8 +123,8 @@ public class E2_TimelineWSManagerTest {
         system.assert(deleteCol <> null);
         
         String jsonMilestone = '[{"weekId":"' + week.Id + '", "value":"milestone",' + '"colorCode":"Red",' + '"type":"phase"}]';
-        string milestoneStr = E2_TimelineWSManager.updateMilestoneWeeks(jsonMilestone);
-        system.assert(milestoneStr <> null);
+        string milestoneStr0 = E2_TimelineWSManager.updateMilestoneWeeks(jsonMilestone);
+        system.assert(milestoneStr0 <> null);
         
         String jsonMilestone1 = '[{"weekId":"' + week.Id + '", "value":"milestone",' + '"colorCode":"Red",' + '"type":"milestone"}]';
         string milestoneStr1 = E2_TimelineWSManager.updateMilestoneWeeks(jsonMilestone1);
@@ -132,6 +137,14 @@ public class E2_TimelineWSManagerTest {
         String jsonMilestone3 = '[{"weekId":"' + week.Id + '", "value":"milestone",' + '"colorCode":"Red",' + '"type":"milestone2"}]';
         string milestoneStr3 = E2_TimelineWSManager.updateMilestoneWeeks(jsonMilestone3);
         system.assert(milestoneStr3 <> null);
+        
+        String jsonCell = '[{"rowId":"' + resource.Id + '", "cellId":"' + week.Id +'", "value":1}]';
+        string resourceWeek = E2_TimelineWSManager.updateResourceWeeks(jsonCell);
+        system.assert(resourceWeek <> null);
+        
+        String jsonCell1 = '[{"rowId":"' + milestone.Id + '", "cellId":"' + week.Id +'", "value":1}]';
+        string resourceWeek1 = E2_TimelineWSManager.updateResourceWeeks(jsonCell1);
+        system.assert(resourceWeek1 <> null);
         
       //stop test
       Test.stopTest();
@@ -162,7 +175,8 @@ public class E2_TimelineWSManagerTest {
     resource = E2_Test_Utils.insertCMCEstimateRes(estimate.Id, true);
     week = E2_Test_Utils.insertEstimateWeek(estimate.Id, true);
     resWeek = E2_Test_Utils.insertCMCEstimateResWeek(resource.Id, week.Id, true);
-    
+    milestone = E2_Test_Utils.insertEstimateMilestone(estimate.Id, true);
+    milestoneWeek = E2_Test_Utils.insertMilestoneWeek(milestone.Id, week.Id, true);
     
     
     

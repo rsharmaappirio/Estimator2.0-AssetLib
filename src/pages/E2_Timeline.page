@@ -94,6 +94,16 @@
                     outline: none; 
                 }
                 
+                a.question_button, a.question_button:hover, a.question_button:active, a.question_button:focus{
+                    
+                    background: transparent url({!$Resource.E2_SLDS1}/assets/icons/utility/question_60.png) no-repeat scroll center center / 12px 12px;
+                    height: 12px;
+                    width: 12px;
+                    display: inline-block;
+                    text-decoration: none;
+                    outline: none; 
+                }
+                
                 
                 /**.reallyHidden { display: none !important;}**/
                 .Fixed-Header-Style{font-weight:bold;}
@@ -710,6 +720,10 @@
                         color: #ffffff;
                         text-shadow: none;
                     }
+                    
+                    tr.jaipurrow{
+                        background-color:#f5ffbf;
+                    }
             </style>
             <apex:form >
                 <apex:pageMessages />
@@ -838,7 +852,7 @@
                                                 </div>
                                             </div>
                                     </div> 
-                                     <table id="manageratecardtable" class="slds-table slds-max-medium-table--stacked">
+                                     <table id="manageratecardtable" class="slds-table slds-table--bordered slds-table--cell-buffer slds-table--col-bordered slds-no-row-hover">
                                         <thead>
                                            <tr class="slds-text-heading--label">
                                               <th class="slds-is-sortable" scope="col">
@@ -872,12 +886,12 @@
                                                  <apex:outputText rendered="{!!(rcID == estimateratecard.Practice__c)}">
                                                      <tr childCss="child_{!SUBSTITUTE(estimateratecard.Practice__c, " ", "")}" class="header expand header_{!SUBSTITUTE(estimateratecard.Practice__c, " ", "")}"><td colspan="8" style="text-transform: uppercase;cursor:pointer;background-color:#eeeeee;color:#000000;font-weight:bold;font-style:italic;"><span class="sign"></span> &nbsp; Practice: {!estimateratecard.Practice__c} &nbsp; </td></tr>
                                                  </apex:outputText>
-                                                 <tr class="slds-hint-parent child_{!SUBSTITUTE(estimateratecard.Practice__c, " ", "")}">
+                                                 <tr class="slds-hint-parent child_{!SUBSTITUTE(estimateratecard.Practice__c, " ", "")} {!IF(CONTAINS(estimateratecard.Region__c, 'Jaipur'), 'jaipurrow', '')}">
                                                     <td class="slds-truncate " data-label="Region">
                                                       <apex:outputfield value="{!estimateratecard.Region__c}"/>
                                                     </td>
-                                                    <td class="slds-truncate " data-label="Role">
-                                                        <apex:outputfield value="{!estimateratecard.Resource_Role__c}"/>
+                                                    <td class="slds-truncate " data-label="Role" style="font-weight:bold;">
+                                                        <apex:outputfield value="{!estimateratecard.Resource_Role__c}"/>&nbsp;<a tabindex="-1" href="javascript:void(0);" class="question_button" title="{!IF(estimateratecard.Rate_Card__r.Description__c = NULL, 'No details available', estimateratecard.Rate_Card__r.Description__c)}">&nbsp;</a>
                                                     </td>
                                                     <td class="slds-truncate " data-label="Rate Card">
                                                          <apex:outputfield value="{!estimateratecard.Bill_Rate__c}"/>

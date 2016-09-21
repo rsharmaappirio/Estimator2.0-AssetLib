@@ -93,6 +93,7 @@ public class E2_EditScopeControllerTest {
       System.assertEquals(scopeList[0].Efforts__r.size(), 3, '3 efforts should saved');
       
       for(E2_EditScopeController.Effort eff: scope_wrap.efforts){
+         system.assertEquals(eff.isCloned, false);    
          eff.remove();    
       }         
       controller.saveScope();     
@@ -192,6 +193,7 @@ public class E2_EditScopeControllerTest {
       controller.saveScope();     
       
       system.assertEquals([SELECT Id FROM E2_Favourite_Scope__c WHERE Scope__c =:scope.Id].size(), 1); 
+
       //stop test
     Test.stopTest(); 
     } 
@@ -226,7 +228,9 @@ public class E2_EditScopeControllerTest {
       																			WHERE Scope__c = :scope.Id]);     
       System.assertEquals(relatedAssets.size(), 0);
       
-        
+      controller.resetChildScopesOnException();
+      controller.addNewQuestion();
+      controller.updateFormStatus();
     //stop test
     Test.stopTest();  
     }
@@ -269,9 +273,9 @@ public class E2_EditScopeControllerTest {
     
     List<CMC_Asset__c> lstAssets = new List<CMC_Asset__c>();
     lstAssets.add(E2_Test_Utils.insertAsset('Test Asset 1', 'Test asset record', 'Component', 'User Interface', 
-     									        'Apex', 'Salesforce;Data integration', 1, false));
+     									        'Apex', 'Salesforce;Data integration', 1, 'Active', false));
     lstAssets.add(E2_Test_Utils.insertAsset('Test Asset 2', 'Test asset record', 'Component', 'User Interface', 
-      									        'Apex', 'Salesforce;Data integration', 1, false));
+      									        'Apex', 'Salesforce;Data integration', 1, 'Active', false));
     insert lstAssets;
       	
     recommendedAsset = E2_Test_Utils.insertRecommendedAsset(scope1.id, lstAssets[0].id, true);

@@ -25,7 +25,7 @@ public class E2_DataUtilTest {
     System.runAs(sysAdmin){
         createTestData();
         Test.startTest();
-        	Presales_Request__c psr = [SELECT Id FROM Presales_Request__c];
+            Presales_Request__c psr = [SELECT Id FROM Presales_Request__c];
             estimate = [SELECT Id FROM CMC_Presales_LOE__c];
             scopeTemplate = [SELECT Id FROM E2_Scope__c WHERE RecordTypeId = :rtTemplateId];
             favScope = [SELECT Id FROM E2_Scope__c WHERE RecordTypeId = :rtScopeId AND Parent_Scope__c = null];
@@ -156,20 +156,20 @@ public class E2_DataUtilTest {
         
         List<CMC_Asset__c> lstAssets = new List<CMC_Asset__c>();
         lstAssets.add(E2_Test_Utils.insertAsset('Test Asset 1', 'Test asset record', 'Component', 'User Interface', 
-      									        'Apex', 'Salesforce;Data integration', 1, false));
+                                                'Apex', 'Salesforce;Data integration', 1, 'Active', false));
         lstAssets.add(E2_Test_Utils.insertAsset('Test Asset 2', 'Test asset record', 'Component', 'User Interface', 
-      									        'Apex', 'Salesforce;Data integration', 1, false));
-      	insert lstAssets;
-      	
-      	E2_Recommended_Asset__c recommendedAsset = E2_Test_Utils.insertRecommendedAsset(scopeTemplate.id, lstAssets[0].id, true);
-      	
-      	question = E2_Test_Utils.insertQuestions(favScope.Id, true);
-      	answer = E2_Test_Utils.insertAnswer(question.Id, true);
-      	
-      	fav_scope = new E2_Favourite_Scope__c(Scope__c = favScope.Id, User__c = sysAdmin.Id);
-      	insert fav_scope;
-      	
-      	pse__Region__c region = E2_Test_Utils.insertRegion(true);
+                                                'Apex', 'Salesforce;Data integration', 1, 'Active', false));
+        insert lstAssets;
+        
+        E2_Recommended_Asset__c recommendedAsset = E2_Test_Utils.insertRecommendedAsset(scopeTemplate.id, lstAssets[0].id, true);
+        
+        question = E2_Test_Utils.insertQuestions(favScope.Id, true);
+        answer = E2_Test_Utils.insertAnswer(question.Id, true);
+        
+        fav_scope = new E2_Favourite_Scope__c(Scope__c = favScope.Id, User__c = sysAdmin.Id);
+        insert fav_scope;
+        
+        pse__Region__c region = E2_Test_Utils.insertRegion(true);
         pse__Practice__c practice = E2_Test_Utils.insertPractice(true);
     
         rateCard = E2_Test_Utils.insertRateCard(acc.Id, region.Id, practice.Id, true);

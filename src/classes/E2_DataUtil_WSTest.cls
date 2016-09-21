@@ -97,12 +97,12 @@ public class E2_DataUtil_WSTest {
         
         List<CMC_Asset__c> lstAssets = new List<CMC_Asset__c>();
         lstAssets.add(E2_Test_Utils.insertAsset('Test Asset 1', 'Test asset record', 'Component', 'User Interface', 
-      									        'Apex', 'Salesforce;Data integration', 1, false));
+                                                'Apex', 'Salesforce;Data integration', 1, 'Active', false));
         lstAssets.add(E2_Test_Utils.insertAsset('Test Asset 2', 'Test asset record', 'Component', 'User Interface', 
-      									        'Apex', 'Salesforce;Data integration', 1, false));
-      	insert lstAssets;
-      	
-      	recommendedAsset = E2_Test_Utils.insertRecommendedAsset(scopeTemplate.id, lstAssets[0].id, true);
+                                                'Apex', 'Salesforce;Data integration', 1, 'Active', false));
+        insert lstAssets;
+        
+        recommendedAsset = E2_Test_Utils.insertRecommendedAsset(scopeTemplate.id, lstAssets[0].id, true);
     }
 
 }

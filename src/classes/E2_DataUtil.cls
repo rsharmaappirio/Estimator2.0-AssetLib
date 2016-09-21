@@ -234,7 +234,7 @@ public class E2_DataUtil {
     				Practice__c, Code__c, Rate_Card__c, Resource_Cost__c,
     				Bill_Rate__c, Discounted_Rate__c, Category__c,
     				Rate_Card__r.pse__Region__c, Rate_Card__r.pse__Practice__c, 
-    				Rate_Card__r.pse__Average_Cost_Rate__c, Rate_Card__r.pse__Suggested_Bill_Rate__c 
+    				Rate_Card__r.pse__Average_Cost_Rate__c, Rate_Card__r.pse__Suggested_Bill_Rate__c
     				FROM E2_Estimate_Rate_Card__c 
     				WHERE Estimate__c =: estimateId
     				ORDER BY Practice__c ASC, Region__c ASC, Resource_Role__c ASC];
@@ -245,12 +245,19 @@ public class E2_DataUtil {
     				Practice__c, Code__c, Rate_Card__c, Resource_Cost__c,
     				Bill_Rate__c, Discounted_Rate__c, Category__c,
     				Rate_Card__r.pse__Region__c, Rate_Card__r.pse__Practice__c 
+    				, Rate_Card__r.Description__c
     				FROM E2_Estimate_Rate_Card__c 
     				WHERE Estimate__c =: estimateId
     				ORDER BY Practice__c ASC, Region__c ASC, Resource_Role__c ASC];
   }
   
   public static List<pse__Rate_Card__c> getpseRateCardRecs(Set<Id>rateCardIds, String currencyCode){
+      // we have special condition setup to retrieve the pse rate card for selected currency code in an estimate record. 
+      // user should be able to fetch rate card in following conditions:
+      // 1. No Start/End defined - When start date and end date both are NULL
+      // 2. No End date defined but start date - When there is no end date defined and start date is less than equals today
+      // 3. No Start date defined but end date - When there is no start date defined and end date is greater than today
+      // 4. Both start date and end date defined - start date is less than equals today and end date is greater than equals to today
      return [SELECT Id, pse__Average_Cost_Rate__c, 
 					pse__Practice__r.Name, Code__c, 
 		            pse__Region__r.Name, pse__Role__c, pse__Suggested_Bill_Rate__c 

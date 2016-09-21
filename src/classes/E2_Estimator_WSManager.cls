@@ -481,11 +481,14 @@ public class E2_Estimator_WSManager {
 	  	
 	  	List<E2_AssetWrapper> lstAssetsWrapper = new List<E2_AssetWrapper>();
 	  	try{
+	  	    system.debug('searchStr>>'+searchStr); 
+	  	    system.debug('exisitingAssetIds>>'+exisitingAssetIds); 
 	  		List<List<SObject>> results = E2_DataUtil_WS.getRelatedAssets(searchStr, exisitingAssetIds);
+	  		system.debug('results>>'+results); 
 	  		listAssets = (List<CMC_Asset__c>)results[0];
 	  		
 	  		Map<Id, String> mapAssetContributors = new Map<Id, String>();
-	  		
+	  		system.debug('listAssets>>'+listAssets); 
 	  		for(CMC_Asset_Contributor__c assetContibutor : E2_DataUtil_WS.getAssetContributors(listAssets)){
 	  		  system.debug('==assetContibutor>>'+assetContibutor);
 	  			if(!mapAssetContributors.containsKey(assetContibutor.Asset__c)){

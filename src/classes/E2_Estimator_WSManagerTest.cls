@@ -8,6 +8,8 @@ public class E2_Estimator_WSManagerTest {
   public static CMC_Asset_Contributor__c asetContributor;
   public static E2_Question__c ques1;
   public static E2_Answer__c ans1;
+  public static E2_Action_Scope__c actionScope;
+  public static List<CMC_Asset__c> lstAssets;
   
   public static testmethod void testE2_TreeNode(){
     estimate = [SELECT Id, Name FROM CMC_Presales_LOE__c];
@@ -30,7 +32,12 @@ public class E2_Estimator_WSManagerTest {
                          FROM E2_Scope__c WHERE Parent_Scope__c = :childSC1.Id];              
     
     asetContributor = [Select c.Primary_Contact__c, c.Hours_Contributed__c, c.Contact__c, c.Asset__c 
-                         From CMC_Asset_Contributor__c c];              
+                         From CMC_Asset_Contributor__c c];  
+    actionScope = [SELECT Id FROM E2_Action_Scope__c];
+    lstAssets = [SELECT Id, Short_Description__c, Technologies__c, Release_Stage__c, Asset_Type__c, Asset_SubType__c, Appirio_Services_Practice__c,
+                   Number_of_Uses__c, Is_Recommended__c, Total_Hours__c, Reuse_LOE__c 
+                   FROM CMC_Asset__c];
+    
     User sysAdmin = E2_Test_Utils.insertUser(E2_Constants.PROFILE_SYS_ADMIN, true);
     
     System.runAs(sysAdmin){
@@ -45,13 +52,10 @@ public class E2_Estimator_WSManagerTest {
             
       treeLst = E2_Estimator_WSManager.retrieveAllScopeTreeNodesOnEstimateId(estimate.Id);
       System.assertEquals(treeLst.size(), 4, 'Doesnot return 2 scopes associated with the estimate');
-      
-      
-      
+
       E2_TreeNodeMap treeMap = E2_Estimator_WSManager.getChildScopeDetailNodes(parentSC.Id);
       System.assertEquals(treeMap.nodeList.size(), 1, 'Doesnot return 1 scope child to parent scope');
-      
-      
+
       treeMap = E2_Estimator_WSManager.getScopeDetailNodes(childSC.Id);
       System.assertEquals(childSC.Id, treeMap.scope_id, 'returns same scope id');
       System.assertEquals(treeMap.nodeList.size(), 1, 'Doesnot return 1 scope related to scope id');
@@ -61,31 +65,18 @@ public class E2_Estimator_WSManagerTest {
       
       treeLst = E2_Estimator_WSManager.getImmediateChildNodesWithEffortsOnScopeId(parentSC.Id);
       System.assertEquals(treeLst.size(), 1 + 1, 'Doesnot return the only immediate child scope and only effort to this scope');      
-      
-      //treeMap = E2_Estimator_WSManager.getClonedNodes(childSC.Id, estimate.Id, parentSC.Id);
-      /*System.assertEquals(childSC.Id, treeMap.scope_id, 'returns same scope id');
-      System.assertEquals(treeMap.nodeList.size(), 1, 'Doesnot return 1 scope related to scope id');
-      System.assertEquals(treeMap.nodeList[0].sourceId, childSC.id, 'source id is populated'); 
-      System.assertNotEquals(treeMap.nodeList[0].id, childSC.id, 'source id <> scope id'); 
-      */
-      //treeMap = E2_Estimator_WSManager.getChildCloneNodes(parentSC.Id, parentSC.Id, estimate.Id);
-      
-      //commented as getting error during asset related code coverage
+
       String scopeIds = parentSC.Id+ ','+ child_childSC.Id+ ',' + parentSC1.Id+ ','+ child_childSC1.Id ; 
       String cloned_msg = E2_Estimator_WSManager.getClonedNodesTemplate(scopeIds, scopeGroup.Id, parentSC.Id);
       system.assertEquals(cloned_msg, 'Success', 'Success message is returned');
-      /*System.assertEquals(childSC.Id, treeMap.scope_id, 'returns same scope id');
-      System.assertEquals(treeMap.nodeList.size(), 1, 'Doesnot return 1 scope related to scope id');
-      System.assertEquals(treeMap.nodeList[0].sourceId, childSC.id, 'source id is populated'); 
-      System.assertNotEquals(treeMap.nodeList[0].id, childSC.id, 'source id <> scope id'); */
-      
-      //treeMap = E2_Estimator_WSManager.getChildCloneNodesTemplate(parentSC.Id, parentSC.Id, scopeGroup.Id);
       
       treeLst1 = E2_Estimator_WSManager.retrieveAllScopeTreeNodesOnScopeGroup(scopeGroup.Id);
       System.assertEquals(treeLst1.size(), 5, 'Does not return 2 scopes associated with the group');
+      
       E2_Estimator_WSManager.updateScopeFlag(estimate.Id,'flagred');
       string error = E2_Estimator_WSManager.updateScopeFlag(E2_constants.BLANK,'flagred');  
       System.assertEquals(error, 'Failed to update: Current scope not identified!!!');
+      
       E2_Estimator_WSManager.updateScopeFlag(childSC.Id,'flagred');
       E2_Estimator_WSManager.updateScopeFlag(childSC.Id,'flagyellow');
       E2_Estimator_WSManager.updateScopeFlag(childSC.Id,'flaggreen');
@@ -95,10 +86,7 @@ public class E2_Estimator_WSManagerTest {
       
       String test_scopeName1 = E2_Estimator_WSManager.getFormatedScopeName(childSC);
       system.assert(test_scopeName1 != null);
-      
-      //commented as getting error during asset related code coverage
-      
-      //treeMap = E2_Estimator_WSManager.getClonedNodesTemplate(parentSC.Id, scopeGroup.Id, null);
+
       E2_Estimator_WSManager.reparentScope(scopeGroup.Id, null);
       String a_scopeId = E2_Estimator_WSManager.reparentScope(childSC.Id, null);
       System.assertEquals(a_scopeId, childSC.id, 'Not successfully reparenting');
@@ -110,20 +98,32 @@ public class E2_Estimator_WSManagerTest {
       String test_Scope1 =  E2_Estimator_WSManager.getSelectedScopeNodes(scopeIds, estimate.Id, null);
       system.assert(test_Scope1 != null);
       
+      string allscopesIds = parentSC.Id +',' + childSC.Id + ',' + childSC1.Id;
+      String scopestatus = E2_Estimator_WSManager.updateScopesStatus('Low', null, childSC1.Id, allscopesIds);
+      System.assertEquals(scopestatus, 'Success', 'Success message is returned');
+      
+      scopestatus = E2_Estimator_WSManager.updateScopesStatus(null, childSC.Id, null, allscopesIds);
+      System.assertEquals(scopestatus, 'Success', 'Success message is returned');
+       System.assertEquals(childSC.Is_Active__c, true);
+      
       E2_Estimator_WSManager.deleteScope(scopeGroup.Id, E2_Constants.HASH_TAG);    
       String b_scopeId = E2_Estimator_WSManager.deleteScope(childSC.Id, parentSC.Id);
       System.assertEquals(b_scopeId, childSC.id, 'Not successfully deleting');
       
       String existing_assets = E2_Estimator_WSManager.getExistingAssetsForScope(parentSC.Id);
       system.assert(existing_assets != null);
+      system.debug('lstAssets=='+ lstAssets);
       
       List<string> exisitingAssetIds = new List<string>{recommendedAsset.Asset__c};
-      E2_AssetWrapperMap assetMap = E2_Estimator_WSManager.searchAssets('test', exisitingAssetIds);
-      System.assertEquals(assetMap.searchKey, 'test');
-      System.assertEquals(assetMap.assetList.size(), 0);
-      
-      
-      
+      system.debug('exisitingAssetIds=='+ exisitingAssetIds);
+      Id [] fixedSearchResults = new Id[1];
+      fixedSearchResults[0] = lstAssets[1].Id;
+      Test.setFixedSearchResults(fixedSearchResults);
+    
+      E2_AssetWrapperMap assetMap = E2_Estimator_WSManager.searchAssets('Test', exisitingAssetIds);
+      System.assertEquals(assetMap.searchKey, 'Test');
+      System.assertEquals(assetMap.assetList.size(), 1);
+     
       //stop test  
     Test.stopTest();
     }
@@ -190,18 +190,16 @@ public class E2_Estimator_WSManagerTest {
     insert child_childSC1;
     
     E2_Effort__c effort1 = E2_Test_Utils.insertEffort(true, parentSC.Id);
-    
-    //E2_Assumption__c assumption1 = E2_Test_Utils.insertAssumption(true, parentSC.Id);
-    
-    //E2_Story__c story1 = E2_Test_Utils.insertStory(true, parentSC.Id);
-    
-    List<CMC_Asset__c> lstAssets = new List<CMC_Asset__c>();
+
+    lstAssets = new List<CMC_Asset__c>();
     lstAssets.add(E2_Test_Utils.insertAsset('Test Asset 1', 'Test asset record', 'Component', 'User Interface', 
-  									        'Apex', 'Salesforce;Data integration', 1, false));
+  									        'Apex', 'Salesforce;Data integration', 1, 'Active', false));
     lstAssets.add(E2_Test_Utils.insertAsset('Test Asset 2', 'Test asset record', 'Component', 'User Interface', 
-  									        'Apex', 'Salesforce;Data integration', 1, false));
-  	insert lstAssets;
-  	
+  									        'Apex', 'Salesforce;Data integration', 1, 'Active', false));
+  	lstAssets.add(E2_Test_Utils.insertAsset('Test Asset 3', 'Test asset record', 'Component', 'User Interface', 
+  									        'Apex', 'Salesforce;Data integration', 1, 'Active', false));
+  	insert lstAssets;								        
+
   	recommendedAsset = E2_Test_Utils.insertRecommendedAsset(parentSC.id, lstAssets[0].id, true);
   	
   	Contact con  = E2_Test_Utils.insertContact(acc.Id, true);
@@ -215,6 +213,9 @@ public class E2_Estimator_WSManagerTest {
   	
   	ques1 = E2_Test_Utils.insertQuestions(parentSC.Id, true);
   	ans1 = E2_Test_Utils.insertAnswer(ques1.Id, true);
+  	
+  	actionScope = new E2_Action_Scope__c(Answer__c = ans1.Id, Scope__c = parentSC.Id);
+    insert actionScope;
   	
        
   }

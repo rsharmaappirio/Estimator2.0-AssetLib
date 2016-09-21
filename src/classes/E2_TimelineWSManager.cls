@@ -741,7 +741,8 @@ public class E2_TimelineWSManager {
         Map<String, CMC_Estimate_Resource_Week__c> resourceWeekMap = new Map<String, CMC_Estimate_Resource_Week__c>();
         List<CMC_Estimate_Resource_Week__c> lstToInsert = new List<CMC_Estimate_Resource_Week__c>();
         List<CMC_Estimate_Resource_Week__c> lstToUpdate = new List<CMC_Estimate_Resource_Week__c>();
-        List<CMC_Estimate_Week__c> lstWeekToUpdate = new List<CMC_Estimate_Week__c>();
+        //List<CMC_Estimate_Week__c> lstWeekToUpdate = new List<CMC_Estimate_Week__c>();
+        Map<String, CMC_Estimate_Week__c> weekToUpdateMap = new Map<String, CMC_Estimate_Week__c>();
         
         
         for(E2_TimelineWS.CellWrapper rWeek : lstWeeks){
@@ -756,14 +757,29 @@ public class E2_TimelineWSManager {
         
         
         for(E2_TimelineWS.CellWrapper rWeek: lstWeeks){
-            
+            //CMC_Estimate_Week__c estimateWeek = new CMC_Estimate_Week__c();
             String rowType = rWeek.rowId;
             if(rowType.equalsIgnoreCase(MILESTONE_TEXT)) {
-                lstWeekToUpdate.add(new CMC_Estimate_Week__c ( id = rWeek.cellId, Milestone__c = rWeek.value));
+                if(!weekToUpdateMap.containsKey(rWeek.cellId)) weekToUpdateMap.put(rWeek.cellId, new CMC_Estimate_Week__c( id = rWeek.cellId ));
+                
+                CMC_Estimate_Week__c estimateWeek = weekToUpdateMap.get(rWeek.cellId);
+                estimateWeek.Milestone__c = rWeek.value;
+                weekToUpdateMap.put(rWeek.cellId, estimateWeek);
+                //lstWeekToUpdate.add(new CMC_Estimate_Week__c ( id = rWeek.cellId, Milestone__c = rWeek.value));
             }else if(rowType.equalsIgnoreCase(MILESTONE1_TEXT)) {
-                lstWeekToUpdate.add(new CMC_Estimate_Week__c ( id = rWeek.cellId, E2_Milestone1__c = rWeek.value));
+                if(!weekToUpdateMap.containsKey(rWeek.cellId)) weekToUpdateMap.put(rWeek.cellId, new CMC_Estimate_Week__c( id = rWeek.cellId ));
+                
+                CMC_Estimate_Week__c estimateWeek = weekToUpdateMap.get(rWeek.cellId);
+                estimateWeek.E2_Milestone1__c = rWeek.value;
+                weekToUpdateMap.put(rWeek.cellId, estimateWeek);
+                //lstWeekToUpdate.add(new CMC_Estimate_Week__c ( id = rWeek.cellId, E2_Milestone1__c = rWeek.value));
             }else if(rowType.equalsIgnoreCase(MILESTONE2_TEXT)) {
-                lstWeekToUpdate.add(new CMC_Estimate_Week__c ( id = rWeek.cellId, E2_Milestone2__c = rWeek.value));
+                if(!weekToUpdateMap.containsKey(rWeek.cellId)) weekToUpdateMap.put(rWeek.cellId, new CMC_Estimate_Week__c( id = rWeek.cellId ));
+                
+                CMC_Estimate_Week__c estimateWeek = weekToUpdateMap.get(rWeek.cellId);
+                estimateWeek.E2_Milestone2__c = rWeek.value;
+                weekToUpdateMap.put(rWeek.cellId, estimateWeek);
+                //lstWeekToUpdate.add(new CMC_Estimate_Week__c ( id = rWeek.cellId, E2_Milestone2__c = rWeek.value));
             }else{
                 String key = rWeek.rowId + KEY_SEPARATOR + rWeek.cellId;
                 if(resourceWeekMap.containsKey(key)){
@@ -781,7 +797,7 @@ public class E2_TimelineWSManager {
         }
         
         try{
-         if(!lstWeekToUpdate.isEmpty()) update lstWeekToUpdate;
+         if(!weekToUpdateMap.isEmpty()) update weekToUpdateMap.values();
          if(!lstToUpdate.isEmpty()) update lstToUpdate;
          if(!lstToInsert.isEmpty()) insert lstToInsert;
         }catch(Exception ex){

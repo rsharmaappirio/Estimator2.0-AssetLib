@@ -206,9 +206,9 @@ public class E2_EditScopeTemplateControllerTest {
             
             controller.saveScope();     
             List<E2_Recommended_Asset__c> relatedAssets = new List<E2_Recommended_Asset__c>([SELECT Scope__c, Asset__c 
-      																			FROM E2_Recommended_Asset__c
-      																			WHERE Scope__c = :scope.Id]);     
-      			System.assertEquals(relatedAssets.size(), 0);
+                                                                                FROM E2_Recommended_Asset__c
+                                                                                WHERE Scope__c = :scope.Id]);     
+                System.assertEquals(relatedAssets.size(), 0);
         Test.stopTest();  
      }
   }
@@ -250,11 +250,11 @@ public class E2_EditScopeTemplateControllerTest {
     
     List<CMC_Asset__c> lstAssets = new List<CMC_Asset__c>();
     lstAssets.add(E2_Test_Utils.insertAsset('Test Asset 1', 'Test asset record', 'Component', 'User Interface', 
-     									        'Apex', 'Salesforce;Data integration', 1, false));
+                                                'Apex', 'Salesforce;Data integration', 1, 'Active', false));
     lstAssets.add(E2_Test_Utils.insertAsset('Test Asset 2', 'Test asset record', 'Component', 'User Interface', 
-      									        'Apex', 'Salesforce;Data integration', 1, false));
+                                                'Apex', 'Salesforce;Data integration', 1, 'Active', false));
     insert lstAssets;
-      	
+        
     recommendedAsset = E2_Test_Utils.insertRecommendedAsset(scope1.id, lstAssets[0].id, true);
   }
 

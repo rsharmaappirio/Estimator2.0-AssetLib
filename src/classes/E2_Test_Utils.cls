@@ -214,10 +214,10 @@ public with sharing class E2_Test_Utils {
   
   //insert CMC Asset record
   public static CMC_Asset__c insertAsset(String assetName, String shortDesc, String assetType, String assetSubtype, 
-  																			String technologies, string servicePractice, decimal reuseLoe, Boolean isInsert){
+  																			String technologies, string servicePractice, decimal reuseLoe, String releaseStage, Boolean isInsert){
   	CMC_Asset__c asset = new CMC_Asset__c(Name = assetName, Short_Description__c = shortDesc, Technologies__c = technologies,
   												Asset_Type__c = assetType, Asset_SubType__c = assetSubtype, 
-  												Appirio_Services_Practice__c = servicePractice,	Reuse_LOE__c = reuseLoe);
+  												Appirio_Services_Practice__c = servicePractice,	Reuse_LOE__c = reuseLoe, Release_Stage__c = releaseStage);
   	if(isInsert) {                                  
       insert(asset);
     }

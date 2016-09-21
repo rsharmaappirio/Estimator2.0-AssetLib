@@ -129,9 +129,8 @@ public class E2_AddNewScopeControllerTest {
       
       E2_Scope__c pscope1 =  E2_Test_Utils.insertScope(false);
       pscope1.recordTypeId = recTypeId;
-      pscope1.Presales_LOE__c = estimate.id;  
+      pscope1.Presales_LOE__c = estimate.id; 
       insert pscope1;
-    
       
       E2_Scope__c childSC = E2_Test_Utils.insertScope(false);
       childSC.Presales_LOE__c = estimate.Id;
@@ -146,17 +145,20 @@ public class E2_AddNewScopeControllerTest {
       stdController = new ApexPages.StandardController(pscope1);
       controller = new E2_AddNewScopeController(stdController); 
       controller.pageAction();
-      system.assert(controller.is_Edit == true);      
+      system.assert(controller.is_Edit == true);  
+      
+      pscope1.Is_Favourite__c = true;
+      controller.saveScope();
       
       controller.childScopes.addAll(controller.childScopes);  
       System.assertEquals(controller.childScopes.size(), 2, '1 more child scope should be added in list'); 
-      
+
       controller.saveScope();     
       System.assertEquals([SELECT Id FROM E2_Scope__c WHERE Parent_Scope__c =: pscope1.Id].size(), 1, 'both scopes should not have been removed');
       
       controller.childScopes.clear();  
       controller.pageAction();
-      System.assertEquals(controller.childScopes.size(), 1, '1 child scope should be added in list'); 
+      System.assertEquals(controller.childScopes.size(), 1, '1 child scope should be removed from list'); 
       for( E2_AddNewScopeController.Scope scope_wrap : controller.childScopes)  {
          scope_wrap.efforts.addAll(scope_wrap.efforts);   
       } 

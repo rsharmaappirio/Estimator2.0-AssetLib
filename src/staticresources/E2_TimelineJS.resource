@@ -1782,6 +1782,227 @@ function AutoFillEditor(args) {
 }
 
 
+(function ($) {
+  // register namespace
+  $.extend(true, window, {
+    "Slick": {
+      "Plugins": {
+        "HeaderMenu": HeaderMenu
+      }
+    }
+  });
+
+  function HeaderMenu(options) {
+    var _grid;
+    var _self = this;
+    var _handler = new Slick.EventHandler();
+    var _defaults = {
+      buttonCssClass: null,
+      buttonImage: null
+    };
+    var $menu;
+    var $activeHeaderColumn;
+
+
+    function init(grid) {
+      options = $.extend(true, {}, _defaults, options);
+      _grid = grid;
+      _handler
+        .subscribe(_grid.onHeaderCellRendered, handleHeaderCellRendered)
+        .subscribe(_grid.onBeforeHeaderCellDestroy, handleBeforeHeaderCellDestroy);
+
+      // Force the grid to re-render the header now that the events are hooked up.
+      _grid.setColumns(_grid.getColumns());
+
+      // Hide the menu on outside click.
+      $(document.body).bind("mousedown", handleBodyMouseDown);
+    }
+
+
+    function destroy() {
+      _handler.unsubscribeAll();
+      $(document.body).unbind("mousedown", handleBodyMouseDown);
+    }
+
+
+    function handleBodyMouseDown(e) {
+      if ($menu && $menu[0] != e.target && !$.contains($menu[0], e.target)) {
+        hideMenu();
+      }
+    }
+
+
+    function hideMenu() {
+      if ($menu) {
+        $menu.remove();
+        $menu = null;
+        $activeHeaderColumn
+          .removeClass("slick-header-column-active");
+      }
+    }
+
+    function handleHeaderCellRendered(e, args) {
+      var column = args.column;
+      var menu = column.header && column.header.menu;
+
+      if (menu) {
+        var $el = $("<div></div>")
+          .addClass("slick-header-menubutton")
+          .data("column", column)
+          .data("menu", menu);
+
+        if (options.buttonCssClass) {
+          $el.addClass(options.buttonCssClass);
+        }
+
+        if (options.buttonImage) {
+          $el.css("background-image", "url(" + options.buttonImage + ")");
+        }
+
+        if (menu.tooltip) {
+          $el.attr("title", menu.tooltip);
+        }
+
+        $el
+          .bind("click", showMenu)
+          .appendTo(args.node);
+      }
+    }
+
+
+    function handleBeforeHeaderCellDestroy(e, args) {
+      var column = args.column;
+
+      if (column.header && column.header.menu) {
+        $(args.node).find(".slick-header-menubutton").remove();
+      }
+    }
+
+
+    function showMenu(e) {
+      var $menuButton = $(this);
+      var menu = $menuButton.data("menu");
+      var columnDef = $menuButton.data("column");
+
+      // Let the user modify the menu or cancel altogether,
+      // or provide alternative menu implementation.
+      if (_self.onBeforeMenuShow.notify({
+          "grid": _grid,
+          "column": columnDef,
+          "menu": menu
+        }, e, _self) == false) {
+        return;
+      }
+
+
+      if (!$menu) {
+        $menu = $("<div class='slick-header-menu'></div>")
+          .appendTo(_grid.getContainerNode());
+      }
+      $menu.empty();
+
+
+      // Construct the menu items.
+      for (var i = 0; i < menu.items.length; i++) {
+        var item = menu.items[i];
+
+        var $li = $("<div class='slick-header-menuitem'></div>")
+          .data("command", item.command || '')
+          .data("column", columnDef)
+          .data("item", item)
+          .bind("click", handleMenuItemClick)
+          .appendTo($menu);
+
+        if (item.disabled) {
+          $li.addClass("slick-header-menuitem-disabled");
+        }
+
+        if (item.tooltip) {
+          $li.attr("title", item.tooltip);
+        }
+
+        var $icon = $("<div class='slick-header-menuicon'></div>")
+          .appendTo($li);
+
+        if (item.iconCssClass) {
+          $icon.addClass(item.iconCssClass);
+        }
+
+        if (item.iconImage) {
+          $icon.css("background-image", "url(" + item.iconImage + ")");
+        }
+
+        $("<span class='slick-header-menucontent'></span>")
+          .text(item.title)
+          .appendTo($li);
+      }
+
+
+     
+      //RJ: Added the conditional setting for offset of $menu to make this appear
+      var gridWidth = $menu.parent().width();
+      var menuWidth = $(this).offset().left + $menu.width();
+      
+      if(menuWidth < gridWidth){
+          // Position the menu.
+          $menu
+            .offset({ top: $(this).offset().top + $(this).height(), left: $(this).offset().left });
+      }else{
+          // Position the menu.
+          $menu
+            .offset({ top: $(this).offset().top + $(this).height(), left: ($(this).offset().left + $(this).width()) - $menu.width() });
+      }
+      
+      // Code in Past; Modified above 8 - 10 lines 
+      //$menu.offset({ top: $(this).offset().top + $(this).height(), left: $(this).offset().left });
+
+      // Mark the header as active to keep the highlighting.
+      $activeHeaderColumn = $menuButton.closest(".slick-header-column");
+      $activeHeaderColumn
+        .addClass("slick-header-column-active");
+
+      // Stop propagation so that it doesn't register as a header click event.
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+
+    function handleMenuItemClick(e) {
+      var command = $(this).data("command");
+      var columnDef = $(this).data("column");
+      var item = $(this).data("item");
+
+      if (item.disabled) {
+        return;
+      }
+
+      hideMenu();
+
+      if (command != null && command != '') {
+        _self.onCommand.notify({
+            "grid": _grid,
+            "column": columnDef,
+            "command": command,
+            "item": item
+          }, e, _self);
+      }
+
+      // Stop propagation so that it doesn't register as a header click event.
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    $.extend(this, {
+      "init": init,
+      "destroy": destroy,
+
+      "onBeforeMenuShow": new Slick.Event(),
+      "onCommand": new Slick.Event()
+    });
+  }
+})(jQuery);
+
+
 jQuery.fn.center = function () {
     this.css("position","absolute");
     this.css("top", Math.max(0, (($(window).height() - $(this).outerHeight()) / 2) + 
@@ -1933,6 +2154,12 @@ $(function() {
             }
         }
     });
+    // document click event to save chnages in grid when moved outside gird : 	I-232609
+    $(document).click(function(e) {
+        if (e.target.id != "myDiv" && !$(e.target).parents("#myDiv").size()) { 
+             Slick.GlobalEditorLock.commitCurrentEdit();
+        }
+    });
     
     // bind the data picker controller with the input field for date.
     $("#datepicker").datepicker(datepickerOptions);
@@ -1964,8 +2191,8 @@ var gridMainInitiate = function(){
     
     grid = new Slick.Grid("#myGrid", data, columns, Timeline.getGridOptions());
                                                     
-     // set keyboard focus on the grid
-    grid.getCanvasNode().focus();
+     // set keyboard focus on the grid 
+    //grid.getCanvasNode().focus(); // commented to get default page focus on load : I-232604
     
     grid.registerPlugin( new Slick.AutoColumnSize());
     // add header menu plugin
@@ -2864,7 +3091,7 @@ var Timeline = {
                                          if (typeof colorCodePostFix != 'undefined') {
                                              data[from.fromRow + i][columns[from.fromCell + j].field + colorCodePostFix] = val;
                                              //Timeline.updatePhaseColorCode(field, val);
-                                             nodes_order_json += '{"weekId":"' + field + '", "type":"' + rowId.toLowerCase() + '", "value":"' + val + '"},';
+                                             nodes_order_json += '{"weekId":"' + field + '", "type":"' + rowId.toLowerCase() + '", "value":"' + val.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"},';
                                              grid.invalidateRow(from.fromRow + i);
                                          }
                                      }
@@ -2922,7 +3149,7 @@ var Timeline = {
                                          var field = columns[from.fromCell + j].field;
                                          data[from.fromRow + i][columns[from.fromCell + j].field] = cellValue;
                                          
-                                         nodes_order_json += '{"weekId":"' + field + '", "type":"' + rowId.toLowerCase() + '", "value":"' + cellValue + '"';
+                                         nodes_order_json += '{"weekId":"' + field + '", "type":"' + rowId.toLowerCase() + '", "value":"' + cellValue.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"';
                                          
                                          var meta_info = Timeline.fixedRowsTypes[rowId];
                                          if (typeof meta_info != 'undefined') {
@@ -3011,7 +3238,7 @@ var Timeline = {
     
     triggerUpdateCell: function(field, rowId, val, row, cell){
         
-        val = val.replace(/"/g, '\\"');
+        val = val.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
         if(rowId.toLowerCase() == Timeline.fixedRowsTypes.phase.id){
             
             var cellNode = grid.getCellNode(row, cell);
@@ -3109,7 +3336,7 @@ var Timeline = {
                         
                         data[to.fromRow + i][columns[to.fromCell + j].field] = val;
                        
-                        nodes_order_json += '{"rowId":"' + rowId + '", "cellId":"' + field + '", "value":"' + val + '"},';
+                        nodes_order_json += '{"rowId":"' + rowId + '", "cellId":"' + field + '", "value":"' + val.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"},';
                        
                         grid.invalidateRow(to.fromRow + i);
                     }
