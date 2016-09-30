@@ -126,6 +126,10 @@ global with sharing class E2_TimelineWS {
         return E2_TimelineWSManager.updateResourceWeeks(jsonstr); 
     }
     
+    webservice static string updateDevCapacity(string estimateId, integer devCapacity) {
+        return E2_TimelineWSManager.updateDevCapacity(estimateId, devCapacity); 
+    }
+    
     global class E2_TimelineRow{
        webservice string id;
        webservice string resource;
@@ -136,6 +140,7 @@ global with sharing class E2_TimelineWS {
        webservice List<E2_TimelineRowColumn> colRows;
        webservice string resourceRateCardRole;
        webservice string e2Resource;
+       webservice string roleToDisplay;
        
        public E2_TimelineRow(string id, string resource, string skill, integer rate, integer order, integer cost, List<E2_TimelineRowColumn> colRows){
           this.id = id;
@@ -156,6 +161,12 @@ global with sharing class E2_TimelineWS {
           this(id, resource, resourceRateCardRole, skill, rate, order, cost, colRows);
           this.e2Resource = e2Resource;
        }
+       
+       public E2_TimelineRow(string id, string resource, string e2Resource, string resourceRateCardRole, string skill, integer rate, integer order, integer cost, string roleToDisplay, List<E2_TimelineRowColumn> colRows){
+          this(id, resource, e2Resource, resourceRateCardRole, skill, rate, order, cost, colRows);
+          this.roleToDisplay = roleToDisplay;
+       }
+       
     }
     
     global class E2_TimelineRowColumn{

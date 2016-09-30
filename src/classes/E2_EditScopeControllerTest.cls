@@ -60,6 +60,8 @@ public class E2_EditScopeControllerTest {
       E2_EditScopeController controller = new E2_EditScopeController(stdController);
     
       controller.pageAction();
+      controller.scopeQuestionManager.retriveScopeQuestion();
+      
       System.assert(controller.childScope <> null, '1 child scope should be added in list as master');     
       
       E2_EditScopeController.Scope scope_wrap = controller.childScope;
@@ -87,7 +89,8 @@ public class E2_EditScopeControllerTest {
       String effortsJson = JSON.serialize(lstEfforts, true);
       controller.effortsJson = effortsJson;
       controller.addBulkEfforts();
-        
+     // controller.childScope.efforts.get(controller.childScope.efforts.size() - 1).effort.id = 'test';
+      controller.resetChildScopesOnException();
       controller.saveScope();     
       List<E2_Scope__c> scopeList = E2_DataUtil.getScopeAndChildrenOnScopeIdForEditScope(scope.id);
       System.assertEquals(scopeList[0].Efforts__r.size(), 3, '3 efforts should saved');
@@ -189,11 +192,18 @@ public class E2_EditScopeControllerTest {
     
       controller.pageAction();
       System.assert(controller.childScope <> null, '1 child scope should be added in list'); 
+      
+      system.assertEquals(controller.favScopes.containsKey(controller.childScope.scope.Id + '-' + UserInfo.getUserId()), false);
       controller.childScope.scope.Is_Favourite__c = true;        
-      controller.saveScope();     
+      controller.saveScope();
       
       system.assertEquals([SELECT Id FROM E2_Favourite_Scope__c WHERE Scope__c =:scope.Id].size(), 1); 
-
+      controller.getUserFavoriteScopes();
+      system.assertEquals(controller.favScopes.containsKey(controller.childScope.scope.Id + '-' + UserInfo.getUserId()), true);
+      
+      controller.childScope.scope.Is_Favourite__c = false;        
+      controller.saveScope();
+      //system.assertEquals([SELECT Id FROM E2_Favourite_Scope__c WHERE Scope__c =:scope.Id].size(), 0); 
       //stop test
     Test.stopTest(); 
     } 
@@ -202,7 +212,7 @@ public class E2_EditScopeControllerTest {
   public static testmethod void testEditScopeWithAssets(){
     scope = [SELECT Id, LastModifiedById FROM E2_Scope__c];
     estimate = [SELECT Id FROM CMC_Presales_LOE__c];
-    recommendedAsset = [SELECT Scope__c, Asset__c FROM E2_Recommended_Asset__c];
+    List<E2_Recommended_Asset__c> recommendedAssets = [SELECT Scope__c, Asset__c FROM E2_Recommended_Asset__c];
     
     User sysAdmin = E2_Test_Utils.insertUser(E2_Constants.PROFILE_SYS_ADMIN, true);
       
@@ -219,14 +229,16 @@ public class E2_EditScopeControllerTest {
     
       controller.pageAction();
       
-      controller.assetsRecsJson = '{"'+ recommendedAsset.Asset__c + '" : {"recommendedAssetRecId" : "' + recommendedAsset.Id + '", "id" : "' + recommendedAsset.Asset__c + '", '+
-                                '"isExisting" : "true", "isDeleted" : "true"}}'; 
+      controller.assetsRecsJson = '{"'+ recommendedAssets.get(0).Asset__c + '" : {"recommendedAssetRecId" : "' + recommendedAssets.get(0).Id + '", "id" : "' + recommendedAssets.get(0).Asset__c + '", '+
+                                '"isExisting" : "true", "isDeleted" : "true"}, "'+ 
+                                + recommendedAssets.get(1).Asset__c + '" : {"recommendedAssetRecId" : "' + recommendedAssets.get(1).Id + '", "id" : "' + recommendedAssets.get(1).Asset__c + '", '+
+                                '"isExisting" : "false", "isDeleted" : "false"}}'; 
         
       controller.saveScope();
       List<E2_Recommended_Asset__c> relatedAssets = new List<E2_Recommended_Asset__c>([SELECT Scope__c, Asset__c 
       																			FROM E2_Recommended_Asset__c
       																			WHERE Scope__c = :scope.Id]);     
-      System.assertEquals(relatedAssets.size(), 0);
+      System.assertEquals(relatedAssets.size(), 2);
       
       controller.resetChildScopesOnException();
       controller.addNewQuestion();
@@ -279,6 +291,7 @@ public class E2_EditScopeControllerTest {
     insert lstAssets;
       	
     recommendedAsset = E2_Test_Utils.insertRecommendedAsset(scope1.id, lstAssets[0].id, true);
+    E2_Test_Utils.insertRecommendedAsset(scope1.id, lstAssets[1].id, true);
 
   }
 

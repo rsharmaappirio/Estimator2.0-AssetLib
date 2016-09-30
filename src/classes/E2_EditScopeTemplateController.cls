@@ -18,12 +18,12 @@ public with sharing class E2_EditScopeTemplateController {
     public string dmlOperationMessage{get;set;}
     
     public string assetsRecsJson {get;set;}
-	public boolean showFavForSTMPermissionSet {get;set;}
-	
-	public E2_ScopeQuestionAnswerManager scopeQuestionManager{get;set;}
-	
-	public string effortsJson {get;set;}
-	
+    public boolean showFavForSTMPermissionSet {get;set;}
+    
+    public E2_ScopeQuestionAnswerManager scopeQuestionManager{get;set;}
+    
+    public string effortsJson {get;set;}
+    
     public E2_EditScopeTemplateController(ApexPages.StandardController std) {
        // constructor for the page tied to standard controller  
        this.scope = (E2_Scope__c)std.getRecord();
@@ -46,20 +46,20 @@ public with sharing class E2_EditScopeTemplateController {
             return null;            
         }else{
             this.scope.LastModifiedBy = [SELECT Name,Id FROM User WHERE Id=:this.scope.LastModifiedById];
-        	scopeQuestionManager.scope = this.scope;
+            scopeQuestionManager.scope = this.scope;
             populateViewRecords();
         }
         
         //I-227260 : code to hide Favourite for Scope Template Manager
         List<PermissionSet> permissionSetsAllowed = E2_DataUtil.getPermissionSet();
         
-		User currentUser = E2_DataUtil.getPermissionSetAssignmentForUser(permissionSetsAllowed);
-		      if (currentUser.PermissionSetAssignments.size() > 0) {
-		        showFavForSTMPermissionSet = false;
-		      }
-		      else {
-		        showFavForSTMPermissionSet = true;
-		      }
+        User currentUser = E2_DataUtil.getPermissionSetAssignmentForUser(permissionSetsAllowed);
+              if (currentUser.PermissionSetAssignments.size() > 0) {
+                showFavForSTMPermissionSet = false;
+              }
+              else {
+                showFavForSTMPermissionSet = true;
+              }
         return null;
     }
     
@@ -123,11 +123,11 @@ public with sharing class E2_EditScopeTemplateController {
             }
             
             if(assetsToInsert.size() > 0){
-            	insert assetsToInsert;
+                insert assetsToInsert;
             }
             
             if(assetsToDelete.size() > 0){
-            	delete assetsToDelete;
+                delete assetsToDelete;
             }
         }catch(Exception ex){
             Database.rollback(sp);
@@ -139,10 +139,7 @@ public with sharing class E2_EditScopeTemplateController {
         this.dmlOperationMessage = E2_Constants.DML_OPERATION_MESSAGE_SUCCESS;
         string errorMessage = E2_Constants.BLANK;
         scopeQuestionManager.saveQuestion(errorMessage, this.dmlOperationMessage);
-        if(!string.isBlank(errorMessage)) {
-        	msg = new ApexPages.Message(ApexPages.Severity.ERROR, errorMessage);
-            ApexPages.addMessage(msg);
-        }
+        
         // Rohit - Set Current user details as last modified by user on scope 
         User modifiedBy = new User(Id = UserInfo.getUserId(),FirstName = UserInfo.getFirstName(),LastName = UserInfo.getLastName()); 
         this.scope.LastModifiedBy = modifiedBy;
@@ -166,7 +163,7 @@ public with sharing class E2_EditScopeTemplateController {
     
     //method to add new question 
     public pagereference addNewQuestion() {
-    	return scopeQuestionManager.addNewQuestion();
+        return scopeQuestionManager.addNewQuestion();
     }
     
     // method to populate records 
@@ -240,12 +237,7 @@ public with sharing class E2_EditScopeTemplateController {
             if(scope.Source_Scope__c != NULL){
                 this.isCloned = true;               
             }
-            if(scope.id == null){   
-               Blob hash2 = Crypto.generateDigest(E2_Constants.MD5, Blob.valueOf(E2_Constants.STRING_1000 + String.valueOf(Datetime.now().formatGMT(E2_Constants.DATETIME_FORMAT_YYYYMMDD))));
-               this.key = EncodingUtil.convertToHex(hash2);
-            }else{
-              this.key = scope.id;
-            }
+            this.key = scope.id;
             this.scope = scope;
             for(E2_Effort__c effort : efforts){
                 if(effort.Source_Effort__c <> NULL) {

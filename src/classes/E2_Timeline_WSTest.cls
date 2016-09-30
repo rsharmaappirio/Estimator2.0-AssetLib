@@ -100,6 +100,13 @@ public class E2_Timeline_WSTest {
       String jsonMilestone = '[{"weekId":"' + week.Id + '", "value":"milestone",' + '"colorCode":"Red",' + '"type":"phase"}]';
       string milestoneStr = E2_TimelineWS.updateMilestoneWeeks(jsonMilestone);
       system.assert(milestoneStr <> null);
+      
+      string devCapacity = E2_TimelineWS.updateDevCapacity(estimate.Id, 5) ;
+      system.assertEquals(devCapacity, E2_Constants.BLANK + 5);
+      
+      String jsonCell2 = '[{"rowId":"milestone2",' + '"cellId":"' + week.Id +'", "value":1}]';
+      string resourceWeek2 = E2_TimelineWS.updateResourceWeeks(jsonCell2);
+      system.assert(resourceWeek2 <> null);
         
       //stop test
       Test.stopTest();

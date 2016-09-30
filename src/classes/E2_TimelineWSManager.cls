@@ -621,6 +621,7 @@ public class E2_TimelineWSManager {
              }
              
             string resourceRole = (res.E2_Estimate_Rate_Card__c == null ? '' : res.E2_Estimate_Rate_Card__r.Resource_Role__c);
+            string displayRole = resourceRole;
             string region = (res.E2_Estimate_Rate_Card__c == null ? '' : res.E2_Estimate_Rate_Card__r.Region__c);
             string key = region + SEPARATOR + resourceRole;
             if(E2_Constants.ROLE_RESOURCEROLE_MAP.containsKey(key)){
@@ -632,7 +633,8 @@ public class E2_TimelineWSManager {
                       res.Skill__c,
                       (res.Rate__c == null ? 0 : res.Rate__c.intValue()),
                       (res.Order__c == null ? 0 : res.Order__c.intValue()),
-                      (res.Cost__c == null ? 0 : res.Cost__c.intValue())
+                      (res.Cost__c == null ? 0 : res.Cost__c.intValue()),
+                      displayRole + ' (' + region + ')' 
                       ,colRows));                                   
          }        
         return rows;
@@ -805,5 +807,17 @@ public class E2_TimelineWSManager {
         }
          
         return 'Success';
+    }
+    
+    public static string updateDevCapacity(string estimateId, integer devCapacity) {
+        try {
+            CMC_Presales_LOE__c estimate = new CMC_Presales_LOE__c(id = estimateId, 
+                                                    E2_Dev_hours_per_day__c = devCapacity);
+            update estimate;
+        } catch(Exception ex){
+            return 'Failed: ' + ex.getMessage(); 
+        }
+         
+        return E2_Constants.BLANK + devCapacity;
     }
 }

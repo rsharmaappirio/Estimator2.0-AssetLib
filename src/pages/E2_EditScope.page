@@ -729,7 +729,11 @@
                                                             <div class="slds-col--padded slds-size--1-of-1" style="margin-left:5px;">
                                                                 <label class="slds-checkbox" id="{!answer.key}" onmouseover="$(this).children('.description').show();" onmouseout="$(this).children('.description').hide();">
                                                                     <apex:outputText rendered="{!!ISBLANK(answer.e2answer.Action__c)}">
-                                                                        <span class="description">Answer will {!answer.e2answer.Action__c}<apex:outputText rendered="{!contains(answer.e2answer.Action__c,'child scope')}"> if cloned</apex:outputText></span>
+                                                                        <span class="description"><apex:outputText rendered="{!answer.e2answer.Action__c == 'Change Complexity to Low'}">{!$Label.E2_Answer_Action_Complexity_Low}</apex:outputText>
+                                                                            <apex:outputText rendered="{!answer.e2answer.Action__c == 'Change Complexity to Medium'}">{!$Label.E2_Answer_Action_Complexity_Medium}</apex:outputText>
+                                                                            <apex:outputText rendered="{!answer.e2answer.Action__c == 'Change Complexity to High'}">{!$Label.E2_Answer_Action_Complexity_High}</apex:outputText>
+                                                                            <apex:outputText rendered="{!answer.e2answer.Action__c == 'Deactivate child scope'}">{!$Label.E2_Answer_Action_Deactivate_Child_Scope}</apex:outputText>
+                                                                            <apex:outputText rendered="{!answer.e2answer.Action__c == 'Activate child scope'}">{!$Label.E2_Answer_Action_Activate_Child_Scope}</apex:outputText></span>
                                                                     </apex:outputText>
                                                                     <apex:outputText rendered="{!answer.e2answer.Is_Selected__c}">
                                                                         <input id="{!answer.key}" checked="true" type="checkbox" name="{!question.e2question.id}answerscheckbox" questionid="{!question.e2question.id}" value="{!answer.key}" action="{!answer.e2answer.Action__c}" loe="{!answer.e2answer.Effort_LOE__c}" onchange="AddEditQuestionAnswer.showActionAlert(this);"/>
@@ -755,7 +759,11 @@
                                                             <div class="slds-col--padded slds-size--1-of-1" style="margin-left:5px;">
                                                                 <label class="slds-radio" onmouseover="$(this).children('.description').show();" onmouseout="$(this).children('.description').hide();">
                                                                     <apex:outputText rendered="{!!ISBLANK(answer.e2answer.Action__c)}">
-                                                                        <span class="description">Answer will {!answer.e2answer.Action__c}<apex:outputText rendered="{!contains(answer.e2answer.Action__c,'child scope')}"> if cloned</apex:outputText></span>
+                                                                        <span class="description"><apex:outputText rendered="{!answer.e2answer.Action__c == 'Change Complexity to Low'}">{!$Label.E2_Answer_Action_Complexity_Low}</apex:outputText>
+                                                                            <apex:outputText rendered="{!answer.e2answer.Action__c == 'Change Complexity to Medium'}">{!$Label.E2_Answer_Action_Complexity_Medium}</apex:outputText>
+                                                                            <apex:outputText rendered="{!answer.e2answer.Action__c == 'Change Complexity to High'}">{!$Label.E2_Answer_Action_Complexity_High}</apex:outputText>
+                                                                            <apex:outputText rendered="{!answer.e2answer.Action__c == 'Deactivate child scope'}">{!$Label.E2_Answer_Action_Deactivate_Child_Scope}</apex:outputText>
+                                                                            <apex:outputText rendered="{!answer.e2answer.Action__c == 'Activate child scope'}">{!$Label.E2_Answer_Action_Activate_Child_Scope}</apex:outputText></span>
                                                                     </apex:outputText>
                                                                     <apex:outputText rendered="{!answer.e2answer.Is_Selected__c}">
                                                                         <input checked="true" id="{!answer.key}" type="radio" onchange="AddEditQuestionAnswer.showActionAlert(this);" questionid="{!question.e2question.id}" name="{!question.e2question.id}answersradio" value="{!answer.key}" action="{!answer.e2answer.Action__c}" loe="{!answer.e2answer.Effort_LOE__c}"/>

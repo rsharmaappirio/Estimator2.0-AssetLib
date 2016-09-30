@@ -46,6 +46,21 @@ public class E2_EditScopeTemplateControllerTest {
     scope.Source_Scope__c = source_scope.Id;
     update scope;
     
+    E2_Scope__c scope1 =  E2_Test_Utils.insertScope(false);
+    scope1.recordTypeId = recTypeId1;
+    scope1.Presales_LOE__c = estimate.id;  
+    insert scope1;
+    
+    E2_Effort__c source_effort = E2_Test_Utils.insertEffort(true, scope.Id);
+    
+    E2_Effort__c effort1 = E2_Test_Utils.insertEffort(false, scope.Id);
+    E2_Effort__c effort2 = E2_Test_Utils.insertEffort(false, scope1.Id);
+    effort2.Source_Effort__c = source_effort.Id;
+    List<E2_Effort__c> effortLst1 = new List<E2_Effort__c>();
+    effortLst1.add(effort1);
+    effortLst1.add(effort2);
+    insert effortLst1;
+    
     System.runAs(sysAdmin){
         Test.startTest();           
             PageReference pageRef = Page.E2_EditScopeTemplate;
@@ -55,13 +70,14 @@ public class E2_EditScopeTemplateControllerTest {
             ApexPages.StandardController stdController = new ApexPages.StandardController(scope);
             E2_EditScopeTemplateController controller = new E2_EditScopeTemplateController(stdController);
             controller.pageAction();
-      
+            
                   E2_EditScopeTemplateController.Scope scope_wrap = controller.childScope;
                   scope_wrap.addNewEffort();
                   scope_wrap.addNewEffort();
                   scope_wrap.hasClonedEfforts = true;
                   system.assertEquals(scope_wrap.isCloned, true); 
-                  system.assertEquals(scope_wrap.key, scope.Id); 
+                  system.assertEquals(scope_wrap.key, scope.Id);
+                  
                   for(E2_EditScopeTemplateController.Effort eff: scope_wrap.efforts){
                         
                       eff.effort.Is_Active__c = true;
@@ -70,9 +86,8 @@ public class E2_EditScopeTemplateControllerTest {
                       eff.effort.Resource_Role__c = 'Project Manager';
                       eff.effort.Complexity_Factor_High__c = 10;
                       eff.effort.Complexity_Factor_Low__c = 10;
-                         
                   }  
-                  system.assertEquals(scope_wrap.getEffortsSize(), 80, 'scope cumulative efforts size should match'); 
+                  system.assertEquals(scope_wrap.getEffortsSize(), 160, 'scope cumulative efforts size should match'); 
                   scope_wrap.reload();
                   scope_wrap.changeComplexity();
                   
@@ -86,7 +101,7 @@ public class E2_EditScopeTemplateControllerTest {
                     
                   controller.saveScope();     
                   List<E2_Scope__c> scopeList = E2_DataUtil.getScopeAndChildrenOnScopeIdForEditScope(scope.id);
-                  system.assertEquals(scopeList[0].Efforts__r.size(), 3, '3 efforts should saved');
+                  system.assertEquals(scopeList[0].Efforts__r.size(), 5, '5 efforts should saved');
                   
                   for(E2_EditScopeTemplateController.Effort eff: scope_wrap.efforts){
                      eff.remove();    
@@ -130,8 +145,8 @@ public class E2_EditScopeTemplateControllerTest {
       controller.pageAction();
       
       system.assertEquals(controller.showFavForSTMPermissionSet, true);  
-      controller.saveScope();          
-       
+      controller.saveScope();  
+      
     //stop test
     Test.stopTest(); 
     } 
@@ -157,7 +172,11 @@ public class E2_EditScopeTemplateControllerTest {
     effortLst1.add(effort1);
     effortLst1.add(effort2);
     insert effortLst1;  
-      
+    
+    CMC_Asset__c asset = E2_Test_Utils.insertAsset('Test Asset 1', 'Test asset record', 'Component', 'User Interface', 
+                                                   'Apex', 'Salesforce;Data integration', 1, 'Active', true);
+    E2_Recommended_Asset__c recommendedAsset1 = E2_Test_Utils.insertRecommendedAsset(scope1.id, asset.id, true);
+    
     System.runAs(sysAdmin){
     //start test
     Test.startTest();
@@ -171,9 +190,17 @@ public class E2_EditScopeTemplateControllerTest {
       controller.pageAction();
       system.assert(controller.childScope <> null, '1 child scope should be added in list');
        
-      controller.childScope.scope.Is_Favourite__c = true;        
+      controller.childScope.scope.Is_Favourite__c = true;  
+      controller.assetsRecsJson = '{"'+ recommendedAsset1.Asset__c + '" : {"recommendedAssetRecId" : "' + recommendedAsset1.Id + 
+                                    '", "id" : "' + recommendedAsset1.Asset__c + '", '+
+                                    '"isExisting" : "false", "isDeleted" : "false"}}'; 
       controller.saveScope();     
       
+      List<E2_Recommended_Asset__c> relatedAssets = new List<E2_Recommended_Asset__c>([SELECT Scope__c, Asset__c 
+                                                                                FROM E2_Recommended_Asset__c
+                                                                                WHERE Scope__c = :scope.Id]);     
+      System.assertEquals(relatedAssets.size(), 2);
+                
       system.assertNotEquals([SELECT Id FROM E2_Favourite_Scope__c WHERE Scope__c =:scope.Id].size(), 1); 
       
       controller.addNewQuestion();                 
@@ -208,9 +235,46 @@ public class E2_EditScopeTemplateControllerTest {
             List<E2_Recommended_Asset__c> relatedAssets = new List<E2_Recommended_Asset__c>([SELECT Scope__c, Asset__c 
                                                                                 FROM E2_Recommended_Asset__c
                                                                                 WHERE Scope__c = :scope.Id]);     
-                System.assertEquals(relatedAssets.size(), 0);
+            System.assertEquals(relatedAssets.size(), 0);
         Test.stopTest();  
      }
+  }
+  
+  public static testmethod void testEditScopewithPermission(){
+    
+      
+    scope = [SELECT Id, LastModifiedById FROM E2_Scope__c];
+    estimate = [SELECT Id FROM CMC_Presales_LOE__c];
+    effortLst = [SELECT Id FROM E2_Effort__c WHERE Scope__c = :scope.Id];
+    User sysAdmin = E2_Test_Utils.insertUser(E2_Constants.PROFILE_SYS_ADMIN, true);
+    
+    PermissionSet permission = [SELECT Id, Name
+                        			FROM PermissionSet
+                        			WHERE Name =: E2_Constants.STM_PERMISSION_SET];
+      
+    PermissionSetAssignment psa = new PermissionSetAssignment(PermissionSetId = permission.Id, AssigneeId = sysAdmin.Id);
+    insert psa; 
+      
+    System.runAs(sysAdmin){
+    //start test
+    Test.startTest();
+      PageReference pageRef = Page.E2_EditScopeTemplate;
+      Test.setCurrentPage(pageRef);
+      ApexPages.currentPage().getParameters().put(E2_Constants.URL_KEY_ESTIMATE_ID, estimate.Id);
+    
+      ApexPages.StandardController stdController = new ApexPages.StandardController(scope);
+      E2_EditScopeTemplateController controller = new E2_EditScopeTemplateController(stdController);
+    
+      controller.pageAction();
+                       			    
+      
+      controller.pageAction();
+      system.assertEquals(controller.showFavForSTMPermissionSet, false); 
+      controller.saveScope();  
+      
+    //stop test
+    Test.stopTest(); 
+    } 
   }
   
   //create test data

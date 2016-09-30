@@ -332,6 +332,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>false</editable>
+        <field>CMC_Presales_LOE__c.E2_Dev_hours_per_day__c</field>
+        <readable>false</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
         <field>CMC_Presales_LOE__c.E2_Is_Primary__c</field>
         <readable>false</readable>
     </fieldPermissions>

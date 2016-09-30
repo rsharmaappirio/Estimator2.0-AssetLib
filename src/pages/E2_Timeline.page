@@ -35,7 +35,8 @@
     <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/controls/slick.columnpicker.js"></script>
     <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/slick.formatters.js"></script>
     <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/slick.editors.js"></script>
-    <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/slick.grid.js"></script>
+    <!--script type="text/javascript" src="{!$Resource.E2_SlickGrid}/slick.grid.js"></script-->
+    <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/slick.grid.new.js"></script>
     <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/lib/js/require.js"></script>
     <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/lib/js/underscore.js"></script>
     
@@ -54,6 +55,14 @@
         </apex:define>
         <apex:define name="body">
             <style rel="stylesheet" type="text/css">
+            
+               
+            
+                div.info_icon{
+                    background: transparent url({!$Resource.E2_SLDS1}/assets/icons/utility/info_60.png) no-repeat scroll center right / 15px 15px;
+                    
+                }
+            
                 a.delete_button, a.delete_button:hover, a.delete_button:active, a.delete_button:focus{
                     background: transparent url({!$Resource.E2_SLDS1}/assets/icons/utility/delete_60.png) no-repeat scroll center center / 15px 15px;
                     height: 15px;
@@ -62,6 +71,7 @@
                     text-decoration: none;
                     outline: none; 
                 }
+                
                 a.push_button{
                     background: transparent url({!$Resource.E2_SLDS1}/assets/icons/utility/push_60.png) no-repeat scroll center center / 15px 15px;
                     height: 15px;
@@ -107,6 +117,9 @@
                 
                 /**.reallyHidden { display: none !important;}**/
                 .Fixed-Header-Style{font-weight:bold;}
+                
+                .hours-cell-style-text-center{text-align:center;}
+                
                 .custom-fix-row{
                     background-color: #eee!important;
                     border-color: #ccc!important;
@@ -269,6 +282,7 @@
                     background: transparent;
                     outline: 0;
                     padding: 0;
+                    text-align: inherit;
                 }
                 
                 /** SLDS STYLE OF FOCUS ON INPUT
@@ -677,14 +691,26 @@
                       border: 1px solid gray;
                       padding: 2px;
                       display: inline-block;
-                      min-width: 100px;
+                      min-width: 155px;
                       -moz-box-shadow: 2px 2px 2px silver;
                       -webkit-box-shadow: 2px 2px 2px silver;
                       z-index: 99999;
-                      max-width: 120px;
+                      max-width: 175px;
+                    }
+                    
+                    #phaseContextMenu {
+                      background: #e1efc7;
+                      border: 1px solid gray;
+                      padding: 2px;
+                      display: inline-block;
+                      min-width: 140px;
+                      -moz-box-shadow: 2px 2px 2px silver;
+                      -webkit-box-shadow: 2px 2px 2px silver;
+                      z-index: 99999;
+                      max-width: 180px;
                     }
                 
-                    #contextMenu li {
+                    #contextMenu li, #phaseContextMenu li {
                       padding: 4px 4px 4px 14px;
                       list-style: none;
                       cursor: pointer;
@@ -697,7 +723,7 @@
                       border-width: 1px;
                     }
                 
-                    #contextMenu li:hover {
+                    #contextMenu li:hover, #phaseContextMenu li:hover {
                       background-color: white;
                     } 
                     
@@ -741,7 +767,9 @@
                         <li class="slds-tabs--default__item slds-text-heading--label " title="Manage Ratecard" role="presentation">
                             <a class="slds-tabs--default__link" href="javascript:void(0);" role="tab" tabindex="0" aria-selected="false" aria-controls="tab-default-2" id="tab-default-2__item">Manage Ratecard&nbsp;</a>
                         </li>
-                         
+                        <li class="slds-tabs--default__item slds-text-heading--label " title="Weeks Required" role="presentation">
+                            <a class="slds-tabs--default__link" href="javascript:void(0);" role="tab" tabindex="0" aria-selected="false" aria-controls="tab-default-3" id="tab-default-3__item">Weeks Required&nbsp;</a>
+                        </li> 
                     </ul>
                     <div id="tab-default-1" style="padding:0px" class="slds-tabs--default__content slds-show paddingTopZero" role="tabpanel" aria-labelledby="tab-default-1__item">
                         <div id="manage_timeline_div">
@@ -830,7 +858,7 @@
                                 </div>  
                                 
                                <a id='downloadLink'></a>
-                               <a id="" href="javascript:void(0);" class="excel_button" style=" padding-bottom: 2px;" title="Download Grid in Excel Format" onclick="return Timeline.downloadExcel_Click();">&nbsp;</a>
+                               <div><span style="display:inline-block;vertical-align: bottom;">Download as&nbsp;</span><a id="" href="javascript:void(0);" class="excel_button" style=" padding-bottom: 2px;display:inline-block;" title="Download Grid in Excel Format" onclick="return Timeline.downloadExcel_Click();">&nbsp;</a></div>
                                <!--input type="submit" onclick="return Timeline.downloadExcel_Click();" class="slds-button slds-button--neutral slds-button--brand save-button-custom" title="Download Excel" value="Download Excel"/-->
                                
                                <div style="position:relative">
@@ -846,7 +874,7 @@
                                      <div class="slds-modal__footer">
                                              <div class="slds-col slds-no-flex slds-align-bottom">
                                                 <div class="" role="group">
-                                                    <apex:commandButton onclick="return Timeline.updateEstimateRateCards();" styleClass="slds-button slds-button--neutral slds-button--brand save-button-custom" title="Save" value="Save" action="{!updateEstimateRateCards}" />
+                                                    <apex:commandButton onclick="return Timeline.updateEstimateRateCards();" styleClass="slds-button slds-button--neutral slds-button--brand save-button-custom buttonSaveCustom" title="Save" value="Save" action="{!updateEstimateRateCards}" />
                                                     
                                                     <apex:commandButton onclick="return Timeline.refreshRateCardRatesAndCost();" styleClass="slds-button slds-button--neutral slds-button--brand save-button-custom" title="Refresh Rates & Cost" value="Refresh Rates & Cost" action="{!refreshRateCardRatesAndCost}" rendered="{!$Setup.E2_System_setting__c.Refresh_Ratacard__c}"/>
                                                 </div>
@@ -897,7 +925,7 @@
                                                          <apex:outputfield value="{!estimateratecard.Bill_Rate__c}"/>
                                                     </td>
                                                     <td class="slds-truncate " data-label="Rate">
-                                                        <apex:inputfield style="width:30%" styleClass="slds-input" value="{!estimateratecard.Discounted_Rate__c}"/>
+                                                        <apex:inputfield style="width:30%" styleClass="slds-input discountRateTextBox" value="{!estimateratecard.Discounted_Rate__c}"/>
                                                     </td>
                                                     <td class="slds-truncate " data-label="Resource Cost">
                                                         <apex:outputfield value="{!estimateratecard.Resource_Cost__c}"/>
@@ -927,6 +955,43 @@
                                             </div>
                                     </div>
                           </apex:outputPanel>             
+                    </div>
+                    
+                    <div id="tab-default-3" style="padding:0px" class="slds-tabs--default__content slds-hide paddingTopZero" role="tabpanel" aria-labelledby="tab-default-3__item">
+                          <!-- CALCULATE REQUIRED WEEKS --> 
+                            <div class="slds-page-header" role="banner" style="background: #16325c;color:#ffffff;padding-top: 7px;padding-bottom: 7px;">
+                                                    <div class="slds-media">
+                                                        <div class="slds-media__figure slds-icon slds-icon--small">
+                                                            <apex:image value="{!URLFOR($Resource.E2_SLDS1, '/assets/icons/standard/note_60.png')}" width="48" height="48"/>
+                                                        </div>
+                                                        <div class="slds-media__body" style="margin-top:2px;">
+                                                            <p class="slds-truncate slds-align-middle">Use of Week calculator is applicable only if dev hours are defined for the phase.</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                          <div id="timelineSummary" style="height:400px">
+                              <div id="summarySection" style="width:50%;float:left;">
+                                 <table id="summaryTable" class="slds-table slds-table--bordered slds-table--cell-buffer slds-table--col-bordered slds-no-row-hover">
+                        		    <thead>
+                        		     <tr class="slds-text-heading--label"><th>Project Phase</th><th>Hours</th><th>Weeks</th></tr>
+                        			</thead>
+                                    <tbody id="summaryTbody">			   
+                                    </tbody>
+                                 </table>	
+                              </div>
+                              <div id="editableHoursWeekSection" style="width:20%;float:left;">
+                                   <table id="editHoursTable" class="slds-table slds-table--bordered slds-table--cell-buffer slds-table--col-bordered slds-no-row-hover" 
+                                    style="border-collapse: collapse;border-color: black;border-style: solid;border-width: 1px;">
+                        		    <thead>
+                        		     <tr class="slds-text-heading--label"><th></th><th>Hours</th><th></th></tr>
+                        			</thead>
+                                    <tbody>
+                        			   <tr><td>Dev</td><td><input class="slds slds-input mandate-numeric" style="width:30px" id="devhoursperday" onchange="TimelineSummary.onChange_InputDevHoursPerWeek();" type="text" value="{!IF(CMC_Presales_LOE__c.E2_Dev_hours_per_day__c == NULL, 0, CMC_Presales_LOE__c.E2_Dev_hours_per_day__c)}"/></td><td>per Day</td></tr>
+                        			   <tr><td></td><td><div id="hoursperweekdiv"></div></td><td>per Week</td></tr>
+                                    </tbody>
+                                   </table>			
+                              </div>
+                           </div>
                     </div>
                     
                 </div> 
@@ -962,11 +1027,20 @@
                 
                 <br/>
                 
+                <ul id="phaseContextMenu" style="display:none;position:absolute">
+                  <span><button id="merge_btn" onclick="return false;" data="MERGE">Merge</button></span>    
+                  <span><button id="unmerge_btn" onclick="return false;" data="UNMERGE">UnMerge</button></span>
+                  <span><button id="clear_btn" onclick="return false;" data="CLEAR">Clear</button></span>
+                  <br/>
+                  <b>Apply Phase:</b>
+                </ul>
+                
                 <ul id="contextMenu" style="display:none;position:absolute">
                   <span><button id="merge_btn" onclick="return false;" data="MERGE">Merge</button></span>    
                   <span><button id="unmerge_btn" onclick="return false;" data="UNMERGE">UnMerge</button></span>
+                  <span><button id="clear_btn" onclick="return false;" data="CLEAR">Clear</button></span>
                   <br/>
-                  <b>Apply Background:</b>
+                  <b>Apply Background:</b><br/>
                   <li title="Default Color" style="background-color:transparent;border-color:black;" data="">&nbsp;</li>
                   <li style="background-color: #9B4175;border-color:#9B4175;" data="#9B4175">&nbsp;</li>
                   

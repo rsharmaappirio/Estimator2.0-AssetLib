@@ -44,6 +44,21 @@
         <type>Lookup</type>
     </fields>
     <fields>
+        <fullName>E2_Dev_hours_per_day__c</fullName>
+        <description>Custom field is used to store dev capacity per day for estimate.</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Custom field is used to store dev capacity per day for estimate.</inlineHelpText>
+        <label>Dev hours per day</label>
+        <precision>5</precision>
+        <required>false</required>
+        <scale>0</scale>
+        <trackFeedHistory>false</trackFeedHistory>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
         <fullName>E2_Is_Primary__c</fullName>
         <defaultValue>true</defaultValue>
         <description>Primary Estimate out of other estimates.</description>

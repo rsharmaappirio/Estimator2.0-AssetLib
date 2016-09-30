@@ -19,7 +19,7 @@ public with sharing class E2_EditScopeController {
     public boolean is_Dirty{get;set;}
     public string assetsRecsJson {get;set;}
     public string effortsJson {get;set;}
-    private Map<String,E2_Favourite_Scope__c> favScopes;
+    @TestVisible private Map<String,E2_Favourite_Scope__c> favScopes;
     
     public E2_ScopeQuestionAnswerManager scopeQuestionManager{get;set;}
 
@@ -53,7 +53,7 @@ public with sharing class E2_EditScopeController {
         return null;
     }
     
-    private void getUserFavoriteScopes() {
+    @TestVisible private void getUserFavoriteScopes() {
     	// Method get all scopes marked favorite by logged-in user
     	favScopes = new Map<String,E2_Favourite_Scope__c>();
        	for(E2_Favourite_Scope__c favSC : E2_DataUtil.getFavScopeForCurrentUser()) {
@@ -74,7 +74,6 @@ public with sharing class E2_EditScopeController {
     public pagereference saveScope(){
         List<E2_Scope__c> scopeListToUpsert = new List<E2_Scope__c>();       
         List<E2_Effort__c> masterScope_Efforts = new List<E2_Effort__c>();        
-        List<E2_Scope__c> scopeListToDelete = new List<E2_Scope__c>();       
         List<E2_Effort__c> effortsToDelete = new List<E2_Effort__c>();
         List<E2_Favourite_Scope__c> fscLstToInsert = new List<E2_Favourite_Scope__c>();
         List<E2_Favourite_Scope__c> fscLstToDelete = new List<E2_Favourite_Scope__c>();  
@@ -99,27 +98,21 @@ public with sharing class E2_EditScopeController {
             }
         }
         // Create a savepoint 
-        Savepoint sp = Database.setSavepoint();
-        
-    	if(this.childScope.isDeleted == false){                
-            // mark scopes as favorites
-            if(this.childScope.scope.Is_Favourite__c != this.childScope.isFavorite) {
-	            String uniqueKey = this.childScope.scope.Id + '-' + UserInfo.getUserId();
-	            if(this.childScope.scope.Is_Favourite__c == true && !favScopes.containsKey(uniqueKey)){
-			      fscLstToInsert.add(getE2FavoriteScopeInstance(this.childScope.scope.Id, UserInfo.getUserId(), uniqueKey));
-			    }else if(this.childScope.scope.Is_Favourite__c == false && favScopes.containsKey(uniqueKey)){
-				  fscLstToDelete.add(favScopes.get(uniqueKey));
-				}
-				if(this.childScope.scope.CreatedById != UserInfo.getUserId()) {
-					this.childScope.scope.Is_Favourite__c = this.childScope.isFavorite;
-				}
-            }
-			// scope to insert/update (Upsert)
-            scopeListToUpsert.add(this.childScope.scope);
-				
-        } else {
-        	scopeListToDelete.add(this.childScope.scope);
+        Savepoint sp = Database.setSavepoint();             
+        // mark scopes as favorites
+        if(this.childScope.scope.Is_Favourite__c != this.childScope.isFavorite) {
+            String uniqueKey = this.childScope.scope.Id + '-' + UserInfo.getUserId();
+            if(this.childScope.scope.Is_Favourite__c == true && !favScopes.containsKey(uniqueKey)){
+		      fscLstToInsert.add(getE2FavoriteScopeInstance(this.childScope.scope.Id, UserInfo.getUserId(), uniqueKey));
+		    }else if(this.childScope.scope.Is_Favourite__c == false && favScopes.containsKey(uniqueKey)){
+			  fscLstToDelete.add(favScopes.get(uniqueKey));
+			}
+			if(this.childScope.scope.CreatedById != UserInfo.getUserId()) {
+				this.childScope.scope.Is_Favourite__c = this.childScope.isFavorite;
+			}
         }
+		// scope to insert/update (Upsert)
+        scopeListToUpsert.add(this.childScope.scope);
         this.scope = this.childScope.scope;
         
         try{       
@@ -135,52 +128,34 @@ public with sharing class E2_EditScopeController {
         }catch(Exception ex){
             Database.rollback(sp);
             resetChildScopesOnException();
-            this.errorMessage = ex.getMessage().contains(E2_constants.INSUFFICIENT_ACCESS_OR_READONLY) ? 
-                                    E2_Constants.INSUFFICIENT_ERROR_MSSG: 
-                                    ex.getMessage();
+            this.errorMessage = ex.getMessage().contains(E2_constants.INSUFFICIENT_ACCESS_OR_READONLY) ? E2_Constants.INSUFFICIENT_ERROR_MSSG : ex.getMessage();
             return null;
         }
         
-        if(this.childScope.isDeleted == false){             
-                    
-            for(Effort ef : this.childScope.efforts){
-                if(ef.isDeleted == true){
-                    if(ef.effort.id <> NULL) effortsToDelete.add(ef.effort); 
-                        continue;
-                }
-                system.debug('>>ef.effort.scope__c = sc.scope.id>>' + ef.effort.scope__c + '=' +  this.childScope.scope.id);
-                if(ef.effort.scope__c == null) ef.effort.scope__c = this.childScope.scope.id;
-                    masterScope_Efforts.add(ef.effort);
+        for(Effort ef : this.childScope.efforts){
+            if(ef.isDeleted == true){
+                if(ef.effort.id <> NULL) effortsToDelete.add(ef.effort); 
+                    continue;
             }
-        }       
+            system.debug('>>ef.effort.scope__c = sc.scope.id>>' + ef.effort.scope__c + '=' +  this.childScope.scope.id);
+            if(ef.effort.scope__c == null) ef.effort.scope__c = this.childScope.scope.id;
+                masterScope_Efforts.add(ef.effort);
+        }
         try{
-            if(!effortsToDelete.isEmpty()){
-              delete effortsToDelete;            
-            } 
-        
-            if(!scopeListToDelete.isEmpty()){
-              delete scopeListToDelete;
-            }
+            if(!effortsToDelete.isEmpty()) delete effortsToDelete; 
  
-            if(!masterScope_Efforts.isEmpty()){
-                upsert masterScope_Efforts;
-            }
+            if(!masterScope_Efforts.isEmpty()) upsert masterScope_Efforts;
             
-            if(assetsToInsert.size() > 0){
-            	insert assetsToInsert;
-            }
+            if(assetsToInsert.size() > 0) insert assetsToInsert;
             
-            if(assetsToDelete.size() > 0){
-            	delete assetsToDelete;
-            }
+            if(assetsToDelete.size() > 0) delete assetsToDelete;
+            
             assetsRecsJson = '';
             this.is_Dirty = false;
         }catch(Exception ex){
             Database.rollback(sp);
             resetChildScopesOnException(); 
-            this.errorMessage = ex.getMessage().contains(E2_constants.INSUFFICIENT_ACCESS_OR_READONLY) ? 
-                                    E2_Constants.INSUFFICIENT_ERROR_MSSG : 
-                                    ex.getMessage();
+            this.errorMessage = ex.getMessage().contains(E2_constants.INSUFFICIENT_ACCESS_OR_READONLY) ? E2_Constants.INSUFFICIENT_ERROR_MSSG : ex.getMessage();
             return null;            
         }
         this.dmlOperationMessage = E2_Constants.DML_OPERATION_MESSAGE_SUCCESS;

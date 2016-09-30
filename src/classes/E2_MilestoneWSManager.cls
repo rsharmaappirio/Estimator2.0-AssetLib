@@ -19,9 +19,10 @@ public class E2_MilestoneWSManager {
     public static string addFromTemplate(string selectedTemplate, string estimateId){
        //method to insert E2_Estimate_Milestone__c records from Template based on the type
        //for 'Workday' or 'SFDC'
+        system.debug('selectedTemplate>>' +selectedTemplate);
         List<E2_Estimate_Milestone__c> lstToInsert = new List<E2_Estimate_Milestone__c>();
         List<E2_Estimate_Milestone__c> estimateMilestones = E2_MilestoneDataUtil_WS.getEstimateMilestones(estimateId);
-        
+        system.debug('estimateId>>' +estimateId);
         List<E2_Timeline_Milestone__c> lstMilestones = E2_MilestoneDataUtil_WS.getTimelineMilestones(selectedTemplate);
         
         Integer index = estimateMilestones.size() + 1;
@@ -60,7 +61,7 @@ public class E2_MilestoneWSManager {
         }
         
         for(E2_Estimate_Milestone_Week__c rwW : E2_MilestoneDataUtil_WS.getEstimateMilestoneWeeks(weekIds, milestoneIds)){
-               
+               system.debug('rwW>>>' +rwW);
                string key = rwW.Estimate_Milestone__c + SEPARATOR + rwW.Estimate_Week__c;
                milestoneWeekMap.put(key, rwW);           
         }

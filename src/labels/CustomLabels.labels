@@ -1,6 +1,41 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomLabels xmlns="http://soap.sforce.com/2006/04/metadata">
     <labels>
+        <fullName>E2_Answer_Action_Activate_Child_Scope</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>E2 Answer Action Activate Child Scope</shortDescription>
+        <value>Answer will activate predefined child scope if cloned</value>
+    </labels>
+    <labels>
+        <fullName>E2_Answer_Action_Complexity_High</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>E2 Answer Action Complexity High</shortDescription>
+        <value>Answer will change scope complexity high</value>
+    </labels>
+    <labels>
+        <fullName>E2_Answer_Action_Complexity_Low</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>E2 Answer Action Complexity Low</shortDescription>
+        <value>Answer will change scope complexity to low</value>
+    </labels>
+    <labels>
+        <fullName>E2_Answer_Action_Complexity_Medium</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>E2 Answer Action Complexity Medium</shortDescription>
+        <value>Answer will change scope complexity to medium</value>
+    </labels>
+    <labels>
+        <fullName>E2_Answer_Action_Deactivate_Child_Scope</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>E2 Answer Action Deactivate Child Scope</shortDescription>
+        <value>Answer will deactivate predefined child scope if cloned</value>
+    </labels>
+    <labels>
         <fullName>E2_Required_Field_Error_Message</fullName>
         <categories>E2_AddEditDerivedEfforts</categories>
         <language>en_US</language>

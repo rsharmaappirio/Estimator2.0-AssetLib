@@ -287,7 +287,7 @@ public with sharing class E2_Test_Utils {
     pserateCard.pse__Average_Cost_Rate__c = 10000;
     pserateCard.pse__Suggested_Bill_Rate__c = 5000;
     pserateCard.pse__Role__c = 'Account Director';
-    pserateCard.Code__c = 'Code 1';
+    pserateCard.Code__c = 'Code1';
     pserateCard.pse__Region__c = regionId;
     pserateCard.pse__Practice__c = practiceId;
     pserateCard.CurrencyIsoCode = E2_Constants.CURRENCY_ISO_CODE_USD;

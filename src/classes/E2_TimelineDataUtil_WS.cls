@@ -15,7 +15,7 @@ public class E2_TimelineDataUtil_WS {
               Bill_Rate__c, Discounted_Rate__c, Category__c  
               FROM E2_Estimate_Rate_Card__c 
               WHERE Estimate__c = :estimateId
-              ORDER BY Region__c ASC, Resource_Role__c ASC];
+              ORDER BY Practice__c ASC, Region__c ASC, Resource_Role__c ASC];
   }
   
   //method to get Hours from CMC_Estimate_Resource_Week__c for a week and a resource

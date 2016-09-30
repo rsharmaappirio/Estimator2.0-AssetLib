@@ -283,7 +283,7 @@ public with sharing class E2_SyncResourceRequestsController {
     
     //perform the sync
     public PageReference syncData(){
-    	if(upsertList.size() ==  0){
+    	if(upsertList == null || upsertList.size() ==  0){
     		return cancel();
     	}
     	

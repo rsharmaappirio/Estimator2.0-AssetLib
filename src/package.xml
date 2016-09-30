@@ -122,6 +122,8 @@
         <members>CMC_Presales_LOE__c.E2_AE__c</members>
         <members>CMC_Presales_LOE__c.E2_Date_Scoped__c</members>
         <members>CMC_Presales_LOE__c.E2_Derived_Effort_Template__c</members>
+        <members>CMC_Presales_LOE__c.E2_Dev_hours_per_day__c</members>
+        <members>CMC_Presales_LOE__c.E2_Dev_hours_per_day__c</members>
         <members>CMC_Presales_LOE__c.E2_Is_Primary__c</members>
         <members>CMC_Presales_LOE__c.E2_Last_Build_Datetime__c</members>
         <members>CMC_Presales_LOE__c.E2_Last_Build_Datetime__c</members>
@@ -140,6 +142,11 @@
         <name>CustomField</name>
     </types>
     <types>
+        <members>E2_Answer_Action_Activate_Child_Scope</members>
+        <members>E2_Answer_Action_Complexity_High</members>
+        <members>E2_Answer_Action_Complexity_Low</members>
+        <members>E2_Answer_Action_Complexity_Medium</members>
+        <members>E2_Answer_Action_Deactivate_Child_Scope</members>
         <members>E2_Required_Field_Error_Message</members>
         <members>E2_Scope_is_Required</members>
         <name>CustomLabel</name>

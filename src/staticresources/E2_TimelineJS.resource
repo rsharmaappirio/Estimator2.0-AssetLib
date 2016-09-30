@@ -1456,8 +1456,8 @@ function PhaseSelectionEditor(args) {
     var scope = this;
 
     this.init = function () {
-      //$input = $("<INPUT type=text class='editor-percentcomplete' readonly/>");
-      $input = $("<INPUT type=text class='editor-percentcomplete'/>");
+      $input = $("<INPUT type=text class='editor-percentcomplete' readonly/>");
+      //$input = $("<INPUT type=text class='editor-percentcomplete'/>");
       $input.width($(args.container).innerWidth() - 25);
       $input.appendTo(args.container);
 
@@ -2164,11 +2164,33 @@ $(function() {
     // bind the data picker controller with the input field for date.
     $("#datepicker").datepicker(datepickerOptions);
     $("#contextMenu").click(Timeline.contextMenuClickHandler);
-    
+   // Code for enablePhaseContextMenu : Rohit
+    for(var _a in renderOptions_Phases){
+        $("#phaseContextMenu").append('<span><button id="phase_btn" onclick="return false;" colorCode="' + renderOptions_Phases[_a] + '" data="' + _a + '" style="width:95%;color:' + 
+                                    (renderOptions_Phases[_a] == '' ? '#000000' : '#ffffff') + ';background:' + renderOptions_Phases[_a] + ';" val="' + 
+                                    _a + '">' + _a + '</button></span>');
+    }   
+    $("#phaseContextMenu").click(Timeline.phaseContextMenuClickHandler);
     reFreshGrid();
+    //to hide open contextmenus : Rohit
+    $("body").click(function () {
+            $("#contextMenu").hide();
+            $("#phaseContextMenu").hide();
+          });
     
+    // handle key down event for enter click on the manage rate cards section.
+    $('input.discountRateTextBox').keydown(function(event){
+        if(event.keyCode == 13) {
+          event.stopPropagation();    
+          event.preventDefault();
+          //$('.buttonSaveCustom').click();// this is making the page to reload; not working so call the actionfunction instead
+          Timeline.updateEstimateRateCards();
+          return false;
+        }        
+    });
     
     loadSpinner.show();
+    TimelineSummary.domReady();
 });
 
 
@@ -2437,7 +2459,7 @@ var Timeline = {
                                                         editable: true,
                                                         enableAddRow: true,
                                                         enableCellNavigation: true,
-                                                        asyncEditorLoading: false,
+                                                        asyncEditorLoading: true, // need true to implement single click
                                                         autoEdit: true,
                                                         enableColumnReorder: false
                                                         ,forceFitColumns : false
@@ -2505,6 +2527,19 @@ var Timeline = {
             headerCssClass: "Fixed-Header-Style",
             order: null
             ,notUsedForCalculation : true
+            ,formatter: function(row, cell, value, columnDef, dataContext) {
+                // 09/23 RJ: Added this formatter to display only role name in the column
+                // Need not to display the whole text with practice, region, role 
+                // show the whole text as tooltip than on screen
+                var SEPARATOR = ' - ';
+                if(typeof value != 'undefined' && value != ''){
+                    var valArr = value.split(SEPARATOR);
+                    if(valArr.length > 0){ 
+                        return '<div class="info_icon" style="cursor:pointer;font-weight:bold;color:#000" title="' + value + '">' + dataContext.roleToDisplay + '</div>';
+                    }
+                }
+                return value;
+            }
         },{
             id: "skill",
             field: "skill",
@@ -2774,7 +2809,7 @@ var Timeline = {
     },
     
     
-    
+    // Code for enablePhaseContextMenu : Rohit
     fixedRowsTypes : {
                       'weekname' : {
                           id : 'weekname',
@@ -2782,6 +2817,7 @@ var Timeline = {
                           valuefield: 'order'
                           , rowLabel: 'WEEK'
                           , enableColorCodeContextMenu : false
+                          , enablePhaseContextMenu : false
                           ,editable : false
                           ,rowIndex : 0
                       }, 
@@ -2794,7 +2830,9 @@ var Timeline = {
                           apply_css : true
                           , rowLabel: 'PHASE'
                           , enableColorCodeContextMenu : false
+                          , enablePhaseContextMenu : true
                           ,rowIndex : 1
+                          ,editable : false
                           
                           
                       }, 'milestone' : {
@@ -2806,6 +2844,7 @@ var Timeline = {
                           apply_css : true
                           , rowLabel: 'MILESTONE'
                           , enableColorCodeContextMenu : true
+                          , enablePhaseContextMenu : false
                           ,rowIndex : 2
                           
                       }, 'milestone1' : {
@@ -2817,6 +2856,7 @@ var Timeline = {
                           apply_css : true
                           , rowLabel: ''
                           , enableColorCodeContextMenu : true
+                          , enablePhaseContextMenu : false
                           ,rowIndex : 3
                           
                       }, 'milestone2' : {
@@ -2828,13 +2868,15 @@ var Timeline = {
                           apply_css : true
                           , rowLabel: ''
                           , enableColorCodeContextMenu : true
+                          , enablePhaseContextMenu : false
                           ,rowIndex : 4
                           
                       }, 'capacityneedsperphase' : {
                           id : 'capacityneedsperphase',
                           defaultValue : 0
                           , rowLabel: 'CAPACITY NEEDS PER PHASE (Hrs)'
-                          , enableColorCodeContextMenu : false,
+                          , enableColorCodeContextMenu : false
+                          , enablePhaseContextMenu : false,
                           apply_css : false
                           ,editable : false
                           ,rowIndex : 5
@@ -2843,7 +2885,8 @@ var Timeline = {
                           id : 'hoursperphase',
                           defaultValue : 0
                           , rowLabel: 'HOURS PER PHASE (Hrs)'
-                          , enableColorCodeContextMenu : false,
+                          , enableColorCodeContextMenu : false
+                          , enablePhaseContextMenu : false,
                           apply_css : false
                           ,editable : false
                           ,rowIndex : 6
@@ -2852,7 +2895,8 @@ var Timeline = {
                           id : 'total',
                           defaultValue : 0
                           , rowLabel: 'TOTAL PER WEEK (Hrs)'
-                          , enableColorCodeContextMenu : false,
+                          , enableColorCodeContextMenu : false
+                          , enablePhaseContextMenu : false,
                           apply_css : false
                           ,editable : false
                           ,rowIndex : 7
@@ -2927,7 +2971,7 @@ var Timeline = {
                     $.each(columns, function(indx1, colItem) {
                         if(indx1 >= Timeline.fixedColumns && typeof colItem.usedForCalculation != 'undefined' && colItem.usedForCalculation){
                             //added code for colspan
-                             //metadata.selectable = true;
+                             metadata.selectable = true;
                              var val = currentRow[columns[indx1].field];
                              var nextCellIndex = indx1 + 1;
                              var colspan = 1;
@@ -2942,7 +2986,7 @@ var Timeline = {
                              // end of colspan calcuation
                              metadata.columns[colItem.field] = {};
                              //metadata.columns[colItem.field].editor = MilestoneEditor; // commented after adding colspan no need for phase editor now
-                             metadata.columns[colItem.field].editor = PhaseSelectionEditor; 
+                             //metadata.columns[colItem.field].editor = PhaseSelectionEditor; 
                              metadata.columns[colItem.field].colspan = colspan; // added for colspan
                         }
                     });
@@ -3029,30 +3073,38 @@ var Timeline = {
     onContextMenuHandler: function (e) {
       e.preventDefault();
       var cell = grid.getCellFromEvent(e);
-      
-     
+      $("#phaseContextMenu").hide();
+      $("#contextMenu").hide();
       
       if(typeof Timeline.fixedRowsTypes[data[cell.row].id] == 'undefined'){
           return; // if not an fixed header row
       }
-      
-      if(Timeline.fixedRowsTypes[data[cell.row].id].enableColorCodeContextMenu == false){
+      // Code for enablePhaseContextMenu : Rohit
+      if(Timeline.fixedRowsTypes[data[cell.row].id].enableColorCodeContextMenu == false
+         && Timeline.fixedRowsTypes[data[cell.row].id].enablePhaseContextMenu == false){
           return; // if context menu disabled for an fixed header row
       }
       
       if(typeof columns[cell.cell] != 'undefined' && typeof columns[cell.cell].usedForCalculation == 'undefined'){
           return;
       }
-      //console.log(cell);
-      $("#contextMenu")
-          .data("data", { range : grid.getSelectionModel().getSelectedRanges(), row : cell.row, cell : cell.cell})
-          .css("top", e.pageY)
-          .css("left", e.pageX)
-          .show();
-
-      $("body").one("click", function () {
-        $("#contextMenu").hide();
-      });
+      if(Timeline.fixedRowsTypes[data[cell.row].id].enableColorCodeContextMenu == true) {
+          //console.log(cell);
+          $("#contextMenu")
+              .data("data", { range : grid.getSelectionModel().getSelectedRanges(), row : cell.row, cell : cell.cell})
+              .css("top", e.pageY)
+              .css("left", e.pageX)
+              .show();
+      }
+      // Code for enablePhaseContextMenu : Rohit
+      else if(Timeline.fixedRowsTypes[data[cell.row].id].enablePhaseContextMenu == true) {
+          //console.log(cell);
+          $("#phaseContextMenu")
+              .data("data", { range : grid.getSelectionModel().getSelectedRanges(), row : cell.row, cell : cell.cell})
+              .css("top", e.pageY)
+              .css("left", e.pageX)
+              .show();
+      }
     },
     
     contextMenuClickHandler:function (e) {
@@ -3137,9 +3189,21 @@ var Timeline = {
                 
                          if (val.toLowerCase() == 'merge') {
                              var nodes_order_json = '[';
-                
+                             var cellValue_register = [];
+                             for(var i = 0; i <= from.toRow - from.fromRow; i++) {
+                                 var cellValue = '';
+                                 for (var j = 0; j <= from.toCell - from.fromCell; j++) {
+                                     if(data[from.fromRow + i][columns[from.fromCell + j].field] != 'undefined' 
+                                     && data[from.fromRow + i][columns[from.fromCell + j].field] != '') {
+                                         cellValue = data[from.fromRow + i][columns[from.fromCell + j].field];
+                                         break;
+                                     }
+                                 }
+                                 cellValue_register.push(cellValue);
+                             }
+                             
                              for (var i = 0; i <= from.toRow - from.fromRow; i++) {
-                                 var cellValue = data[from.fromRow + i][columns[from.fromCell].field];
+                                 var cellValue = cellValue_register[i];//data[from.fromRow + i][columns[from.fromCell].field];
                 
                 
                                  for (var j = 0; j <= from.toCell - from.fromCell; j++) {
@@ -3216,9 +3280,279 @@ var Timeline = {
                              grid.setData(data);
                              Timeline.renderGrid();
                     
+                         }else if (val.toLowerCase() == 'clear') {
+                            var nodes_order_json = '[';
+                    
+                             for (var i = 0; i <= from.toRow - from.fromRow; i++) {
+                                // var cellValue = data[from.fromRow + i][columns[from.fromCell].field];
+                                 for (var j = 0; j <= from.toCell - from.fromCell; j++) {
+                                     if (typeof columns[from.fromCell + j].usedForCalculation != 'undefined' && columns[from.fromCell + j].usedForCalculation == true) {
+                                         var rowId = data[from.fromRow + i].id;
+                                         var field = columns[from.fromCell + j].field;
+                                         var value = data[from.fromRow + i][columns[from.fromCell + j].field];
+                    
+                                         //if (columns[from.fromCell].field != columns[from.fromCell + j].field && value == cellValue) {
+                                             data[from.fromRow + i][columns[from.fromCell + j].field] = '';
+                                             
+                                             var meta_info = Timeline.fixedRowsTypes[rowId];
+                                             if (typeof meta_info != 'undefined') {
+                                                 var colorCodePostFix = meta_info.colorcodepostfix;
+                                                 if (typeof colorCodePostFix != 'undefined') {
+                                                    data[from.fromRow + i][columns[from.fromCell + j].field + colorCodePostFix] = '';
+                                                 }
+                                             }
+                                             nodes_order_json += '{"weekId":"' + field + '", "type":"' + rowId.toLowerCase() + '", "value":"", "colorCode":""},';
+                                         //}
+                                         grid.invalidateRow(from.fromRow + i);
+                                     }
+                                 }
+                    
+                             }
+                             // do a database update for milestone and phase color code update
+                             if (nodes_order_json != '[') {
+                                 nodes_order_json = nodes_order_json.slice(0, -1);
+                                 nodes_order_json += ']';
+                                 Timeline.updateMilestoneWeeks(nodes_order_json);
+                             }
+                             grid.getSelectionModel().setSelectedRanges([]);
+                             grid.setData(data);
+                             Timeline.renderGrid();
+                             
                          }
  
                     }// end of context length check    
+                 }//end of is button check  
+        
+        
+    }, 
+    phaseContextMenuClickHandler:function (e) {
+                 if (!$(e.target).is("button")) {
+                     return;
+                 }
+                 
+                 if (!grid.getEditorLock().commitCurrentEdit()) {
+                     return;
+                 }
+                
+                 if ($(e.target).is("button")) {
+                     var context_data = $(this).data("data");
+                     var val = typeof $(e.target).attr("data") == 'undefined' ? '' : $(e.target).attr("data");
+                     console.log(context_data);
+                     if (context_data.range.length > 0) {
+                         var from = context_data.range[0];
+                
+                         if (val.toLowerCase() == 'merge') {
+                             var nodes_order_json = '[';
+                             var cellValue_register = [];
+                             for(var i = 0; i <= from.toRow - from.fromRow; i++) {
+                                 var cellValue = '';
+                                 for (var j = 0; j <= from.toCell - from.fromCell; j++) {
+                                     if(data[from.fromRow + i][columns[from.fromCell + j].field] != 'undefined' 
+                                     && data[from.fromRow + i][columns[from.fromCell + j].field] != '') {
+                                         cellValue = data[from.fromRow + i][columns[from.fromCell + j].field];
+                                         break;
+                                     }
+                                 }
+                                 cellValue_register.push(cellValue);
+                             }
+                             
+                             for (var i = 0; i <= from.toRow - from.fromRow; i++) {
+                                 var cellValue = cellValue_register[i];//]data[from.fromRow + i][columns[from.fromCell].field];
+                
+                
+                                 for (var j = 0; j <= from.toCell - from.fromCell; j++) {
+                                     if (typeof columns[from.fromCell + j].usedForCalculation != 'undefined' && columns[from.fromCell + j].usedForCalculation == true) {
+                
+                                         var rowId = data[from.fromRow + i].id;
+                                         var field = columns[from.fromCell + j].field;
+                                         data[from.fromRow + i][columns[from.fromCell + j].field] = cellValue;
+                                         
+                                         nodes_order_json += '{"weekId":"' + field + '", "type":"' + rowId.toLowerCase() + '", "value":"' + cellValue.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"';
+                                         
+                                         var meta_info = Timeline.fixedRowsTypes[rowId];
+                                         if (typeof meta_info != 'undefined') {
+                                             var colorCodePostFix = meta_info.colorcodepostfix;
+                                             if (typeof colorCodePostFix != 'undefined') {
+                                                 var cCode = data[from.fromRow + i][columns[from.fromCell + j].field + colorCodePostFix];
+                                                 nodes_order_json += ', "colorCode":"' + cCode + '"';
+                                             }
+                                         }
+                                         
+                                         nodes_order_json += '},';
+                                         grid.invalidateRow(from.fromRow + i);
+                
+                                     }
+                                 }
+                
+                             }
+                             
+                             // do a database update for milestone and phase color code update
+                             if (nodes_order_json != '[') {
+                                 nodes_order_json = nodes_order_json.slice(0, -1);
+                                 nodes_order_json += ']';
+                                 Timeline.updateMilestoneWeeks(nodes_order_json);
+                             }
+                             
+                             grid.getSelectionModel().setSelectedRanges([]);
+                             grid.setData(data);
+                             Timeline.renderGrid();
+                         }else if (val.toLowerCase() == 'unmerge') {
+                             var nodes_order_json = '[';
+                    
+                             for (var i = 0; i <= from.toRow - from.fromRow; i++) {
+                                 var cellValue = data[from.fromRow + i][columns[from.fromCell].field];
+                                 for (var j = 0; j <= from.toCell - from.fromCell; j++) {
+                                     if (typeof columns[from.fromCell + j].usedForCalculation != 'undefined' && columns[from.fromCell + j].usedForCalculation == true) {
+                                         var rowId = data[from.fromRow + i].id;
+                                         var field = columns[from.fromCell + j].field;
+                                         var value = data[from.fromRow + i][columns[from.fromCell + j].field];
+                    
+                                         if (columns[from.fromCell].field != columns[from.fromCell + j].field && value == cellValue) {
+                                             data[from.fromRow + i][columns[from.fromCell + j].field] = '';
+                                             
+                                             var meta_info = Timeline.fixedRowsTypes[rowId];
+                                             if (typeof meta_info != 'undefined') {
+                                                 var colorCodePostFix = meta_info.colorcodepostfix;
+                                                 if (typeof colorCodePostFix != 'undefined') {
+                                                    data[from.fromRow + i][columns[from.fromCell + j].field + colorCodePostFix] = '';
+                                                 }
+                                             }
+                                             nodes_order_json += '{"weekId":"' + field + '", "type":"' + rowId.toLowerCase() + '", "value":"", "colorCode":""},';
+                                         }
+                                         grid.invalidateRow(from.fromRow + i);
+                                     }
+                                 }
+                    
+                             }
+                             // do a database update for milestone and phase color code update
+                             if (nodes_order_json != '[') {
+                                 nodes_order_json = nodes_order_json.slice(0, -1);
+                                 nodes_order_json += ']';
+                                 Timeline.updateMilestoneWeeks(nodes_order_json);
+                             }
+                             grid.getSelectionModel().setSelectedRanges([]);
+                             grid.setData(data);
+                             Timeline.renderGrid();
+                    
+                         } else if (val.toLowerCase() == 'clear') {
+                            var nodes_order_json = '[';
+                    
+                             for (var i = 0; i <= from.toRow - from.fromRow; i++) {
+                                // var cellValue = data[from.fromRow + i][columns[from.fromCell].field];
+                                 for (var j = 0; j <= from.toCell - from.fromCell; j++) {
+                                     if (typeof columns[from.fromCell + j].usedForCalculation != 'undefined' && columns[from.fromCell + j].usedForCalculation == true) {
+                                         var rowId = data[from.fromRow + i].id;
+                                         var field = columns[from.fromCell + j].field;
+                                         var value = data[from.fromRow + i][columns[from.fromCell + j].field];
+                    
+                                         //if (columns[from.fromCell].field != columns[from.fromCell + j].field && value == cellValue) {
+                                             data[from.fromRow + i][columns[from.fromCell + j].field] = '';
+                                             
+                                             var meta_info = Timeline.fixedRowsTypes[rowId];
+                                             if (typeof meta_info != 'undefined') {
+                                                 var colorCodePostFix = meta_info.colorcodepostfix;
+                                                 if (typeof colorCodePostFix != 'undefined') {
+                                                    data[from.fromRow + i][columns[from.fromCell + j].field + colorCodePostFix] = '';
+                                                 }
+                                             }
+                                             nodes_order_json += '{"weekId":"' + field + '", "type":"' + rowId.toLowerCase() + '", "value":"", "colorCode":""},';
+                                         //}
+                                         grid.invalidateRow(from.fromRow + i);
+                                     }
+                                 }
+                    
+                             }
+                             // do a database update for milestone and phase color code update
+                             if (nodes_order_json != '[') {
+                                 nodes_order_json = nodes_order_json.slice(0, -1);
+                                 nodes_order_json += ']';
+                                 Timeline.updateMilestoneWeeks(nodes_order_json);
+                             }
+                             grid.getSelectionModel().setSelectedRanges([]);
+                             grid.setData(data);
+                             Timeline.renderGrid();
+                             
+                         } else if(typeof val != 'undefined' && typeof renderOptions_Phases[val] != 'undefined'){
+                             var nodes_order_json = '[';
+                    
+                             for (var i = 0; i <= from.toRow - from.fromRow; i++) {
+                                // var cellValue = data[from.fromRow + i][columns[from.fromCell].field];
+                                 for (var j = 0; j <= from.toCell - from.fromCell; j++) {
+                                     if (typeof columns[from.fromCell + j].usedForCalculation != 'undefined' && columns[from.fromCell + j].usedForCalculation == true) {
+                                         var rowId = data[from.fromRow + i].id;
+                                         var field = columns[from.fromCell + j].field;
+                                         var value = data[from.fromRow + i][columns[from.fromCell + j].field];
+                    
+                                         //if (columns[from.fromCell].field != columns[from.fromCell + j].field && value == cellValue) {
+                                             data[from.fromRow + i][columns[from.fromCell + j].field] = val;
+                                             
+                                             var meta_info = Timeline.fixedRowsTypes[rowId];
+                                             if (typeof meta_info != 'undefined') {
+                                                 var colorCodePostFix = meta_info.colorcodepostfix;
+                                                 if (typeof colorCodePostFix != 'undefined') {
+                                                    data[from.fromRow + i][columns[from.fromCell + j].field + colorCodePostFix] = renderOptions_Phases[val];
+                                                 }
+                                             }
+                                             nodes_order_json += '{"weekId":"' + field + '", "type":"' + rowId.toLowerCase() + '", "value":"'+ val +'", "colorCode":"' + renderOptions_Phases[val] + '"},';
+                                         //}
+                                         grid.invalidateRow(from.fromRow + i);
+                                     }
+                                 }
+                    
+                             }
+                             // do a database update for milestone and phase color code update
+                             if (nodes_order_json != '[') {
+                                 nodes_order_json = nodes_order_json.slice(0, -1);
+                                 nodes_order_json += ']';
+                                 Timeline.updateMilestoneWeeks(nodes_order_json);
+                             }
+                             grid.getSelectionModel().setSelectedRanges([]);
+                             grid.setData(data);
+                             Timeline.renderGrid();
+                         }
+ 
+                    }// end of context length check   
+                    else if(val.toLowerCase() == 'clear' || typeof renderOptions_Phases[val] != 'undefined'){
+                         var nodes_order_json = '[';
+                         if(val.toLowerCase() == 'clear') {
+                             var rowId = data[context_data.row].id;
+                             var field = columns[context_data.cell].field;
+                             var meta_info = Timeline.fixedRowsTypes[rowId];
+                             data[context_data.row][columns[context_data.cell].field] = '';
+                             if (typeof meta_info != 'undefined') {
+                                 var colorCodePostFix = meta_info.colorcodepostfix;
+                                 if (typeof colorCodePostFix != 'undefined') {
+                                     data[context_data.row][columns[context_data.cell].field + colorCodePostFix] = '';
+                                     //Timeline.triggerUpdateColorCode(field, val, rowId);
+                                     grid.invalidateRow(context_data.row);
+                                 }
+                             }
+                             nodes_order_json += '{"weekId":"' + field + '", "type":"' + rowId.toLowerCase() + '", "value":"", "colorCode":""},';
+                         } else {
+                             var rowId = data[context_data.row].id;
+                             var field = columns[context_data.cell].field;
+                             var meta_info = Timeline.fixedRowsTypes[rowId];
+                             data[context_data.row][columns[context_data.cell].field] = val;
+                             if (typeof meta_info != 'undefined') {
+                                 var colorCodePostFix = meta_info.colorcodepostfix;
+                                 if (typeof colorCodePostFix != 'undefined') {
+                                     data[context_data.row][columns[context_data.cell].field + colorCodePostFix] = renderOptions_Phases[val];
+                                     //Timeline.triggerUpdateColorCode(field, val, rowId);
+                                     grid.invalidateRow(context_data.row);
+                                 }
+                             }
+                            nodes_order_json += '{"weekId":"' + field + '", "type":"' + rowId.toLowerCase() + '", "value":"'+ val +'", "colorCode":"' + renderOptions_Phases[val] + '"},';
+                         }
+                         // do a database update for milestone and phase color code update
+                         if (nodes_order_json != '[') {
+                             nodes_order_json = nodes_order_json.slice(0, -1);
+                             nodes_order_json += ']';
+                             Timeline.updateMilestoneWeeks(nodes_order_json);
+                         }
+                         grid.setData(data);
+                         Timeline.renderGrid();
+                
+                     } 
                  }//end of is button check  
         
         
@@ -3330,10 +3664,10 @@ var Timeline = {
                         if(rowId.toLowerCase() != Timeline.fixedRowsTypes.milestone.id 
                                 && rowId.toLowerCase() != Timeline.fixedRowsTypes.milestone1.id 
                                 && rowId.toLowerCase() != Timeline.fixedRowsTypes.milestone2.id
-                                && ((val != undefined && !Timeline.numFieldValidator(val).valid) || val == '')){
-                            val = 0;
+                                && ((typeof val != undefined && !Timeline.numFieldValidator(val).valid) || val == '')){
+                            val = '0';
                         }
-                        
+                        //console.log(val);
                         data[to.fromRow + i][columns[to.fromCell + j].field] = val;
                        
                         nodes_order_json += '{"rowId":"' + rowId + '", "cellId":"' + field + '", "value":"' + val.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"},';
@@ -3630,6 +3964,8 @@ var Timeline = {
         column.order = parseInt(column.order);
         column["usedForCalculation"] = true;
         column["headerCssClass"] = "Fixed-Header-Style";
+        // 09/23: RJ Added below line for applying css on hours column too. 
+        column["cssClass"] = "hours-cell-style-text-center";
         column["validator"] = Timeline.numFieldValidator;
         column.asyncPostRender = function(cellNode, row, dataContext, colDef) {
                 //console.log('postrender');
@@ -4790,4 +5126,169 @@ var Timeline = {
         }
     }
     
+}
+
+
+
+var TimelineSummary = {
+   json: {}, 
+   hoursPerWeek: 0,
+   DEV_CAPACITY_PER_DAY_ID : '#devhoursperday',
+   domReady : function() {
+       
+     $(TimelineSummary.DEV_CAPACITY_PER_DAY_ID).keydown(function(event){
+        if(event.keyCode == 13) {
+          event.stopPropagation();    
+          event.preventDefault();
+          TimelineSummary.onChange_InputDevHoursPerWeek();
+          return false;
+        }        
+    });
+     TimelineSummary.applyNumericValidation();
+     TimelineSummary.generateSummarySection();
+     TimelineSummary.load();  
+   },
+   applyNumericValidation : function(){
+	   $('.mandate-numeric').keyup(function(evt) {		    
+		    //$('body div.slds-error--tooltip').remove();
+		    var inputVal = $(this).val();
+		    //var numericReg = /^\d*[0-9](|.\d*[0-9]|,\d*[0-9])?$/;
+		    // var numericReg = /^[0-9]+\.?[0-9]*$/;
+		    var numericReg = /^[0-9]*$/;
+		    if(!numericReg.test(inputVal)) {
+                $(this).val(inputVal.substring(0, inputVal.length - 1)); 
+		        $(document.body).append('<div class="slds slds-error--tooltip"><div class="slds slds-popover slds-popover--tooltip slds-nubbin--bottom" role="tooltip"><div class="slds-popover__body">Numeric only.</div></div></div>');
+		        var top = $(this).offset().top - $(this).height() + 'px';
+		        var left = $(this).offset().left + 'px';
+		        $('body div.slds-error--tooltip').css({position : 'absolute', top : top , left : left});
+		    }
+		    
+		});
+		
+		$('.mandate-numeric').blur(function(evt) {
+		   $('body div.slds-error--tooltip').remove(); 
+		});
+	},
+   
+   load: function(){
+     var hours = 0;
+     if($(TimelineSummary.DEV_CAPACITY_PER_DAY_ID).val() != '' && !isNaN($(TimelineSummary.DEV_CAPACITY_PER_DAY_ID).val())) hours = parseInt($(TimelineSummary.DEV_CAPACITY_PER_DAY_ID).val());
+     TimelineSummary.calcuateHoursPerWeek(hours);
+     TimelineSummary.updatejsonWithWeeks();
+     TimelineSummary.renderSummarySection();
+   },
+   
+   generateSummarySection: function(){
+      delete TimelineSummary.json;
+	  TimelineSummary.json = {};
+      var phaseHoursSum = 0;
+	  var weekSum = 0;
+      for(var _a in capacityNeeds_JSON){
+	     if(_a == 'PhaseHours'){			    
+			for(var _b in capacityNeeds_JSON[_a]){
+			   TimelineSummary.json[_b] = {};
+			   var phaseHours = typeof capacityNeeds_JSON[_a][_b] != 'undefined' ? parseInt(capacityNeeds_JSON[_a][_b]) : 0;
+			   TimelineSummary.json[_b]['Hours'] = phaseHours;
+			   TimelineSummary.json[_b]['Weeks'] = 0;
+			   phaseHoursSum += phaseHours;
+			   
+			}				
+		 }		  
+	  }
+	  
+	  TimelineSummary.json['Total'] = {};
+	  TimelineSummary.json['Total']['Hours'] = phaseHoursSum;
+	  TimelineSummary.json['Total']['Weeks'] = weekSum;
+	  
+   },
+   
+   renderSummarySection: function(){
+       var html = '';
+       document.getElementById('summaryTbody').innerHTML = html;
+	   for(var _c in TimelineSummary.json){
+	     html +=  '<tr '+ (_c.toLowerCase() == 'total' ? 'style="font-weight:bold;"' : '') + '>';
+	     html +=  '<td>' + _c.toUpperCase() + '</td>';
+		 html +=  '<td>' + TimelineSummary.json[_c]['Hours'] + '</td>';
+		 html +=  '<td>' + TimelineSummary.json[_c]['Weeks'] + '</td>';
+		 html +=  '</tr>';			 
+	   }
+	   document.getElementById('summaryTbody').innerHTML = html;
+   },
+   
+   calcuateHoursPerWeek: function(devHours){
+       var totalHours = capacityNeeds_JSON["TotalHours"];
+       var role_json = capacityNeeds_JSON['RoleHours'];
+	   var hoursPerDay = 0;
+	   var hoursPerWeek = 0;
+	   var validate = false;
+	   // check that developer hours exists and is greater than 0
+	   if(typeof role_json['developer'] != 'undefined' && parseInt(role_json['developer']) > 0){
+	      validate = true;
+	   } 
+	   if(validate == true){
+		   for(var _a in role_json){
+			  if(_a != 'developer'){
+			       var roleHours = isNaN(parseInt(role_json[_a])) ? 0 : parseInt(role_json[_a]);
+			       var hours = (Math.round(roleHours/parseInt(totalHours)) * parseInt(devHours));
+				   hoursPerDay += isNaN(hours) ? 0 : hours;
+			  }			  
+		   }
+		   hoursPerDay += parseInt(devHours);
+		   hoursPerWeek = hoursPerDay * 5;
+		   TimelineSummary.hoursPerWeek = parseInt(hoursPerWeek);
+		   document.getElementById('hoursperweekdiv').innerHTML = hoursPerWeek;
+       }
+   },
+   
+   updatejsonWithWeeks: function(){
+       var _weekSum = 0;    
+       for(var _c in TimelineSummary.json){
+            if(_c.toLowerCase() != 'total'){
+    	     	var phaseHour = parseInt(TimelineSummary.json[_c]['Hours']);
+                TimelineSummary.json[_c]['Weeks'] = TimelineSummary.hoursPerWeek > 0 ? Math.round(phaseHour/TimelineSummary.hoursPerWeek) : 0;
+                
+                if(TimelineSummary.json[_c]['Weeks'] < 1 && phaseHour > 0 && TimelineSummary.hoursPerWeek > 0){
+                      TimelineSummary.json[_c]['Weeks'] = 1;
+                }
+                
+                _weekSum += parseInt(TimelineSummary.json[_c]['Weeks']);
+                console.log(_weekSum);
+            }
+	   }
+	   
+	  //TimelineSummary.json['Total'] = {};
+	  //TimelineSummary.json['Total']['Hours'] = phaseHoursSum;
+	  TimelineSummary.json['Total']['Weeks'] = _weekSum;
+	  console.log(TimelineSummary.json);
+   },
+   
+   onChange_InputDevHoursPerWeek: function(){
+       loadSpinner.show();
+       var hours = 0;
+       if($(TimelineSummary.DEV_CAPACITY_PER_DAY_ID).val() != '' && !isNaN($(TimelineSummary.DEV_CAPACITY_PER_DAY_ID).val())) hours = parseInt($(TimelineSummary.DEV_CAPACITY_PER_DAY_ID).val());
+       sforce.apex.execute(WEBSERVICE_NAME, "updateDevCapacity", {
+            estimateId : estimateId,
+            devCapacity: hours
+        }, TimelineSummary.onChange_InputDevHoursPerWeek_Callback);
+       
+   },
+   
+   onChange_InputDevHoursPerWeek_Callback : {
+        onSuccess: function(result) {
+            result = (result.length > 0 ? result[0] : result);
+            // check for failure message, show alert and stop
+            if (result.indexOf('Fail') != -1) {
+                    alert(result);
+                loadSpinner.hide();
+                return;
+            }
+            TimelineSummary.load();
+            loadSpinner.hide();
+        },
+        onFailure: function(error) {
+            alert(error);
+            loadSpinner.hide();
+        }
+    }
+
 }
