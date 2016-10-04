@@ -120,7 +120,7 @@
                            <div class="slds-col slds-no-flex slds-align-bottom">
                               <div class="" role="group">
                                  
-                                 <apex:commandButton onclick="return validateData();" styleClass="slds-button slds-button--neutral slds-button--small slds-button--right--float" title="Add Scope" value="Add Scope" action="{!addNewScope}"/>
+                                 <apex:commandButton onclick="return validateData();" styleClass="slds-button slds-button--neutral slds-button--small slds-button--right--float" title="Add Scope" value="Add New" action="{!addNewScope}"/>
                                  <!--         <apex:commandButton onclick="return addUpdateScopes();" styleClass="slds-button slds-button--neutral" title="Add/Update" value="Add/Update" action="{!saveScope}"/> -->
                               </div>
                            </div>

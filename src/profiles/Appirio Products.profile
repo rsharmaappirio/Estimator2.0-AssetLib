@@ -697,6 +697,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>E2_Scope_Group__c.Description__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>E2_Scope__c.Complexity__c</field>
         <readable>true</readable>
     </fieldPermissions>

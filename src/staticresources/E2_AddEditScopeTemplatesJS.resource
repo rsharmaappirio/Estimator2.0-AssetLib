@@ -797,7 +797,7 @@ var AddEditScope = {
         $('#helpModal1').find('#' + AddEditScope.SELECT_ADD_NEW_FRAME_ID).attr('src', '/apex/E2_AddNewScopeTemplate?is_New=true&scopegroup_id=' + scopeGrpId);
         $('#helpModal1').find('#' + AddEditScope.SELECT_ADD_NEW_FRAME_ID).closest('div.slds-modal__content').scrollTop(0);
         $('.custom-new-header').html('Add New Scope');
-        $('#helpModal1').find('#addupdatescopebutton').html('Add');
+        $('#helpModal1').find('#addupdatescopebutton').html('Save');
         $('#helpBackdrop1').show();
     },
 
