@@ -595,13 +595,18 @@
                 
                 .slds-capacityperphase-cell { 
                     text-align: center!important;
-                    background-color: #0070d2!important;
                     color: #fff!important;
+                }
+                .slds-capacityperphase-cell div { 
+                    background-color: #0070d2!important;
                 }
                 .slds-hoursperphase-cell { 
                     text-align: center!important;
                     background-color: #0070d2!important;
                     color: #fff!important;
+                }
+                .slds-hoursperphase-cell div {
+                    background-color: #0070d2!important;
                 }
                 .slds-totalhrsperweek-cell { 
                     text-align: center!important;

@@ -180,7 +180,7 @@ public class E2_Estimator_WSManager {
         parentScopeId = (parentScopeId == null || parentScopeId == E2_Constants.BLANK ? E2_Constants.HASH_TAG : parentScopeId);
         Id recTypeId = E2_RecordTypeClass.getId(E2_Constants.E2_SCOPE_API_NAME, E2_Constants.SCOPE_RT_SCOPE);
 		
-		List<E2_Scope__c> scopeList = new List<E2_Scope__c>();
+		    List<E2_Scope__c> scopeList = new List<E2_Scope__c>();
         map<string,E2_Scope__c> hasChildrenScope = new map<string,E2_Scope__c>();
         map<string, E2_Scope__c> clonedSourceMap = new map<string, E2_Scope__c>();
         
@@ -601,6 +601,123 @@ public class E2_Estimator_WSManager {
     	if(!scopesToUpdate.isEmpty())
     		update scopesToUpdate;
     	return 'Success';
+    }
+    
+    //T-542532 : method to clone scope scope
+    public static string cloneScopeWithChild(string scopeIdCSV, string estimateId, string parentScopeId){
+       parentScopeId = (parentScopeId == null || parentScopeId == E2_Constants.BLANK ? E2_Constants.HASH_TAG : parentScopeId);
+        Id recTypeId = E2_RecordTypeClass.getId(E2_Constants.E2_SCOPE_API_NAME, E2_Constants.SCOPE_RT_SCOPE);
+    
+        List<E2_Scope__c> scopeList = new List<E2_Scope__c>();
+        Map<string, E2_Scope__c> hasChildrenScope = new Map<string, E2_Scope__c>();
+        Map<string, E2_Scope__c> clonedSourceMap = new Map<string, E2_Scope__c>();
+        
+        List<String> scopeIDs = scopeIdCSV.split(E2_constants.COMMA);        
+        
+        for(E2_Scope__c scope : E2_DataUtil_WS.getFullScopesDetailsWithLimit(scopeIDs)){
+           E2_Scope__c cloneScope = scope.clone(false, true, false, false);
+           cloneScope.Source_Scope__c = scope.id;
+           cloneScope.Presales_LOE__c = estimateId;
+           cloneScope.Parent_Scope__c = (parentScopeId == E2_Constants.HASH_TAG ? null : parentScopeId);
+           cloneScope.recordTypeId = recTypeId;    
+           cloneScope.Scope_Group__c = null;                      
+           scopeList.add(cloneScope);
+           clonedSourceMap.put(scope.id, cloneScope);
+           if(scope.Efforts__r.size() > 0 || scope.E2_Recommended_Assets__r.size() > 0
+               || scope.Questions__r.size() > 0){
+                hasChildrenScope.put(scope.id, scope);
+           }                                                
+        }
+        if(!scopeList.isEmpty()){
+            insert scopeList;   
+            cloneScopesChildRecs(scopeList, hasChildrenScope, clonedSourceMap);   
+        }
+        return 'Success'; 
+    }
+    
+    private static void cloneScopesChildRecs(List<E2_Scope__c> scopeList, map<string,E2_Scope__c> hasChildrenScope, 
+                                           map<string, E2_Scope__c> clonedSourceMap) {
+      List<E2_Effort__c> effortList = new List<E2_Effort__c>();
+      List<E2_Recommended_Asset__c> assetList = new List<E2_Recommended_Asset__c>();
+      map<Id, E2_Question__c> questionsmap = new map<Id, E2_Question__c>();
+      
+        for(E2_Scope__c scope : scopeList) {
+          if(hasChildrenScope.containsKey(scope.Source_Scope__c)) {
+              E2_Scope__c sourceScope = hasChildrenScope.get(scope.Source_Scope__c);          
+          for(E2_Effort__c effort : sourceScope.Efforts__r){
+            E2_Effort__c cloneEffort = effort.clone(false, true, false, false);
+              cloneEffort.Scope__c = scope.Id;
+              cloneEffort.Source_Effort__c = effort.id;
+              effortList.add(cloneEffort);
+          }
+          for(E2_Recommended_Asset__c asset : sourceScope.E2_Recommended_Assets__r) {
+                E2_Recommended_Asset__c clonedAsset = asset.clone(false, true, false, false);
+                clonedAsset.Scope__c = scope.Id;
+                assetList.add(clonedAsset); 
+          }
+          for(E2_Question__c sourceQuestion : sourceScope.Questions__r) {
+            E2_Question__c clonedQuestion  = sourceQuestion.clone(false, true, false, false);
+            clonedQuestion.Scope__c = scope.Id;
+            clonedQuestion.Source_Question__c = sourceQuestion.Id;
+            questionsmap.put(sourceQuestion.Id, clonedQuestion);
+          }
+            }   
+    }
+        if(!effortList.isEmpty()) {
+          insert effortList;
+        }
+        if(!assetList.isEmpty()) {
+          insert assetList;
+        }
+        if(!questionsmap.isEmpty()) {
+          List<E2_Answer__c> allAnswers = E2_DataUtil_WS.getAnswersDetails(questionsmap.KeySet());
+          set<Id> questionsIds = questionsmap.KeySet();
+          for(Id questionsId : questionsIds) {
+            Boolean hasAnswers = false;
+            for(E2_Answer__c sourceAnswer : allAnswers) {
+              if(sourceAnswer.Question__c == questionsId) {
+                hasAnswers = true;
+              }
+            } 
+            if(hasAnswers == false)
+              questionsmap.remove(questionsId);
+          }
+          insert questionsmap.values();
+          
+          map<id,E2_Answer__c> answersList = new map<id,E2_Answer__c>();
+          map<id,List<E2_Action_Scope__c>> actionScopes = new map<id,List<E2_Action_Scope__c>>();
+          
+          for(E2_Answer__c sourceAnswer : allAnswers) {
+            E2_Answer__c clonedAnswer = sourceAnswer.clone(false, true, false, false);
+            clonedAnswer.Question__c = questionsmap.get(sourceAnswer.Question__c).Id;
+            clonedAnswer.Source_Answer__c = sourceAnswer.Id;
+            answersList.put(sourceAnswer.Id,clonedAnswer);
+            if(!sourceAnswer.Action_Scopes__r.isEmpty()) {
+              actionScopes.put(sourceAnswer.Id,sourceAnswer.Action_Scopes__r);
+            }
+          }
+          if(!answersList.isEmpty()) {
+            insert answersList.values();
+            List<E2_Action_Scope__c> actionscopestoinsert = new List<E2_Action_Scope__c>();
+            for(Id sourceAnswer : answersList.keySet()) {
+              if(actionScopes.containsKey(sourceAnswer)) {
+                for(E2_Action_Scope__c actionScope : actionScopes.get(sourceAnswer)) {
+                  if(clonedSourceMap.containsKey(actionScope.Scope__c)) {
+                    E2_Scope__c clonedScope = clonedSourceMap.get(actionScope.Scope__c);
+                    E2_Answer__c clonedAnswer = answersList.get(sourceAnswer);
+                    string uniqueKey = clonedAnswer.Id + E2_Constants.BLANK + clonedScope.Id;
+                    actionscopestoinsert.add(new E2_Action_Scope__c(Answer__c = clonedAnswer.Id,
+                                  Scope__c = clonedScope.Id,
+                                  Unique_Key__c = uniqueKey));
+                  }                 
+                }
+              }
+            }
+            if(!actionscopestoinsert.isEmpty()) {
+              insert actionscopestoinsert;
+            }           
+          }
+        }
     }
     
     //wrapper class for scope 

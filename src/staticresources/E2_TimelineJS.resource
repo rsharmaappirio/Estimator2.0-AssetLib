@@ -3221,6 +3221,8 @@ var Timeline = {
                                              if (typeof colorCodePostFix != 'undefined') {
                                                  var cCode = data[from.fromRow + i][columns[from.fromCell + j].field + colorCodePostFix];
                                                  nodes_order_json += ', "colorCode":"' + cCode + '"';
+                                             } else {
+                                                 nodes_order_json += ', "colorCode":""';
                                              }
                                          }
                                          
@@ -3320,7 +3322,54 @@ var Timeline = {
                              
                          }
  
-                    }// end of context length check    
+                    }// end of context length check 
+                    else if(val.toLowerCase() == 'clear' || val.toLowerCase() == 'unmerge') {
+                         var nodes_order_json = '[';
+                         if(val.toLowerCase() == 'clear') {
+                             var rowId = data[context_data.row].id;
+                             var field = columns[context_data.cell].field;
+                             var meta_info = Timeline.fixedRowsTypes[rowId];
+                             data[context_data.row][columns[context_data.cell].field] = '';
+                             if (typeof meta_info != 'undefined') {
+                                 var colorCodePostFix = meta_info.colorcodepostfix;
+                                 if (typeof colorCodePostFix != 'undefined') {
+                                     data[context_data.row][columns[context_data.cell].field + colorCodePostFix] = '';
+                                     //Timeline.triggerUpdateColorCode(field, val, rowId);
+                                     grid.invalidateRow(context_data.row);
+                                 }
+                             }
+                             nodes_order_json += '{"weekId":"' + field + '", "type":"' + rowId.toLowerCase() + '", "value":"", "colorCode":""},';
+                         } else if(val.toLowerCase() == 'unmerge') {
+                             var cellText = data[context_data.row][columns[context_data.cell].field];
+                             var rowid = data[context_data.row].id;
+                             var meta_info = Timeline.fixedRowsTypes[rowid];
+                             for(var cellValue = context_data.cell+1; cellValue <= columns.length - 1; cellValue++) {
+                                 var cellText1 = data[context_data.row][columns[cellValue].field];
+                                 if(cellText1 != '' && cellText == cellText1) {
+                                     data[context_data.row][columns[cellValue].field] = '';
+                                     if (typeof meta_info != 'undefined') {
+                                        var colorCodePostFix = meta_info.colorcodepostfix;
+                                        if (typeof colorCodePostFix != 'undefined') {
+                                            data[context_data.row][columns[cellValue].field + colorCodePostFix] = '';
+                                        }
+                                    }
+                                    nodes_order_json += '{"weekId":"' + columns[cellValue].field + '", "type":"' + rowid.toLowerCase() + '", "value":"", "colorCode":""},';
+                                 } else {
+                                     break;
+                                 }
+                             }
+                             grid.invalidateRow(context_data.row);
+                         } 
+                         // do a database update for milestone and phase color code update
+                         if (nodes_order_json != '[') {
+                             nodes_order_json = nodes_order_json.slice(0, -1);
+                             nodes_order_json += ']';
+                             Timeline.updateMilestoneWeeks(nodes_order_json);
+                         }
+                         grid.setData(data);
+                         Timeline.renderGrid();
+                
+                     } 
                  }//end of is button check  
         
         
@@ -3512,7 +3561,7 @@ var Timeline = {
                          }
  
                     }// end of context length check   
-                    else if(val.toLowerCase() == 'clear' || typeof renderOptions_Phases[val] != 'undefined'){
+                    else if(val.toLowerCase() == 'clear' || typeof renderOptions_Phases[val] != 'undefined' || val.toLowerCase() == 'unmerge') {
                          var nodes_order_json = '[';
                          if(val.toLowerCase() == 'clear') {
                              var rowId = data[context_data.row].id;
@@ -3528,10 +3577,31 @@ var Timeline = {
                                  }
                              }
                              nodes_order_json += '{"weekId":"' + field + '", "type":"' + rowId.toLowerCase() + '", "value":"", "colorCode":""},';
+                         } else if(val.toLowerCase() == 'unmerge') {
+                             var phaseText = data[context_data.row][columns[context_data.cell].field];
+                             var rowid = data[context_data.row].id;
+                             var meta_info = Timeline.fixedRowsTypes[rowid];
+                             for(var cellValue = context_data.cell+1; cellValue <= columns.length - 1; cellValue++) {
+                                 var phaseText1 = data[context_data.row][columns[cellValue].field];
+                                 if(phaseText == phaseText1) {
+                                     data[context_data.row][columns[cellValue].field] = '';
+                                     if (typeof meta_info != 'undefined') {
+                                        var colorCodePostFix = meta_info.colorcodepostfix;
+                                        if (typeof colorCodePostFix != 'undefined') {
+                                            data[context_data.row][columns[cellValue].field + colorCodePostFix] = '';
+                                        }
+                                    }
+                                    nodes_order_json += '{"weekId":"' + columns[cellValue].field + '", "type":"' + rowid.toLowerCase() + '", "value":"", "colorCode":""},';
+                                 } else {
+                                     break;
+                                 }
+                             }
+                             grid.invalidateRow(context_data.row);
                          } else {
                              var rowId = data[context_data.row].id;
                              var field = columns[context_data.cell].field;
                              var meta_info = Timeline.fixedRowsTypes[rowId];
+                             var phaseText = data[context_data.row][columns[context_data.cell].field];
                              data[context_data.row][columns[context_data.cell].field] = val;
                              if (typeof meta_info != 'undefined') {
                                  var colorCodePostFix = meta_info.colorcodepostfix;
@@ -3542,6 +3612,23 @@ var Timeline = {
                                  }
                              }
                             nodes_order_json += '{"weekId":"' + field + '", "type":"' + rowId.toLowerCase() + '", "value":"'+ val +'", "colorCode":"' + renderOptions_Phases[val] + '"},';
+                            
+                             for(var cellValue = context_data.cell+1; cellValue <= columns.length - 1; cellValue++) {
+                                 var phaseText1 = data[context_data.row][columns[cellValue].field];
+                                 if(phaseText1 != '' && phaseText == phaseText1) {
+                                     data[context_data.row][columns[cellValue].field] = val;
+                                     var meta_info = Timeline.fixedRowsTypes[rowId];
+                                     if (typeof meta_info != 'undefined') {
+                                        var colorCodePostFix = meta_info.colorcodepostfix;
+                                        if (typeof colorCodePostFix != 'undefined') {
+                                            data[context_data.row][columns[cellValue].field + colorCodePostFix] = renderOptions_Phases[val];
+                                        }
+                                    }
+                                    nodes_order_json += '{"weekId":"' + columns[cellValue].field + '", "type":"' + rowId.toLowerCase() + '", "value":"'+ val +'", "colorCode":"' + renderOptions_Phases[val] + '"},';
+                                 } else {
+                                     break;
+                                 }
+                             }
                          }
                          // do a database update for milestone and phase color code update
                          if (nodes_order_json != '[') {
@@ -3775,6 +3862,7 @@ var Timeline = {
             var row = args.row;
             var value = data[args.row][grid.getColumns()[args.cell].field];
             var rowId = item.id;
+            alert(value);
             if (rowId && field) {
                 Timeline.triggerUpdateCell(field, rowId, value, row, column);   
             }
