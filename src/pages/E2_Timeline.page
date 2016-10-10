@@ -762,6 +762,7 @@
                 <apex:actionfunction name="refreshRateCardRatesAndCost" action="{!refreshRateCardRatesAndCost}" oncomplete="Timeline.refreshRateCardRatesAndCost_complete();" rerender="ratecard_table"/>
                 <apex:actionfunction name="refreshOverviewPanel" action="{!refreshOverviewPanel}" rerender="overview_panel"/>
                 <apex:actionfunction name="changeDiscount" action="{!changeDiscount}" rerender="overview_panel"/>
+                <apex:actionfunction name="changeDiscountAmount" action="{!changeDiscountAmount}" rerender="overview_panel"/>
                 
                 
                 <div id="tabpanel">
@@ -843,7 +844,7 @@
                                                 </tr>
                                                 <tr>
                                                     <td><span class="overview-label">Discount:</span>&nbsp;<apex:inputfield onchange="changeDiscount();return false;" styleClass="slds-input" style="line-height: 20px;min-height: 20px;width: 40px;" value="{!estimate.Discount_Percent__c}"/>%</td>
-                                                    <td><span class="overview-label">Discount Amt:</span>&nbsp;{!CMC_Presales_LOE__c.CurrencyIsoCode}&nbsp;<apex:outputfield value="{!estimate.Discount_Amount__c}"/></td>
+                                                    <td><span class="overview-label">Discount Amt:</span>&nbsp;{!CMC_Presales_LOE__c.CurrencyIsoCode}&nbsp;<apex:inputText onchange="changeDiscountAmount();return false;" styleClass="slds-input mandate-numeric-estimate" style="line-height: 20px;min-height: 20px;width: 80px;" value="{!discountAmount}"/></td>
                                                     <td></td>
                                                 </tr>
                                                 <tr>

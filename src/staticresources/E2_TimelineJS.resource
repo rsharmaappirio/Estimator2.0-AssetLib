@@ -2141,6 +2141,7 @@ function preventEnterSubmit(e) {
 // On DOM Ready
 $(function() {
     //$("#form").keypress(preventEnterSubmit);
+    applyNumericValidation();
     makeManageRateCardsCollapsible();
     tabpanel.bindEvents();
     tabpanel.showTimelineTab();
@@ -2363,7 +2364,7 @@ var Timeline = {
     capacityneeds_cols_css : {'text-align' : 'center', 'background-color': '#0070d2', 'color' : '#fff', 'font-weight' : 'bold'},
     hoursperphase_cols_css : {'text-align' : 'center', 'background-color': '#0070d2', 'color' : '#fff', 'font-weight' : 'bold'},
     rt_json : [],
-    
+    cellOldText : '',
     
     renderGrid: function(){
         grid.setCellCssStyles("label_highlights", {
@@ -3849,6 +3850,11 @@ var Timeline = {
            typeof Timeline.fixedRowsTypes[data[args.row].id.toLowerCase()].editable != 'undefined' &&
            Timeline.fixedRowsTypes[data[args.row].id.toLowerCase()].editable == false) {
           return false;
+      }else if(typeof data[args.row] != 'undefined' && 
+           typeof data[args.row].id != 'undefined' && 
+           typeof Timeline.fixedRowsTypes[data[args.row].id.toLowerCase()] != 'undefined'){
+            
+            Timeline.cellOldText = data[args.row][grid.getColumns()[args.cell].field];
       }
       
     },
@@ -3862,8 +3868,31 @@ var Timeline = {
             var row = args.row;
             var value = data[args.row][grid.getColumns()[args.cell].field];
             var rowId = item.id;
-            alert(value);
-            if (rowId && field) {
+            //alert(value);
+            if(typeof Timeline.fixedRowsTypes[data[args.row].id.toLowerCase()] != 'undefined'){
+                
+                var meta_info = Timeline.fixedRowsTypes[rowId];
+                var colorCodePostFix = meta_info.colorcodepostfix;
+                var cCode = data[args.row][columns[column].field + colorCodePostFix];
+                
+                var nodes_order_json = '[';
+                nodes_order_json += '{"weekId":"' + columns[column].field + '", "type":"' + rowId.toLowerCase() + '", "value":"' + value.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '", "colorCode":"' + cCode + '"},';
+                for(var cellValue = column+1; cellValue <= columns.length - 1; cellValue++) {
+                    var cellText = data[args.row][columns[cellValue].field];
+                    if(cellText != '' && cellText == Timeline.cellOldText) {
+                        data[args.row][columns[cellValue].field] = value;
+                        nodes_order_json += '{"weekId":"' + columns[cellValue].field + '", "type":"' + rowId.toLowerCase() + '", "value":"' + value.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '", "colorCode":"' + cCode + '"},';
+                    } else {
+                         break;
+                    }
+                }
+                if (nodes_order_json != '[') {
+                    nodes_order_json = nodes_order_json.slice(0, -1);
+                    nodes_order_json += ']';
+                    Timeline.updateMilestoneWeeks(nodes_order_json);
+                }
+                grid.invalidateRow(args.row);
+            }else if (rowId && field) {
                 Timeline.triggerUpdateCell(field, rowId, value, row, column);   
             }
         }
@@ -5379,4 +5408,24 @@ var TimelineSummary = {
         }
     }
 
+}
+// method for numeric field validation
+var applyNumericValidation = function(){
+            $('.mandate-numeric-estimate').keyup(function(evt) {		    
+		    $('body div.slds-error--tooltip').remove();
+		    var inputVal = $(this).val();
+		    var numericReg = /^[0-9]*$/;
+		    if(!numericReg.test(inputVal)) {
+		        $(this).val(inputVal.substring(0, inputVal.length - 1)); 
+		        $(document.body).append('<div class="slds slds-error--tooltip"><div class="slds slds-popover slds-popover--tooltip slds-nubbin--bottom" role="tooltip"><div class="slds-popover__body">Numeric only.</div></div></div>');
+		        var top = $(this).offset().top - ($(this).height() + 10) + 'px';
+		        var left = $(this).offset().left + 'px';
+		        $('body div.slds-error--tooltip').css({position : 'absolute', top : top , left : left});
+		    }
+		    
+		});
+		
+		$('.mandate-numeric-estimate').blur(function(evt) {
+		   $('body div.slds-error--tooltip').remove(); 
+		});
 }

@@ -89,4 +89,9 @@ global with sharing class E2_Estimator_WS {
     	return E2_Estimator_WSManager.updateScopesStatus(complexity, scopeToActivate, scopeToDeactivate,
     										allscopesIds);						
     }
+    
+    //T-542532: Method to clone scopes 
+    webservice static string cloneScopeWithChild(string scopeIdCSV, string estimateId, string parentScopeId) {
+      return E2_Estimator_WSManager.cloneScopeWithChild(scopeIdCSV, estimateId, parentScopeId);
+    } 
 }

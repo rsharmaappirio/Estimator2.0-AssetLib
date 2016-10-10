@@ -603,7 +603,7 @@ public class E2_Estimator_WSManager {
     	return 'Success';
     }
     
-    //T-542532 : method to clone scope scope
+    //T-542532 : method to clone scope 
     public static string cloneScopeWithChild(string scopeIdCSV, string estimateId, string parentScopeId){
        parentScopeId = (parentScopeId == null || parentScopeId == E2_Constants.BLANK ? E2_Constants.HASH_TAG : parentScopeId);
         Id recTypeId = E2_RecordTypeClass.getId(E2_Constants.E2_SCOPE_API_NAME, E2_Constants.SCOPE_RT_SCOPE);
@@ -620,7 +620,8 @@ public class E2_Estimator_WSManager {
            cloneScope.Presales_LOE__c = estimateId;
            cloneScope.Parent_Scope__c = (parentScopeId == E2_Constants.HASH_TAG ? null : parentScopeId);
            cloneScope.recordTypeId = recTypeId;    
-           cloneScope.Scope_Group__c = null;                      
+           cloneScope.Scope_Group__c = scope.Scope_Group__c;                      
+           
            scopeList.add(cloneScope);
            clonedSourceMap.put(scope.id, cloneScope);
            if(scope.Efforts__r.size() > 0 || scope.E2_Recommended_Assets__r.size() > 0
@@ -634,7 +635,7 @@ public class E2_Estimator_WSManager {
         }
         return 'Success'; 
     }
-    
+    //method to clone child records of a scope
     private static void cloneScopesChildRecs(List<E2_Scope__c> scopeList, map<string,E2_Scope__c> hasChildrenScope, 
                                            map<string, E2_Scope__c> clonedSourceMap) {
       List<E2_Effort__c> effortList = new List<E2_Effort__c>();
@@ -662,7 +663,8 @@ public class E2_Estimator_WSManager {
             questionsmap.put(sourceQuestion.Id, clonedQuestion);
           }
             }   
-    }
+        }
+        //insert child records
         if(!effortList.isEmpty()) {
           insert effortList;
         }
@@ -693,7 +695,7 @@ public class E2_Estimator_WSManager {
             clonedAnswer.Source_Answer__c = sourceAnswer.Id;
             answersList.put(sourceAnswer.Id,clonedAnswer);
             if(!sourceAnswer.Action_Scopes__r.isEmpty()) {
-              actionScopes.put(sourceAnswer.Id,sourceAnswer.Action_Scopes__r);
+              actionScopes.put(sourceAnswer.Id, sourceAnswer.Action_Scopes__r);
             }
           }
           if(!answersList.isEmpty()) {
@@ -707,8 +709,8 @@ public class E2_Estimator_WSManager {
                     E2_Answer__c clonedAnswer = answersList.get(sourceAnswer);
                     string uniqueKey = clonedAnswer.Id + E2_Constants.BLANK + clonedScope.Id;
                     actionscopestoinsert.add(new E2_Action_Scope__c(Answer__c = clonedAnswer.Id,
-                                  Scope__c = clonedScope.Id,
-                                  Unique_Key__c = uniqueKey));
+																	                                  Scope__c = clonedScope.Id,
+																	                                  Unique_Key__c = uniqueKey));
                   }                 
                 }
               }

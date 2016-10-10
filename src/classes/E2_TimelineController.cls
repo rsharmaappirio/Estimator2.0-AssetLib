@@ -16,12 +16,14 @@ public with sharing class E2_TimelineController extends E2_Master {
   public string capacityNeeds_JSON{get;set;}
   public String ratecard_JSON {get;set;}
   public static final string SEPARATOR = ' - ';
+  public decimal discountAmount{get;set;}
 
   public E2_TimelineController (ApexPages.StandardController std) {
     // constructor : use to initiate the variable
     this.estimate = (CMC_Presales_LOE__c)std.getRecord();
     this.estimateRateCards = new List<E2_Estimate_Rate_Card__c>();
     this.estimate.Discount_Percent__c = (this.estimate.Discount_Percent__c == NULL ? 0 : this.estimate.Discount_Percent__c);
+    this.discountAmount = (this.estimate.Discount_Percent__c == NULL ? 0 : this.estimate.Discount_Amount__c);
     // populate renderOptions_PhasesJSON field
     populateRenderOptions();
   }
@@ -67,6 +69,7 @@ public with sharing class E2_TimelineController extends E2_Master {
                        WHERE Id = :estimate.id];
       
       this.estimate.Discount_Percent__c = (this.estimate.Discount_Percent__c == NULL ? 0 : this.estimate.Discount_Percent__c);
+      this.discountAmount = (this.estimate.Discount_Percent__c == NULL ? 0 : this.estimate.Discount_Amount__c);
       
       return null;
   }
@@ -76,6 +79,18 @@ public with sharing class E2_TimelineController extends E2_Master {
       // this method gets invoked when user changes or update the discount input in Estimate 
       // Summary above the grid. 
       try{
+        update this.estimate;
+      }catch(Exception ex){
+        ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, ex.getMessage()));  
+      }
+      refreshOverviewPanel(); 
+  }
+  
+  public void changeDiscountAmount(){
+      // this method gets invoked when user changes or update the discount input in Estimate 
+      // Summary above the grid. 
+      try{
+        this.estimate.Discount_Percent__c =  (this.discountAmount / this.estimate.Service_Fees__c) * 100;
         update this.estimate;
       }catch(Exception ex){
         ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, ex.getMessage()));  
