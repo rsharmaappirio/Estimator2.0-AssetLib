@@ -551,7 +551,7 @@ public class E2_Estimator_WSManager {
     	        for(E2_AssetWrapper assetWrapper : lstExistingAssets){	        	        	
     	        	assetsRecsJson += '"'+ assetWrapper.id + '" : {"recommendedAssetRecId" : "' + assetWrapper.recommendedAssetRecId + '",' + 
     	        	                                                '"id" : "' + assetWrapper.id + '", ' +
-    	        	                                                '"assetName" : "' + assetWrapper.assetName + '", ' +
+    	        	                                                '"assetName" : "' + (assetWrapper.assetName).replaceAll('"', '\\\\"').replaceAll('[\r\n]','') + '", ' +
     	        	                                                '"description" : "' + (assetWrapper.description).replaceAll('"', '\\\\"').replaceAll('[\r\n]','') + '", ' +
     	        	                                                '"technologies" : "' + assetWrapper.technologies + '", ' +
     	        	                                                '"totalHours" : "' + assetWrapper.totalHours + '", ' +
@@ -620,7 +620,7 @@ public class E2_Estimator_WSManager {
            cloneScope.Presales_LOE__c = estimateId;
            cloneScope.Parent_Scope__c = (parentScopeId == E2_Constants.HASH_TAG ? null : parentScopeId);
            cloneScope.recordTypeId = recTypeId;    
-           cloneScope.Scope_Group__c = scope.Scope_Group__c;                      
+           cloneScope.Scope_Group__c = scope.Scope_Group__c;                       
            
            scopeList.add(cloneScope);
            clonedSourceMap.put(scope.id, cloneScope);

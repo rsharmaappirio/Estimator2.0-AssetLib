@@ -16,6 +16,10 @@ table tbody tr td.slds-td{
   background-color:#CCCCCC;
   font-weight:bold;
 }
+table tbody tr td.slds-td-scope{
+  background-color: #0070d2;
+  font-weight:bold;
+}
 </style>        
         
 <apex:pageMessages />
@@ -85,6 +89,95 @@ table tbody tr td.slds-td{
                 <legend class="slds-text-heading--medium slds-p-vertical--medium">
                     Capacity Needs
                 </legend>
+                
+                <!-- Scope Capacity Needs start-->
+                <div class="slds-card">
+                    <div class="slds-card__header slds-grid grid--flex-spread">                       
+                       <div class="slds-col slds-has-flexi-truncate">
+                       <h2 class="slds-text-heading--small slds-truncate">Specified Capacity Needs by Role and Phase</h2>
+                       </div>
+                    </div>                    
+                    
+                <div class="slds-card__body">
+                <table class="slds-table slds-table--bordered slds-max-medium-table--stacked-horizontal slds-no-row-hover">
+                    <thead>
+                      <tr class="slds-text-heading--label">
+                        <th class="slds-is-sortable slds-th" scope="col">
+                          <div class="slds-truncate">ROLE</div>
+                        </th>
+                        <apex:repeat value="{!scopePhases}" var="phase">
+                        <th class="slds-is-sortable slds-th" scope="col" data-label="{!phase}">
+                          <div class="slds-truncate">{!phase}</div>
+                        </th>
+                        </apex:repeat>
+                        <th class="slds-cell-shrink slds-th" data-label="Total">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                     <apex:repeat value="{!scopeRolePhaseMap}" var="ultimateParentId">
+                         <apex:variable var="ultimateParentName" value="{!scopeIdMap[ultimateParentId]}"/>
+                         <tr class="slds-hint-parent">
+                             <td class="slds-truncate slds-td-scope" scope="row" data-label="{!scopeIdMap[ultimateParentId]}">{!scopeIdMap[ultimateParentId]}</td>
+                             <apex:repeat value="{!scopePhases}" var="phase">
+                                 <apex:variable var="c" value="{!ultimateParentId}|{!phase}" />
+                                <td class="slds-truncate slds-td-scope"  scope="row" data-label="{!phase}">
+                                    <apex:outputText value="{0, number, 0.00}">
+                                               <apex:param value="{!scopeRolePhaseHourMap[c]}" />
+                                    </apex:outputText>
+                                </td>
+                             </apex:repeat>
+                             <apex:variable var="c" value="{!ultimateParentId}|total" />
+                             <td class="slds-truncate slds-td-scope"  scope="row" data-label="Total">
+                                 <apex:outputText value="{0, number, 0.00}">
+                                               <apex:param value="{!scopeRolePhaseHourMap[c]}" />
+                                </apex:outputText>
+                            </td>
+                         </tr>
+                         <apex:variable var="rolePhaseMap" value="{!scopeRolePhaseMap[ultimateParentId]}" />
+                         <apex:repeat value="{!rolePhaseMap}" var="role">
+                             <tr class="slds-hint-parent">
+                                 <td class="slds-truncate slds-td" scope="row" data-label="{!role}">{!role}</td>
+                                 <apex:repeat value="{!rolePhaseMap[role]}" var="phase">
+                                     <apex:variable var="c" value="{!ultimateParentId}|{!role}|{!phase}" />
+                                     <td class="slds-truncate" scope="row" data-label="{!role}">
+                                         <apex:outputText value="{0, number, 0.00}">
+                                               <apex:param value="{!scopeRolePhaseHourMap[c]}" />
+                                         </apex:outputText>
+                                    </td>
+                                 </apex:repeat>
+                                 <apex:variable var="c" value="{!ultimateParentId}|{!role}|total" />
+                                 <td class="slds-truncate slds-td"  scope="row" data-label="Total">
+                                     <apex:outputText value="{0, number, 0.00}">
+                                                   <apex:param value="{!scopeRolePhaseHourMap[c]}" />
+                                    </apex:outputText>
+                                </td>
+                             </tr>
+                         </apex:repeat>         
+                     </apex:repeat>
+                     <tr>
+                        <td class="slds-truncate slds-td" scope="row">Total</td>
+                        <apex:variable var="phaseTotal" value="{!0}"/>
+                        <apex:repeat value="{!scopePhases}" var="p1">
+                                 <apex:variable var="c" value="{!p1}|total" />
+                                 <td class="slds-truncate slds-td" scope="row" data-label="{!p1}">
+                                         <apex:outputText value="{0, number, 0.00}">
+                                               <apex:param value="{!scopeRolePhaseHourMap[c]}" />
+                                         </apex:outputText>                      
+                                 </td>
+                                 <apex:variable var="rowValue" value="{!scopeRolePhaseHourMap[c]}"/>
+                                 <apex:variable var="phaseTotal" value="{!phaseTotal + rowValue}"/>
+                             </apex:repeat>
+                        <td class="slds-truncate slds-td" scope="row">
+                            <apex:outputText value="{0, number, 0.00}">
+                                               <apex:param value="{!phaseTotal}" />
+                           </apex:outputText>                         
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                </div>
+                <!-- Scope Capacity Needs end-->
                 <div class="slds-card">
                     <div class="slds-card__header slds-grid grid--flex-spread">                       
                        <div class="slds-col slds-has-flexi-truncate">
@@ -121,7 +214,7 @@ table tbody tr td.slds-td{
                         <apex:variable var="rowTotal" value="{!0}"/>
                         <apex:repeat value="{!rolesToPhaseMap[role]}" var="phases1">
                             <apex:repeat value="{!phases1}" var="p1">
-                                 <apex:variable var="c" value="{!p1 & '|' & role}" />
+                                 <apex:variable var="c" value="{!p1}|{!role}" />
                                  <td class="slds-truncate" scope="row" data-label="{!role}">
 
                                          <apex:outputText value="{0, number, 0.00}">
@@ -199,7 +292,7 @@ table tbody tr td.slds-td{
                         <apex:variable var="rowTotal" value="{!0}"/>
                         <apex:repeat value="{!rolesSkillToPhaseMap[role]}" var="phases1">
                             <apex:repeat value="{!phases1}" var="p1">
-                                 <apex:variable var="c" value="{!p1 & '|' & role}" />
+                                 <apex:variable var="c" value="{!p1}|{!role}" />
                                  <td class="slds-truncate" scope="row" data-label="{!role}">
 
                                          <apex:outputText value="{0, number, 0.00}">
@@ -241,7 +334,8 @@ table tbody tr td.slds-td{
                   </table>
                 </div>
                 </div>
-                        
+                
+
             </fieldset>
 </apex:outputPanel>
 

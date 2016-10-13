@@ -751,7 +751,11 @@
                         color: #ffffff;
                         text-shadow: none;
                     }
-                    
+                    ::selection {
+                        background: #3297fd!important;
+                        color: #ffffff!important;
+                        text-shadow: none;
+                    }
                     tr.jaipurrow{
                         background-color:#f5ffbf;
                     }

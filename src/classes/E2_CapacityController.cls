@@ -19,6 +19,10 @@ public with sharing class E2_CapacityController extends E2_Master{
   public Map<String, Decimal> rolesPhaseToHoursMap {get;set;}
   public Map<String, Set<String>> rolesSkillToPhaseMap {get;set;}
   public Map<String, Decimal> rolesSkillPhaseToHoursMap {get;set;}
+  public map<string, decimal> scopeRolePhaseHourMap {get;set;}
+  public map<string, map<string, set<string>>> scopeRolePhaseMap {get;set;}
+  public map<string, string> scopeIdMap {get;set;}
+  public set<string> scopePhases {get;set;}
   private static string TOTAL = 'total';
   
   //constructor  
@@ -29,7 +33,11 @@ public with sharing class E2_CapacityController extends E2_Master{
     rolesToPhaseMap = new Map<String, Set<String>>();
     rolesSkillToPhaseMap = new Map<String, Set<String>>();
     rolesPhaseToHoursMap = new Map<String, Decimal>();
-    rolesSkillPhaseToHoursMap = new Map<String, Decimal>();   
+    rolesSkillPhaseToHoursMap = new Map<String, Decimal>();
+    scopeRolePhaseHourMap = new map<string, decimal>();
+    scopeRolePhaseMap = new map<string, map<string, set<string>>>();
+    scopeIdMap = new map<string, string>();
+    scopePhases = new set<string>();
   }
   
   
@@ -39,6 +47,7 @@ public with sharing class E2_CapacityController extends E2_Master{
     // Method to invoke on page load to get pre-calculated capacity
     this.storedCapacity = E2_DataUtil.getCapacityListByEstimateId(this.estimate.id);
     calculateHours();
+    generateScopeCapacity();
     return null;
   }
   
@@ -226,6 +235,81 @@ public with sharing class E2_CapacityController extends E2_Master{
         for(string phase : skillsPhases){
             string rolePhaseKey = phase + E2_Constants.SEPARATOR + role;            
             if(!rolesSkillPhaseToHoursMap.containsKey(rolePhaseKey)) rolesSkillPhaseToHoursMap.put(rolePhaseKey, 0);            
+        }
+    }
+  }
+  
+  public void generateScopeCapacity() {
+      for(E2_Effort__c effort : [SELECT Phase__c, Resource_Role__c, Low_Effort_Hrs__c, High_Effort_Hrs__c, Scope__r.Complexity__c, 
+                                    Effort_Hrs__c, Scope__c, Scope__r.Name, Scope__r.Ultimate_Parent_Scope__c, Scope__r.Ultimate_Parent_Scope__r.Name 
+                                    FROM E2_Effort__c WHERE Scope__r.Presales_LOE__c =:estimate.Id AND Scope__r.Is_Active__c = true]) {
+           decimal loeHrs = effort.Effort_Hrs__c;
+           if(effort.Scope__r.Complexity__c == E2_Constants.LOW) {
+               loeHrs = effort.Low_Effort_Hrs__c;
+           }else if(effort.Scope__r.Complexity__c == E2_Constants.HIGH) {
+               loeHrs = effort.High_Effort_Hrs__c;
+           }
+           
+           string ultimateScopeId = effort.Scope__c;
+           string ultimateScopeName = effort.Scope__r.Name;
+           if(effort.Scope__r.Ultimate_Parent_Scope__c <> NULL) {
+               ultimateScopeId = effort.Scope__r.Ultimate_Parent_Scope__c;
+               ultimateScopeName = effort.Scope__r.Ultimate_Parent_Scope__r.Name;
+           }
+           if(!scopeIdMap.containsKey(ultimateScopeId)) {
+               scopeIdMap.put(ultimateScopeId, ultimateScopeName);
+               scopeRolePhaseMap.put(ultimateScopeId, new map<string, set<string>>());
+           }
+           map<string, set<string>> rolePhaseMap = scopeRolePhaseMap.get(ultimateScopeId);
+           if(!rolePhaseMap.containsKey(effort.Resource_Role__c)) rolePhaseMap.put(effort.Resource_Role__c, new set<string>());
+           
+           string scopeKey = ultimateScopeId + E2_Constants.SEPARATOR + effort.Resource_Role__c;
+           if(!scopeRolePhaseHourMap.containsKey(scopeKey)) scopeRolePhaseHourMap.put(scopeKey, loeHrs);
+           else scopeRolePhaseHourMap.put(scopeKey, loeHrs + scopeRolePhaseHourMap.get(scopeKey));
+           
+           string scopePhaseKey = scopeKey + E2_Constants.SEPARATOR + effort.Phase__c;
+           if(!scopeRolePhaseHourMap.containsKey(scopePhaseKey)) scopeRolePhaseHourMap.put(scopePhaseKey, loeHrs);
+           else scopeRolePhaseHourMap.put(scopePhaseKey, loeHrs + scopeRolePhaseHourMap.get(scopePhaseKey));
+           
+           string scopeRoleKey = scopeKey + E2_Constants.SEPARATOR + TOTAL;
+           if(!scopeRolePhaseHourMap.containsKey(scopeRoleKey)) scopeRolePhaseHourMap.put(scopeRoleKey, loeHrs);
+           else scopeRolePhaseHourMap.put(scopeRoleKey, loeHrs + scopeRolePhaseHourMap.get(scopeRoleKey));
+           
+           string phaseScopeTotal = ultimateScopeId + E2_Constants.SEPARATOR + effort.Phase__c;
+           if(!scopeRolePhaseHourMap.containsKey(phaseScopeTotal)) scopeRolePhaseHourMap.put(phaseScopeTotal, loeHrs);
+           else scopeRolePhaseHourMap.put(phaseScopeTotal, loeHrs + scopeRolePhaseHourMap.get(phaseScopeTotal));
+           
+           string scopeTotal = ultimateScopeId + E2_Constants.SEPARATOR + TOTAL;
+           if(!scopeRolePhaseHourMap.containsKey(scopeTotal)) scopeRolePhaseHourMap.put(scopeTotal, loeHrs);
+           else scopeRolePhaseHourMap.put(scopeTotal, loeHrs + scopeRolePhaseHourMap.get(scopeTotal));
+           
+           string phaseTotal = effort.Phase__c + E2_Constants.SEPARATOR + TOTAL;
+           if(!scopeRolePhaseHourMap.containsKey(phaseTotal)) scopeRolePhaseHourMap.put(phaseTotal, loeHrs);
+           else scopeRolePhaseHourMap.put(phaseTotal, loeHrs + scopeRolePhaseHourMap.get(phaseTotal));
+      }
+      
+      Set<string> updatedPhases = new set<string>();
+      for(string phase : E2_Estimator_Manager.getAppirioWayPhases()){
+        string phaseSumKey = phase + E2_Constants.SEPARATOR + TOTAL;
+        if(scopeRolePhaseHourMap.containsKey(phaseSumKey) && 
+            scopeRolePhaseHourMap.get(phaseSumKey) <> 0){
+            updatedPhases.add(phase);    
+        }                   
+    }  
+    
+    scopePhases.clear();
+    scopePhases.addAll(updatedPhases);
+    
+    for(String ultimateScopeId : scopeRolePhaseMap.keyset()){
+        map<string, set<string>> rolePhaseMap = scopeRolePhaseMap.get(ultimateScopeId);
+        for(string role : rolePhaseMap.keyset()) {
+            rolePhaseMap.put(role, scopePhases);
+            for(string phase : scopePhases){
+                string scopeKey = ultimateScopeId + E2_Constants.SEPARATOR + role + E2_Constants.SEPARATOR + phase;
+                if(!scopeRolePhaseHourMap.containsKey(scopeKey)) scopeRolePhaseHourMap.put(scopeKey, 0);
+                string scopePhaseKey = ultimateScopeId + E2_Constants.SEPARATOR + phase;
+                if(!scopeRolePhaseHourMap.containsKey(scopePhaseKey)) scopeRolePhaseHourMap.put(scopePhaseKey, 0);
+            }
         }
     }
   }

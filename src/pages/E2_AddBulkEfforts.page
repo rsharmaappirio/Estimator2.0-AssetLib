@@ -5,6 +5,16 @@
         <title>Add Efforts</title>
         <link type="text/css" rel="stylesheet" href="{!URLFOR($Resource.cloneany, '/slds/styles/salesforce-lightning-design-system-vf.min.css')}" />
         <apex:includeScript value="{!URLFOR($Resource.cloneany, '/libs/jquery.js')}" />
+        <style>
+            .wrap table {
+                table-layout: fixed;
+            }
+            
+            .inner_table{
+                max-height: 350px;
+                overflow-y: auto;
+            }
+        </style>
     </head>
 
     <body>
@@ -17,7 +27,9 @@
                 <!-- PRIMARY CONTENT WRAPPER -->
                 <div class="myapp">
                     <apex:pageMessages />
-                    
+                    <div style="float:left;padding:6px 9px;background-color:#FFFFE1;width:100%;">
+                        <img style="height:15px !important;" src="{!URLFOR($Resource.E2_SLDS1, '/assets/icons/utility/info_60.png')}">&nbsp; Only Non-zero efforts will be proceed.</img>
+                    </div>
                     <!--div class="slds-page-header" role="banner">
                         <div class="slds-grid">
                             <div class="slds-col slds-has-flexi-truncate">
@@ -30,56 +42,63 @@
                         </div>
                     </div-->
                     
-                    <div>
-                    <table class="slds-table slds-table--bordered slds-no-row-hover">
-                        <thead>
-                            <tr class="slds-text-heading--label">
-                                <th scope="col">
-                                    <div class="slds-truncate">Phase</div>
-                                </th>
-                                <th scope="col">
-                                    <div class="slds-truncate">Role</div>
-                                </th>
-                                <th scope="col">
-                                    <div class="slds-truncate">Hours</div>
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <apex:repeat value="{!lstEfforts}" var="effort">
-                                <tr class="slds-hint-parent slds-selection-background">
-                                    <td class="slds-truncate" data-label="Phase" style="width:30%;">
-                                        <div class="slds-form-element">
-                                            <div class="slds-form-element__control">
-                                                <apex:selectList styleclass="slds-select" value="{!effort.phaseName}" size="1">
-                                                    <apex:selectOptions value="{!phases}"/>
-                                                </apex:selectList>
-                                            </div>
-                                        </div>
-                                    </td>
-                                
-                                    <td class="slds-truncate" data-label="Role" style="width:30%;">
-                                        <div class="slds-form-element">
-                                            <div class="slds-form-element__control">
-                                                <apex:selectList styleclass="slds-select" value="{!effort.roleName}" size="1">
-                                                    <apex:selectOptions value="{!roles}"/>
-                                                </apex:selectList>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    
-                                    <td class="slds-truncate" data-label="Hours" style="width:30%;">
-                                        <div class="slds-form-element">
-                                            <div class="slds-form-element__control">
-                                                <apex:inputText styleclass="slds-input mandate-numeric" value="{!effort.hours}"/>
-                                            </div>
-                                        </div>
-                                    </td>
+                    <div class="wrap">
+                        <table class="slds-table slds-table--bordered slds-no-row-hover">
+                            <thead>
+                                <tr class="slds-text-heading--label">
+                                    <th scope="col">
+                                        <div class="slds-truncate">Phase</div>
+                                    </th>
+                                    <th scope="col">
+                                        <div class="slds-truncate">Role</div>
+                                    </th>
+                                    <th scope="col">
+                                        <div class="slds-truncate">Hours</div>
+                                    </th>
                                 </tr>
-                            </apex:repeat>
-                        </tbody>
-                    </table>
-                    <apex:commandbutton style="margin:5px;" styleClass="slds-button slds-button--neutral slds-button--small slds-update-scope slds-button--brand" value="Add more rows" action="{!addEfforts}"/>
+                            </thead>
+                        </table>
+                        <div class="inner_table">
+                            <table class="slds-table slds-table--bordered slds-no-row-hover">
+                                <tbody>
+                                    <apex:repeat value="{!lstEfforts}" var="effort">
+                                        <tr class="slds-hint-parent slds-selection-background">
+                                            <td class="slds-truncate" data-label="Phase" style="width:30%;">
+                                                <div class="slds-form-element">
+                                                    <div class="slds-form-element__control">
+                                                        <apex:selectList styleclass="slds-select" value="{!effort.phaseName}" size="1">
+                                                            <apex:selectOptions value="{!phases}"/>
+                                                        </apex:selectList>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        
+                                            <td class="slds-truncate" data-label="Role" style="width:30%;">
+                                                <div class="slds-form-element">
+                                                    <div class="slds-form-element__control">
+                                                        <apex:selectList styleclass="slds-select" value="{!effort.roleName}" size="1">
+                                                            <apex:selectOptions value="{!roles}"/>
+                                                        </apex:selectList>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            
+                                            <td class="slds-truncate" data-label="Hours" style="width:30%;">
+                                                <div class="slds-form-element">
+                                                    <div class="slds-form-element__control">
+                                                        <apex:inputText styleclass="slds-input mandate-numeric" value="{!effort.hours}"/>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </apex:repeat>
+                                </tbody>
+                            </table>
+                            
+                            <div style="text-align:center;">
+                                <apex:commandbutton style="margin:5px;" styleClass="slds-button slds-button--neutral slds-button--small slds-update-scope slds-button--brand" value="Add more rows" action="{!addEfforts}"/>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

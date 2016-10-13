@@ -399,127 +399,165 @@
 
 
 
-(function($) {
-    // register namespace
-    $.extend(true, window, {
-        "Slick": {
-            "CellRangeSelector": CellRangeSelector
+(function ($) {
+  // register namespace
+  $.extend(true, window, {
+    "Slick": {
+      "CellRangeSelector": CellRangeSelector
+    }
+  });
+
+
+  function CellRangeSelector(options) {
+    var _grid;
+    var _gridOptions;
+    var _$activeCanvas;
+    var _dragging;
+    var _decorator;
+    var _self = this;
+    var _handler = new Slick.EventHandler();
+    var _defaults = {
+      selectionCss: {
+        "border": "2px dashed blue"
+      }
+    };
+    
+    // Frozen row & column variables
+    var _rowOffset;
+    var _columnOffset;
+    var _isRightCanvas;
+    var _isBottomCanvas;
+
+    function init(grid) {
+      options = $.extend(true, {}, _defaults, options);
+      _decorator = new Slick.CellRangeDecorator(grid, options);
+      _grid = grid;
+      _gridOptions = _grid.getOptions();
+      _handler
+        .subscribe(_grid.onDragInit, handleDragInit)
+        .subscribe(_grid.onDragStart, handleDragStart)
+        .subscribe(_grid.onDrag, handleDrag)
+        .subscribe(_grid.onDragEnd, handleDragEnd);
+    }
+
+    function destroy() {
+        _handler.unsubscribeAll();
+    }
+
+    function handleDragInit(e, dd) {
+        // Set the active canvas node because the decorator needs to append its
+        // box to the correct canvas
+        _$activeCanvas = $( _grid.getActiveCanvasNode( e ) );
+
+        var c = _$activeCanvas.offset();
+
+        _rowOffset = 0;
+        _columnOffset = 0;
+        _isBottomCanvas = _$activeCanvas.hasClass( 'grid-canvas-bottom' );
+
+        if ( _gridOptions.frozenRow > -1 && _isBottomCanvas ) {
+            _rowOffset = ( _gridOptions.frozenBottom ) ? $('.grid-canvas-bottom').height() : $('.grid-canvas-top').height();
         }
-    });
+        
+        _isRightCanvas = _$activeCanvas.hasClass( 'grid-canvas-right' );
+        
+        if ( _gridOptions.frozenColumn > -1 && _isRightCanvas ) {
+            _columnOffset = $('.grid-canvas-left').width();
+        }
+              
+        // prevent the grid from cancelling drag'n'drop by default
+        e.stopImmediatePropagation();
+    }
 
-
-    function CellRangeSelector(options) {
-        var _grid;
-        var _canvas;
-        var _dragging;
-        var _decorator;
-        var _self = this;
-        var _handler = new Slick.EventHandler();
-        var _defaults = {
-            selectionCss: {
-                "border": "2px dashed blue"
+    function handleDragStart(e, dd) {
+        var cell = _grid.getCellFromEvent(e);
+        if (_self.onBeforeCellRangeSelected.notify(cell) !== false) {
+            if (_grid.canCellBeSelected(cell.row, cell.cell)) {
+                _dragging = true;
+                e.stopImmediatePropagation();
             }
+        }
+        if (!_dragging) {
+            return;
+        }
+
+      _grid.focus();
+       
+
+
+       // new code
+       var start = _grid.getCellFromPoint(
+                dd.startX - _$activeCanvas.offset().left + _columnOffset,
+                dd.startY - _$activeCanvas.offset().top + _rowOffset);
+
+
+
+        dd.range = {
+            start: start,
+            end: {}
         };
 
-
-        function init(grid) {
-            options = $.extend(true, {}, _defaults, options);
-            _decorator = new Slick.CellRangeDecorator(grid, options);
-            _grid = grid;
-            _canvas = _grid.getCanvasNode();
-            _handler
-                .subscribe(_grid.onDragInit, handleDragInit)
-                .subscribe(_grid.onDragStart, handleDragStart)
-                .subscribe(_grid.onDrag, handleDrag)
-                .subscribe(_grid.onDragEnd, handleDragEnd);
-        }
-
-        function destroy() {
-            _handler.unsubscribeAll();
-        }
-
-        function handleDragInit(e, dd) {
-            // prevent the grid from cancelling drag'n'drop by default
-            e.stopImmediatePropagation();
-        }
-
-        function handleDragStart(e, dd) {
-            var cell = _grid.getCellFromEvent(e);
-            if (_self.onBeforeCellRangeSelected.notify(cell) !== false) {
-                if (_grid.canCellBeSelected(cell.row, cell.cell)) {
-                    _dragging = true;
-                    //console.log(cell.row + ':' + cell.cell);
-                    e.stopImmediatePropagation();
-                }
-            }
-            if (!_dragging) {
-                return;
-            }
-
-            _grid.focus();
-
-            var start = _grid.getCellFromPoint(
-                dd.startX - $(_canvas).offset().left,
-                dd.startY - $(_canvas).offset().top);
-
-            dd.range = {
-                start: start,
-                end: {}
-            };
-
-            //_grid.scrollCellIntoView(start.row, start.cell);
-            return _decorator.show(new Slick.Range(start.row, start.cell));
-        }
-
-        function handleDrag(e, dd) {
-            if (!_dragging) {
-                return;
-            }
-            e.stopImmediatePropagation();
-
-            var end = _grid.getCellFromPoint(
-                e.pageX - $(_canvas).offset().left,
-                e.pageY - $(_canvas).offset().top);
-
-            if (!_grid.canCellBeSelected(end.row, end.cell)) {
-                return;
-            }
-
-            dd.range.end = end;
-            //console.log(end.row + ':' + end.cell);
-            
-            // scroll the viewport in case scroll bar is visible
-            _grid.scrollCellIntoView(end.row, end.cell);
-            _decorator.show(new Slick.Range(dd.range.start.row, dd.range.start.cell, end.row, end.cell));
-        }
-
-        function handleDragEnd(e, dd) {
-            if (!_dragging) {
-                return;
-            }
-
-            _dragging = false;
-            e.stopImmediatePropagation();
-
-            _decorator.hide();
-            _self.onCellRangeSelected.notify({
-                range: new Slick.Range(
-                    dd.range.start.row,
-                    dd.range.start.cell,
-                    dd.range.end.row,
-                    dd.range.end.cell
-                )
-            });
-        }
-
-        $.extend(this, {
-            "init": init,
-            "destroy": destroy,
-
-            "onBeforeCellRangeSelected": new Slick.Event(),
-            "onCellRangeSelected": new Slick.Event()
-        });
+        return _decorator.show(new Slick.Range(start.row, start.cell));
+   
+        // old code
+        //dd.range = {start: cell, end: {}};
+        //return _decorator.show(new Slick.Range(cell.row, cell.cell));
     }
+
+    function handleDrag(e, dd) {
+        if (!_dragging) {
+            return;
+        }
+        e.stopImmediatePropagation();
+
+        var end = _grid.getCellFromPoint(
+            e.pageX - _$activeCanvas.offset().left + _columnOffset,
+            e.pageY - _$activeCanvas.offset().top + _rowOffset
+        );
+
+        if ( (!_grid.canCellBeSelected( end.row, end.cell ) )
+        /** COMMENTED THESE CONDITIONS HOWEVER THESE MIGHT SUPPORT THE BUTTOM CANVAS: TODO: Come back to check if bottom canvas used
+             || ( !_isRightCanvas && ( end.cell > _gridOptions.frozenColumn ) )
+             || ( _isRightCanvas && ( end.cell <= _gridOptions.frozenColumn ) )
+             || ( !_isBottomCanvas && ( end.row >= _gridOptions.frozenRow ) )
+             || ( _isBottomCanvas && ( end.row < _gridOptions.frozenRow ) )**/
+           ) {
+            return;
+        }
+
+        dd.range.end = end;
+        // scroll the viewport in case scroll bar is visible
+         _grid.scrollCellIntoView(end.row, end.cell);
+        _decorator.show(new Slick.Range(dd.range.start.row, dd.range.start.cell, end.row, end.cell));
+    }
+
+    function handleDragEnd(e, dd) {
+      if (!_dragging) {
+        return;
+      }
+
+      _dragging = false;
+      e.stopImmediatePropagation();
+
+      _decorator.hide();
+      _self.onCellRangeSelected.notify({
+        range: new Slick.Range(
+            dd.range.start.row,
+            dd.range.start.cell,
+            dd.range.end.row,
+            dd.range.end.cell
+        )
+      });
+    }
+
+    $.extend(this, {
+      "init": init,
+      "destroy": destroy,
+
+      "onBeforeCellRangeSelected": new Slick.Event(),
+      "onCellRangeSelected": new Slick.Event()
+    });
+  }
 })(jQuery);
 
 
@@ -630,100 +668,92 @@
 
         	//Write the headers of the slick grid values into excel
             function writeHeaders() {
-                
-            	var headers = [];
+            	//frozen column support
+            	var headers = []; 
 
-            	$('div.slick-header-columns').find('span.slick-column-name').each(function(){
-            	    headers.push({ value: $(this).text(), metadata: { style: styles["headerstyle"].id } });
-            	});
+            	
+                $.each(grid.getColumns(), function(indx1, colItem) {
+                  headers.push({ value: (typeof colItem != 'undefined' && typeof colItem.name != 'undefined' ? colItem.name : ''), metadata: { style: styles["headerstyle"].id } });
+                });
             	
             	//push the headers in to excel
             	newWorksheet.data.push(headers);
-            
+                
             	return headers;
             };
 
         	//write the cell values of each rows in to the excel
             function writeCell(headers) {
+              
                 
-                var row = 0;
-                $('div.grid-canvas').find('div.slick-row').each(function(){
+                var gridData = grid.getData();
+                
+                $.each(gridData, function(indx2, dataItem) {
                     var rowData = [];
-                    var index = 0;
-                    var cell;
+                    var prev_cell;
                     
-                    for(var indx = 0; indx < headers.length; indx++){
-                        
-                        
-                        if($(this).find('div.slick-cell.' + 'l' + indx).length){
+                    $.each(grid.getColumns(), function(indx1, colItem) {
+                       var cell = grid.getCellNode(indx2, indx1);
+                       
+                       if(typeof cell != 'undefined'){ 
                            
-                            cell = $(this).find('div.slick-cell.' + 'l' + indx);
-                           
-                           
-                            // rowData.push({ value: (cell.find('div').length ? cell.find('div').text() : cell.text()), metadata: { style: styles["cellstyles"].id}});
-                            
-                            
-                            
-                            var metaformat = {
+                           var metaformat = {
+                                        			font: { 
+                                        				bold: false,
+                                        				size: 12,
+                                        				color: rgbToHexForExcel_Color((
+                                                                        				    cell.css('color') == 'transparent' || cell.css('color') == '' ? 
+                                                                        				    cell.parent('.slick-row').css('color') : 
+                                                                        				    cell.css('color')))
+                                        			}, 
+                                        			fill: {
+                                        				type: 'pattern',
+                                        				patternType: 'solid',
+                                        				fgColor: rgbToHexForExcel_BgColor((
+                                                                        				    cell.css('background-color') == 'transparent' || cell.css('background-color') == '' ? 
+                                                                        				    cell.parent('.slick-row').css('background-color') : 
+                                                                        				    cell.css('background-color')))
+                                        			},
+                                        			alignment: {
+                                                        horizontal: cell.css('text-align')
+                                                    }
+                                       		};
+                               
+                                
+                             rowData.push({ value: (cell.find('div').length ? cell.find('div').text() : cell.text()), metadata: { style: stylesheet.createFormat(metaformat).id }});
+                                
+                             prev_cell = cell;  
+                       }else if(typeof prev_cell != 'undefined'){
+                           rowData.push({ value: '', metadata: { style: stylesheet.createFormat({
                                     			font: { 
                                     				bold: false,
                                     				size: 12,
                                     				color: rgbToHexForExcel_Color((
-                                                                    				    cell.css('color') == 'transparent' || cell.css('color') == '' ? 
-                                                                    				    cell.parent('.slick-row').css('color') : 
-                                                                    				    cell.css('color')))
+                                                                    				    prev_cell.css('color') == 'transparent' || prev_cell.css('color') == '' ? 
+                                                                    				    prev_cell.parent('.slick-row').css('color') : 
+                                                                    				    prev_cell.css('color')))
                                     			}, 
                                     			fill: {
                                     				type: 'pattern',
                                     				patternType: 'solid',
                                     				fgColor: rgbToHexForExcel_BgColor((
-                                                                    				    cell.css('background-color') == 'transparent' || cell.css('background-color') == '' ? 
-                                                                    				    cell.parent('.slick-row').css('background-color') : 
-                                                                    				    cell.css('background-color')))
+                                                                    				    prev_cell.css('background-color') == 'transparent' || prev_cell.css('background-color') == '' ? 
+                                                                    				    prev_cell.parent('.slick-row').css('background-color') : 
+                                                                    				    prev_cell.css('background-color')))
                                     			},
                                     			alignment: {
-                                                    horizontal: cell.css('text-align')
+                                                    horizontal: prev_cell.css('text-align')
                                                 }
-                                   		};
+                                    			
+                                    		}).id } });
                            
-                            
-                            rowData.push({ value: (cell.find('div').length ? cell.find('div').text() : cell.text()), metadata: { style: stylesheet.createFormat(metaformat).id }});
-                                     
-                                      
-                        }else if(typeof cell != 'undefined'){
-                            
-                           
-                           
-                            rowData.push({ value: '', metadata: { style: stylesheet.createFormat({
-                                                                                                                                                        			font: { 
-                                                                                                                                                        				bold: false,
-                                                                                                                                                        				size: 12,
-                                                                                                                                                        				color: rgbToHexForExcel_Color((
-                                                                                                                                                                                        				    cell.css('color') == 'transparent' || cell.css('color') == '' ? 
-                                                                                                                                                                                        				    cell.parent('.slick-row').css('color') : 
-                                                                                                                                                                                        				    cell.css('color')))
-                                                                                                                                                        			}, 
-                                                                                                                                                        			fill: {
-                                                                                                                                                        				type: 'pattern',
-                                                                                                                                                        				patternType: 'solid',
-                                                                                                                                                        				fgColor: rgbToHexForExcel_BgColor((
-                                                                                                                                                                                        				    cell.css('background-color') == 'transparent' || cell.css('background-color') == '' ? 
-                                                                                                                                                                                        				    cell.parent('.slick-row').css('background-color') : 
-                                                                                                                                                                                        				    cell.css('background-color')))
-                                                                                                                                                        			},
-                                                                                                                                                        			alignment: {
-                                                                                                                                                                        horizontal: cell.css('text-align')
-                                                                                                                                                                    }
-                                                                                                                                                        			
-                                                                                                                                                        		}).id } });
-                        }
-                    }
-                    
-                    
-                    row++;
+                       }
+                       
+                    });
                     
                     newWorksheet.data.push(rowData);
-                });   
+                });
+            	
 
             	
             };
@@ -1277,6 +1307,8 @@ var addNewColumn = function(columnDefinition) {
     var columns = grid.getColumns();
     columns.push(columnDefinition);
     grid.setColumns(columns);
+    // when columns are now in; go for grid init
+    grid.init();
 }
 
 
@@ -1683,8 +1715,16 @@ function AutoFillEditor(args) {
       if(typeof args.item.id == 'undefined' || typeof Timeline.fixedRowsTypes[args.item.id] != 'undefined') return;
       
       
-      //$picker.width($(args.container).innerWidth());
-      $picker.appendTo(args.container);
+       // In case of frozen column feature; the picker gets hidden behind the divs
+      // the position of the picker should be set specifically based on the parent container offset values
+      // we also need to append the picker to dom and not to container as to display the picker over and above all the html elements;
+      var parentOffset = args.container.offset();
+      $picker.css({ 'position': 'absolute', 'left' : parentOffset.left, 'top' : parentOffset.top});
+      $picker.appendTo(document.body);
+      
+      // commented to append picker to container; 
+      //$picker.appendTo(args.container);
+      
       
       $picker.append("<div class='editor-autofill-helper'><div class='editor-autofill-wrapper'><div class='editor-autofill-slider' /></div>");
 
@@ -1736,6 +1776,7 @@ function AutoFillEditor(args) {
                 Timeline.autoFill(nodes_order_json);
             }
             
+            grid.focus();
             grid.setData(data);
             Timeline.renderGrid();
             
@@ -2417,8 +2458,9 @@ var Timeline = {
             // jquery click doesn't work on anchor tags
             document.getElementById("downloadLink").click();
             $('#myGrid').css({'width': '99%', height: '450px'});
-            grid.destroy();
-            gridMainInitiate();
+            grid.resizeCanvas(); 
+            //grid.destroy();
+            //gridMainInitiate();
             loadSpinner.hide();
             loader.hide();
         }); 
@@ -2429,10 +2471,12 @@ var Timeline = {
     downloadExcel_Click: function(src, event){
        // change the width and height of the grid to make all the columns visible to be 
        // able to be available at the time of render
-       $('#myGrid').css({'width': '15000px', height: '15000px'});    
        
-       grid.destroy();
-       gridMainInitiate();
+       $('#myGrid').css({'width': '15000px', height: '15000px'});
+       grid.resizeCanvas();
+       
+       //grid.destroy();
+       //gridMainInitiate();
        loadSpinner.show();
        loader.show();
        // 3 seconds are benchmarks
@@ -2456,7 +2500,7 @@ var Timeline = {
     
     getGridOptions: function(){ 
       return {
-                                                        explicitInitialization : false,
+                                                        explicitInitialization : true,
                                                         editable: true,
                                                         enableAddRow: true,
                                                         enableCellNavigation: true,
@@ -2468,7 +2512,7 @@ var Timeline = {
                                                         ,enableAsyncPostRender: true
                                                         ,asyncPostRenderDelay : 50 // default 50
                                                         ,leaveSpaceForNewRows : true
-                                                        //,frozenColumn : 2
+                                                        ,frozenColumn : 4
                                                         //,frozenRow : 3
                                                         //,autoHeight: true
                                                         //,fullWidthRows: true
@@ -3869,15 +3913,19 @@ var Timeline = {
             var value = data[args.row][grid.getColumns()[args.cell].field];
             var rowId = item.id;
             //alert(value);
-            if(typeof Timeline.fixedRowsTypes[data[args.row].id.toLowerCase()] != 'undefined'){
+            if(typeof data[args.row] != 'undefined' && 
+                typeof data[args.row].id != 'undefined' && 
+                typeof Timeline.fixedRowsTypes[data[args.row].id.toLowerCase()] != 'undefined'){
                 
                 var meta_info = Timeline.fixedRowsTypes[rowId];
                 var colorCodePostFix = meta_info.colorcodepostfix;
-                var cCode = data[args.row][columns[column].field + colorCodePostFix];
-                
+                var cCode = '';
+                if(typeof data[args.row][columns[column].field + colorCodePostFix] != 'undefined'){
+                   cCode = data[args.row][columns[column].field + colorCodePostFix];
+                }
                 var nodes_order_json = '[';
                 nodes_order_json += '{"weekId":"' + columns[column].field + '", "type":"' + rowId.toLowerCase() + '", "value":"' + value.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '", "colorCode":"' + cCode + '"},';
-                for(var cellValue = column+1; cellValue <= columns.length - 1; cellValue++) {
+                for(var cellValue = column + 1; cellValue <= columns.length - 1; cellValue++) {
                     var cellText = data[args.row][columns[cellValue].field];
                     if(cellText != '' && cellText == Timeline.cellOldText) {
                         data[args.row][columns[cellValue].field] = value;
@@ -4064,6 +4112,9 @@ var Timeline = {
             // set the grid's columns as the new columns
             grid.setColumns(columns);
             
+            // when columns are now in; go for grid init
+            grid.init();
+            
             sforce.apex.execute(WEBSERVICE_NAME, "getTimelineRows", {
                 estimateId: estimateId
             }, Timeline.getRows_CallBack);
@@ -4193,6 +4244,8 @@ var Timeline = {
             // set the grid's columns as the new columns
             columns = columns.concat(Timeline.getEndColumns());
             grid.setColumns(columns);
+             // when columns are now in; go for grid init
+            grid.init();
             loader.hide();
         },
         onFailure: function(error) {
