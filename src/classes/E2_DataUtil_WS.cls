@@ -6,7 +6,7 @@
  * Created By: Rohit Sharma (Appirio)
  * 
  * Date Modified      Modified By                  Description of the update
-
+ * Oct 19, 2016       Arpita Bose                  S-448268 : Cloned scope item on right click
 *  =====================================================================*/
 public with sharing class E2_DataUtil_WS {
    
@@ -77,7 +77,7 @@ public with sharing class E2_DataUtil_WS {
    	return [Select e.Source_Scope__c, e.Scope_Group__c, e.Parent_Scope__c, e.Name, 
                    e.Presales_LOE__c, e.Description__c , e.LOE_Hrs__c, 
                    e.Complexity__c, e.Scope_Item_Type__c, e.Is_Active__c, e.Scope_Flag__c, 
-                   e.E2_Assumption__c,
+                   e.E2_Assumption__c, e.RecordTypeId, e.Display_Order__c,
             (Select Id, Name, Scope__c, Complexity_Factor_High__c, Resource_Role__c, Phase__c, Effort_Hrs__c, Speciality__c, 
              Complexity_Factor_Low__c, Is_Active__c, Source_Effort__c FROM Efforts__r),
              (SELECT Id, Scope__c, Asset__c FROM E2_Recommended_Assets__r),
@@ -160,5 +160,14 @@ public with sharing class E2_DataUtil_WS {
    								 FROM CMC_Asset__c
    								 WHERE Id IN :assetsId]);
   }
+  
+  //AB S-448268 : Method to return all scopes details by scopeId
+  public static List<E2_Scope__c> getChildScopesById(set<Id> scopesId){
+       return [Select e.Source_Scope__c, e.Scope_Group__c, e.Parent_Scope__c, e.Name, 
+                                 e.Presales_LOE__c, e.Description__c , e.LOE_Hrs__c,e.Ultimate_Parent_Id__c, 
+                                 e.Complexity__c, e.Scope_Item_Type__c, e.Is_Active__c, e.Scope_Flag__c, e.Display_Order__c                                  
+                                 FROM E2_Scope__c e 
+                                 WHERE e.Id IN: scopesId];   
+   }
    
 }

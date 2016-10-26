@@ -1,3 +1,17 @@
+/**=====================================================================
+ * Appirio, Inc
+ * Name: E2_CapacityController
+ * Description: Controller class to build & display estimate capacity
+ * Created Date: July 07, 2016
+ * Created By: Rohit Sharma (Appirio)
+ * 
+ * Date Modified            Modified By             Description of the update
+ * September 20, 2016       Arpita Bose             
+ * October 17, 2016         Jitendra Jangid         S-447214 : Added SOQL methods for Scope and efforts for capacity needs
+ * October 19th,2016        Rohit Sharma            I-241595 : Enhance the E2 code where algo has developed 
+                                                    around "Scope Template manager" permission set 
+*  =====================================================================*/
+
 @isTest(seeAllData=false)
 public class E2_DataUtilTest {
     
@@ -18,8 +32,7 @@ public class E2_DataUtilTest {
     public static E2_Estimate_Rate_Card__c estimateRC;
     public static E2_Milestone_Library__c milestoneLib;
     public static E2_Action_Scope__c actionScope;
-    public static PermissionSet permission;
-        
+
     public static testmethod void testE2_TreeNode() {
     
     System.runAs(sysAdmin){
@@ -43,8 +56,7 @@ public class E2_DataUtilTest {
             estimateRC = [SELECT Id FROM E2_Estimate_Rate_Card__c];
             milestoneLib = [SELECT Id FROM E2_Milestone_Library__c ];
             actionScope = [SELECT Id FROM E2_Action_Scope__c];
-            permission = [SELECT Id FROM PermissionSet WHERE Name = :E2_Constants.STM_PERMISSION_SET];
-             
+
             Set<Id> estimateIds = new Set<Id>();
             estimateIds.add(estimate.Id);
             List<Presales_Request__c> psrs = E2_dataUtil.getPSRDetailOnPsrId(psr.Id);
@@ -95,11 +107,8 @@ public class E2_DataUtilTest {
             set<Id> answers = new set<Id>();
             answers.add(answer.Id);
             system.assertEquals(E2_DataUtil.getRelatedScopes(answers) .size(), 1);
-            system.assertEquals(E2_DataUtil.getPermissionSet().size(), 1);
-            List<PermissionSet> permissionSetIds = new List<PermissionSet>();
-            permissionSetIds.add(permission);
-            User testUser = E2_DataUtil.getPermissionSetAssignmentForUser(permissionSetIds);
-            system.assert(testUser <> null);
+            system.assert(E2_DataUtil.getEstimateScopeParentMapping(estimate.Id).size() > 0);
+            system.assert(E2_DataUtil.getAllActiveScopeEffortsByEstimateId(estimate.Id).size() > 0);
             
         Test.stopTest();
     }

@@ -141,6 +141,24 @@ var jstree_options = {
                         AddEditScope.showAddFromTemplateModal();
                     }
                 },
+                "Clone_self": {
+                    "separator_before": false,
+                    "separator_after": false,
+                    "label": "Clone self",
+                    "action": function(obj) {
+                        AddEditScope.ADD_FROM_TEMPLATE_PARENT_ID = $node.id;
+                        AddEditScope.cloneScopeWithoutChild($node.id);
+                    }
+                },
+                "Clone_with_child": {
+                    "separator_before": false,
+                    "separator_after": false,
+                    "label": "Clone with children",
+                    "action": function(obj) {
+                        AddEditScope.ADD_FROM_TEMPLATE_PARENT_ID = $node.id;
+                        AddEditScope.cloneScopeWithChild($node.id);
+                    }
+                },
                 "Remove": {
                     "separator_before": false,
                     "separator_after": false,
@@ -398,6 +416,7 @@ var AddEditScope = {
     SAVED_SCOPE_ID : null,
     SAVED_SCOPE_NAME : null,
     SELECTED_NODE : '',
+    UPDATE_DISPLAY_ORDER : false,
     reload_Scope_frame : function(result) {
         $.each(result, function(indx, scope) {
             var frame_id = '#' + scope + AddEditScope.ENDS_WITH;
@@ -683,6 +702,7 @@ var AddEditScope = {
                 $(treeId).jstree('destroy');
                 $(treeId).jstree(jstree_options);
                 AddEditScope.tree_init();
+                
                 return;
             }
             
@@ -780,8 +800,13 @@ var AddEditScope = {
                 }
                 global_scopeId = null;
             }
-            
-            $(loadSpinner).hide();
+            if(AddEditScope.UPDATE_DISPLAY_ORDER == true) {
+                AddEditScope.UPDATE_DISPLAY_ORDER = false;
+                // set the display order and sequence back in the database
+                AddEditScope.updateScopeDisplayOrderOnClone();
+            } else {
+                $(loadSpinner).hide();
+            }
         },
         onFailure: function(error) {
             alert(error);
@@ -793,14 +818,11 @@ var AddEditScope = {
             var hasChildren = false;
             if (result.length > 0) {
                 //to refresh scope loe we need to reload jstree
+                AddEditScope.UPDATE_DISPLAY_ORDER = true;
                 $(treeId).jstree('destroy');
                 $(treeId).jstree(jstree_options);
                 AddEditScope.tree_init();
                 // End
-                
-                //TODO : Add method to update order
-                
-                $(loadSpinner).hide();
                 CustomAlert.show('Scope has been cloned successfully!!!');
             } else {
                 $(loadSpinner).hide();
@@ -1101,8 +1123,108 @@ var AddEditScope = {
             $(loadSpinner).hide();
         }
         
-    }
+    },
+    cloneScopeWithoutChild : function(nodeId) {
+        $(loadSpinner).show();
+        var $selectedNode = $(treeId).jstree(true).get_node(nodeId);
+        var arr = [];
+        arr.push($selectedNode.original.id);
+        AddEditScope.cloneScopeWithChild_init(arr.toString());
+    },
+    cloneScopeWithChild : function(nodeId) {
+        $(loadSpinner).show();
+        var $selectedNode = $(treeId).jstree(true).get_node(nodeId);
+        var arr = [];
+        arr.push($selectedNode.original.id);
+        $.each($selectedNode.children_d, function(indx, id) {
+            var $childnode = $(treeId).jstree(true).get_node(id);
+            arr.push($childnode.original.id);
+        });
+        AddEditScope.cloneScopeWithChild_init(arr.toString());
+    },
 
+    cloneScopeWithChild_init: function(scopeIds) {
+        sforce.apex.execute("E2_Estimator_WS", "cloneScopeWithChild", {
+            scopeIdCSV: scopeIds
+        }, AddEditScope.cloneScopeWithChild_initCallBack);
+    },
+    cloneScopeWithChild_initCallBack: {
+        onSuccess: function(result) {
+           console.log(result);
+           var newList = [];
+           for(var i_indx = result.length - 1; i_indx >= 0 ; i_indx--) {
+               var node = result[i_indx];
+               newList.push(node);
+           }
+           newList.sort(function(a,b) {return (parseInt(a.display_order) > parseInt(b.display_order)) ? 1 : ((parseInt(b.display_order) >= parseInt(a.display_order)) ? -1 : 0);} ); 
+           result = newList;
+           console.log(result);
+           var sibling = $(treeId).jstree(true).get_node(AddEditScope.ADD_FROM_TEMPLATE_PARENT_ID);
+           $.each(result, function(indx, node) {
+            
+            var display_order = parseInt(node.display_order);
+            var parent = node.parent;
+            if(node.parent == sibling.parent) {
+                node.state = JSON.parse(node.state);
+                var display_order = "after";
+                var parent = AddEditScope.ADD_FROM_TEMPLATE_PARENT_ID;
+                // jstree api call to create the tree node.
+                $(treeId).jstree(AddEditScope.CREATE_NODE, parent, node, display_order);
+            }
+           });
+           $.each(result, function(indx, node) {
+            if(node.parent != sibling.parent) {
+                node.state = JSON.parse(node.state);
+                var display_order = parseInt(node.display_order);
+                var parent = node.parent;
+                // jstree api call to create the tree node.
+                $(treeId).jstree(AddEditScope.CREATE_NODE, parent, node, display_order);
+            }
+           });
+           AddEditScope.updateScopeDisplayOrder();
+           AddEditScope.ADD_FROM_TEMPLATE_PARENT_ID = '';
+           result = null;
+        },
+        onFailure: function(error) {
+            alert(error);
+            $(loadSpinner).hide();
+        }
+    },
+    updateScopeDisplayOrderOnClone : function(){
+        //to handle the re-ordering of scopes (vikash goyal 7/15/2016)
+        // create a json of new order of scopes in the tree hierarchy and send this json to the 
+        // controller to update the position of all the scopes in the tree.
+        var nodes_order_json = '[';
+        
+        $($(treeId).jstree(true).get_json('#', {flat:true})).each(function(index, value){
+            var position = $.inArray(value.id, $(treeId).jstree().get_node(value.parent).children);
+            nodes_order_json += '{"scopeId":"' + value.id + '", "displayOrder":"' + position + '", "sequence":"' + index + '"},';
+        });
+        
+        nodes_order_json = nodes_order_json.slice(0, -1);
+        nodes_order_json += ']';
+        
+        // invoke the webservice to update scopes display order 
+        sforce.apex.execute("E2_Estimator_WS", "updateScopesDisplayOrder", {
+                scopeJsonStr: nodes_order_json
+                }, AddEditScope.updateScopeDisplayOrderOnCloneCallback);
+    },
+    
+    updateScopeDisplayOrderOnCloneCallback : {
+        onSuccess: function(result) {
+            result = (result.length > 0 ? result[0] : result);
+            // check for failure message
+            if (result.indexOf('Fail') != -1) {
+                $(loadSpinner).hide();
+                return;
+            }
+            $(loadSpinner).hide();
+        },
+        onFailure: function(error) {
+            alert(error);
+            $(loadSpinner).hide();
+        }
+    }
 }
 
 

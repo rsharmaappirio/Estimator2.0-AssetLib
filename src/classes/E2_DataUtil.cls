@@ -7,13 +7,18 @@
  * 
  * Date Modified      Modified By                  Description of the update
    Aug 29th, 2016     Arpita Bose                  Added CurrencyISOCode in the query
+   Oct 17th, 2016     Rohit Sharma                 S-447214 : Added SOQL methods for Scope
+                                                   and efforts for capacity needs
+   Oct 19th,2016     Rohit Sharma                  I-241595 : Enhance the E2 code where algo has developed 
+                                                   around "Scope Template manager" permission set                                                   
 *  =====================================================================*/
 
 public class E2_DataUtil {
 
   public static List<Presales_Request__c> getPSRDetailOnPsrId(id psr_id){
      return [SELECT id, Name, Account_Name__c, Opportunity__c, Opportunity_Name__c,
-             Reviewer__c, Reviewer_Name__c, Due_Date__c, Created_By_Name__c, Description__c, Opportunity__r.Account.Id  
+             Reviewer__c, Reviewer_Name__c, Due_Date__c, Created_By_Name__c, Description__c,
+             Opportunity__r.Account.Id, (SELECT id FROM Presales_LOEs__r)    
              FROM Presales_Request__c WHERE id = : psr_id];
   
   }
@@ -216,18 +221,6 @@ public class E2_DataUtil {
 		        WHERE Scope__c =: scopeId AND User__c =: UserInfo.getUserId()];
   }
   
-  public static User getPermissionSetAssignmentForUser(List<PermissionSet> permissionSetIds){
-      return [SELECT Id, Profile.Name,
-		        (SELECT Id FROM PermissionSetAssignments WHERE PermissionSetId IN: permissionSetIds)
-		        FROM User
-		        WHERE Id = :userinfo.getUserId()];
-  }
-  
-  public static List<PermissionSet> getPermissionSet(){
-      return [SELECT Id, Name
-			    FROM PermissionSet
-			    WHERE Name =: E2_Constants.STM_PERMISSION_SET];
-  }
   
   public static List<E2_Estimate_Rate_Card__c> getEstimateRateCardRecs(id estimateId){
      return [SELECT Id, Resource_Role__c, Estimate__c, Region__c, 
@@ -296,5 +289,16 @@ public class E2_DataUtil {
   			 FROM Answers__r ORDER BY Sequence__c)
   			 FROM E2_Question__c
   			 WHERE Id =: questionId];  
+  }
+  
+  public static List<E2_Scope__c> getEstimateScopeParentMapping(Id estimateId) {
+      return [SELECT Id, Name, Parent_Scope__c, Scope_Item_Type__c FROM 
+              E2_Scope__c WHERE Presales_LOE__c =:estimateId ORDER BY Sequence__c NULLS LAST];
+  }
+  
+  public static List<E2_Effort__c> getAllActiveScopeEffortsByEstimateId(Id estimateId) {
+      return [SELECT Phase__c, Resource_Role__c, Low_Effort_Hrs__c, High_Effort_Hrs__c, Scope__r.Complexity__c, 
+              Effort_Hrs__c, Scope__c FROM E2_Effort__c WHERE 
+              Scope__r.Presales_LOE__c =:estimateId AND Scope__r.Is_Active__c = true ORDER BY Scope__r.Sequence__c NULLS LAST];
   }
 }

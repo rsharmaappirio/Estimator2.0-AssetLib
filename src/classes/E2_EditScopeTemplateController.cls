@@ -2,11 +2,12 @@
  * Appirio, Inc
  * Name: E2_EditScopeTemplateController
  * Description: Controller class for E2_EditScopeTemplate page
- * Created Date: 
- * Created By: 
+ * Created Date: June 21, 2016
+ * Created By:  Rohit Sharma
  * 
  * Date Modified      Modified By                  Description of the update
-   
+   October 19th,2016  Rohit Sharma                 I-241595 : Enhance the E2 code where algo has developed 
+                                                    around "Scope Template manager" permission set 
 *  =====================================================================*/
 
 public with sharing class E2_EditScopeTemplateController {
@@ -49,17 +50,6 @@ public with sharing class E2_EditScopeTemplateController {
             scopeQuestionManager.scope = this.scope;
             populateViewRecords();
         }
-        
-        //I-227260 : code to hide Favourite for Scope Template Manager
-        List<PermissionSet> permissionSetsAllowed = E2_DataUtil.getPermissionSet();
-        
-        User currentUser = E2_DataUtil.getPermissionSetAssignmentForUser(permissionSetsAllowed);
-              if (currentUser.PermissionSetAssignments.size() > 0) {
-                showFavForSTMPermissionSet = false;
-              }
-              else {
-                showFavForSTMPermissionSet = true;
-              }
         return null;
     }
     

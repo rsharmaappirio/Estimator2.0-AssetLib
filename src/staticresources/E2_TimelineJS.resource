@@ -464,6 +464,13 @@
         if ( _gridOptions.frozenColumn > -1 && _isRightCanvas ) {
             _columnOffset = $('.grid-canvas-left').width();
         }
+        
+        //S-448253 : commit current edit to resolve double drag problem
+        if(typeof Slick.GlobalEditorLock.commitCurrentEdit != 'undefined') {
+          window.setTimeout(function(){
+            Slick.GlobalEditorLock.commitCurrentEdit();
+          },  0);
+        }
               
         // prevent the grid from cancelling drag'n'drop by default
         e.stopImmediatePropagation();
@@ -1269,8 +1276,12 @@
   }
 })(jQuery);
 
-
-
+Number.prototype.toCommaFrmt = function(){
+    return this.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+String.prototype.toCommaFrmt = function(){
+    return this.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
 
 Date.prototype.startOfWeek = function(pStartOfWeek) {
     var mDifference = this.getDay() - pStartOfWeek;
@@ -2446,17 +2457,53 @@ var Timeline = {
         
     },
     
-    
+     // Method to convert b64 to blob for IE10+ export
+    b64toBlob : function(b64Data, contentType, sliceSize) {
+              contentType = contentType || '';
+              sliceSize = sliceSize || 512;
+            
+              var byteCharacters = atob(b64Data);
+              var byteArrays = [];
+            
+              for (var offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+                var slice = byteCharacters.slice(offset, offset + sliceSize);
+            
+                var byteNumbers = new Array(slice.length);
+                for (var i = 0; i < slice.length; i++) {
+                  byteNumbers[i] = slice.charCodeAt(i);
+                }
+            
+                var byteArray = new Uint8Array(byteNumbers);
+            
+                byteArrays.push(byteArray);
+              }
+            
+              var blob = new Blob(byteArrays, {type: contentType});
+              return blob;
+     },
     
     
     registerExportToExcel: function(){
        var gridData = grid.getData();    
        
        $('body').exportToExcel("Report.xlsx", "Report", gridData, null, function (response) {
-            console.log(response);
+            //console.log(response);
             // use vanilla way of calling click action on anchor tag
             // jquery click doesn't work on anchor tags
-            document.getElementById("downloadLink").click();
+            //document.getElementById("downloadLink").click();
+            
+            if (navigator.msSaveBlob) { // IE 10+ 
+                //alert('in IE');
+                response = response.replace('data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,', '');
+                //console.log('NEWRESPONSE' + response);
+                navigator.msSaveBlob(Timeline.b64toBlob(response, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'), 'Report.xlsx'); 
+            } else{
+                //alert('in Firefox/Mozilla/Chrome');
+                // use vanilla way of calling click action on anchor tag
+                // jquery click doesn't work on anchor tags
+                document.getElementById("downloadLink").click();
+            }
+            
             $('#myGrid').css({'width': '99%', height: '450px'});
             grid.resizeCanvas(); 
             //grid.destroy();
@@ -2513,7 +2560,7 @@ var Timeline = {
                                                         ,asyncPostRenderDelay : 50 // default 50
                                                         ,leaveSpaceForNewRows : true
                                                         ,frozenColumn : 4
-                                                        //,frozenRow : 3
+                                                        ,frozenRow : 5
                                                         //,autoHeight: true
                                                         //,fullWidthRows: true
                                                         //,frozenBottom: true
@@ -2646,14 +2693,14 @@ var Timeline = {
                         if(row < Timeline.fixedRows){
                             if(data[row].id == Timeline.fixedRowsTypes.total.id){
                                  //$(cellNode).empty().html(Timeline.getSumOfHoursForRows()).css({'text-align' : 'center', 'background-color': '#666666', 'color' : '#fff'});
-                                 $(cellNode).empty().html(Timeline.getSumOfHoursForAllRows(cellNode, row, dataContext, colDef)).css(Timeline.calcuation_cols_css);
+                                 $(cellNode).empty().html(Timeline.getSumOfHoursForAllRows(cellNode, row, dataContext, colDef).toCommaFrmt()).css(Timeline.calcuation_cols_css);
                             }
                             return;
                         }else{
-                          $(cellNode).empty().html(Timeline.getHoursSum(cellNode, row, dataContext, colDef)).css({'text-align':'center'});
+                          $(cellNode).empty().html(Timeline.getHoursSum(cellNode, row, dataContext, colDef).toCommaFrmt()).css({'text-align':'center'});
                         }
                     }
-                },{
+                },/*{
                     id: "capacityneedshours",
                     name: "Capacity Needs (Hrs)",
                     field: "capacityneedshours",
@@ -2677,7 +2724,7 @@ var Timeline = {
                                 if(typeof capacityNeeds_JSON != 'undefined' && typeof capacityNeeds_JSON.TotalHours != 'undefined'){
                                     totalHours = capacityNeeds_JSON.TotalHours;
                                 }
-                                $(cellNode).empty().html(totalHours).css(Timeline.highlight_cols_css);
+                                $(cellNode).empty().html(totalHours.toCommaFrmt()).css(Timeline.highlight_cols_css);
                                  
                             }else if(data[row].id == Timeline.fixedRowsTypes.total.id){
                                 
@@ -2698,7 +2745,7 @@ var Timeline = {
                                      sum += parseInt(row_sum);
                                      
                                  });
-                                 $(cellNode).empty().html(sum).css(Timeline.calcuation_cols_css);
+                                 $(cellNode).empty().html(sum.toCommaFrmt()).css(Timeline.calcuation_cols_css);
                                  
                             }
                             return;
@@ -2713,10 +2760,10 @@ var Timeline = {
                               hours = capacityNeeds_JSON.RoleHours[resourceRateCardRole];
                           }
                           
-                          $(cellNode).empty().html(hours).css({'text-align':'center'});
+                          $(cellNode).empty().html(hours.toCommaFrmt()).css({'text-align':'center'});
                         }
                     }
-                }, {
+                },*/ {
                     id: "rate",
                     name: "Rate",
                     field: "rate",
@@ -2733,7 +2780,7 @@ var Timeline = {
                         //    return '';
                         //}
                         if(typeof Timeline.fixedRowsTypes[data[row].id] != 'undefined' || dataContext.id == '') return "";
-                        return value == '' ? '' : currency_code + " "  + parseFloat(value).toFixed(2);
+                        return value == '' ? '' : parseFloat(value).toFixed(2).toCommaFrmt();
                         
                     },asyncPostRender: function(cellNode, row, dataContext, colDef) {
                         //console.log('postrender');
@@ -2741,7 +2788,7 @@ var Timeline = {
                             if(data[row].id == Timeline.fixedRowsTypes.total.id){
                                  //$(cellNode).empty().html(Timeline.getSumOfBelowRows()).css({'text-align' : 'center', 'background-color': '#666666', 'color' : '#fff'});
                                  var rate = Timeline.getAvgOfBelowRows(cellNode, row, dataContext, colDef);
-                                 $(cellNode).empty().html(currency_code + " "  + parseFloat(isNaN(rate) ? 0 : rate).toFixed(2)).css(Timeline.calcuation_cols_css);
+                                 $(cellNode).empty().html(parseFloat(isNaN(rate) ? 0 : rate).toFixed(2).toCommaFrmt()).css(Timeline.calcuation_cols_css);
                             }
                             return;
                         }
@@ -2763,7 +2810,7 @@ var Timeline = {
                         //    return '';
                         //}
                         if(typeof Timeline.fixedRowsTypes[data[row].id] != 'undefined' || dataContext.id == '') return "";
-                        return value == '' ? '' : currency_code + " "  + parseFloat(value).toFixed(2);
+                        return value == '' ? '' : parseFloat(value).toFixed(2).toCommaFrmt();
                         
                     },asyncPostRender: function(cellNode, row, dataContext, colDef) {
                         //console.log('postrender');
@@ -2771,7 +2818,7 @@ var Timeline = {
                             if(data[row].id == Timeline.fixedRowsTypes.total.id){
                                  //$(cellNode).empty().html(Timeline.getSumOfBelowRows()).css({'text-align' : 'center', 'background-color': '#666666', 'color' : '#fff'});
                                  var cost = Timeline.getAvgOfBelowRows(cellNode, row, dataContext, colDef);
-                                 $(cellNode).empty().html(currency_code + " "  + parseFloat(isNaN(cost) ? 0 : cost).toFixed(2)).css(Timeline.calcuation_cols_css);
+                                 $(cellNode).empty().html(parseFloat(isNaN(cost) ? 0 : cost).toFixed(2).toCommaFrmt()).css(Timeline.calcuation_cols_css);
                             }
                             return;
                         }
@@ -2807,11 +2854,11 @@ var Timeline = {
                                  });
                                  
                                  var total_cost = parseFloat(sum).toFixed(2);
-                                 $(cellNode).empty().html(currency_code + " "  + total_cost).css(Timeline.calcuation_cols_css);
+                                 $(cellNode).empty().html(total_cost.toCommaFrmt()).css(Timeline.calcuation_cols_css);
                             }
                             return;
                         }
-                        $(cellNode).empty().html(currency_code + " "  + parseFloat(Timeline.getHoursSum(cellNode, row, dataContext, colDef) * dataContext.cost).toFixed(2));
+                        $(cellNode).empty().html(parseFloat(Timeline.getHoursSum(cellNode, row, dataContext, colDef) * dataContext.cost).toFixed(2).toCommaFrmt());
                     }
                 },{
                     id: "selling_price",
@@ -2844,11 +2891,11 @@ var Timeline = {
                                  });
                                  
                                  var total_price = parseFloat(sum).toFixed(2);
-                                 $(cellNode).empty().html(currency_code + " "  + total_price).css(Timeline.calcuation_cols_css);
+                                 $(cellNode).empty().html(total_price.toCommaFrmt()).css(Timeline.calcuation_cols_css);
                             }
                             return;
                         }
-                        $(cellNode).empty().html(currency_code + " "  + parseFloat(Timeline.getHoursSum(cellNode, row, dataContext, colDef) * dataContext.rate).toFixed(2));
+                        $(cellNode).empty().html(parseFloat(Timeline.getHoursSum(cellNode, row, dataContext, colDef) * dataContext.rate).toFixed(2).toCommaFrmt());
                     }
                 }];
     },
@@ -3792,19 +3839,21 @@ var Timeline = {
                         
                         var rowId = data[to.fromRow + i].id;
                         var field = columns[to.fromCell + j].field;
-                        
-                        if(rowId.toLowerCase() != Timeline.fixedRowsTypes.milestone.id 
-                                && rowId.toLowerCase() != Timeline.fixedRowsTypes.milestone1.id 
-                                && rowId.toLowerCase() != Timeline.fixedRowsTypes.milestone2.id
-                                && ((typeof val != undefined && !Timeline.numFieldValidator(val).valid) || val == '')){
-                            val = '0';
+                        if(rowId.toLowerCase() != Timeline.fixedRowsTypes.phase.id || typeof renderOptions_Phases[val] != 'undefined') {
+                            if(rowId.toLowerCase() != Timeline.fixedRowsTypes.milestone.id 
+                                    && rowId.toLowerCase() != Timeline.fixedRowsTypes.milestone1.id 
+                                    && rowId.toLowerCase() != Timeline.fixedRowsTypes.milestone2.id
+                                    && rowId.toLowerCase() != Timeline.fixedRowsTypes.phase.id
+                                    && ((typeof val != undefined && !Timeline.numFieldValidator(val).valid) || val == '')){
+                                val = '0';
+                            }
+                            //console.log(val);
+                            data[to.fromRow + i][columns[to.fromCell + j].field] = val;
+                           
+                            nodes_order_json += '{"rowId":"' + rowId + '", "cellId":"' + field + '", "value":"' + val.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"},';
+                            grid.invalidateRow(to.fromRow + i);
                         }
-                        //console.log(val);
-                        data[to.fromRow + i][columns[to.fromCell + j].field] = val;
-                       
-                        nodes_order_json += '{"rowId":"' + rowId + '", "cellId":"' + field + '", "value":"' + val.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"},';
-                       
-                        grid.invalidateRow(to.fromRow + i);
+                        
                     }
                 }
             }
@@ -3814,11 +3863,9 @@ var Timeline = {
             nodes_order_json = nodes_order_json.slice(0, -1);
             nodes_order_json += ']';
             Timeline.updateResourceWeeks(nodes_order_json);
+            grid.setData(data);
         }
-        
-        grid.setData(data);
         Timeline.renderGrid();
-
     },
     
     onBeforeMoveRowsHandler: function(e, data) {
@@ -5286,7 +5333,7 @@ var Timeline = {
                 loader.hide();
                 return;
             }
-            
+            if(typeof refreshOverviewPanel === 'function') refreshOverviewPanel();
             loader.hide();
             Timeline.renderGrid();
         },

@@ -66,6 +66,8 @@ public class E2_AddEditEstimateController extends E2_Master{
             this.estimate.Opportunity_Name__c = psr.Account_Name__c;
             this.estimate.E2_SA__c = UserInfo.getUserId();
             this.estimate.E2_Date_Scoped__c = system.today();
+            // RS 13/10 I-239781 : make estimate primary in case of Ist estimate on psr
+            if(psr.Presales_LOEs__r.size() == 0) this.estimate.Default__c = true;
     }
     
     if(this.estimate.Id != null && psr.id <> null){

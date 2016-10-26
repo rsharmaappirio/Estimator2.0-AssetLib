@@ -1,3 +1,14 @@
+/**=====================================================================
+ * Appirio, Inc
+ * Name: E2_EditScopeTemplateController
+ * Description: Controller class for E2_EditScopeTemplate page
+ * Created Date: June 21, 2016
+ * Created By:  Rohit Sharma
+ * 
+ * Date Modified      Modified By                  Description of the update
+   October 19th,2016  Rohit Sharma                 I-241595 : Enhance the E2 code where algo has developed 
+                                                    around "Scope Template manager" permission set 
+*  =====================================================================*/
 @isTest(seeAllData=false)
 public class E2_EditScopeTemplateControllerTest {
   public static E2_Scope__c scope;
@@ -143,8 +154,8 @@ public class E2_EditScopeTemplateControllerTest {
       E2_EditScopeTemplateController controller = new E2_EditScopeTemplateController(stdController);
     
       controller.pageAction();
-      
-      system.assertEquals(controller.showFavForSTMPermissionSet, true);  
+      // Permission set removed
+      //system.assertEquals(controller.showFavForSTMPermissionSet, true);  
       controller.saveScope();  
       
     //stop test
@@ -247,14 +258,6 @@ public class E2_EditScopeTemplateControllerTest {
     estimate = [SELECT Id FROM CMC_Presales_LOE__c];
     effortLst = [SELECT Id FROM E2_Effort__c WHERE Scope__c = :scope.Id];
     User sysAdmin = E2_Test_Utils.insertUser(E2_Constants.PROFILE_SYS_ADMIN, true);
-    
-    PermissionSet permission = [SELECT Id, Name
-                        			FROM PermissionSet
-                        			WHERE Name =: E2_Constants.STM_PERMISSION_SET];
-      
-    PermissionSetAssignment psa = new PermissionSetAssignment(PermissionSetId = permission.Id, AssigneeId = sysAdmin.Id);
-    insert psa; 
-      
     System.runAs(sysAdmin){
     //start test
     Test.startTest();

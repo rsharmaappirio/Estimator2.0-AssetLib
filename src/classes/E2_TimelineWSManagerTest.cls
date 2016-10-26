@@ -1,3 +1,11 @@
+/**=====================================================================
+ * Appirio, Inc
+ * Name: E2_TimelineWSManager
+ * Description: This is a manager test class for E2_TimelineWSManager
+ * Created Date: Aug 12, 2016
+ * Created By: Rahul Jain (Appirio)
+ * 17 Oct 2016: Modified RS : I-239841 : Condition added to save Phase on copy paste, method updateResourceWeeks
+*  =====================================================================*/
 @isTest(seeAllData=false)
 public class E2_TimelineWSManagerTest {
   public static CMC_Presales_LOE__c estimate;

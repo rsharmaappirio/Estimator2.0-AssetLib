@@ -197,7 +197,6 @@
     </types>
     <types>
         <members>Derived_Effort_Template_Manager</members>
-        <members>Scope_Template_manager</members>
         <name>PermissionSet</name>
     </types>
     <types>

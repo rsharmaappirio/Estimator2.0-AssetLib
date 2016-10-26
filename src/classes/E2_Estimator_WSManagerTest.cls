@@ -1,3 +1,12 @@
+/**=====================================================================
+ * Appirio, Inc
+ * Name: E2_Estimator_WSManager
+ * Description: Test class to E2_Estimator_WSManager web service manager 
+ * Created Date: May 13, 2016
+ * Created By: Rohit Sharma (Appirio)
+ * 
+ * Date Modified      Modified By                  Description of the update
+*  =====================================================================*/
 @isTest(seeAllData=false)
 public class E2_Estimator_WSManagerTest {
   public static CMC_Presales_LOE__c estimate;

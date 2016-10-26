@@ -79,13 +79,23 @@
         </layoutColumns>
         <style>OneColumn</style>
     </layoutSections>
+    <relatedLists>
+        <fields>NAME</fields>
+        <fields>Allocation__c</fields>
+        <fields>Of_Phase__c</fields>
+        <fields>To_Phase__c</fields>
+        <fields>Of_Role__c</fields>
+        <fields>Role__c</fields>
+        <fields>UniqueKey__c</fields>
+        <relatedList>E2_Derived_Effort__c.Derived_Effort_Group__c</relatedList>
+    </relatedLists>
     <showEmailCheckbox>false</showEmailCheckbox>
     <showHighlightsPanel>false</showHighlightsPanel>
     <showInteractionLogPanel>false</showInteractionLogPanel>
     <showRunAssignmentRulesCheckbox>false</showRunAssignmentRulesCheckbox>
     <showSubmitAndAttachButton>false</showSubmitAndAttachButton>
     <summaryLayout>
-        <masterLabel>00hR0000000XFv8</masterLabel>
+        <masterLabel>00h5000000UzIL0</masterLabel>
         <sizeX>4</sizeX>
         <sizeY>0</sizeY>
         <summaryLayoutStyle>Default</summaryLayoutStyle>

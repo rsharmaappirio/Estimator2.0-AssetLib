@@ -817,7 +817,7 @@
                 </div>
                 
                 <div id="helpModal" class="slds-modal slds-fade-in-open" role="dialog" style="display: none !important;">
-                    <div class="slds-modal__container" style="max-width:100%; width:60%; max-height:800px;">
+                    <div class="slds-modal__container" style="max-width:100%; width:60%;">
                        <div class="slds-modal__header">
                           <button class="slds-button slds-button--icon-inverse slds-modal__close slds-modal__close-custom" onclick="EditScope.hideAddBulkEffortsModal(); return false;">               
                           <span class="slds-assistive-text">Close</span>

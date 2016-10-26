@@ -338,6 +338,7 @@
          <input type="hidden" value="{!CMC_Presales_LOE__c.Description__c}"/>
          <input type="hidden" value="{!CMC_Presales_LOE__c.Presales_Request__c}"/>
          <input type="hidden" value="{!CMC_Presales_LOE__c.Product__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.Default__c}"/>
          <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Version_Notes__c}"/>
          <input type="hidden" value="{!CMC_Presales_LOE__c.Opportunity_Name__c}"/>
          <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Date_Scoped__c}"/>

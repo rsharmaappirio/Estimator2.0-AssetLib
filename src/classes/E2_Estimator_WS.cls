@@ -6,9 +6,10 @@
  * Created By: Rahul Jain (Appirio)
  * 
  * Date Modified      Modified By                  Description of the update
- *  7/15/2016					Vikash Goyal								 Added method for updating display orders of scope updateScopesDisplayOrder()
+ *  Jul 15, 2016	  Vikash Goyal					Added method for updating display orders of scope updateScopesDisplayOrder()
+ * Oct 19, 2016       Arpita Bose                  S-448268 : Cloned scope item on right click
 *  =====================================================================*/
-global with sharing class E2_Estimator_WS {
+global without sharing class E2_Estimator_WS {
     
     webservice static List<E2_TreeNode> retrieveAllScopeTreeNodesOnEstimateId(string estimateId){
        return E2_Estimator_WSManager.retrieveAllScopeTreeNodesOnEstimateId(estimateId);
@@ -90,8 +91,8 @@ global with sharing class E2_Estimator_WS {
     										allscopesIds);						
     }
     
-    //T-542532: Method to clone scopes 
-    webservice static string cloneScopeWithChild(string scopeIdCSV, string estimateId, string parentScopeId) {
-      return E2_Estimator_WSManager.cloneScopeWithChild(scopeIdCSV, estimateId, parentScopeId);
+    // AB : S-448268 : Cloned scope item on right click 
+    webservice static List<E2_TreeNode> cloneScopeWithChild(string scopeIdCSV) {
+      return E2_Estimator_WSManager.cloneScopeWithChild(scopeIdCSV);
     } 
 }

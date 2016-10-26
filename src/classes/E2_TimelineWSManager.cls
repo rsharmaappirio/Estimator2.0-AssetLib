@@ -6,6 +6,7 @@
  * Created By: Rahul Jain (Appirio)
  * 08 Sep 2016: Modified: RJ : Added E2_Estimate_Rate_Card__r.Resource_Role__c, E2_Estimate_Rate_Card__r.Region__c field in the query method for 
  *                             Capacity Needs and Timeline Hours based on roles
+ * 17 Oct 2016: Modified RS : I-239841 : Condition added to save Phase on copy paste, method updateResourceWeeks
 *  =====================================================================*/
 public class E2_TimelineWSManager {
     
@@ -761,7 +762,14 @@ public class E2_TimelineWSManager {
         for(E2_TimelineWS.CellWrapper rWeek: lstWeeks){
             //CMC_Estimate_Week__c estimateWeek = new CMC_Estimate_Week__c();
             String rowType = rWeek.rowId;
-            if(rowType.equalsIgnoreCase(MILESTONE_TEXT)) {
+            // RS I-239841 : Condition added to save Phase on copy paste
+            if(rowType.equalsIgnoreCase(PHASE_TEXT)) {
+                if(!weekToUpdateMap.containsKey(rWeek.cellId)) weekToUpdateMap.put(rWeek.cellId, new CMC_Estimate_Week__c( id = rWeek.cellId ));
+                CMC_Estimate_Week__c estimateWeek = weekToUpdateMap.get(rWeek.cellId);
+                estimateWeek.Phase__c = rWeek.value;
+                weekToUpdateMap.put(rWeek.cellId, estimateWeek);
+                //lstWeekToUpdate.add(new CMC_Estimate_Week__c ( id = rWeek.cellId, Phase__c = rWeek.value));
+            }else if(rowType.equalsIgnoreCase(MILESTONE_TEXT)) {
                 if(!weekToUpdateMap.containsKey(rWeek.cellId)) weekToUpdateMap.put(rWeek.cellId, new CMC_Estimate_Week__c( id = rWeek.cellId ));
                 
                 CMC_Estimate_Week__c estimateWeek = weekToUpdateMap.get(rWeek.cellId);
