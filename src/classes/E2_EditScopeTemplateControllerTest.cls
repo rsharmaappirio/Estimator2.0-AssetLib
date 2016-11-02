@@ -272,7 +272,7 @@ public class E2_EditScopeTemplateControllerTest {
                        			    
       
       controller.pageAction();
-      system.assertEquals(controller.showFavForSTMPermissionSet, false); 
+      system.assertEquals(controller.showFavForSTMPermissionSet, true); 
       controller.saveScope();  
       
     //stop test

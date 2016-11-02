@@ -301,4 +301,16 @@ public class E2_DataUtil {
               Effort_Hrs__c, Scope__c FROM E2_Effort__c WHERE 
               Scope__r.Presales_LOE__c =:estimateId AND Scope__r.Is_Active__c = true ORDER BY Scope__r.Sequence__c NULLS LAST];
   }
+  
+  public static List<E2_Scope__c> getChildScopesOfEstimate(List<CMC_Presales_LOE__c> presalesList){
+       return [SELECT Id                               
+               FROM E2_Scope__c 
+               WHERE Presales_LOE__c IN : presalesList];   
+   }
+   
+   public static List<E2_Scope__c> getChildScopesOfScopeLibrary(List <E2_Scope_Group__c> scopeGroups){
+       return [SELECT Id                               
+               FROM E2_Scope__c 
+               WHERE Scope_Group__c IN : scopeGroups];   
+  }
 }

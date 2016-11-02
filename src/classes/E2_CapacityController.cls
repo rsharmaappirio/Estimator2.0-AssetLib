@@ -182,12 +182,12 @@ public with sharing class E2_CapacityController extends E2_Master{
             if(!rolesPhaseToHoursMap.containsKey(rolePhaseKey)){
                rolesPhaseToHoursMap.put(rolePhaseKey, 0);    
             }
-            rolesPhaseToHoursMap.put(rolePhaseKey, (rolesPhaseToHoursMap.get(rolePhaseKey)+eC.Hours__c.round(System.RoundingMode.HALF_EVEN)));
+            rolesPhaseToHoursMap.put(rolePhaseKey, (rolesPhaseToHoursMap.get(rolePhaseKey)+eC.Hours__c));
             string phaseSumKey = phase + E2_Constants.SEPARATOR + TOTAL;
             if(!rolesPhaseToHoursMap.containsKey(phaseSumKey)){
                rolesPhaseToHoursMap.put(phaseSumKey, 0);    
             }
-            rolesPhaseToHoursMap.put(phaseSumKey, (rolesPhaseToHoursMap.get(phaseSumKey)+eC.Hours__c.round(System.RoundingMode.HALF_EVEN)));
+            rolesPhaseToHoursMap.put(phaseSumKey, (rolesPhaseToHoursMap.get(phaseSumKey)+eC.Hours__c));
             if(!rolesToPhaseMap.containsKey(role)) rolesToPhaseMap.put(role, new Set<String>());
             
             if(eC.Speciality__c != null) {
@@ -195,12 +195,12 @@ public with sharing class E2_CapacityController extends E2_Master{
                                   role + E2_Constants.SPACE + E2_Constants.OPEN_BRACKET + 
                                   eC.Speciality__r.Name + E2_Constants.CLOSE_BRACKET;
                 if(!rolesSkillPhaseToHoursMap.containsKey(roleskillPhaseKey)){
-                    rolesSkillPhaseToHoursMap.put(roleskillPhaseKey, eC.Hours__c.round(System.RoundingMode.HALF_EVEN));    
+                    rolesSkillPhaseToHoursMap.put(roleskillPhaseKey, eC.Hours__c);    
                 }
                 if(!rolesSkillPhaseToHoursMap.containsKey(phaseSumKey)){
                    rolesSkillPhaseToHoursMap.put(phaseSumKey, 0);    
                 }
-                rolesSkillPhaseToHoursMap.put(phaseSumKey, (rolesSkillPhaseToHoursMap.get(phaseSumKey)+eC.Hours__c.round(System.RoundingMode.HALF_EVEN)));
+                rolesSkillPhaseToHoursMap.put(phaseSumKey, (rolesSkillPhaseToHoursMap.get(phaseSumKey)+eC.Hours__c));
                 String roleSkillsKey = role + E2_Constants.SPACE + E2_Constants.OPEN_BRACKET + eC.Speciality__r.Name + E2_Constants.CLOSE_BRACKET;
                 if(!rolesSkillToPhaseMap.containsKey(roleSkillsKey)) rolesSkillToPhaseMap.put(roleSkillsKey, new Set<String>());
             }
@@ -304,7 +304,7 @@ public with sharing class E2_CapacityController extends E2_Master{
   
   public void fillScopeRolePhaseHoursMap(id ultimateScopeId, string role, string phase, decimal loeHrs) {
       string scopeKey = ultimateScopeId + E2_Constants.SEPARATOR + role;
-      loeHrs = loeHrs.round(System.RoundingMode.HALF_EVEN);
+      loeHrs = loeHrs;
       if(!scopeRolePhaseHourMap.containsKey(scopeKey)) scopeRolePhaseHourMap.put(scopeKey, loeHrs);
       else scopeRolePhaseHourMap.put(scopeKey, loeHrs + scopeRolePhaseHourMap.get(scopeKey));
                
@@ -409,7 +409,7 @@ public with sharing class E2_CapacityController extends E2_Master{
     map<string, decimal> scopeRolePhaseHourMaptemp = generateDerivedHoursMap(combinedderivedEfforts);
     if(!scopeRolePhaseHourMaptemp.isEmpty()) {
         for(string scopeKey : scopeRolePhaseHourMaptemp.keySet()) {
-            decimal loeHrs = scopeRolePhaseHourMaptemp.get(scopeKey);//.round(System.RoundingMode.HALF_EVEN);
+            decimal loeHrs = scopeRolePhaseHourMaptemp.get(scopeKey);
             if(!scopeRolePhaseHourMap.containsKey(scopeKey)) scopeRolePhaseHourMap.put(scopeKey, loeHrs);
             else scopeRolePhaseHourMap.put(scopeKey, loeHrs + scopeRolePhaseHourMap.get(scopeKey));
         }
@@ -418,7 +418,7 @@ public with sharing class E2_CapacityController extends E2_Master{
   
   public void fillScopeRolePhaseHoursMapTemp(map<string, decimal> scopeRolePhaseHourMaptemp,id ultimateScopeId, string role, string phase, decimal loeHrs) {
       string scopeKey = ultimateScopeId + E2_Constants.SEPARATOR + role;
-      loeHrs = loeHrs;//.round(System.RoundingMode.HALF_DOWN);
+      loeHrs = loeHrs;
       if(!scopeRolePhaseHourMaptemp.containsKey(scopeKey)) scopeRolePhaseHourMaptemp.put(scopeKey, loeHrs);
       else scopeRolePhaseHourMaptemp.put(scopeKey, loeHrs + scopeRolePhaseHourMaptemp.get(scopeKey));
                

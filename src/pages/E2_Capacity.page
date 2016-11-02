@@ -31,6 +31,16 @@ table tbody tr td.slds-td-scope{
 .child {
     display :none;
 }
+.slds-button--last {
+                background: url({!$Resource.E2_SLDS1}/assets/icons/utility/down_60.png) no-repeat scroll center center / 16px 16px!important;
+                background-color: #ffffff!important;
+                width: 36px;
+                height:36px;
+            }
+            .slds-dropdown-trigger {
+                float: right;
+                display: flex!important;
+            }
 </style>        
         
 <apex:pageMessages />
@@ -59,10 +69,22 @@ table tbody tr td.slds-td-scope{
       </div>
     </div>
     <div class="slds-col slds-no-flex slds-align-bottom">
-      <div class="slds-button-group" role="group">
-        <button class="slds-button slds-button--neutral" value="Export Scope Items (Conga)" onclick="window.open('https://composer.congamerge.com?SessionId={!$API.Session_ID}&ServerUrl={!$API.Partner_Server_URL_80}&id={!estimate.id}&QueryId=[E2Estimate]{!$Label.E2_Scope_Export_Query}?pv0={!estimate.id},[E2UltimateScope]{!$Label.E2_Ultimate_Scope_Export_Query}?pv0={!estimate.id}&TemplateGroup=E2&DS2=1&DS3=1&OFN={Template.Label}+-+{!URLENCODE(estimate.name)}&DS8=1', '', 'width=600,height=400,top=0');return false;">Export Scope Items (Conga)</button>
-        <button class="slds-button slds-button--neutral" value="Export (XLS)" onclick="window.location.href='/apex/E2_ExportScopeItemstoXLS?id={!estimate.id}';return false;">Export (XLS)</button>
-        <button class="slds-button slds-button--neutral" value="Export (CSV)" onclick="window.location.href='/apex/E2_ExportScopeItemsToCSV?id={!estimate.id}';return false;">Export (CSV)</button>
+      <div class="slds-button-group slds-dropdown-trigger slds-is-open" aria-expanded="true" aria-haspopup="true" role="group">
+        <button class="slds-button slds-button--neutral" value="Export Scope as" style="border-radius: 0px;">Export Scope as</button>
+        <button class="slds-button slds-button--icon-border-filled slds-button--last" name="more" id="lc-230-more" title="Export scope as" type="button"></button>
+        <div class="slds-dropdown slds-dropdown--right slds-dropdown--actions" id="lc-236-dd">
+            <ul class="dropdown__list" role="menu">
+                <li id="lc-234-xls-item" class="slds-dropdown__item" tabindex="-1" role="menuitem option">
+                    <a id="lc-234-xls" data-value="XLS" class="slds-truncate" tabindex="-1" href="javascript:void(0);" onclick="window.location.href='/apex/E2_ExportScopeItemstoXLS?id={!estimate.id}';return false;">XLS</a>
+                </li>
+                <li id="lc-235-csv-item" class="slds-dropdown__item" tabindex="-1" role="menuitem option">
+                    <a id="lc-235-csv" data-value="CSV" class="slds-truncate" tabindex="-1" href="javascript:void(0);" onclick="window.location.href='/apex/E2_ExportScopeItemsToCSV?id={!estimate.id}';return false;">CSV</a>
+                </li>
+                <li id="lc-233-conga-item" class="slds-dropdown__item" tabindex="-1" role="menuitem option">
+                    <a id="lc-233-conga" data-value="Conga Export" class="slds-truncate" tabindex="-1" href="javascript:void(0);" onclick="window.open('https://composer.congamerge.com?SessionId={!$API.Session_ID}&ServerUrl={!$API.Partner_Server_URL_80}&id={!estimate.id}&QueryId=[E2Estimate]{!$Label.E2_Scope_Export_Query}?pv0={!estimate.id},[E2UltimateScope]{!$Label.E2_Ultimate_Scope_Export_Query}?pv0={!estimate.id}&TemplateGroup=E2&DS2=1&DS3=1&OFN={Template.Label}+-+{!URLENCODE(estimate.name)}&DS8=1', '', 'width=600,height=400,top=0');return false;" >Conga Export</a>
+                </li>
+            </ul>
+         </div>
       </div>
     </div>
   </div>
@@ -154,8 +176,8 @@ table tbody tr td.slds-td-scope{
                                          <apex:variable var="c" value="{!p1}|{!role}" />
                                          <td class="slds-truncate" scope="row" data-label="{!role}">
         
-                                                 <apex:outputText value="{0, number, 0.00}">
-                                                       <apex:param value="{!rolesPhaseToHoursMap[c]}" />
+                                                 <apex:outputText value="{0, number, 0}">
+                                                       <apex:param value="{!ROUND(rolesPhaseToHoursMap[c], 0.00)}" />
                                                  </apex:outputText>
                                                                                          
                                          </td>
@@ -164,8 +186,8 @@ table tbody tr td.slds-td-scope{
                                      </apex:repeat>
                                 </apex:repeat>
                                 <td class="slds-truncate slds-td" scope="row">
-                                   <apex:outputText value="{0, number, 0.00}">
-                                                       <apex:param value="{!rowTotal}" />
+                                   <apex:outputText value="{0, number, 0}">
+                                                       <apex:param value="{!ROUND(rowTotal, 0.00)}" />
                                    </apex:outputText>                        
                                 </td>  
                               </tr> 
@@ -176,16 +198,16 @@ table tbody tr td.slds-td-scope{
                                 <apex:repeat value="{!phases}" var="p1">
                                          <apex:variable var="c" value="{!p1}|total" />
                                          <td class="slds-truncate slds-td" scope="row" data-label="{!p1}">
-                                                 <apex:outputText value="{0, number, 0.00}">
-                                                       <apex:param value="{!rolesPhaseToHoursMap[c]}" />
+                                                 <apex:outputText value="{0, number, 0}">
+                                                       <apex:param value="{!ROUND(rolesPhaseToHoursMap[c],0.00)}" />
                                                  </apex:outputText>                      
                                          </td>
                                          <apex:variable var="rowValue" value="{!rolesPhaseToHoursMap[c]}"/>
                                          <apex:variable var="phaseTotal" value="{!phaseTotal + rowValue}"/>
                                      </apex:repeat>
                                 <td class="slds-truncate slds-td" scope="row">
-                                    <apex:outputText value="{0, number, 0.00}">
-                                                       <apex:param value="{!phaseTotal}" />
+                                    <apex:outputText value="{0, number, 0}">
+                                                       <apex:param value="{!ROUND(phaseTotal,0.00)}" />
                                    </apex:outputText>                         
                                 </td>
                               </tr>  
@@ -233,8 +255,8 @@ table tbody tr td.slds-td-scope{
                                          <apex:variable var="c" value="{!p1}|{!role}" />
                                          <td class="slds-truncate" scope="row" data-label="{!role}">
         
-                                                 <apex:outputText value="{0, number, 0.00}">
-                                                       <apex:param value="{!rolesSkillPhaseToHoursMap[c]}" />
+                                                 <apex:outputText value="{0, number, 0}">
+                                                       <apex:param value="{!ROUND(rolesSkillPhaseToHoursMap[c],0.00)}" />
                                                  </apex:outputText>
                                                                                          
                                          </td>
@@ -243,8 +265,8 @@ table tbody tr td.slds-td-scope{
                                      </apex:repeat>
                                 </apex:repeat>
                                 <td class="slds-truncate slds-td" scope="row">
-                                   <apex:outputText value="{0, number, 0.00}">
-                                                       <apex:param value="{!rowTotal}" />
+                                   <apex:outputText value="{0, number, 0}">
+                                                       <apex:param value="{!ROUND(rowTotal,0.00)}" />
                                    </apex:outputText>                        
                                 </td>  
                               </tr> 
@@ -255,16 +277,16 @@ table tbody tr td.slds-td-scope{
                                 <apex:repeat value="{!skillsPhases}" var="p1">
                                          <apex:variable var="c" value="{!p1}|total" />
                                          <td class="slds-truncate slds-td" scope="row" data-label="{!p1}">
-                                                 <apex:outputText value="{0, number, 0.00}">
-                                                       <apex:param value="{!rolesSkillPhaseToHoursMap[c]}" />
+                                                 <apex:outputText value="{0, number, 0}">
+                                                       <apex:param value="{!ROUND(rolesSkillPhaseToHoursMap[c],0.00)}" />
                                                  </apex:outputText>                      
                                          </td>
                                          <apex:variable var="rowValue" value="{!rolesSkillPhaseToHoursMap[c]}"/>
                                          <apex:variable var="phaseTotal" value="{!phaseTotal + rowValue}"/>
                                      </apex:repeat>
                                 <td class="slds-truncate slds-td" scope="row">
-                                    <apex:outputText value="{0, number, 0.00}">
-                                                       <apex:param value="{!phaseTotal}" />
+                                    <apex:outputText value="{0, number, 0}">
+                                                       <apex:param value="{!ROUND(phaseTotal,0.00)}" />
                                    </apex:outputText>                         
                                 </td>
                               </tr>  
@@ -310,41 +332,37 @@ table tbody tr td.slds-td-scope{
                                  <apex:variable var="ultimateParentName" value="{!scopeIdMap[ultimateParentId]}"/>
                                  <tr class="slds-hint-parent header expand header_{!ultimateParentId}" childCSS="child_{!ultimateParentId}" title="Click to expand" style="cursor:pointer;">
                                      <td class="slds-truncate slds-td-scope" scope="row" data-label="{!scopeIdMap[ultimateParentId]}"> <span class="sign"></span> &nbsp; Epic: {!scopeIdMap[ultimateParentId]}</td>
-                                     <apex:variable var="rowTotal" value="{!0}"/>
                                      <apex:repeat value="{!scopePhases}" var="phase">
                                          <apex:variable var="c" value="{!ultimateParentId}|{!phase}" />
                                         <td class="slds-truncate slds-td-scope"  scope="row" data-label="{!phase}">
-                                            <apex:outputText value="{0, number, 0.00}">
-                                                       <apex:param value="{!scopeRolePhaseHourMap[c]}" />
+                                            <apex:outputText value="{0, number, 0}">
+                                                       <apex:param value="{!ROUND(scopeRolePhaseHourMap[c],0.00)}" />
                                             </apex:outputText>
                                         </td>
-                                        <apex:variable var="rowValue" value="{!scopeRolePhaseHourMap[c]}"/>
-                                         <apex:variable var="rowTotal" value="{!rowTotal + rowValue}"/>
                                      </apex:repeat>
+                                     <apex:variable var="c" value="{!ultimateParentId}|total" />
                                      <td class="slds-truncate slds-td-scope"  scope="row" data-label="Total">
-                                         <apex:outputText value="{0, number, 0.00}">
-                                                       <apex:param value="{!rowTotal}" />
+                                         <apex:outputText value="{0, number, 0}">
+                                                       <apex:param value="{!ROUND(scopeRolePhaseHourMap[c],0.00)}" />
                                         </apex:outputText>
                                     </td>
                                  </tr>
                                  <apex:variable var="rolePhaseMap" value="{!scopeRolePhaseMap[ultimateParentId]}" />
                                  <apex:repeat value="{!rolePhaseMap}" var="role">
                                      <tr class="slds-hint-parent child child_{!ultimateParentId}">
-                                         <apex:variable var="rowTotal" value="{!0}"/>
                                          <td class="slds-truncate" scope="row" data-label="{!role}">{!role}</td>
                                          <apex:repeat value="{!rolePhaseMap[role]}" var="phase">
                                              <apex:variable var="c" value="{!ultimateParentId}|{!role}|{!phase}" />
                                              <td class="slds-truncate" scope="row" data-label="{!role}">
-                                                 <apex:outputText value="{0, number, 0.00}">
-                                                       <apex:param value="{!scopeRolePhaseHourMap[c]}" />
+                                                 <apex:outputText value="{0, number, 0}">
+                                                       <apex:param value="{!ROUND(scopeRolePhaseHourMap[c],0.00)}" />
                                                  </apex:outputText>
                                             </td>
-                                            <apex:variable var="rowValue" value="{!scopeRolePhaseHourMap[c]}"/>
-                                         <apex:variable var="rowTotal" value="{!rowTotal + rowValue}"/>
                                          </apex:repeat>
+                                         <apex:variable var="c" value="{!ultimateParentId}|{!role}|total" />
                                          <td class="slds-truncate"  scope="row" data-label="Total">
-                                             <apex:outputText value="{0, number, 0.00}">
-                                                           <apex:param value="{!rowTotal}" />
+                                             <apex:outputText value="{0, number, 0}">
+                                                           <apex:param value="{!ROUND(scopeRolePhaseHourMap[c],0.00)}" />
                                             </apex:outputText>
                                         </td>
                                      </tr>
@@ -356,16 +374,16 @@ table tbody tr td.slds-td-scope{
                                 <apex:repeat value="{!scopePhases}" var="p1">
                                          <apex:variable var="c" value="{!p1}|total" />
                                          <td class="slds-truncate slds-td" scope="row" data-label="{!p1}">
-                                                 <apex:outputText value="{0, number, 0.00}">
-                                                       <apex:param value="{!scopeRolePhaseHourMap[c]}" />
+                                                 <apex:outputText value="{0, number, 0}">
+                                                       <apex:param value="{!ROUND(scopeRolePhaseHourMap[c],0.00)}" />
                                                  </apex:outputText>                      
                                          </td>
                                          <apex:variable var="rowValue" value="{!scopeRolePhaseHourMap[c]}"/>
                                          <apex:variable var="phaseTotal" value="{!phaseTotal + rowValue}"/>
                                      </apex:repeat>
                                 <td class="slds-truncate slds-td" scope="row">
-                                    <apex:outputText value="{0, number, 0.00}">
-                                                       <apex:param value="{!phaseTotal}" />
+                                    <apex:outputText value="{0, number, 0}">
+                                                       <apex:param value="{!ROUND(phaseTotal,0.00)}" />
                                    </apex:outputText>                         
                                 </td>
                               </tr>

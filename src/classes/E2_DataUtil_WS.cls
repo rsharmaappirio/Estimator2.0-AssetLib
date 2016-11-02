@@ -7,6 +7,7 @@
  * 
  * Date Modified      Modified By                  Description of the update
  * Oct 19, 2016       Arpita Bose                  S-448268 : Cloned scope item on right click
+ * Oct 27, 2016       Rohit Sharma                 I-241822 : Total effort of scope hierarchy has not displayed over ultimate parent node
 *  =====================================================================*/
 public with sharing class E2_DataUtil_WS {
    
@@ -26,20 +27,22 @@ public with sharing class E2_DataUtil_WS {
    }
   
    public static List<E2_Scope__c> getChildScopesOfEstimate(string estimateId){
+       // RS : I-241822 : added Ultimate_Parent_Scope__c parent scope in soql query. 
        return [Select e.Source_Scope__c, e.Scope_Group__c, e.Parent_Scope__c, e.Name, 
-                                 e.Presales_LOE__c, e.Description__c , e.LOE_Hrs__c,e.Ultimate_Parent_Id__c, 
+                                 e.Presales_LOE__c, e.Description__c , e.LOE_Hrs__c,e.Ultimate_Parent_Id__c, e.Ultimate_Parent_Scope__c, 
                                  e.Complexity__c, e.Scope_Item_Type__c, e.Is_Active__c, e.Scope_Flag__c, e.Display_Order__c                                  
                                  FROM E2_Scope__c e 
-                                 WHERE e.Presales_LOE__c = : estimateId];   
+                                 WHERE e.Presales_LOE__c = : estimateId ORDER BY e.Ultimate_Parent_Scope__c NULLS FIRST];   
    }
    
     public static List<E2_Scope__c> getChildScopesOfScopeGroup(string scopeGrpId){
+        // RS : I-241822 : added Ultimate_Parent_Scope__c parent scope in soql query.
     	Id recTypeId = E2_RecordTypeClass.getId(E2_Constants.E2_SCOPE_API_NAME, E2_Constants.SCOPE_RT_TEMPLATE);    	
-      return [SELECT Source_Scope__c, Scope_Group__c, Parent_Scope__c, Name,Ultimate_Parent_Id__c, 
+      return [SELECT Source_Scope__c, Scope_Group__c, Parent_Scope__c, Name,Ultimate_Parent_Id__c, Ultimate_Parent_Scope__c, 
                                  Presales_LOE__c, Description__c , LOE_Hrs__c, 
                                  Complexity__c, Scope_Item_Type__c, Is_Active__c, Scope_Flag__c, Display_Order__c                                   
                                  FROM E2_Scope__c 
-                                 WHERE Scope_Group__c = : scopeGrpId AND RecordTypeId = :recTypeId];   
+                                 WHERE Scope_Group__c = : scopeGrpId AND RecordTypeId = :recTypeId ORDER BY Ultimate_Parent_Scope__c NULLS FIRST];   
    }
    
    public static List<E2_Scope__c> getScopeDetails(string estimateId) {
@@ -115,7 +118,7 @@ public with sharing class E2_DataUtil_WS {
    }
    
    public static List<E2_Scope__c> getUltimateScopeLOE(string ultimateScopes) {
-  	return [SELECT LOE_Hrs__c,Ultimate_Parent_Id__c FROM E2_Scope__c WHERE
+  	return [SELECT LOE_Hrs__c,Ultimate_Parent_Id__c, Ultimate_Parent_Scope__c FROM E2_Scope__c WHERE
   			Is_Active__c = true AND Ultimate_Parent_Id__c = :ultimateScopes];
   }
   
@@ -164,7 +167,7 @@ public with sharing class E2_DataUtil_WS {
   //AB S-448268 : Method to return all scopes details by scopeId
   public static List<E2_Scope__c> getChildScopesById(set<Id> scopesId){
        return [Select e.Source_Scope__c, e.Scope_Group__c, e.Parent_Scope__c, e.Name, 
-                                 e.Presales_LOE__c, e.Description__c , e.LOE_Hrs__c,e.Ultimate_Parent_Id__c, 
+                                 e.Presales_LOE__c, e.Description__c , e.LOE_Hrs__c,e.Ultimate_Parent_Id__c, e.Ultimate_Parent_Scope__c, 
                                  e.Complexity__c, e.Scope_Item_Type__c, e.Is_Active__c, e.Scope_Flag__c, e.Display_Order__c                                  
                                  FROM E2_Scope__c e 
                                  WHERE e.Id IN: scopesId];   

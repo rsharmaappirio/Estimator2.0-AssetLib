@@ -477,8 +477,14 @@ var AddEditScope = {
                 AddEditScope.tree_init();
                 return;
             }
+            if(AddEditScope.UPDATE_DISPLAY_ORDER == true) {
+                AddEditScope.UPDATE_DISPLAY_ORDER = false;
+                CustomAlert.show('Scope have been cloned successfully!!!');
+            } else {
+                CustomAlert.show('Scope have been re-parented successfully!!!');
+            }
             
-            CustomAlert.show('Scope have been re-parented successfully!!!');
+            
             $(loadSpinner).show().css('height', $(document).outerHeight());
             $(treeId).jstree('destroy');
             $(treeId).jstree(jstree_options);
@@ -902,6 +908,45 @@ var AddEditScope = {
             $('#' + frameid).attr('src', url);
         }
     },
+    sort_cloned_scopes : function(data) {
+        var sibling = $(treeId).jstree(true).get_node(AddEditScope.ADD_FROM_TEMPLATE_PARENT_ID);
+        var newList = [];
+        var map = {};
+         // load all the parent nodes first
+         for(var indx = data.length - 1; indx >= 0 ; indx--){
+          var node = data[indx];
+          if(node.parent == sibling.parent || node.id == sibling.id) {     
+            newList.push(node);
+            map[node.id] = node;
+            data.splice(indx, 1);
+          }	 
+         }
+         // sort the list to set the sort order of parent nodes
+         newList.sort(function(a,b) {return (parseInt(a.display_order) > parseInt(b.display_order)) ? 1 : ((parseInt(b.display_order) > parseInt(a.display_order)) ? -1 : 0);} ); 
+         // re-iterate the list for child and sub-child; 
+         /// load in the order of hierarchy.
+         while(data.length > 0){
+          var intermediateList = [];
+          // traverse the data 
+          for(var i_indx = data.length - 1; i_indx >= 0 ; i_indx--){
+        	var node = data[i_indx];
+            if(typeof map[node.parent] != 'undefined'){
+        		intermediateList.push(node);
+        		data.splice(i_indx, 1);		
+        	}
+          }  
+          // sort the list to sort the sort order of intermediate list
+          intermediateList.sort(function(a,b) {return (parseInt(a.display_order) > parseInt(b.display_order)) ? 1 : ((parseInt(b.display_order) > parseInt(a.display_order)) ? -1 : 0);} ); 
+          for(var j_indx = 0; j_indx <= intermediateList.length - 1 ; j_indx++){  
+           var node = intermediateList[j_indx];  
+           newList.push(node);
+           map[node.id] = node;
+         }
+         // clear the array
+         intermediateList = [];
+         }  
+         return newList;
+    },
     cloneScopeWithoutChild : function(nodeId) {
         $(loadSpinner).show();
         var $selectedNode = $(treeId).jstree(true).get_node(nodeId);
@@ -927,18 +972,10 @@ var AddEditScope = {
     },
     cloneScopeWithChild_initCallBack: {
         onSuccess: function(result) {
-           console.log(result);
-           var newList = [];
-           for(var i_indx = result.length - 1; i_indx >= 0 ; i_indx--) {
-               var node = result[i_indx];
-               newList.push(node);
-           }
-           newList.sort(function(a,b) {return (parseInt(a.display_order) > parseInt(b.display_order)) ? 1 : ((parseInt(b.display_order) >= parseInt(a.display_order)) ? -1 : 0);} ); 
-           result = newList;
-           console.log(result);
            var sibling = $(treeId).jstree(true).get_node(AddEditScope.ADD_FROM_TEMPLATE_PARENT_ID);
+           
+           result = AddEditScope.sort_cloned_scopes(result);
            $.each(result, function(indx, node) {
-            
             var display_order = parseInt(node.display_order);
             var parent = node.parent;
             if(node.parent == sibling.parent) {
@@ -958,8 +995,10 @@ var AddEditScope = {
                 $(treeId).jstree(AddEditScope.CREATE_NODE, parent, node, display_order);
             }
            });
+           AddEditScope.UPDATE_DISPLAY_ORDER = true;
            AddEditScope.updateScopeDisplayOrder();
            AddEditScope.ADD_FROM_TEMPLATE_PARENT_ID = '';
+           result = null;
         },
         onFailure: function(error) {
             alert(error);

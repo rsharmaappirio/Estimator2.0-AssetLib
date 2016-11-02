@@ -37,14 +37,28 @@
                   </div>
                   <apex:form >
                   <div class="slds-col slds-no-flex slds-align-bottom">
-                     <div class="slds-button-group" role="group">
-                        <!--button class="slds-button slds-button--neutral" onclick="return false;">Help</button-->
-                        <button class="slds-button slds-button--neutral" value="Export Scope Items (Conga)" onclick="window.open('https://composer.congamerge.com?SessionId={!$API.Session_ID}&ServerUrl={!$API.Partner_Server_URL_80}&id={!estimate.id}&QueryId=[E2Estimate]{!$Label.E2_Scope_Export_Query}?pv0={!estimate.id},[E2UltimateScope]{!$Label.E2_Ultimate_Scope_Export_Query}?pv0={!estimate.id}&TemplateGroup=E2&DS2=1&DS3=1&OFN={Template.Label}+-+{!URLENCODE(estimate.name)}&DS8=1', '', 'width=600,height=400,top=0');return false;">Export Scope Items (Conga)</button>
+                     <div class="slds-button-group" role="group" >
+                         <apex:commandButton rendered="{!isEditable}" styleClass="slds-button slds-button--neutral slds-button--brand" title="Build Capacity" value="Build Capacity" action="{!buildCapacity}"/>
                         <apex:commandButton rendered="{!isEditable}" styleClass="slds-button slds-button--neutral" title="Add Scope From Library" value="Add Scope from Library" onclick="return AddEditScope.addfromtemplate_click(this);"/>
-                        <apex:commandButton rendered="{!isEditable}" styleClass="slds-button slds-button--neutral" title="Add New Scope" value="Add New Scope" onclick="return AddEditScope.addnew_click(this);"/>
-                        <apex:commandButton rendered="{!isEditable}" styleClass="slds-button slds-button--neutral slds-button--brand" title="Build Capacity" value="Build Capacity" action="{!buildCapacity}"/>
- 
-                     </div>
+                        <apex:commandButton rendered="{!isEditable}" styleClass="slds-button slds-button--neutral" title="Add New Scope" value="Add New Scope" onclick="return AddEditScope.addnew_click(this);" style="border-right: 0px;"/>
+                        <div class="slds-dropdown-trigger slds-is-open" aria-expanded="true" aria-haspopup="true">
+                            <button class="slds-button slds-button--neutral" value="Export Scope as" style="border-radius: 0px;">Export Scope as</button>
+                            <button class="slds-button slds-button--icon-border-filled slds-button--last" name="more" id="lc-230-more" title="Export scope as" type="button"></button>
+                            <div class="slds-dropdown slds-dropdown--right slds-dropdown--actions" id="lc-236-dd">
+                                <ul class="dropdown__list" role="menu">
+                                    <li id="lc-234-xls-item" class="slds-dropdown__item" tabindex="-1" role="menuitem option">
+                                        <a id="lc-234-xls" data-value="XLS" class="slds-truncate" tabindex="-1" href="javascript:void(0);" onclick="window.location.href='/apex/E2_ExportScopeItemstoXLS?id={!estimate.id}';return false;">XLS</a>
+                                    </li>
+                                    <li id="lc-235-csv-item" class="slds-dropdown__item" tabindex="-1" role="menuitem option">
+                                        <a id="lc-235-csv" data-value="CSV" class="slds-truncate" tabindex="-1" href="javascript:void(0);" onclick="window.location.href='/apex/E2_ExportScopeItemsToCSV?id={!estimate.id}';return false;">CSV</a>
+                                    </li>
+                                    <li id="lc-233-conga-item" class="slds-dropdown__item" tabindex="-1" role="menuitem option">
+                                        <a id="lc-233-conga" data-value="Conga Export" class="slds-truncate" tabindex="-1" href="javascript:void(0);" onclick="window.open('https://composer.congamerge.com?SessionId={!$API.Session_ID}&ServerUrl={!$API.Partner_Server_URL_80}&id={!estimate.id}&QueryId=[E2Estimate]{!$Label.E2_Scope_Export_Query}?pv0={!estimate.id},[E2UltimateScope]{!$Label.E2_Ultimate_Scope_Export_Query}?pv0={!estimate.id}&TemplateGroup=E2&DS2=1&DS3=1&OFN={Template.Label}+-+{!URLENCODE(estimate.name)}&DS8=1', '', 'width=600,height=400,top=0');return false;" >Conga Export</a>
+                                    </li>
+                                </ul>
+                             </div>
+                        </div>
+                      </div>
                   </div>
                   </apex:form>
                </div>
@@ -314,6 +328,16 @@
             .publishercontainer .bottomBar {
                height: 45px!important;
             } 
+            .slds-button--last {
+                background: url({!$Resource.E2_SLDS1}/assets/icons/utility/down_60.png) no-repeat scroll center center / 16px 16px!important;
+                background-color: #ffffff!important;
+                width: 36px;
+                height:36px;
+            }
+            .slds-dropdown-trigger {
+                float: right;
+                display: flex!important;
+            }
                
          </style>
       </apex:define>

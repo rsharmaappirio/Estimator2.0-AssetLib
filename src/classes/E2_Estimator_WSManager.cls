@@ -9,6 +9,7 @@
  * Oct 17, 2016       Vikash Goyal                 S-445267 : Update asset JSON to remove all 
  *                                                 speical charctors from asset name and Description.
  * Oct 19, 2016       Arpita Bose                  S-448268 : Cloned scope item on right click
+ * Oct 27, 2016       Rohit Sharma                 I-241822 : Total effort of scope hierarchy has not displayed over ultimate parent node
 *  =====================================================================*/
 public class E2_Estimator_WSManager {
     private final static string NODE_TYPE_SCOPE = 'scope';
@@ -42,11 +43,12 @@ public class E2_Estimator_WSManager {
         		if(!scopeRollhrs.containsKey(scopeId)) 
         			scopeRollhrs.put(scopeId, 0);
         	} else if(scope.Is_Active__c) {
-        		if(!scopeRollhrs.containsKey(scope.Ultimate_Parent_Id__c)) 
-        			scopeRollhrs.put(scope.Ultimate_Parent_Id__c, scope.LOE_Hrs__c);
+        	    // RS : I-241822 : Total effort of scope hierarchy has not displayed over ultimate parent node
+        		if(!scopeRollhrs.containsKey(scope.Ultimate_Parent_Scope__c)) 
+        			scopeRollhrs.put(scope.Ultimate_Parent_Scope__c, scope.LOE_Hrs__c);
         		else
-        			scopeRollhrs.put(scope.Ultimate_Parent_Id__c, 
-        					scopeRollhrs.get(scope.Ultimate_Parent_Id__c) + scope.LOE_Hrs__c);
+        			scopeRollhrs.put(scope.Ultimate_Parent_Scope__c, 
+        					scopeRollhrs.get(scope.Ultimate_Parent_Scope__c) + scope.LOE_Hrs__c);
         		
         	}
         }

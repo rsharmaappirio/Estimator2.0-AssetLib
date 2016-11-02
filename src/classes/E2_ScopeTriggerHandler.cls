@@ -6,7 +6,7 @@
  * Created By: Arpita Bose (Appirio)
  * 
  * Date Modified      Modified By                  Description of the update
- *  
+ * October 27, 2016   Rohit Sharma                 I-241853 : Wrong total effort has displayed over ultimate parent after cloning scope hierarchy.
 *  =====================================================================*/
 public class E2_ScopeTriggerHandler {
 	
@@ -26,18 +26,25 @@ public class E2_ScopeTriggerHandler {
         list<E2_scope__c> scopesToUpdate = new list<E2_scope__c>();
         //get all the scope Ids where Parent Scope is not null or is changed
         for(E2_Scope__c scope : newList) {
-        	if(scope.Parent_Scope__c != NULL && !scopeIds.contains(scope.Id)) {
+            // RS : I-241853 : Wrong total effort has displayed over ultimate parent after cloning scope hierarchy.
+        	if(scope.Parent_Scope__c != NULL  && !scopeIds.contains(scope.Id)) {
         		updatedScopes.add(scope.Id);
         		scopeIds.add(scope.Id);
-        	}            
+        	} else if(scope.Parent_Scope__c == NULL && !scopeIds.contains(scope.Id)) {
+        	    E2_scope__c scopeEdit = new E2_scope__c(id = scope.Id, Ultimate_Parent_Scope__c = NULL);
+        	    scopesToUpdate.add(scopeEdit);
+        		scopeIds.add(scope.Id);
+        	}             
         }
         //update ultimate parent on Scopes for the set of scope Ids fetched 
         if(!updatedScopes.isEmpty()) {
             for(E2_scope__c scope : E2_DataUtil.getscopeUltimateParentDetails(updatedScopes)) {
                 scope.Ultimate_Parent_Scope__c = scope.Ultimate_Parent_Id__c;
                 scopesToUpdate.add(scope);
-            }
-            update scopesToUpdate;   
+            }   
+        }
+        if(!scopesToUpdate.isEmpty()) {
+            update scopesToUpdate;
         }
   }
    

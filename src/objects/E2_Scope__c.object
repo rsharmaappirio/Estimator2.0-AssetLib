@@ -21,6 +21,10 @@
         <type>Default</type>
     </actionOverrides>
     <actionOverrides>
+        <actionName>Follow</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
         <actionName>List</actionName>
         <type>Default</type>
     </actionOverrides>
@@ -243,12 +247,13 @@
     </fields>
     <fields>
         <fullName>Scope_Group__c</fullName>
-        <deleteConstraint>SetNull</deleteConstraint>
+        <deleteConstraint>Restrict</deleteConstraint>
         <description>Contains the scopes relevant to the group.For eg: Sales cloud implementation with 100k records.</description>
         <externalId>false</externalId>
         <inlineHelpText>Contains the scopes relevant to the group.For eg: Sales cloud implementation with 100k records.</inlineHelpText>
         <label>Scope Group</label>
         <referenceTo>E2_Scope_Group__c</referenceTo>
+        <relationshipLabel>Scope</relationshipLabel>
         <relationshipName>Scopes</relationshipName>
         <required>false</required>
         <trackFeedHistory>false</trackFeedHistory>

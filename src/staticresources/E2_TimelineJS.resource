@@ -726,8 +726,14 @@
                                                     }
                                        		};
                                
-                                
-                             rowData.push({ value: (cell.find('div').length ? cell.find('div').text() : cell.text()), metadata: { style: stylesheet.createFormat(metaformat).id }});
+                             
+                             // 10/28/2016: RJ: To resolve issue of showing numbers as text in exported excel; need to typecast text to number;
+                             var cellValue = (cell.find('div').length ? cell.find('div').text() : cell.text());
+                             cellValue = cellValue.removeCommaFrmt();
+                             cellValue = isNaN(parseInt(cellValue)) ? cellValue : parseInt(cellValue);
+                             rowData.push({ value: cellValue, metadata: { style: stylesheet.createFormat(metaformat).id }});
+                             // old code: commented for reference purpose; TODO: remove after some releases
+                             //rowData.push({ value: (cell.find('div').length ? cell.find('div').text() : cell.text()), metadata: { style: stylesheet.createFormat(metaformat).id }});
                                 
                              prev_cell = cell;  
                        }else if(typeof prev_cell != 'undefined'){
@@ -1281,6 +1287,13 @@ Number.prototype.toCommaFrmt = function(){
 }
 String.prototype.toCommaFrmt = function(){
     return this.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
+Number.prototype.removeCommaFrmt = function(){
+    return this.toString().replace(/\,/g,'');
+}
+String.prototype.removeCommaFrmt = function(){
+    return this.replace(/\,/g,'');
 }
 
 Date.prototype.startOfWeek = function(pStartOfWeek) {
@@ -2560,7 +2573,7 @@ var Timeline = {
                                                         ,asyncPostRenderDelay : 50 // default 50
                                                         ,leaveSpaceForNewRows : true
                                                         ,frozenColumn : 4
-                                                        ,frozenRow : 5
+                                                        ,frozenRow : 8
                                                         //,autoHeight: true
                                                         //,fullWidthRows: true
                                                         //,frozenBottom: true
@@ -4506,6 +4519,8 @@ var Timeline = {
                 loader.hide();
                 return;
             }
+            // Refresh top panel on estimate on resource change
+            if(typeof refreshOverviewPanel === 'function') refreshOverviewPanel();
             sforce.apex.execute(WEBSERVICE_NAME, "getTimelineColumns", {
                 estimateId: estimateId
             }, Timeline.initCallback);
@@ -4583,6 +4598,8 @@ var Timeline = {
                 loader.hide();
                 return;
             }
+            // Refresh top panel on estimate on resource change
+            if(typeof refreshOverviewPanel === 'function') refreshOverviewPanel();
             
             sforce.apex.execute(WEBSERVICE_NAME, "getTimelineColumns", {
                 estimateId: estimateId
@@ -4626,6 +4643,8 @@ var Timeline = {
                 return;
             }
             //loader.hide();
+            // Refresh top panel on estimate on resource change
+            if(typeof refreshOverviewPanel === 'function') refreshOverviewPanel();
             // Because we need rate and cost updated as per the latest selected resource
             // also needed the phases/milestone data too.
              sforce.apex.execute(WEBSERVICE_NAME, "getTimelineColumns", {

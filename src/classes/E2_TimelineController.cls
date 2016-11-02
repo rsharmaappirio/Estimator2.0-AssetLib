@@ -5,8 +5,8 @@
  * Created Date: Aug 12th, 2016
  * Created By: Rahul Jain (Appirio)
  * 
- * Date Modified      Modified By                  Description of the update
-      
+ * Date Modified      Modified By         Description of the update
+ * Oct 26th, 2016     Rohit Sharma        S-447680 : Round off the hours to nearest figure on capacity tab.      
 *  =====================================================================*/
 public with sharing class E2_TimelineController extends E2_Master {
     
@@ -94,13 +94,14 @@ public with sharing class E2_TimelineController extends E2_Master {
       // method to populate the capacityNeeds_JSON variable with Phase hours
       // Role hours and total capacity needs from Capicity needs calculated 
       // from Scopes
+      // RS : S-447680 : Round off the hours to nearest figure on capacity tab
     this.capacityNeeds_JSON = '{';
     
     string phaseHours_JSON = '{';
     for(AggregateResult groupedResults : [SELECT SUM(Hours__c) Hours, Phase__c  
                                           FROM E2_Capacity__c WHERE Estimator__c =: this.estimate.Id  
                                           GROUP BY Phase__c]) {
-        string phaseHour = '"' + string.valueOf(groupedResults.get('Phase__c')).toLowerCase() + '" : "' + Integer.valueOf(groupedResults.get('Hours')) + '"';
+        string phaseHour = '"' + string.valueOf(groupedResults.get('Phase__c')).toLowerCase() + '" : "' + ((Decimal)groupedResults.get('Hours')).round() + '"';
         phaseHours_JSON += (phaseHours_JSON == '{' ? '' : ',') + phaseHour;
     }
     phaseHours_JSON += '},';
@@ -109,7 +110,7 @@ public with sharing class E2_TimelineController extends E2_Master {
     for(AggregateResult groupedResults : [SELECT SUM(Hours__c) Hours, Role__c  
                                           FROM E2_Capacity__c WHERE Estimator__c =: this.estimate.Id  
                                           GROUP BY Role__c]) {
-        string roleHour = '"' + string.valueOf(groupedResults.get('Role__c')).toLowerCase() + '" : "' + Integer.valueOf(groupedResults.get('Hours')) + '"';
+        string roleHour = '"' + string.valueOf(groupedResults.get('Role__c')).toLowerCase() + '" : "' + ((Decimal)groupedResults.get('Hours')).round() + '"';
         roleHours_JSON += (roleHours_JSON == '{' ? '' : ',') + roleHour;
     }
     roleHours_JSON += '},';
@@ -117,7 +118,7 @@ public with sharing class E2_TimelineController extends E2_Master {
     AggregateResult[] totalHours = [SELECT SUM(Hours__c) Hours 
                                     FROM E2_Capacity__c 
                                     WHERE Estimator__c =: this.estimate.Id];
-    this.capacityNeeds_JSON += '"TotalHours" : "' + (totalHours[0].get('Hours') == NULL ? '' : ''+Integer.valueOf(totalHours[0].get('Hours'))) + '"';
+    this.capacityNeeds_JSON += '"TotalHours" : "' + (totalHours[0].get('Hours') == NULL ? '' : ''+ ((Decimal)totalHours[0].get('Hours')).round()) + '"';
     this.capacityNeeds_JSON += '}';
   }
   
