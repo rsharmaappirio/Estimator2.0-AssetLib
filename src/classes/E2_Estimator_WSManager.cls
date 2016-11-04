@@ -178,11 +178,12 @@ public class E2_Estimator_WSManager {
     }
         
     // Method to clonned scope from scope library
-    public static string getSelectedScopeNodes(string scopeIdCSV, string estimateId, string parentScopeId) {
+    public static List<E2_TreeNode> getSelectedScopeNodes(string scopeIdCSV, string estimateId, string parentScopeId) {
+        List<E2_TreeNode> nodeList = new List<E2_TreeNode>();
         parentScopeId = (parentScopeId == null || parentScopeId == E2_Constants.BLANK ? E2_Constants.HASH_TAG : parentScopeId);
         Id recTypeId = E2_RecordTypeClass.getId(E2_Constants.E2_SCOPE_API_NAME, E2_Constants.SCOPE_RT_SCOPE);
-		
-		    List<E2_Scope__c> scopeList = new List<E2_Scope__c>();
+		boolean hasChildren = true;
+		List<E2_Scope__c> scopeList = new List<E2_Scope__c>();
         map<string,E2_Scope__c> hasChildrenScope = new map<string,E2_Scope__c>();
         map<string, E2_Scope__c> clonedSourceMap = new map<string, E2_Scope__c>();
         
@@ -206,8 +207,24 @@ public class E2_Estimator_WSManager {
             insert scopeList;   
             cloneScopesChild(scopeList, hasChildrenScope, clonedSourceMap);
             reParentClonedScopes(clonedSourceMap);
+            set<Id> scopesId = new set<Id>();
+            for(E2_Scope__c scope : scopeList) {
+                scopesId.add(scope.Id);
+            }
+            
+            list<E2_Scope__c> allscopes = E2_DataUtil_WS.getChildScopesById(scopesId);
+            map<String, decimal> scopeRollhrs = generateParentHoursMap(allscopes);
+            for(E2_Scope__c scope : allscopes) {
+            	string scopeId = (string)scope.Id;  
+            	decimal totalhrs = scopeRollhrs.containsKey(scopeId) ? scopeRollhrs.get(scopeId) : 0;
+                nodeList.add(new E2_TreeNode(scope.id, scope.name, getFormatedScopeNameForFlag(scope, totalhrs), 
+                                 (scope.Parent_Scope__c == NULL ? E2_Constants.HASH_TAG : scope.Parent_Scope__c), 
+                                 hasChildren, scope.Source_Scope__c, NODE_TYPE_SCOPE, 
+                                 (scope.Display_Order__c == NULL ? E2_Constants.DEFAULT_SCOPE_DISPLAY_ORDER : scope.Display_Order__c))
+                );                                                
+            }
         }
-        return 'Success';												            
+        return nodeList;												            
     }
     
     // private method to insert scope child efforts and update parent hierarchy 
@@ -359,7 +376,9 @@ public class E2_Estimator_WSManager {
     }
     
     //method to get clonned nodes template 
-    public static String getClonedNodesTemplate(string scopeId, string scopeGrpId, string parentScopeId){
+    public static List<E2_TreeNode> getClonedNodesTemplate(string scopeId, string scopeGrpId, string parentScopeId){
+        List<E2_TreeNode> nodeList = new List<E2_TreeNode>();
+        boolean hasChildren = true;
         parentScopeId = (parentScopeId == null || parentScopeId == E2_Constants.BLANK ? E2_Constants.HASH_TAG : parentScopeId);
         Id recTypeId = E2_RecordTypeClass.getId(E2_Constants.E2_SCOPE_API_NAME, E2_Constants.SCOPE_RT_TEMPLATE);
 		
@@ -385,9 +404,25 @@ public class E2_Estimator_WSManager {
         if(!scopeList.isEmpty()){
             insert scopeList;   
             cloneScopesChild(scopeList, hasChildrenScope, clonedSourceMap);
-            reParentClonedScopes(clonedSourceMap);   
+            reParentClonedScopes(clonedSourceMap);
+            set<Id> scopesId = new set<Id>();
+            for(E2_Scope__c scope : scopeList) {
+                scopesId.add(scope.Id);
+            }
+            
+            list<E2_Scope__c> allscopes = E2_DataUtil_WS.getChildScopesById(scopesId);
+            map<String, decimal> scopeRollhrs = generateParentHoursMap(allscopes);
+            for(E2_Scope__c scope : allscopes) {
+            	string newScopeId = (string)scope.Id;  
+            	decimal totalhrs = scopeRollhrs.containsKey(newScopeId) ? scopeRollhrs.get(newScopeId) : 0;
+                nodeList.add(new E2_TreeNode(scope.id, scope.name, getFormatedScopeNameForFlag(scope, totalhrs), 
+                                 (scope.Parent_Scope__c == NULL ? E2_Constants.HASH_TAG : scope.Parent_Scope__c), 
+                                 hasChildren, scope.Source_Scope__c, NODE_TYPE_SCOPE, 
+                                 (scope.Display_Order__c == NULL ? E2_Constants.DEFAULT_SCOPE_DISPLAY_ORDER : scope.Display_Order__c))
+                );                                                
+            }
         }        
-        return 'Success';            
+        return nodeList;            
     }
     
     //method to update scope flag to colors based on flag value 

@@ -44,8 +44,8 @@ public class E2_Estimator_WSTest {
       treeLst = E2_Estimator_WS.getImmediateChildNodesWithEffortsOnScopeId(parentSC.Id);
       System.assertEquals(treeLst.size(), 1 + 1, 'Doesnot return the only immediate child scope and only effort to this scope');      
 
-      String cloned_msg = E2_Estimator_WS.getClonedNodesTemplate(childSC.Id, scopeGroup.Id, parentSC.Id);
-      system.assertEquals(cloned_msg, 'Success', 'Success message is returned');
+      List<E2_TreeNode> cloned_msg = E2_Estimator_WS.getClonedNodesTemplate(childSC.Id, scopeGroup.Id, parentSC.Id);
+      system.assertNotEquals(cloned_msg.size(), 0, 'Success message is returned');
       
       treeLst = E2_Estimator_WS.retrieveAllScopeTreeNodesOnScopeGroup(scopeGroup.Id);
       System.assertEquals(treeLst.size(), 2, 'Return 2 scopes associated with the group');
@@ -72,10 +72,10 @@ public class E2_Estimator_WSTest {
       System.assertEquals(b_scopeId, childSC.id, 'Not successfully deleting');
       
       String scopeIds = childSC.Id+ ','+ childSC1.Id ; 
-      String test_Scope1 =  E2_Estimator_WS.getSelectedScopeNodes(parentSC.Id, estimate.Id, null);
+      List<E2_TreeNode> test_Scope1 =  E2_Estimator_WS.getSelectedScopeNodes(parentSC.Id, estimate.Id, null);
       system.assert(test_Scope1 != null);
  
-      String test_Scope2 =  E2_Estimator_WS.getSelectedScopeNodes(parentSC.Id, estimate.Id, null);
+      List<E2_TreeNode> test_Scope2 =  E2_Estimator_WS.getSelectedScopeNodes(parentSC.Id, estimate.Id, null);
       system.assert(test_Scope2 != null);
       
       List<string> exisitingAssetIds = new List<string>{recommendedAsset.Asset__c};

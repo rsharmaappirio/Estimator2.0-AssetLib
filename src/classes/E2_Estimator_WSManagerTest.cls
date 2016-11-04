@@ -76,8 +76,8 @@ public class E2_Estimator_WSManagerTest {
       System.assertEquals(treeLst.size(), 1 + 1, 'Doesnot return the only immediate child scope and only effort to this scope');      
 
       String scopeIds = parentSC.Id+ ','+ child_childSC.Id+ ',' + parentSC1.Id+ ','+ child_childSC1.Id ; 
-      String cloned_msg = E2_Estimator_WSManager.getClonedNodesTemplate(scopeIds, scopeGroup.Id, parentSC.Id);
-      system.assertEquals(cloned_msg, 'Success', 'Success message is returned');
+      List<E2_TreeNode> cloned_msg = E2_Estimator_WSManager.getClonedNodesTemplate(scopeIds, scopeGroup.Id, parentSC.Id);
+      system.assertNotEquals(cloned_msg.size(), 0, 'Success message is returned');
       
       treeLst1 = E2_Estimator_WSManager.retrieveAllScopeTreeNodesOnScopeGroup(scopeGroup.Id);
       System.assertEquals(treeLst1.size(), 5, 'Does not return 2 scopes associated with the group');
@@ -104,7 +104,7 @@ public class E2_Estimator_WSManagerTest {
       String statusStr = E2_Estimator_WSManager.updateScopesDisplayOrder(jsonString);
       System.assertEquals(statusStr, 'success');
        
-      String test_Scope1 =  E2_Estimator_WSManager.getSelectedScopeNodes(scopeIds, estimate.Id, null);
+      List<E2_TreeNode> test_Scope1 =  E2_Estimator_WSManager.getSelectedScopeNodes(scopeIds, estimate.Id, null);
       system.assert(test_Scope1 != null);
       
       string allscopesIds = parentSC.Id +',' + childSC.Id + ',' + childSC1.Id;

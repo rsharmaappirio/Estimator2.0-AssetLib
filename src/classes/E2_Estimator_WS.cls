@@ -52,7 +52,7 @@ global without sharing class E2_Estimator_WS {
         return E2_Estimator_WSManager.getChildScopeDetailNodes(parentId); 
     }
     
-    webservice static String getClonedNodesTemplate(string scopeId, string scopeGrpId, string parentScopeId){
+    webservice static List<E2_TreeNode> getClonedNodesTemplate(string scopeId, string scopeGrpId, string parentScopeId){
         return E2_Estimator_WSManager.getClonedNodesTemplate(scopeId, scopeGrpId, parentScopeId);        
     }
     
@@ -80,7 +80,7 @@ global without sharing class E2_Estimator_WS {
     }
     
     // Method to clonned scopes 
-    webservice static string getSelectedScopeNodes(string scopeIdCSV, string estimateId, string parentScopeId) {
+    webservice static List<E2_TreeNode> getSelectedScopeNodes(string scopeIdCSV, string estimateId, string parentScopeId) {
     	return E2_Estimator_WSManager.getSelectedScopeNodes(scopeIdCSV, estimateId, parentScopeId);
     } 
     

@@ -2205,7 +2205,13 @@ function preventEnterSubmit(e) {
 
 // On DOM Ready
 $(function() {
-    //$("#form").keypress(preventEnterSubmit);
+    // Bind the window resize event to adjust the with of all the iframes with the resized 
+    // width of the window
+    // on screen for good user experience
+    //$( window ).resize(function() {
+    //    if(typeof grid != 'undefined') grid.resizeCanvas();
+    //});
+    
     applyNumericValidation();
     makeManageRateCardsCollapsible();
     tabpanel.bindEvents();
@@ -2793,7 +2799,7 @@ var Timeline = {
                         //    return '';
                         //}
                         if(typeof Timeline.fixedRowsTypes[data[row].id] != 'undefined' || dataContext.id == '') return "";
-                        return value == '' ? '' : parseFloat(value).toFixed(2).toCommaFrmt();
+                        return value == '' ? '0.00' : parseFloat(value).toFixed(2).toCommaFrmt();
                         
                     },asyncPostRender: function(cellNode, row, dataContext, colDef) {
                         //console.log('postrender');
@@ -2802,6 +2808,7 @@ var Timeline = {
                                  //$(cellNode).empty().html(Timeline.getSumOfBelowRows()).css({'text-align' : 'center', 'background-color': '#666666', 'color' : '#fff'});
                                  var rate = Timeline.getAvgOfBelowRows(cellNode, row, dataContext, colDef);
                                  $(cellNode).empty().html(parseFloat(isNaN(rate) ? 0 : rate).toFixed(2).toCommaFrmt()).css(Timeline.calcuation_cols_css);
+                                 
                             }
                             return;
                         }
@@ -2823,7 +2830,7 @@ var Timeline = {
                         //    return '';
                         //}
                         if(typeof Timeline.fixedRowsTypes[data[row].id] != 'undefined' || dataContext.id == '') return "";
-                        return value == '' ? '' : parseFloat(value).toFixed(2).toCommaFrmt();
+                        return value == '' ? '0.00' : parseFloat(value).toFixed(2).toCommaFrmt();
                         
                     },asyncPostRender: function(cellNode, row, dataContext, colDef) {
                         //console.log('postrender');

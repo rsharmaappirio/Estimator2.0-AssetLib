@@ -820,19 +820,39 @@ var AddEditScope = {
     },
     addScopeTemplate_initCallBack: {
         onSuccess: function(result) {
-            var hasChildren = false;
             if (result.length > 0) {
-                //to refresh scope loe we need to reload jstree
-                AddEditScope.UPDATE_DISPLAY_ORDER = true;
-                $(treeId).jstree('destroy');
-                $(treeId).jstree(jstree_options);
-                AddEditScope.tree_init();
-                // End
-                CustomAlert.show('Scope has been cloned successfully!!!');
+                var sibling = null;
+                if(AddEditScope.ADD_FROM_TEMPLATE_PARENT_ID != null && AddEditScope.ADD_FROM_TEMPLATE_PARENT_ID != '')
+                sibling = $(treeId).jstree(true).get_node(AddEditScope.ADD_FROM_TEMPLATE_PARENT_ID);
+               result = AddEditScope.sort_cloned_scopes(result);
+               $.each(result, function(indx, node) {
+                
+                var display_order = parseInt(node.display_order);
+                var parent = node.parent;
+                if((sibling == null && node.parent == "#") || (sibling != null  && node.parent == sibling.id)) {
+                    node.state = JSON.parse(node.state);
+                    var display_order = "after";
+                    var parent = AddEditScope.ADD_FROM_TEMPLATE_PARENT_ID;
+                    // jstree api call to create the tree node.
+                    $(treeId).jstree(AddEditScope.CREATE_NODE, parent, node, display_order);
+                }
+               });
+               $.each(result, function(indx, node) {
+                if((sibling == null && node.parent != "#") || (sibling != null  && node.parent != sibling.id)) {
+                    node.state = JSON.parse(node.state);
+                    var display_order = parseInt(node.display_order);
+                    var parent = node.parent;
+                    // jstree api call to create the tree node.
+                    $(treeId).jstree(AddEditScope.CREATE_NODE, parent, node, display_order);
+                }
+               });
+               AddEditScope.UPDATE_DISPLAY_ORDER = true;
+               AddEditScope.updateScopeDisplayOrder();
+               AddEditScope.ADD_FROM_TEMPLATE_PARENT_ID = '';
+               result = null;
             } else {
                 $(loadSpinner).hide();
             }
-            result = null;
         },
         onFailure: function(error) {
             alert(error);
@@ -879,6 +899,7 @@ var AddEditScope = {
     addNewScope: function() {
         var func = document.getElementById(AddEditScope.SELECT_ADD_NEW_FRAME_ID).contentWindow.addUpdateScopes;
         if (typeof func != 'undefined') {
+            AddEditScope.UPDATE_DISPLAY_ORDER = true;
             func();
         }
     },
@@ -1130,13 +1151,15 @@ var AddEditScope = {
         
     },
     sort_cloned_scopes : function(data) {
-        var sibling = $(treeId).jstree(true).get_node(AddEditScope.ADD_FROM_TEMPLATE_PARENT_ID);
+        var sibling = null;
+        if(AddEditScope.ADD_FROM_TEMPLATE_PARENT_ID != null && AddEditScope.ADD_FROM_TEMPLATE_PARENT_ID != '')
+        sibling = $(treeId).jstree(true).get_node(AddEditScope.ADD_FROM_TEMPLATE_PARENT_ID);
         var newList = [];
         var map = {};
          // load all the parent nodes first
          for(var indx = data.length - 1; indx >= 0 ; indx--){
           var node = data[indx];
-          if(node.parent == sibling.parent || node.id == sibling.id) {     
+          if((sibling == null && node.parent == "#") || (sibling != null && (node.parent == sibling.parent || node.id == sibling.id  || node.parent == sibling.id))) {     
             newList.push(node);
             map[node.id] = node;
             data.splice(indx, 1);
@@ -1194,33 +1217,37 @@ var AddEditScope = {
     },
     cloneScopeWithChild_initCallBack: {
         onSuccess: function(result) {
-           var sibling = $(treeId).jstree(true).get_node(AddEditScope.ADD_FROM_TEMPLATE_PARENT_ID);
-           result = AddEditScope.sort_cloned_scopes(result);
-           $.each(result, function(indx, node) {
-            
-            var display_order = parseInt(node.display_order);
-            var parent = node.parent;
-            if(node.parent == sibling.parent) {
-                node.state = JSON.parse(node.state);
-                var display_order = "after";
-                var parent = AddEditScope.ADD_FROM_TEMPLATE_PARENT_ID;
-                // jstree api call to create the tree node.
-                $(treeId).jstree(AddEditScope.CREATE_NODE, parent, node, display_order);
-            }
-           });
-           $.each(result, function(indx, node) {
-            if(node.parent != sibling.parent) {
-                node.state = JSON.parse(node.state);
+            if (result.length > 0) {
+               var sibling = $(treeId).jstree(true).get_node(AddEditScope.ADD_FROM_TEMPLATE_PARENT_ID);
+               result = AddEditScope.sort_cloned_scopes(result);
+               $.each(result, function(indx, node) {
+                
                 var display_order = parseInt(node.display_order);
                 var parent = node.parent;
-                // jstree api call to create the tree node.
-                $(treeId).jstree(AddEditScope.CREATE_NODE, parent, node, display_order);
+                if(node.parent == sibling.parent) {
+                    node.state = JSON.parse(node.state);
+                    var display_order = "after";
+                    var parent = AddEditScope.ADD_FROM_TEMPLATE_PARENT_ID;
+                    // jstree api call to create the tree node.
+                    $(treeId).jstree(AddEditScope.CREATE_NODE, parent, node, display_order);
+                }
+               });
+               $.each(result, function(indx, node) {
+                if(node.parent != sibling.parent) {
+                    node.state = JSON.parse(node.state);
+                    var display_order = parseInt(node.display_order);
+                    var parent = node.parent;
+                    // jstree api call to create the tree node.
+                    $(treeId).jstree(AddEditScope.CREATE_NODE, parent, node, display_order);
+                }
+               });
+               AddEditScope.UPDATE_DISPLAY_ORDER = true;
+               AddEditScope.updateScopeDisplayOrder();
+               AddEditScope.ADD_FROM_TEMPLATE_PARENT_ID = '';
+               result = null;
+            } else {
+                $(loadSpinner).hide();
             }
-           });
-           AddEditScope.UPDATE_DISPLAY_ORDER = true;
-           AddEditScope.updateScopeDisplayOrder();
-           AddEditScope.ADD_FROM_TEMPLATE_PARENT_ID = '';
-           result = null;
         },
         onFailure: function(error) {
             alert(error);

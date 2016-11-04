@@ -7,6 +7,8 @@
  * 
  * Date Modified      Modified By                  Description of the update
  * 17 Oct 2016        Rohit Sharma                 I-239841 : Condition added to save Phase on copy paste
+ * 02 Nov 2016        Rohit Sharma                 I-?????? : Modified the rate card margin and rate margin calculation on this page
+                                                              to allow zero values for bill rate and cost rate fields in the rate card. 
 *  =====================================================================
 -->
 <apex:page standardController="CMC_Presales_LOE__c" extensions="E2_TimelineController" action="{!pageAction}" 
@@ -873,7 +875,7 @@
                                 
                                <a id='downloadLink'></a>
                                <div><span style="display:inline-block;vertical-align: bottom;">Download as&nbsp;</span><a id="" href="javascript:void(0);" class="excel_button" style=" padding-bottom: 2px;display:inline-block;" title="Download Grid in Excel Format" onclick="return Timeline.downloadExcel_Click();">&nbsp;</a>
-                                <span style="display: inline-block;float: right;padding-right: 14px;padding-top: 10px;color: red;">*All the calculations are done using currency as {!CMC_Presales_LOE__c.CurrencyIsoCode}</span>
+                                <span style="display: inline-block;float: right;padding-right: 14px;padding-top: 10px;">CURRENCY:&nbsp;<span style="color: blue;font-weight:bold">{!CMC_Presales_LOE__c.CurrencyIsoCode}</span></span>
                                </div>
                                <!--input type="submit" onclick="return Timeline.downloadExcel_Click();" class="slds-button slds-button--neutral slds-button--brand save-button-custom" title="Download Excel" value="Download Excel"/-->
                                
@@ -947,11 +949,11 @@
                                                         <apex:outputfield value="{!estimateratecard.Resource_Cost__c}"/>
                                                     </td>
                                                      <td class="slds-truncate " data-label="Rate Card Margin">
-                                                        <apex:outputtext value="{!ROUND(1-(estimateratecard.Resource_Cost__c/estimateratecard.Bill_Rate__c), 2)}"/>
+                                                        <apex:outputtext value="{!ROUND(IF(estimateratecard.Bill_Rate__c == 0, 0, 1) - (IF(estimateratecard.Resource_Cost__c == 0, 0, estimateratecard.Resource_Cost__c)/IF(estimateratecard.Bill_Rate__c == 0, 1, estimateratecard.Bill_Rate__c)), 2)}"/>
                                                     </td>
                                                    
                                                     <td class="slds-truncate " data-label="Rate Margin">
-                                                        <apex:outputtext value="{!ROUND(1-(estimateratecard.Resource_Cost__c/estimateratecard.Discounted_Rate__c), 2)}"/>
+                                                        <apex:outputtext value="{!ROUND(IF(estimateratecard.Discounted_Rate__c == 0, 0, 1) - (IF(estimateratecard.Resource_Cost__c == 0, 0, estimateratecard.Resource_Cost__c)/IF(estimateratecard.Discounted_Rate__c == 0, 1, estimateratecard.Discounted_Rate__c)), 2)}"/>
                                                     </td>
                                                     
                                                     <td class="slds-cell-shrink" data-label="Actions">
@@ -988,24 +990,24 @@
                           <div id="timelineSummary" style="height:400px">
                               <div id="summarySection" style="width:50%;float:left;">
                                  <table id="summaryTable" class="slds-table slds-table--bordered slds-table--cell-buffer slds-table--col-bordered slds-no-row-hover">
-                        		    <thead>
-                        		     <tr class="slds-text-heading--label"><th>Project Phase</th><th>Hours</th><th>Weeks</th></tr>
-                        			</thead>
-                                    <tbody id="summaryTbody">			   
+                                    <thead>
+                                     <tr class="slds-text-heading--label"><th>Project Phase</th><th>Hours</th><th>Weeks</th></tr>
+                                    </thead>
+                                    <tbody id="summaryTbody">              
                                     </tbody>
-                                 </table>	
+                                 </table>   
                               </div>
                               <div id="editableHoursWeekSection" style="width:20%;float:left;">
                                    <table id="editHoursTable" class="slds-table slds-table--bordered slds-table--cell-buffer slds-table--col-bordered slds-no-row-hover" 
                                     style="border-collapse: collapse;border-color: black;border-style: solid;border-width: 1px;">
-                        		    <thead>
-                        		     <tr class="slds-text-heading--label"><th></th><th>Hours</th><th></th></tr>
-                        			</thead>
+                                    <thead>
+                                     <tr class="slds-text-heading--label"><th></th><th>Hours</th><th></th></tr>
+                                    </thead>
                                     <tbody>
-                        			   <tr><td>Dev</td><td><input class="slds slds-input mandate-numeric" style="width:30px" id="devhoursperday" onchange="TimelineSummary.onChange_InputDevHoursPerWeek();" type="text" value="{!IF(CMC_Presales_LOE__c.E2_Dev_hours_per_day__c == NULL, 0, CMC_Presales_LOE__c.E2_Dev_hours_per_day__c)}"/></td><td>per Day</td></tr>
-                        			   <tr><td></td><td><div id="hoursperweekdiv"></div></td><td>per Week</td></tr>
+                                       <tr><td>Dev</td><td><input class="slds slds-input mandate-numeric" style="width:30px" id="devhoursperday" onchange="TimelineSummary.onChange_InputDevHoursPerWeek();" type="text" value="{!IF(CMC_Presales_LOE__c.E2_Dev_hours_per_day__c == NULL, 0, CMC_Presales_LOE__c.E2_Dev_hours_per_day__c)}"/></td><td>per Day</td></tr>
+                                       <tr><td></td><td><div id="hoursperweekdiv"></div></td><td>per Week</td></tr>
                                     </tbody>
-                                   </table>			
+                                   </table>         
                               </div>
                            </div>
                     </div>
