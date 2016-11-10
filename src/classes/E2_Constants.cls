@@ -108,7 +108,8 @@ public class E2_Constants {
   
   public final static Map<String, String> ROLE_RESOURCEROLE_MAP = new Map<String, String> { 'GS - Jaipur Delivery - Business Analyst' => 'Business Analyst - Jaipur',
                                                                                             'GS - Jaipur Delivery - Project Manager' => 'Project Manager - Jaipur',
-                                                                                            'GS - Jaipur Delivery - Technical Lead' => 'Technical Lead - Jaipur'
+                                                                                            'GS - Jaipur Delivery - Technical Lead' => 'Technical Lead - Jaipur',
+                                                                                            'GS - North America Delivery - Technical Consultant - Express' => 'Technical Consultant'
   };
   
  

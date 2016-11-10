@@ -70,7 +70,7 @@ table tbody tr td.slds-td-scope{
     </div>
     <div class="slds-col slds-no-flex slds-align-bottom">
       <div class="slds-button-group slds-dropdown-trigger slds-is-open" aria-expanded="true" aria-haspopup="true" role="group">
-        <button class="slds-button slds-button--neutral" value="Export Scope as" style="border-radius: 0px;">Export Scope as</button>
+        <button class="slds-button slds-button--neutral" onclick="return false;" value="Export Scope as" style="border-radius: 0px;">Export Scope as</button>
         <button class="slds-button slds-button--icon-border-filled slds-button--last" name="more" id="lc-230-more" title="Export scope as" type="button"></button>
         <div class="slds-dropdown slds-dropdown--right slds-dropdown--actions" id="lc-236-dd">
             <ul class="dropdown__list" role="menu">

@@ -2712,14 +2712,15 @@ var Timeline = {
                         if(row < Timeline.fixedRows){
                             if(data[row].id == Timeline.fixedRowsTypes.total.id){
                                  //$(cellNode).empty().html(Timeline.getSumOfHoursForRows()).css({'text-align' : 'center', 'background-color': '#666666', 'color' : '#fff'});
-                                 $(cellNode).empty().html(Timeline.getSumOfHoursForAllRows(cellNode, row, dataContext, colDef).toCommaFrmt()).css(Timeline.calcuation_cols_css);
+                                 $(cellNode).empty().html(Timeline.getSumOfHoursForAllRows(cellNode, row, dataContext, colDef).toCommaFrmt()).addClass('slds-totalhrsperweek-cell-sum');
                             }
                             return;
                         }else{
-                          $(cellNode).empty().html(Timeline.getHoursSum(cellNode, row, dataContext, colDef).toCommaFrmt()).css({'text-align':'center'});
+                          $(cellNode).empty().html(Timeline.getHoursSum(cellNode, row, dataContext, colDef).toCommaFrmt()).addClass('slds-totalhrsperweek-cell');//.css({'text-align':'center','background-color': '#bacde3'});
                         }
                     }
-                },/*{
+                },
+                {
                     id: "capacityneedshours",
                     name: "Capacity Needs (Hrs)",
                     field: "capacityneedshours",
@@ -2735,7 +2736,7 @@ var Timeline = {
                     ,asyncPostRender: function(cellNode, row, dataContext, colDef) {
                         //console.log('postrender');
                         if(row < Timeline.fixedRows){
-                            if(data[row].id == Timeline.fixedRowsTypes.milestone2.id){
+                            /*if(data[row].id == Timeline.fixedRowsTypes.milestone2.id){
                                 $(cellNode).empty().html('# Hours Scoped').css(Timeline.highlight_cols_css);
                             }else if(data[row].id == Timeline.fixedRowsTypes.capacityneedsperphase.id){
                                 
@@ -2766,13 +2767,13 @@ var Timeline = {
                                  });
                                  $(cellNode).empty().html(sum.toCommaFrmt()).css(Timeline.calcuation_cols_css);
                                  
-                            }
+                            }*/
                             return;
                         }else{
                           var hours = 0;
                           var resourceRateCardRole = data[row].resourceRateCardRole;
                           resourceRateCardRole = (typeof resourceRateCardRole == 'undefined' ? '' : resourceRateCardRole.toLowerCase());
-                         
+                          //alert(resourceRateCardRole);
                           if(typeof capacityNeeds_JSON != 'undefined' && 
                                 typeof capacityNeeds_JSON.RoleHours != 'undefined' &&
                                 typeof capacityNeeds_JSON.RoleHours[resourceRateCardRole] != 'undefined'){
@@ -2782,7 +2783,7 @@ var Timeline = {
                           $(cellNode).empty().html(hours.toCommaFrmt()).css({'text-align':'center'});
                         }
                     }
-                },*/ {
+                }, {
                     id: "rate",
                     name: "Rate",
                     field: "rate",
@@ -3167,7 +3168,7 @@ var Timeline = {
                     
                 }else if(typeof data[row] != 'undefined' && data[row].id == Timeline.fixedRowsTypes.total.id){
                     
-                   metadata['cssClasses'] = 'slds-weekname-cell';
+                   metadata['cssClasses'] = 'slds-totalhrsperweek-cell';
                    return metadata;
                 }else if(typeof data[row] != 'undefined' && data[row].id == Timeline.fixedRowsTypes.weekname.id){
                     
@@ -4211,7 +4212,7 @@ var Timeline = {
                          $.each(rowData, function(indx, rowItem) {
                             sum += (typeof rowItem[colDef.id] == 'undefined' || rowItem[colDef.id] == ''? 0 : parseInt(rowItem[colDef.id]));
                          });
-                         $(cellNode).empty().html(sum);//.css({'text-align' : 'center', 'background-color': '#666666', 'color' : '#fff'});
+                         $(cellNode).empty().html(sum).addClass('slds-totalhrsperweek-cell');;//.css({'text-align' : 'center', 'background-color': '#666666', 'color' : '#fff'});
                      }
                      
                      

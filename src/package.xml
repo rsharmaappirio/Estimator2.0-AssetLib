@@ -80,6 +80,12 @@
         <members>E2_TreeNodeMapTest</members>
         <members>E2_TreeNodeTest</members>
         <members>RS_EditScopeTemplateController</members>
+        <members>CMC_PresalesEstimateTest</members>
+    	<members>E2_Scope_Group_Trigger_HandlerTest</members>
+    	<members>E2_Scope_Group_Trigger_Handler</members>
+    	<members>E2_CMC_Presales_Trigger_HandlerTest</members>
+    	<members>E2_CMC_Presales_Trigger_Handler</members>
+    	<members>CMC_PresalesEstimate</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -114,6 +120,8 @@
     </types>
     <types>
         <members>E2_ScopeTrigger</members>
+        <members>CMC_Presales_Estimate_Trigger</members>
+    	<members>E2_Scope_Group_Trigger</members>
         <name>ApexTrigger</name>
     </types>
     <types>
@@ -139,6 +147,15 @@
         <members>CMC_Presales_LOE__c.E2_Total_Strategy_Hrs__c</members>
         <members>CMC_Presales_LOE__c.E2_Total_Test_Hrs__c</members>
         <members>CMC_Presales_LOE__c.E2_Version_Notes__c</members>
+        <members>E2_Estimate_Milestone_Week__c.Text__c</members>
+    	<members>E2_Estimate_Milestone__c.Order__c</members>
+    	<members>E2_Estimate_Milestone__c.Estimate__c</members>
+    	<members>E2_Estimate_Milestone_Week__c.TextColorCode__c</members>
+    	<members>E2_Estimate_Milestone__c.Milestone1__c</members>
+    	<members>E2_Estimate_Milestone_Week__c.Estimate_Week__c</members>
+    	<members>E2_Estimate_Milestone__c.Milestone2__c</members>
+    	<members>E2_Estimate_Milestone_Week__c.Estimate_Milestone__c</members>
+    	<members>E2_Scope__c.Scope_Group__c</members>
         <name>CustomField</name>
     </types>
     <types>

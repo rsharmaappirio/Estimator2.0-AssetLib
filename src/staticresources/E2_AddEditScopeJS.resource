@@ -117,52 +117,10 @@ var jstree_options = {
         "items": function($node) {
             var tree = $(treeId).jstree(true);
             return {
-                "Add_Edit_Child": {
-                    "separator_before": false,
-                    "separator_after": false,
-                    "label": "Manage Children",
-                    "action": function(obj) {
-                        $('#helpModal1').find('#theIframe1').attr('src', '/apex/E2_AddNewScope?is_Edit=true&estimate_id=' + estimateId + '&id=' + $node.id);
-                        $('.custom-new-header').html('Manage Children');
-                        $('#helpModal1').find('#addupdatescopebutton').html('Update');
-                        $('#helpModal1').show();
-                        $('#helpModal1').find('#theIframe1').closest('div.slds-modal__content').scrollTop(0);
-                        $('#helpBackdrop1').css({'height' : $(window.document).height()});
-                        $('#helpBackdrop1').show();
-
-                    }
-                },
-                "Add_from_Template": {
-                    "separator_before": false,
-                    "separator_after": false,
-                    "label": "Add from Library",
-                    "action": function(obj) {
-                        AddEditScope.ADD_FROM_TEMPLATE_PARENT_ID = $node.id;
-                        AddEditScope.showAddFromTemplateModal();
-                    }
-                },
-                "Clone_self": {
-                    "separator_before": false,
-                    "separator_after": false,
-                    "label": "Clone self",
-                    "action": function(obj) {
-                        AddEditScope.ADD_FROM_TEMPLATE_PARENT_ID = $node.id;
-                        AddEditScope.cloneScopeWithoutChild($node.id);
-                    }
-                },
-                "Clone_with_child": {
-                    "separator_before": false,
-                    "separator_after": false,
-                    "label": "Clone with children",
-                    "action": function(obj) {
-                        AddEditScope.ADD_FROM_TEMPLATE_PARENT_ID = $node.id;
-                        AddEditScope.cloneScopeWithChild($node.id);
-                    }
-                },
                 "Remove": {
                     "separator_before": false,
                     "separator_after": false,
-                    "label": "Remove",
+                    "label": "<span style='font-weight:bold'>Remove</span>",
                     "action": function(obj) {
 
                         var ans = confirm('Are you sure you want to delete selected scope?');
@@ -187,14 +145,65 @@ var jstree_options = {
 
                     }
                 },
+                
                 "Comment": {
                     "separator_before": false,
                     "separator_after": false,
-                    "label": "Comment",
+                    "label": "<span style='font-weight:bold'>Comment</span>",
                     "action": function(obj) {
                         ck_custom_editor.postComment($node);
                     }
+                },
+                
+                "Add_from_Template": {
+                    "separator_before": false,
+                    "separator_after": false,
+                    "label": "<span style='font-weight:bold'>Add</span> from Library",
+                    "action": function(obj) {
+                        AddEditScope.ADD_FROM_TEMPLATE_PARENT_ID = $node.id;
+                        AddEditScope.showAddFromTemplateModal();
+                    }
+                },
+                
+                "Clone_self": {
+                    "separator_before": false,
+                    "separator_after": false,
+                    "label": "<span style='font-weight:bold'>Clone</span> (self only)",
+                    "action": function(obj) {
+                        AddEditScope.ADD_FROM_TEMPLATE_PARENT_ID = $node.id;
+                        AddEditScope.cloneScopeWithoutChild($node.id);
+                    }
+                },
+                "Clone_with_child": {
+                    "separator_before": false,
+                    "separator_after": false,
+                    "label": "<span style='font-weight:bold'>Clone</span> (with children)",
+                    "action": function(obj) {
+                        AddEditScope.ADD_FROM_TEMPLATE_PARENT_ID = $node.id;
+                        AddEditScope.cloneScopeWithChild($node.id);
+                    }
+                },
+                
+                
+                "Add_Edit_Child": {
+                    "separator_before": false,
+                    "separator_after": false,
+                    "label": "<span style='font-weight:bold'>Manage</span> Children",
+                    "action": function(obj) {
+                        $('#helpModal1').find('#theIframe1').attr('src', '/apex/E2_AddNewScope?is_Edit=true&estimate_id=' + estimateId + '&id=' + $node.id);
+                        $('.custom-new-header').html('Manage Children');
+                        $('#helpModal1').find('#addupdatescopebutton').html('Update');
+                        $('#helpModal1').show();
+                        $('#helpModal1').find('#theIframe1').closest('div.slds-modal__content').scrollTop(0);
+                        $('#helpBackdrop1').css({'height' : $(window.document).height()});
+                        $('#helpBackdrop1').show();
+
+                    }
                 }
+                
+                
+                
+                
             };
         }
     }
@@ -452,7 +461,9 @@ var AddEditScope = {
 	   // check that if the container for all the iframes (for edit scope) is on the page
 	   if($(containerId).length){
 	       // hide all frames on the page but not the one selected (if already loaded)
-		   $(containerId).find("iframe[id$='" + endsWith + "']").not(frame_id).hide("slow", function() {});
+		  // $(containerId).find("iframe[id$='" + endsWith + "']").not(frame_id).hide("slow", function() {});
+		   // RS: 11/9 commented transation time slow to speedup edit scope frame show/hide
+		   $(containerId).find("iframe[id$='" + endsWith + "']").not(frame_id).hide(1, function() {});
 		   // check if selected node's iframe exists or not
 		   if($(frame_id).length){
 		       // don't call show if frame is already visible.
@@ -464,13 +475,16 @@ var AddEditScope = {
 		             $(frame_id).focus();
 		           }, 500);
 		       }else{
-    			   $(frame_id).show("slow", function() {
+		           // RS: 11/9 commented transation time slow to speedup edit scope frame show/hide
+		           //$(frame_id).show("slow", function() {
+    			   $(frame_id).show(1, function() {
     				   // whenever element is shown again; re-set the height with the dom content
     				   $(this).css({ 'min-height':'400px',width:'100%',margin:'0px', height : $(this.contentWindow.document).height()});
     				   $(frame_id).focus();
     			   });
 		       }
 		   }else{
+		       
 		       // if iframe doesn't exist than create a new iframe for that scope
 			   $('<iframe>', {
 				   src: '/apex/E2_EditScope?estimate_id=' + estimateId + '&id=' + node.id,
@@ -1197,6 +1211,8 @@ var AddEditScope = {
         var arr = [];
         arr.push($selectedNode.original.id);
         AddEditScope.cloneScopeWithChild_init(arr.toString());
+        // clear from client memory
+        arr = null;
     },
     cloneScopeWithChild : function(nodeId) {
         $(loadSpinner).show();
@@ -1208,6 +1224,8 @@ var AddEditScope = {
             arr.push($childnode.original.id);
         });
         AddEditScope.cloneScopeWithChild_init(arr.toString());
+        // clear from client memory
+        arr = null;
     },
 
     cloneScopeWithChild_init: function(scopeIds) {

@@ -126,6 +126,10 @@ global with sharing class E2_TimelineWS {
         return E2_TimelineWSManager.updateResourceWeeks(jsonstr); 
     }
     
+     webservice static string updateResourceWeeks2(string jsonstr){
+        return E2_TimelineWSManager.updateResourceWeeks2(jsonstr); 
+    }
+    
     webservice static string updateDevCapacity(string estimateId, integer devCapacity) {
         return E2_TimelineWSManager.updateDevCapacity(estimateId, devCapacity); 
     }
@@ -327,6 +331,13 @@ global with sharing class E2_TimelineWS {
          public string rowId;
          public string cellId;
          public string value;
+     }
+     
+     public class CellWrapper2{
+         public string rowId;
+         public string cellId;
+         public string value;
+         public string colorCode;
      }
         
 }

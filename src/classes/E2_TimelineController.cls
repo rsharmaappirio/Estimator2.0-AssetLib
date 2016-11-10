@@ -14,7 +14,6 @@ public with sharing class E2_TimelineController extends E2_Master {
   public List<E2_Estimate_Rate_Card__c> estimateRateCards{get;set;}
   public string renderOptions_PhasesJSON{get;set;}
   public string capacityNeeds_JSON{get;set;}
-  public String ratecard_JSON {get;set;}
   public static final string SEPARATOR = ' - ';
 
   public E2_TimelineController (ApexPages.StandardController std) {
@@ -171,9 +170,7 @@ public with sharing class E2_TimelineController extends E2_Master {
                 // when original rate does not match bill rate 
                 if(erateCard.Bill_Rate__c <> erateCard.Rate_Card__r.pse__Suggested_Bill_Rate__c){
                     system.debug('erateCard>>' +erateCard);
-                    if(erateCard.Bill_Rate__c == erateCard.Discounted_Rate__c){
-                        erateCard.Discounted_Rate__c = erateCard.Rate_Card__r.pse__Suggested_Bill_Rate__c;
-                    }
+                    if(erateCard.Bill_Rate__c == erateCard.Discounted_Rate__c) erateCard.Discounted_Rate__c = erateCard.Rate_Card__r.pse__Suggested_Bill_Rate__c;
                     erateCard.Bill_Rate__c = erateCard.Rate_Card__r.pse__Suggested_Bill_Rate__c;
                     hasChanged = true;
                 }
@@ -187,7 +184,6 @@ public with sharing class E2_TimelineController extends E2_Master {
                     rateCardsToUpdate.add(erateCard);
                 }
             }
-            
             
             try{
                 if(!rateCardsToUpdate.isEmpty()){
@@ -212,7 +208,6 @@ public with sharing class E2_TimelineController extends E2_Master {
   
   public PageReference updateEstimateRateCards(){
       // When save button is clicked 
-      
       if(!this.estimateRateCards.isEmpty()){
         // Create a savepoint 
         // we don't want to save/update estimate rate cards, when there is a failure in the update
@@ -228,11 +223,6 @@ public with sharing class E2_TimelineController extends E2_Master {
             System.debug('Error in update of estimate rate cards:' + ex.getMessage());
         }
       }
-      
-      //pageAction();
-      // TODO: Check whey are are setting back the estimate rate card records.
-      //this.estimateRateCards = E2_Estimator_Manager.getEstimateRateCards(this.estimate.Id, this.estimate.CurrencyISOCode);
-      
       return null;
   }
   
@@ -241,7 +231,6 @@ public with sharing class E2_TimelineController extends E2_Master {
     // with the updated/new billing rate and the cost rate.
     Map<String, E2_Estimate_Rate_Card__c> roleRateMap = new Map<String, E2_Estimate_Rate_Card__c>();
     List<CMC_Estimate_Resource__c> lstEstimateResourcesToUpdate = new List<CMC_Estimate_Resource__c>();
-    
     //create map
     for(E2_Estimate_Rate_Card__c estimateRateCard : this.estimateRateCards){
         roleRateMap.put(estimateRateCard.Practice__c + SEPARATOR + estimateRateCard.Region__c + SEPARATOR +  estimateRateCard.Resource_Role__c, estimateRateCard);
@@ -259,13 +248,11 @@ public with sharing class E2_TimelineController extends E2_Master {
             res.Rate__c = roleRateMap.get(e2Role).Discounted_Rate__c;
             hasChanged = true;
         }
-        
         // check that estimate rate card has a record for resource role and cost has been updated through manage rate card.                                     
         if(roleRateMap.containsKey(e2Role) && roleRateMap.get(e2Role).Resource_Cost__c != res.Cost__c){
             res.Cost__c = roleRateMap.get(e2Role).Resource_Cost__c;
             hasChanged = true;
         }
-        
         if(hasChanged) lstEstimateResourcesToUpdate.add(res);
     }
     

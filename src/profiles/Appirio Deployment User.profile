@@ -1,6 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Profile xmlns="http://soap.sforce.com/2006/04/metadata">
     <classAccesses>
+        <apexClass>CMC_PresalesEstimate</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>CMC_PresalesEstimateTest</apexClass>
+        <enabled>false</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>E2_AddBulkEffortsController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
@@ -70,6 +78,14 @@
     </classAccesses>
     <classAccesses>
         <apexClass>E2_BatchUpdateUltimateParentScopeTest</apexClass>
+        <enabled>false</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>E2_CMC_Presales_Trigger_Handler</apexClass>
+        <enabled>false</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>E2_CMC_Presales_Trigger_HandlerTest</apexClass>
         <enabled>false</enabled>
     </classAccesses>
     <classAccesses>
@@ -231,6 +247,14 @@
     <classAccesses>
         <apexClass>E2_ScopeWrapperTest</apexClass>
         <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>E2_Scope_Group_Trigger_Handler</apexClass>
+        <enabled>false</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>E2_Scope_Group_Trigger_HandlerTest</apexClass>
+        <enabled>false</enabled>
     </classAccesses>
     <classAccesses>
         <apexClass>E2_SelectDerEffortTemplateControllerTest</apexClass>

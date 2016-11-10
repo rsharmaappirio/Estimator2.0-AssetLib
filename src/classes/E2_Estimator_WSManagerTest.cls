@@ -1,11 +1,12 @@
 /**=====================================================================
  * Appirio, Inc
- * Name: E2_Estimator_WSManager
+ * Name: E2_Estimator_WSManagerTest
  * Description: Test class to E2_Estimator_WSManager web service manager 
  * Created Date: May 13, 2016
  * Created By: Rohit Sharma (Appirio)
  * 
  * Date Modified      Modified By                  Description of the update
+ * Nov 07, 2016       Jitendra Jangid              S-448268 : Cloned scope item on right click
 *  =====================================================================*/
 @isTest(seeAllData=false)
 public class E2_Estimator_WSManagerTest {
@@ -53,6 +54,7 @@ public class E2_Estimator_WSManagerTest {
   
     //start test
     Test.startTest();
+      
       E2_TreeNode tree1 = new E2_TreeNode(parentSc.Name, false, false, parentSC.Id, '#');
       List<E2_TreeNode> treeLst = new List<E2_TreeNode>();
       
@@ -75,6 +77,12 @@ public class E2_Estimator_WSManagerTest {
       treeLst = E2_Estimator_WSManager.getImmediateChildNodesWithEffortsOnScopeId(parentSC.Id);
       System.assertEquals(treeLst.size(), 1 + 1, 'Doesnot return the only immediate child scope and only effort to this scope');      
 
+      // S-448268 : Cloned scope item on right click
+      String scopeToBeCloned= parentSC.Id +',' + childSC.Id;
+      List<E2_TreeNode> resultedClonedNode=E2_Estimator_WSManager.cloneScopeWithChild(scopeToBeCloned);
+      system.assert(resultedClonedNode != null && resultedClonedNode.size() == 2, 'Unit test failed: selected scope has not successfully cloned.'+resultedClonedNode.size());
+      // S-448268 :End
+      
       String scopeIds = parentSC.Id+ ','+ child_childSC.Id+ ',' + parentSC1.Id+ ','+ child_childSC1.Id ; 
       List<E2_TreeNode> cloned_msg = E2_Estimator_WSManager.getClonedNodesTemplate(scopeIds, scopeGroup.Id, parentSC.Id);
       system.assertNotEquals(cloned_msg.size(), 0, 'Success message is returned');
@@ -132,6 +140,8 @@ public class E2_Estimator_WSManagerTest {
       E2_AssetWrapperMap assetMap = E2_Estimator_WSManager.searchAssets('Test', exisitingAssetIds);
       System.assertEquals(assetMap.searchKey, 'Test');
       System.assertEquals(assetMap.assetList.size(), 1);
+     
+      
      
       //stop test  
     Test.stopTest();

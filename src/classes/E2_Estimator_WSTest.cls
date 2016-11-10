@@ -1,7 +1,18 @@
+/**=====================================================================
+ * Appirio, Inc
+ * Name: E2_Estimator_WSTest
+ * Description: Class includes all test method to run Unit Test for E2_Estimator_WS class
+ * Created Date: 
+ * Created By: Rohit Jain (Appirio)
+ * 
+ * Date Modified      Modified By                  Description of the update
+ * Nov 07, 2016       Jitendra Jangid              S-448268 : Cloned scope item on right click
+*  =====================================================================*/
 @isTest(seeAllData=false)
 public class E2_Estimator_WSTest {
   public static CMC_Presales_LOE__c estimate;
   public static E2_Scope__c parentSC, childSC, parentSC1, childSC1;
+  public static List<E2_Scope__c> childScope;
   public static E2_Scope_Group__c scopeGroup;
   public static E2_Recommended_Asset__c recommendedAsset;
   public static Id recTypeId = E2_RecordTypeClass.getId(E2_Constants.E2_SCOPE_API_NAME, E2_Constants.SCOPE_RT_TEMPLATE); 
@@ -86,6 +97,13 @@ public class E2_Estimator_WSTest {
       String test_Scope3 = E2_Estimator_WS.getExistingAssetsForScope(parentSC.Id);
       system.assert(test_Scope3 != null);
       
+      
+      //S-448268 : Cloned scope item on right click
+      String scopeToBeCloned=parentSC.Id+','+childSC.Id;
+      List<E2_TreeNode> resultClonedNode=E2_Estimator_WS.cloneScopeWithChild(scopeToBeCloned);
+       
+      system.assert(resultClonedNode != null, 'Scope has not successfully cloned.');
+      
       //stop test  
     Test.stopTest();
     }
@@ -148,6 +166,9 @@ public class E2_Estimator_WSTest {
     insert lstAssets;
     
     recommendedAsset = E2_Test_Utils.insertRecommendedAsset(parentSC.id, lstAssets[0].id, true);
+    
+   
+    
   }
 
 }

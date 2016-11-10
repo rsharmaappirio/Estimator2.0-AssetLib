@@ -42,8 +42,8 @@
                         <apex:commandButton rendered="{!isEditable}" styleClass="slds-button slds-button--neutral" title="Add Scope From Library" value="Add Scope from Library" onclick="return AddEditScope.addfromtemplate_click(this);"/>
                         <apex:commandButton rendered="{!isEditable}" styleClass="slds-button slds-button--neutral" title="Add New Scope" value="Add New Scope" onclick="return AddEditScope.addnew_click(this);" style="border-right: 0px;"/>
                         <div class="slds-dropdown-trigger slds-is-open" aria-expanded="true" aria-haspopup="true">
-                            <button class="slds-button slds-button--neutral" value="Export Scope as" style="border-radius: 0px;">Export Scope as</button>
-                            <button class="slds-button slds-button--icon-border-filled slds-button--last" name="more" id="lc-230-more" title="Export scope as" type="button"></button>
+                            <button class="slds-button slds-button--neutral" onclick="return false;" value="Export Scope as" style="border-radius: 0px;">Export Scope as</button>
+                            <button class="slds-button slds-button--icon-border-filled slds-button--last" name="more" id="lc-230-more" type="button"></button>
                             <div class="slds-dropdown slds-dropdown--right slds-dropdown--actions" id="lc-236-dd">
                                 <ul class="dropdown__list" role="menu">
                                     <li id="lc-234-xls-item" class="slds-dropdown__item" tabindex="-1" role="menuitem option">

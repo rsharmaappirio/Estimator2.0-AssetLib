@@ -613,10 +613,24 @@
                 }
                 .slds-totalhrsperweek-cell { 
                     text-align: center!important;
+                    background-color: #bacde3!important;
+                    color: #fff!important;
+                }
+                .slds-totalhrsperweek-cell div { 
+                    background-color: #bacde3;
+                }
+                .slds-totalhrsperweek-cell-sum {
+                    text-align: center; 
+                    background-color: #000000!important;
+                    color: #ffffff;
+                    font-weight: bold;
+                }
+                .slds-weekname-cell { 
+                    text-align: center!important;
                     background-color: #666666!important;
                     color: #fff!important;
                 }
-                .slds-weekname-cell { 
+                .slds-total-cell { 
                     text-align: center!important;
                     background-color: #666666!important;
                     color: #fff!important;
@@ -943,7 +957,7 @@
                                                          <apex:outputfield value="{!estimateratecard.Bill_Rate__c}"/>
                                                     </td>
                                                     <td class="slds-truncate " data-label="Rate">
-                                                        <apex:inputfield style="width:30%" styleClass="slds-input discountRateTextBox" value="{!estimateratecard.Discounted_Rate__c}"/>
+                                                        <apex:inputfield style="width:30%" styleClass="slds-input discountRateTextBox mandate-numeric-estimate" value="{!estimateratecard.Discounted_Rate__c}" html-maxlength="6"/>
                                                     </td>
                                                     <td class="slds-truncate " data-label="Resource Cost">
                                                         <apex:outputfield value="{!estimateratecard.Resource_Cost__c}"/>
