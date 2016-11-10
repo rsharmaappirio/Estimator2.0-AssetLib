@@ -1,11 +1,11 @@
 eclipse.preferences.version=1
-endpointApiVersion=36.0
-endpointEnvironment=Sandbox
+endpointApiVersion=37.0
+endpointEnvironment=Other (Specify)
 endpointServer=test.salesforce.com
 httpsProtocol=true
-ideVersion=36.0
+ideVersion=37.0
 keependpoint=false
-metadataFormatVersion=36.0
+metadataFormatVersion=37.0
 namespacePrefix=
 packageName=unpackaged
 preferToolingDeployment=true
