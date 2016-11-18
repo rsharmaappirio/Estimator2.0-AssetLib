@@ -34,8 +34,8 @@ var goBackToPSR = function(psr_id){
 
 
         
-<div xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="slds-grid">
-  <button onclick="return goBackToPSR('{!psr_id}');" class="slds-button slds-button--brand slds-button--small button--border-filled slds-path__mark-complete slds-m-horizontal--small" style="line-height: 14px;">
+<div xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="slds-grid" style="margin-bottom:2px;">
+  <button onclick="return goBackToPSR('{!psr_id}');" class="slds-button slds-button--brand slds-button--small button--border-filled slds-path__mark-complete slds-m-horizontal--small" style="line-height: 14px;margin-left:0px;">
     Go back to PSR
   </button>
   <div class="slds-tabs--path" role="application">
@@ -154,10 +154,5 @@ var goBackToPSR = function(psr_id){
 <!--     </svg>Mark Complete -->
 <!--   </button> -->
 </div>
-
-<br/>
-
-
-
 
 </apex:component>

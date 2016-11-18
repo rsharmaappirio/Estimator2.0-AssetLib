@@ -606,6 +606,16 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>E2_Estimate_Milestone_Week__c.Estimate_Week_Milestone__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>E2_Estimate_Milestone_Week__c.Estimate_Week__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>E2_Estimate_Milestone_Week__c.TextColorCode__c</field>
         <readable>true</readable>
     </fieldPermissions>

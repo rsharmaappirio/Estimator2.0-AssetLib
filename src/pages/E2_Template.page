@@ -82,7 +82,7 @@
         
         
          <!-- FOOTER -->
-            <div>
+            <div class="footer-div">
                     <div class="slds-modal__footer page-footer">
                             
                             <apex:insert name="footer"/>

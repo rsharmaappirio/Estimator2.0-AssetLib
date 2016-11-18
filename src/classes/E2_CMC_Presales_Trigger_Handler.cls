@@ -10,7 +10,7 @@
 // 11/17/2015   Saurabh Gupta      For I-191220 : Added condition to handle NullPointer exception
 // 11/20/2015   Saurabh Gupta	   For S-368002 : Added Component on creation of Presales Estimate record
 // 10/27/2016   Vikash Goyal       For I-241434 : Added function to delete child scope records before deleting estimate record
-//
+// 11/11/2016   Rohit Sharma       For S-447474 : Fixed fee calculation support
 
 public with sharing class E2_CMC_Presales_Trigger_Handler {
 	// variables
@@ -25,6 +25,11 @@ public with sharing class E2_CMC_Presales_Trigger_Handler {
 	// called on before delete
     public void onBeforeDelete(List <CMC_Presales_LOE__c> oldPresalesList) {
     	deleteChildScopes(oldPresalesList);
+	}
+	
+	// RS (S-447474) : 11/11 Method to call on estimate before update
+	public void onBeforeUpdate(List <CMC_Presales_LOE__c> newPresalesList) {
+	    updateDiscountPercentage(newPresalesList);
 	}
 
     // create product record based on CMC_Presales_LOE__c.Name
@@ -175,4 +180,16 @@ public with sharing class E2_CMC_Presales_Trigger_Handler {
             presalesList[0].addError(ex.getMessage());
         }
     }
+    
+    // RS (S-447474) : 11/11 Method to keep discount amount as entered by user previously for E2 estimates 
+	private void updateDiscountPercentage(List <CMC_Presales_LOE__c> newPresalesList) {
+	    for(CMC_Presales_LOE__c estimate : newPresalesList) {
+	        if(estimate.E2_SA__c <> NULL && !string.isBlank(estimate.Discount__c) && 
+	            estimate.Discount__c <> string.valueOf(estimate.Discount_Amount__c) && 
+	            estimate.Service_Fees__c <> 0) {
+	            decimal discount = Decimal.valueOf(estimate.Discount__c);
+	            estimate.Discount_Percent__c = (discount * 100) / estimate.Service_Fees__c;
+	        }
+	    }
+	}
 }

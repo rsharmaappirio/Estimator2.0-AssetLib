@@ -90,12 +90,21 @@ public class E2_TimelineControllerTest {
         
         insert rateCards;
         
-        
-        
         controller.refreshRateCardRatesAndCost();
         estimate.Discount_Percent__c = 5 ;
         controller.changeDiscount();
+        controller.discountAmount = 200;
+        controller.changeDiscountAmount();
+        controller.estimate_Mode = E2_Constants.ESTIMATE_MODE_FIXED_FEE;
+        controller.changeEstimateMode();
+        
+        CMC_Estimate_Resource__c resource = E2_Test_Utils.insertCMCEstimateRes(estimate.Id, true);
+        CMC_Estimate_Week__c week = E2_Test_Utils.insertEstimateWeek(estimate.Id, true);
+        CMC_Estimate_Resource_Week__c resWeek = E2_Test_Utils.insertCMCEstimateResWeek(resource.Id, week.Id, true);
+            
         controller.refreshOverviewPanel();
+        controller.discountAmount = 200;
+        controller.changeDiscountAmount();
         
       //stop test
       Test.stopTest();

@@ -645,4 +645,218 @@ public class E2_Estimator_WSManager {
     	public string displayOrder;
     	public string sequence;
     }
+    
+    // Start : Estimate clone functionality
+    // clone Estimate 
+    public static string cloneEstimate(string estimateId) {
+        if(!string.isBlank(estimateId)) {
+            List<CMC_Presales_LOE__c> estimatesToClone = E2_DataUtil_WS.getEstimateFullDetailById(estimateId);
+            CMC_Presales_LOE__c estimateToClone = estimatesToClone.get(0);
+            CMC_Presales_LOE__c clonedEstimate = estimateToClone.clone(false, true, false, false);
+            clonedEstimate.Name = 'Cloned ' + estimateToClone.Name;
+            try {
+                insert clonedEstimate;
+                return clonedEstimate.id;
+            } catch(Exception ex) {
+                return 'Failed: ' + ex.getMessage();
+            }
+        }
+        return 'Failed: Invalid estimateId';
+    } 
+    
+    // clone Scopes
+    public static string cloneEstimateScopes(string estimateId, string newEstimateId) {
+        if(!string.isBlank(estimateId)) {
+            List<E2_Scope__c> scopeList = new List<E2_Scope__c>();
+            Map<string, E2_Scope__c> hasChildrenScope = new Map<string, E2_Scope__c>();
+            Map<string, E2_Scope__c> clonedSourceMap = new Map<string, E2_Scope__c>();
+
+            for(E2_Scope__c scope : E2_DataUtil_WS.getFullScopesDetailsByEstimateId(estimateId)){
+                E2_Scope__c cloneScope = scope.clone(false, true, false, false);
+                cloneScope.Source_Scope__c = scope.id;
+                cloneScope.Presales_LOE__c = newEstimateId;
+                scopeList.add(cloneScope);
+                clonedSourceMap.put(scope.id, cloneScope);
+                if(scope.Efforts__r.size() > 0 || scope.E2_Recommended_Assets__r.size() > 0
+                    || scope.Questions__r.size() > 0){
+                    hasChildrenScope.put(scope.id, scope);
+                }                                                
+            }
+            if(!scopeList.isEmpty()) {
+                try {
+                    insert scopeList;   
+                    cloneScopesChild(scopeList, hasChildrenScope, clonedSourceMap);
+                    reParentClonedScopes(clonedSourceMap);
+                } catch (Exception ex) {
+                    deleteEstimate(newEstimateId);
+                    return 'Failed: ' + ex.getMessage();
+                }   
+            }
+        }
+        return 'success';
+    }
+    
+    // clone Capacity
+    public static string cloneEstimateCapacity(string estimateId, string newEstimateId) {
+        if(!string.isBlank(estimateId)) {
+            List<E2_Capacity__c> capacityList = new List<E2_Capacity__c>();
+            for(E2_Capacity__c capacity : E2_DataUtil_WS.getCapacityListByEstimateId(estimateId)){
+                E2_Capacity__c clonedCapacity = capacity.clone(false, true, false, false);
+                clonedCapacity.Estimator__c = newEstimateId;
+                capacityList.add(clonedCapacity);
+            }
+            if(!capacityList.isEmpty()) {
+                try {
+                    insert capacityList;
+                } catch (Exception ex) {
+                    deleteEstimate(newEstimateId);
+                    return 'Failed: ' + ex.getMessage();
+                }
+            }
+        }
+        return 'success';
+    }
+    
+    // clone estimate milestones
+    public static string cloneEstimateMilestone(string estimateId, string newEstimateId) {
+        map<id, E2_Estimate_Week_Milestone__c> clonedMilestoneWeeks = new map<id, E2_Estimate_Week_Milestone__c>();
+        map<id, E2_Estimate_Milestone__c> clonedEstimateMilestones = new map<id, E2_Estimate_Milestone__c>();
+        list<E2_Estimate_Milestone_Week__c> clonedEstimateMilestoneWeekMapping = new list<E2_Estimate_Milestone_Week__c>();
+        // clone estimate weeks
+        for(E2_Estimate_Week_Milestone__c estimateWeek : [SELECT Id, Name, Date__c, Estimate__c, Milestone__c, Order__c, 
+                                                          Phase__c 
+                                                          FROM E2_Estimate_Week_Milestone__c 
+                                                          WHERE Estimate__c =: estimateId]) {
+            E2_Estimate_Week_Milestone__c clonedEstimateWeek = estimateWeek.clone(false, true, false, false);
+            clonedEstimateWeek.Estimate__c = newEstimateId;
+            clonedMilestoneWeeks.put(estimateWeek.Id, clonedEstimateWeek);
+        }
+        // clone estimate milestones
+        for(E2_Estimate_Milestone__c estimateMilestone : [SELECT Id, Estimate__c, Order__c, Milestone1__c, Milestone2__c  
+                                                        FROM E2_Estimate_Milestone__c 
+                                                        WHERE Estimate__c =: estimateId]) {
+            E2_Estimate_Milestone__c clonedEstimateMilestone = estimateMilestone.clone(false, true, false, false);
+            clonedEstimateMilestone.Estimate__c = newEstimateId;
+            clonedEstimateMilestones.put(estimateMilestone.Id, clonedEstimateMilestone);
+        }
+        
+        try {
+           if(!clonedMilestoneWeeks.isEmpty()) {
+            insert clonedMilestoneWeeks.values();
+           }
+           if(!clonedEstimateMilestones.isEmpty()) {
+            insert clonedEstimateMilestones.values();
+           }
+           if(!clonedMilestoneWeeks.isEmpty() && !clonedEstimateMilestones.isEmpty()) {
+             // clone estimate resource weeks
+             for(E2_Estimate_Milestone_Week__c milestoneWeek : [SELECT Estimate_Milestone__c, Estimate_Week_Milestone__c, Text__c, TextColorCode__c 
+                                                               FROM E2_Estimate_Milestone_Week__c 
+                                                               WHERE Estimate_Milestone__c IN: clonedEstimateMilestones.keySet() AND
+                                                                     Estimate_Week_Milestone__c IN: clonedMilestoneWeeks.keySet()]) {
+                E2_Estimate_Milestone_Week__c clonedmilestoneWeek = milestoneWeek.clone(false, true, false, false);
+                clonedmilestoneWeek.Estimate_Milestone__c = clonedEstimateMilestones.get(milestoneWeek.Estimate_Milestone__c).id;
+                clonedmilestoneWeek.Estimate_Week_Milestone__c = clonedMilestoneWeeks.get(milestoneWeek.Estimate_Week_Milestone__c).id;
+                clonedEstimateMilestoneWeekMapping.add(clonedmilestoneWeek);
+             }
+             insert clonedEstimateMilestoneWeekMapping;
+           }
+        } catch(Exception ex) {
+            deleteEstimate(newEstimateId);
+            return 'Failed: ' + ex.getMessage();
+        }
+        return 'success';
+    }
+    
+    // clone timeline with rate card
+    public static string cloneEstimateTimeline(string estimateId, string newEstimateId) {
+        if(!string.isBlank(estimateId)) {
+            try {
+                map<Id, E2_Estimate_Rate_Card__c> clonedRateCards = cloneRateCards( estimateId, newEstimateId);
+                if(!clonedRateCards.isEmpty()) {
+                    cloneEstimateTimeline( estimateId, newEstimateId, clonedRateCards);
+                }
+            } catch (Exception ex) {
+                deleteEstimate(newEstimateId);
+                return 'Failed: ' + ex.getMessage();
+            }
+        }
+        return 'success';
+    }
+    
+    // clone etimate rate cards
+    private static map<id, E2_Estimate_Rate_Card__c> cloneRateCards(string estimateId, string newEstimateId) {
+        map<id, E2_Estimate_Rate_Card__c> ratecardsToClone = new map<id, E2_Estimate_Rate_Card__c>();
+        for(E2_Estimate_Rate_Card__c estimateRateCards : [SELECT Id, Bill_Rate__c, Category__c, Code__c, Discounted_Rate__c, Estimate__c, 
+                                                          Practice__c, Rate_Card__c, Region__c, Resource_Cost__c, Resource_Role__c 
+                                                          FROM E2_Estimate_Rate_Card__c 
+                                                          WHERE Estimate__c =: estimateId]) {
+            E2_Estimate_Rate_Card__c clonedRateCard = estimateRateCards.clone(false, true, false, false);
+            clonedRateCard.Estimate__c = newEstimateId;
+            ratecardsToClone.put(estimateRateCards.Id, clonedRateCard);
+        }
+        if(!ratecardsToClone.isEmpty()) {
+            insert ratecardsToClone.values();
+        }
+        return ratecardsToClone;
+    }
+    
+    // clone Timeline
+    private static void cloneEstimateTimeline(string estimateId, string newEstimateId, map<Id, E2_Estimate_Rate_Card__c> clonedRateCards) {
+        map<id, CMC_Estimate_Week__c> clonedEstimateWeeks = new map<id, CMC_Estimate_Week__c>();
+        map<id, CMC_Estimate_Resource__c> clonedEstimateResources = new map<id, CMC_Estimate_Resource__c>();
+        list<CMC_Estimate_Resource_Week__c> clonedEstimateResourceWeekMapping = new list<CMC_Estimate_Resource_Week__c>();
+        // clone estimate weeks
+        for(CMC_Estimate_Week__c estimateWeek : [SELECT Id, Name, Date__c, Estimate__c, Milestone__c, E2_Milestone1__c, E2_Milestone2__c, 
+                                                E2_Milestone1ColorCode__c, E2_Milestone2ColorCode__c, E2_MilestoneColorCode__c, Order__c, 
+                                                Phase__c, E2_PhaseColorCode__c 
+                                                FROM CMC_Estimate_Week__c 
+                                                WHERE Estimate__c =: estimateId]) {
+            CMC_Estimate_Week__c clonedEstimateWeek = estimateWeek.clone(false, true, false, false);
+            clonedEstimateWeek.Estimate__c = newEstimateId;
+            clonedEstimateWeeks.put(estimateWeek.Id, clonedEstimateWeek);
+        }
+        if(!clonedEstimateWeeks.isEmpty()) {
+            // clone estimate resources
+            for(CMC_Estimate_Resource__c estimateRecource : [SELECT Id, Name, CurrencyIsoCode, Estimate__c, Cost__c, Order__c, Rate__c, Role__c, 
+                                                            Skill__c, Hours_Type__c, Is_Used_For_Calculations__c, Rate_Code__c, Resource_Column__c, 
+                                                            E2_Estimate_Rate_Card__c, E2_Role__c 
+                                                            FROM CMC_Estimate_Resource__c 
+                                                            WHERE Estimate__c =: estimateId]) {
+                CMC_Estimate_Resource__c clonedEstimateRecource = estimateRecource.clone(false, true, false, false);
+                clonedEstimateRecource.Estimate__c = newEstimateId;
+                clonedEstimateRecource.E2_Estimate_Rate_Card__c = estimateRecource.E2_Estimate_Rate_Card__c != NULL && 
+                                                                    clonedRateCards.containsKey(estimateRecource.E2_Estimate_Rate_Card__c) ? 
+                                                                    clonedRateCards.get(estimateRecource.E2_Estimate_Rate_Card__c).id : NULL;
+                clonedEstimateResources.put(estimateRecource.Id, clonedEstimateRecource);
+            }
+            
+            // insert Resource timeline 
+            insert clonedEstimateWeeks.values();
+            if(!clonedEstimateResources.isEmpty()) {
+                insert clonedEstimateResources.values();
+                // clone estimate resource weeks
+                for(CMC_Estimate_Resource_Week__c estimateResourceWeek : [SELECT Hours__c, Estimate_Resource__c, Estimate_Week__c 
+                                                                          FROM CMC_Estimate_Resource_Week__c 
+                                                                          WHERE Estimate_Resource__c IN: clonedEstimateResources.keySet() AND
+                                                                          Estimate_Week__c IN: clonedEstimateWeeks.keySet()]) {
+                    CMC_Estimate_Resource_Week__c clonedEstimateResourceWeek = estimateResourceWeek.clone(false, true, false, false);
+                    clonedEstimateResourceWeek.Estimate_Resource__c = clonedEstimateResources.get(estimateResourceWeek.Estimate_Resource__c).id;
+                    clonedEstimateResourceWeek.Estimate_Week__c = clonedEstimateWeeks.get(estimateResourceWeek.Estimate_Week__c).id;
+                    clonedEstimateResourceWeekMapping.add(clonedEstimateResourceWeek);
+                }
+                insert clonedEstimateResourceWeekMapping;
+            }
+        }
+    }
+    
+    // delete estimate 
+    public static void deleteEstimate(string estimateId) {
+        try {
+            CMC_Presales_LOE__c estimateDelete = new CMC_Presales_LOE__c(id = estimateId);
+            delete estimateDelete;
+        } catch(Exception ex) {
+            system.debug('Failed: ' + ex.getMessage());
+        }
+    }
+    // End : Estimate clone functionality
 }

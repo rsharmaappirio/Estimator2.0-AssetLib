@@ -779,6 +779,14 @@
                     tr.jaipurrow{
                         background-color:#f5ffbf;
                     }
+                    tr .estimate-summary {
+                        padding-top : 5px!important;
+                        padding-bottom : 5px!important;
+                    }
+                    .estimate-summary .button {
+                        min-height : 21px!important;
+                        line-height: 18px!important;
+                    }
             </style>
             <apex:form >
                 <apex:pageMessages />
@@ -786,7 +794,10 @@
                 <apex:actionfunction name="refreshRateCardRatesAndCost" action="{!refreshRateCardRatesAndCost}" oncomplete="Timeline.refreshRateCardRatesAndCost_complete();" rerender="ratecard_table"/>
                 <apex:actionfunction name="refreshOverviewPanel" action="{!refreshOverviewPanel}" rerender="overview_panel"/>
                 <apex:actionfunction name="changeDiscount" action="{!changeDiscount}" rerender="overview_panel"/>
-                <!--apex:actionfunction name="changeDiscountAmount" action="{!changeDiscountAmount}" rerender="overview_panel"/-->
+                <apex:actionFunction name="changeEstimateMode" oncomplete="loadSpinner.hide();" action="{!changeEstimateMode}" rerender="overview_panel">
+                    <apex:param name="firstParam" assignTo="{!estimate_Mode}" value="" />
+                </apex:actionFunction>
+                <apex:actionfunction name="changeDiscountAmount" action="{!changeDiscountAmount}" rerender="overview_panel"/>
                 
                 
                 <div id="tabpanel">
@@ -852,7 +863,16 @@
                                         <table style="width:100%" id="overview-table">
                                             <thead>
                                                 <tr>
-                                                    <th colspan="3">ESTIMATE SUMMARY</th>
+                                                    <th colspan="3">
+                                                        <div class="slds-grid estimate-summary">
+                                                            <div class="slds-col slds-has-flexi-truncate">
+                                                                <div class="slds-button-group" role="group" >
+                                                                    <apex:commandButton styleClass="slds-button slds-button--neutral button {!IF(estimate.Mode__c != 'fixed','slds-button--brand','')}" title="T & M" value="T & M" onclick="loadSpinner.show();changeEstimateMode('tm');return false;"/>
+                                                                    <apex:commandButton styleClass="slds-button slds-button--neutral button {!IF(estimate.Mode__c == 'fixed','slds-button--brand','')}" title="Fixed Fee" value="Fixed Fee" onclick="loadSpinner.show();changeEstimateMode('fixed');return false;"/>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                     </th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -861,20 +881,36 @@
                                                     <td><span class="overview-label">Services Cost:</span>&nbsp;<apex:outputfield value="{!estimate.Service_Costs__c}"/></td>
                                                     <td><span class="overview-label">Services Margin:</span>&nbsp;<apex:outputfield value="{!estimate.Service_Margin__c}"/></td>
                                                 </tr>
+                                                <apex:outputText rendered="{!estimate.Mode__c == 'fixed'}">
+                                                <tr>
+                                                    <td><span class="overview-label">Fixed Fee Cost Uplift:</span>&nbsp;<apex:outputfield value="{!estimate.Fixed_Fee_Cost_Uplift_Percent__c}"/></td>
+                                                    <td><span class="overview-label">Fixed Fee Cost Uplift Amt:</span>&nbsp;<apex:outputfield value="{!estimate.Fixed_Fee_Cost_Uplift__c}"/></td>
+                                                    <td><span class="overview-label">Services Uplifted Costs:</span>&nbsp;<apex:outputfield value="{!estimate.Services_Uplifted_Costs__c}"/></td>
+                                                </tr>
+                                                </apex:outputText>
                                                 <tr>
                                                     <td><span class="overview-label">Calculated Fees:</span>&nbsp;{!CMC_Presales_LOE__c.CurrencyIsoCode}&nbsp;<apex:outputfield value="{!estimate.Calculated_Fees__c}"/></td>
                                                     <td><span class="overview-label">Calculated Costs:</span>&nbsp;{!CMC_Presales_LOE__c.CurrencyIsoCode}&nbsp;<apex:outputfield value="{!estimate.Calculated_Costs__c}"/></td>
                                                     <td><span class="overview-label">Calculated Margin:</span>&nbsp;<apex:outputfield value="{!estimate.Calculated_Margin__c}"/></td>
                                                 </tr>
+                                                <apex:outputText rendered="{!estimate.Mode__c != 'fixed'}">
                                                 <tr>
                                                     <td><span class="overview-label">Discount:</span>&nbsp;<apex:inputfield onchange="changeDiscount();return false;" styleClass="slds-input" style="line-height: 20px;min-height: 20px;width: 40px;" value="{!estimate.Discount_Percent__c}"/>%</td>
-                                                    <td><span class="overview-label">Discount Amt:</span>&nbsp;{!CMC_Presales_LOE__c.CurrencyIsoCode}&nbsp;<apex:outputfield value="{!estimate.Discount_Amount__c}"/><!--apex:inputText onchange="changeDiscountAmount();return false;" styleClass="slds-input mandate-numeric-estimate" style="line-height: 20px;min-height: 20px;width: 80px;" value="{!discountAmount}"/--></td>
+                                                    <td><span class="overview-label">Discount Amt:</span>&nbsp;{!CMC_Presales_LOE__c.CurrencyIsoCode}&nbsp;<!--apex:outputfield value="{!estimate.Discount_Amount__c}"/--><apex:inputText onchange="changeDiscountAmount();return false;" styleClass="slds-input mandate-numeric-estimate" style="line-height: 20px;min-height: 20px;width: 80px;" value="{!discountAmount}"/></td>
                                                     <td></td>
                                                 </tr>
+                                                </apex:outputText>
+                                                <apex:outputText rendered="{!estimate.Mode__c == 'fixed'}">
+                                                <tr>
+                                                    <td><span class="overview-label">Fixed Fee Buffer:</span>&nbsp;<apex:inputfield onchange="changeDiscount();return false;" styleClass="slds-input" style="line-height: 20px;min-height: 20px;width: 40px;" value="{!estimate.Fixed_Fee_Buffer__c}"/>%</td>
+                                                    <td><span class="overview-label">Fixed Fee Buffer Amt:</span>&nbsp;{!CMC_Presales_LOE__c.CurrencyIsoCode}&nbsp;<apex:outputfield value="{!estimate.Fixed_Fee_Buffer_Amount__c}"/></td>
+                                                    <td></td>
+                                                </tr>
+                                                </apex:outputText>
                                                 <tr>
                                                     <td><span class="overview-label">As Sold Margin:</span>&nbsp;<apex:outputfield value="{!estimate.As_Sold_Margin__c}"/></td>
                                                     <td><span class="overview-label">Blended (List) Rate:</span>&nbsp;<apex:outputfield value="{!estimate.Blended_Rate_Number__c}"/></td>
-                                                    <td><span class="overview-label">Offshore Blend:</span>&nbsp;<apex:outputfield value="{!estimate.Offshore_Blend__c}"/></td>
+                                                    <td><apex:outputText rendered="{!estimate.Mode__c != 'fixed'}"><span class="overview-label">Offshore Blend:</span>&nbsp;<apex:outputfield value="{!estimate.Offshore_Blend__c}"/></apex:outputText></td>
                                                 </tr>
                                                 <tr>
                                                     <td><span class="overview-label">Total Fees:</span>&nbsp;{!CMC_Presales_LOE__c.CurrencyIsoCode}&nbsp;<apex:outputfield value="{!estimate.Total_Fees__c}"/></td>
@@ -1150,7 +1186,16 @@
                 <input type="hidden" value="{!CMC_Presales_LOE__c.Final_Total__c}" />
                 <input type="hidden" value="{!CMC_Presales_LOE__c.Blended_Rate_Number__c}" />
                 <input type="hidden" value="{!CMC_Presales_LOE__c.Offshore_Blend__c}" />
-               
+                <input type="hidden" value="{!CMC_Presales_LOE__c.Mode__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.Services_Uplifted_Costs__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.Fixed_Fee_Cost_Uplift__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.Fixed_Fee_Cost_Uplift_Percent__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.Fixed_Fee_Buffer__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.Fixed_Fee_Blended__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.Fixed_Fee_Buffer_Amount__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.Topcoder_Challenge_Fees__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.Asset_Fees__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.Discount__c}" />
                
                
             </apex:form>

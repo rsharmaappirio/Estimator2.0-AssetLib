@@ -173,4 +173,38 @@ public with sharing class E2_DataUtil_WS {
                                  WHERE e.Id IN: scopesId];   
    }
    
+   // Get Estimate full details 
+   public static List<CMC_Presales_LOE__c> getEstimateFullDetailById(string estimateId) {
+       return [SELECT Id, Name, Description__c, Presales_Request__c, Type__c, Account_Name__c, Mode__c, Opportunity_Name__c, 
+                Date_Scoped__c, Product__c, Account_Executive__c, Solution_Architect__c, Delivery_Reviewer__c, 
+                CurrencyISOCode, Discount_Percent__c, Discount__c, Fixed_Fee_Cost_Uplift_Percent__c, Fixed_Fee_Buffer__c, 
+                Fixed_Fee_Blended__c, Topcoder_Challenge_Fees__c, Asset_Fees__c, Discount_PCT__c, Offshore_Blend_PCT__c, 
+                Blended_Rate__c, E2_Date_Scoped__c, E2_Version_Notes__c, E2_Reviewer__c, E2_SA__c, E2_AE__c, E2_Is_Primary__c, 
+                E2_Total_Hrs__c, E2_Derived_Effort_Template__c, E2_Last_Build_Datetime__c, E2_Risk__c 
+                FROM CMC_Presales_LOE__c 
+                WHERE Id =: estimateId];
+   }
+   
+   // Get Full Scope Details By Estimate Id
+   public static List<E2_scope__c> getFullScopesDetailsByEstimateId(string estimateId) {
+   	return [Select e.Source_Scope__c, e.Scope_Group__c, e.Parent_Scope__c, e.Name, 
+                   e.Presales_LOE__c, e.Description__c , e.LOE_Hrs__c, 
+                   e.Complexity__c, e.Scope_Item_Type__c, e.Is_Active__c, e.Scope_Flag__c, 
+                   e.E2_Assumption__c, e.RecordTypeId, e.Display_Order__c,
+            (Select Id, Name, Scope__c, Complexity_Factor_High__c, Resource_Role__c, Phase__c, Effort_Hrs__c, Speciality__c, 
+             Complexity_Factor_Low__c, Is_Active__c, Source_Effort__c FROM Efforts__r),
+             (SELECT Id, Scope__c, Asset__c FROM E2_Recommended_Assets__r),
+             (SELECT Id, Question_Text__c, Scope__c, Source_Question__c, 
+  			  Type__c, Is_Active__c, Weighted_Effort_LOE__c FROM Questions__r) 
+            FROM E2_Scope__c e 
+            WHERE e.Presales_LOE__c =: estimateId];
+   }
+   
+   // Get Full Capacity Needs by Estimate Id 
+   public static List<E2_Capacity__c> getCapacityListByEstimateId(string estimateId) {
+  	return [SELECT Id, Role__c, Phase__c, Speciality__c,  Hours__c, Estimator__c  
+  			FROM E2_Capacity__c 
+  			WHERE Estimator__c = :estimateId];
+  }
+   
 }

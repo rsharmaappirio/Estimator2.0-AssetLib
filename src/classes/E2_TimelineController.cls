@@ -6,7 +6,8 @@
  * Created By: Rahul Jain (Appirio)
  * 
  * Date Modified      Modified By         Description of the update
- * Oct 26th, 2016     Rohit Sharma        S-447680 : Round off the hours to nearest figure on capacity tab.      
+ * Oct 26th, 2016     Rohit Sharma        S-447680 : Round off the hours to nearest figure on capacity tab.
+ * Nov 11th, 2016     Rohit Sharma        S-447474 : Fixed fee calculation support
 *  =====================================================================*/
 public with sharing class E2_TimelineController extends E2_Master {
     
@@ -15,6 +16,8 @@ public with sharing class E2_TimelineController extends E2_Master {
   public string renderOptions_PhasesJSON{get;set;}
   public string capacityNeeds_JSON{get;set;}
   public static final string SEPARATOR = ' - ';
+  public string estimate_Mode{get;set;}
+  public decimal discountAmount{get;set;}
 
   public E2_TimelineController (ApexPages.StandardController std) {
     // constructor : use to initiate the variable
@@ -30,7 +33,7 @@ public with sharing class E2_TimelineController extends E2_Master {
      // method to populate the renderOptions_PhasesJSON variable with phases 
      // and color code utilize in the phase column/row of the grid
      
-     
+     this.discountAmount = this.estimate.Discount_Amount__c;
      Schema.DescribeFieldResult fieldResult = E2_Effort__c.Phase__c.getDescribe();
      List<Schema.PicklistEntry> ple = fieldResult.getPicklistValues();
      Map<String, String> phaseColorCodeMap = E2_Constants.PHASE_COLORCODE_MAP;
@@ -56,16 +59,28 @@ public with sharing class E2_TimelineController extends E2_Master {
                         Calculated_Margin__c,
                         Discount_Percent__c,
                         Discount_Amount__c,
+                        Discount__c,
                         Total_Fees__c,
                         As_Sold_Margin__c,
                         Final_Total__c,
                         Blended_Rate_Number__c,
                         Offshore_Blend__c,
-                        Ratecard_JSON__c
+                        Ratecard_JSON__c,
+                        Mode__c,
+                        Services_Uplifted_Costs__c,
+                        Fixed_Fee_Cost_Uplift__c,
+                        Fixed_Fee_Cost_Uplift_Percent__c,
+                        Fixed_Fee_Buffer__c,
+                        Fixed_Fee_Blended__c,
+                        Fixed_Fee_Buffer_Amount__c,
+                        Topcoder_Challenge_Fees__c,
+                        Asset_Fees__c 
                        FROM CMC_Presales_LOE__c 
                        WHERE Id = :estimate.id];
       
       this.estimate.Discount_Percent__c = (this.estimate.Discount_Percent__c == NULL ? 0 : this.estimate.Discount_Percent__c);
+      this.estimate.Fixed_Fee_Buffer__c = (this.estimate.Fixed_Fee_Buffer__c == NULL ? 0 : this.estimate.Fixed_Fee_Buffer__c);
+      this.discountAmount = this.estimate.Discount_Amount__c;
       return null;
   }
   
@@ -74,11 +89,26 @@ public with sharing class E2_TimelineController extends E2_Master {
       // this method gets invoked when user changes or update the discount input in Estimate 
       // Summary above the grid. 
       try{
+        this.estimate.Discount__c = NULL;  
         update this.estimate;
       }catch(Exception ex){
         ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, ex.getMessage()));  
       }
       refreshOverviewPanel(); 
+  }
+  
+  public void changeDiscountAmount() {
+      // this method gets invoked when user changes or update the discount input in Estimate 
+      // Summary above the grid. 
+      try{
+        decimal discountPct = (this.discountAmount * 100) / this.estimate.Service_Fees__c;
+        this.estimate.Discount_Percent__c = discountPct;
+        this.estimate.Discount__c = string.valueOf(this.discountAmount);
+        update this.estimate;
+      }catch(Exception ex){
+        ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, ex.getMessage()));  
+      }
+      refreshOverviewPanel();
   }
   
   public PageReference pageAction(){
@@ -262,5 +292,22 @@ public with sharing class E2_TimelineController extends E2_Master {
        System.debug(ex.getMessage()); 
     }
     
+  }
+  
+  public void changeEstimateMode() {
+      //RS: 11/11 this method gets invoked when user chnages estimate mode to either T & M or Fixed Fee
+      // above summary section
+      if(!string.isBlank(this.estimate_Mode)) {
+          this.estimate.Mode__c = this.estimate_Mode;
+          if(estimate_Mode == E2_Constants.ESTIMATE_MODE_FIXED_FEE) {
+              this.estimate.Fixed_Fee_Cost_Uplift_Percent__c = E2_Constants.DEFAULT_FIXED_FEE_UPLIFT;
+          }
+          try{
+            update this.estimate;
+          }catch(Exception ex){
+            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, ex.getMessage()));  
+          }
+          refreshOverviewPanel();
+      }
   }
 }

@@ -7,6 +7,7 @@
  * 
  * Date Modified      Modified By                  Description of the update
  * Apr 18th, 2016     Arpita                       T-494117
+ * Nov 11th, 2016     Rohit Sharma                 S-447474 : Fixed fee calculation support
 *  =====================================================================*/
 public class E2_Constants {
 
@@ -112,7 +113,9 @@ public class E2_Constants {
                                                                                             'GS - North America Delivery - Technical Consultant - Express' => 'Technical Consultant'
   };
   
- 
+  public final static String ESTIMATE_MODE_T_AND_M = 'tm';
+  public final static String ESTIMATE_MODE_FIXED_FEE = 'fixed';
+  public final static Decimal DEFAULT_FIXED_FEE_UPLIFT = 5;
   
   public void testConstantsMethod(){}
 }

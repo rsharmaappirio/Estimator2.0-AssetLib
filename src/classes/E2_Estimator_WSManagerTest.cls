@@ -121,7 +121,24 @@ public class E2_Estimator_WSManagerTest {
       
       scopestatus = E2_Estimator_WSManager.updateScopesStatus(null, childSC.Id, null, allscopesIds);
       System.assertEquals(scopestatus, 'Success', 'Success message is returned');
-       System.assertEquals(childSC.Is_Active__c, true);
+      System.assertEquals(childSC.Is_Active__c, true);
+      
+      string newEstimateId = E2_Estimator_WSManager.cloneEstimate(estimate.Id);
+      System.assert(newEstimateId.indexOf('Failed: ') == -1, 'Estimate not cloned');
+      
+      string returnMessage = E2_Estimator_WSManager.cloneEstimateScopes(estimate.Id , newEstimateId);
+      System.assertEquals(returnMessage, 'success', 'scope hierachy successfully cloned');
+      
+      returnMessage = E2_Estimator_WSManager.cloneEstimateCapacity(estimate.Id , newEstimateId);
+      System.assertEquals(returnMessage, 'success', 'capacity successfully cloned');
+      
+      returnMessage = E2_Estimator_WSManager.cloneEstimateMilestone(estimate.Id , newEstimateId);
+      System.assertEquals(returnMessage, 'success', 'estimate milestone successfully cloned');
+      
+      returnMessage = E2_Estimator_WSManager.cloneEstimateTimeline(estimate.Id , newEstimateId);
+      System.assertEquals(returnMessage, 'success', 'resource timeline successfully cloned');
+      
+      E2_Estimator_WSManager.deleteEstimate(newEstimateId);
       
       E2_Estimator_WSManager.deleteScope(scopeGroup.Id, E2_Constants.HASH_TAG);    
       String b_scopeId = E2_Estimator_WSManager.deleteScope(childSC.Id, parentSC.Id);
@@ -236,6 +253,23 @@ public class E2_Estimator_WSManagerTest {
   	actionScope = new E2_Action_Scope__c(Answer__c = ans1.Id, Scope__c = parentSC.Id);
     insert actionScope;
   	
+  	pse__Region__c region = E2_Test_Utils.insertRegion(true);
+    pse__Practice__c practice = E2_Test_Utils.insertPractice(true);
+    
+    pse__Rate_Card__c rateCard = E2_Test_Utils.insertRateCard(acc.Id, region.Id, practice.Id, true);
+    
+    E2_Estimate_Rate_Card__c estimateRC = E2_Test_Utils.insertEstimateRateCard(estimate.Id, true);
+    
+    CMC_Estimate_Resource__c resource = E2_Test_Utils.insertCMCEstimateRes(estimate.Id, true);
+    CMC_Estimate_Week__c week = E2_Test_Utils.insertEstimateWeek(estimate.Id, true);
+    CMC_Estimate_Resource_Week__c resWeek = E2_Test_Utils.insertCMCEstimateResWeek(resource.Id, week.Id, true);
+    E2_Estimate_Week_Milestone__c weekMilestones = new E2_Estimate_Week_Milestone__c(Name = 'Week1',Estimate__c = estimate.Id, Order__c = 2,
+                                                         Date__c = system.today(), Phase__c = 'Plan', Milestone__c = 'Test');
+    insert weekMilestones;
+    E2_Estimate_Milestone__c milestone = E2_Test_Utils.insertEstimateMilestone(estimate.Id, true);
+    E2_Estimate_Milestone_Week__c milestoneWk = new E2_Estimate_Milestone_Week__c(Estimate_Milestone__c = milestone.Id, Estimate_Week_Milestone__c = weekMilestones.Id, 
+                                                         TextColorCode__c = 'Red'); 
+    insert milestoneWk;
        
   }
 }

@@ -735,6 +735,8 @@
                              // old code: commented for reference purpose; TODO: remove after some releases
                              //rowData.push({ value: (cell.find('div').length ? cell.find('div').text() : cell.text()), metadata: { style: stylesheet.createFormat(metaformat).id }});
                                 
+
+
                              prev_cell = cell;  
                        }else if(typeof prev_cell != 'undefined'){
                            rowData.push({ value: '', metadata: { style: stylesheet.createFormat({
@@ -978,14 +980,24 @@
     
     function _decodeTabularData(_grid, ta){
       var columns = _grid.getColumns();
+
       var clipText = ta.value;
       
+	  if (typeof(Storage) !== 'undefined' && clipText != null && typeof clipText != 'undefined') {
+        // Store
+        if(clipText.trim() === sessionStorage.getItem("clipText")){
+            sessionStorage.setItem("isSameText", "true");
+        }
+        else{
+            sessionStorage.setItem("isSameText", "false");
+        }
+      }
       // below line support when pasting from excel;
       // from excel you always get trailing new line charater 
       clipText = clipText.replace(/[\n\f\r]$/, '');
       
       var clipRows = clipText.split(/[\n\f\r]/);
-      console.log(clipRows);
+      //console.log(clipRows);
       var clippedRange = [];
       _bodyElement.removeChild(ta);
       
@@ -1089,9 +1101,17 @@
             'toRow': activeRow + this.h - 1
           }
 
+
+
           this.markCopySelection([bRange]);
           _grid.getSelectionModel().setSelectedRanges([bRange]);
-          this.cellExternalCopyManager.onPasteCells.notify({ranges: [bRange], clippedRange: clippedRange, oneCellToMultiple : oneCellToMultiple});
+
+
+		if (typeof(Storage) !== 'undefined' && (typeof _copiedRanges != 'undefined' || _copiedRanges == null)) {
+                // Store
+                _copiedRanges = JSON.parse(sessionStorage.getItem("_copiedRanges"));
+          }
+          this.cellExternalCopyManager.onPasteCells.notify({ranges: [bRange], clippedRange: clippedRange, oneCellToMultiple : oneCellToMultiple, copiedRanges : _copiedRanges});
         },
 
         undo: function() {
@@ -1127,7 +1147,7 @@
 
           this.markCopySelection([bRange]);
           _grid.getSelectionModel().setSelectedRanges([bRange]);
-          this.cellExternalCopyManager.onPasteCells.notify({ranges: [bRange], clippedRange: clippedRange, oneCellToMultiple : oneCellToMultiple});
+          this.cellExternalCopyManager.onPasteCells.notify({ranges: [bRange], clippedRange: clippedRange, oneCellToMultiple : oneCellToMultiple, copiedRanges : _copiedRanges});
           
           if(addRows > 1){            
             var d = _grid.getData();
@@ -1167,11 +1187,18 @@
           ranges = _grid.getSelectionModel().getSelectedRanges();
           if (ranges.length != 0) {
             _copiedRanges = ranges;
+			if (typeof(Storage) !== 'undefined' && _copiedRanges != null && typeof _copiedRanges != 'undefined') {
+                // Store
+                sessionStorage.setItem("_copiedRanges", JSON.stringify(_copiedRanges));
+            }
             markCopySelection(ranges);
             _self.onCopyCells.notify({ranges: ranges});
             
             var columns = _grid.getColumns();
             var clipText = "";
+
+
+
 
             for (var rg = 0; rg < ranges.length; rg++){
                 var range = ranges[rg];
@@ -1183,27 +1210,69 @@
                     if (clipTextRows == "" && _options.includeHeaderWhenCopying) {
                         var clipTextHeaders = [];
                         for (var j = range.fromCell; j < range.toCell + 1 ; j++) {
+
                             if (columns[j].name.length > 0)
                                 clipTextHeaders.push(columns[j].name);
                         }
                         clipTextRows.push(clipTextHeaders.join("\t"));
                     }
 
+
+					var column;
+                    var prevCellText;
+                    var cCode;
                     for (var j = range.fromCell; j < range.toCell + 1 ; j++){
-                        clipTextCells.push(getDataItemValueForColumn(dt, columns[j]));
+						column = j;
+
+						
+						prevCellText = getDataItemValueForColumn(dt, columns[j]);
+                        if(typeof data[i] != 'undefined' && 
+                            typeof data[i].id != 'undefined' && 
+                            typeof Timeline.fixedRowsTypes[data[i].id.toLowerCase()] != 'undefined'){
+                            
+                            //var meta_info = Timeline.fixedRowsTypes[rowId];
+                            //var colorCodePostFix = meta_info.colorcodepostfix;
+                            //var cCode = '';
+                            //if(typeof data[args.row][columns[column].field + colorCodePostFix] != 'undefined'){
+                              // cCode = data[args.row][columns[column].field + colorCodePostFix];
+                            //}    
+                        }
+                        clipTextCells.push(prevCellText);
                     }
+
+					if(typeof data[i] != 'undefined' && 
+                        typeof data[i].id != 'undefined' && 
+                        typeof Timeline.fixedRowsTypes[data[i].id.toLowerCase()] != 'undefined'){
+                    
+                        for(var cellValue = column + 1; cellValue <= columns.length - 1; cellValue++) {
+                            var cellText = getDataItemValueForColumn(dt, columns[cellValue]);
+                            if(cellText != '' && cellText == prevCellText) {
+                                clipTextCells.push(cellText);
+                            } else {
+                                break;
+                            }
+                        }
+                    }
+
                     clipTextRows.push(clipTextCells.join("\t"));
                 }
                 clipText += clipTextRows.join("\r\n") + "\r\n";
+
             }
             
             if(window.clipboardData) {
+
                 window.clipboardData.setData("Text", clipText);
                 return true;
             }
             else {
                 var $focus = $(_grid.getActiveCellNode());
                 var ta = _createTextBox(clipText);
+
+				if (typeof(Storage) !== 'undefined' && clipText != null && typeof clipText != 'undefined') {
+                    // Store
+                    sessionStorage.setItem("clipText", clipText.trim());
+                }
 
                 setTimeout(function(){
                      _bodyElement.removeChild(ta);
@@ -2212,6 +2281,7 @@ $(function() {
     //    if(typeof grid != 'undefined') grid.resizeCanvas();
     //});
     
+
     applyNumericValidation();
     makeManageRateCardsCollapsible();
     tabpanel.bindEvents();
@@ -2580,6 +2650,7 @@ var Timeline = {
                                                         ,leaveSpaceForNewRows : true
                                                         ,frozenColumn : 4
                                                         ,frozenRow : 8
+
                                                         //,autoHeight: true
                                                         //,fullWidthRows: true
                                                         //,frozenBottom: true
@@ -2721,6 +2792,7 @@ var Timeline = {
                     }
                 },
                 {
+
                     id: "capacityneedshours",
                     name: "Capacity Needs (Hrs)",
                     field: "capacityneedshours",
@@ -2768,12 +2840,14 @@ var Timeline = {
                                  $(cellNode).empty().html(sum.toCommaFrmt()).css(Timeline.calcuation_cols_css);
                                  
                             }*/
+
                             return;
                         }else{
                           var hours = 0;
                           var resourceRateCardRole = data[row].resourceRateCardRole;
                           resourceRateCardRole = (typeof resourceRateCardRole == 'undefined' ? '' : resourceRateCardRole.toLowerCase());
                           //alert(resourceRateCardRole);
+
                           if(typeof capacityNeeds_JSON != 'undefined' && 
                                 typeof capacityNeeds_JSON.RoleHours != 'undefined' &&
                                 typeof capacityNeeds_JSON.RoleHours[resourceRateCardRole] != 'undefined'){
@@ -2784,6 +2858,7 @@ var Timeline = {
                         }
                     }
                 }, {
+
                     id: "rate",
                     name: "Rate",
                     field: "rate",
@@ -3833,12 +3908,15 @@ var Timeline = {
     },
     
     
+
     onPasteCellsHandler: function(e, args) {
         
         var from = args.ranges[0];
         var to = args.ranges[0];
         var val;
         
+
+
         var nodes_order_json = '[';
         
         for (var i = 0; i <= from.toRow - from.fromRow; i++) {
@@ -3860,6 +3938,34 @@ var Timeline = {
                         
                         var rowId = data[to.fromRow + i].id;
                         var field = columns[to.fromCell + j].field;
+
+						var cCode = "";
+                        
+                        
+                        if(typeof args.copiedRanges != 'undefined' && sessionStorage.getItem("isSameText") == 'true'){
+                            var copied_rowId = data[args.copiedRanges[0].fromRow + i].id;
+                            var copied_meta_info = Timeline.fixedRowsTypes[copied_rowId];
+                            if (typeof copied_meta_info != 'undefined') {
+                              var colorCodePostFix = copied_meta_info.colorcodepostfix;
+                              if (typeof colorCodePostFix != 'undefined') {
+                                 cCode = data[args.copiedRanges[0].fromRow + i][columns[args.copiedRanges[0].fromCell + j].field + colorCodePostFix]
+                              }
+                            }
+                            
+                            if(typeof cCode != 'undefined' && cCode != null && cCode != ""){
+                                var meta_info = Timeline.fixedRowsTypes[rowId];
+                                //console.log(cCode);
+                                if (typeof meta_info != 'undefined') {
+                                    var colorCodePostFix = meta_info.colorcodepostfix;
+                                    //console.log(colorCodePostFix);
+                                    if (typeof colorCodePostFix != 'undefined') {
+                                        //console.log((to.fromRow + i)+'===='+(to.fromCell + j));
+                                        data[to.fromRow + i][columns[to.fromCell + j].field + colorCodePostFix] = cCode;
+                                    }
+                                }
+                            }
+                        }
+
                         if(rowId.toLowerCase() != Timeline.fixedRowsTypes.phase.id || typeof renderOptions_Phases[val] != 'undefined') {
                             if(rowId.toLowerCase() != Timeline.fixedRowsTypes.milestone.id 
                                     && rowId.toLowerCase() != Timeline.fixedRowsTypes.milestone1.id 
@@ -3871,7 +3977,7 @@ var Timeline = {
                             //console.log(val);
                             data[to.fromRow + i][columns[to.fromCell + j].field] = val;
                            
-                            nodes_order_json += '{"rowId":"' + rowId + '", "cellId":"' + field + '", "value":"' + val.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"},';
+                            nodes_order_json += '{"rowId":"' + rowId + '", "cellId":"' + field + '", "value":"' + val.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '", "colorCode":"' + cCode + '"},';
                             grid.invalidateRow(to.fromRow + i);
                         }
                         
@@ -5340,7 +5446,7 @@ var Timeline = {
     updateResourceWeeks: function(jsonstr) {
         loader.show();
         
-        sforce.apex.execute(WEBSERVICE_NAME, "updateResourceWeeks", {
+        sforce.apex.execute(WEBSERVICE_NAME, "updateResourceWeeks2", {
             jsonstr: jsonstr
         }, Timeline.updateResourceWeeks_Callback);
         
