@@ -63,23 +63,23 @@ global with sharing class E2_MilestoneWS {
     }
     
     webservice static string deleteColumn(string estimateId, string weekId){
-      return E2_TimelineWSManager.deleteColumn( estimateId,  weekId);
+      return E2_MilestoneWSManager.deleteColumn( estimateId,  weekId);
     }
     
     webservice static string addMoreColumnsOnLeft(string estimateId, string weekId, integer noOfColumnsToAdd){                                                   
-      return E2_TimelineWSManager.addMoreColumnsOnLeft( estimateId, weekId, noOfColumnsToAdd);
+      return E2_MilestoneWSManager.addMoreColumnsOnLeft( estimateId, weekId, noOfColumnsToAdd);
     }
     
     webservice static string addMoreColumnsOnRight(string estimateId, string weekId, integer noOfColumnsToAdd){                                                   
-      return E2_TimelineWSManager.addMoreColumnsOnRight( estimateId, weekId, noOfColumnsToAdd);
+      return E2_MilestoneWSManager.addMoreColumnsOnRight( estimateId, weekId, noOfColumnsToAdd);
     }
     
     webservice static string onBuild(string estimateId, string sDate, integer noOfColumnsToAdd){
-      return E2_TimelineWSManager.onBuild( estimateId,  sDate,  noOfColumnsToAdd);
+      return E2_MilestoneWSManager.onBuild( estimateId,  sDate,  noOfColumnsToAdd);
     }
     
     webservice static string onStartDateSelectionChange(string estimateId, string sDate, integer order, string name){
-      return  E2_TimelineWSManager.onStartDateSelectionChange( estimateId, sDate,  order, name);                                         
+      return  E2_MilestoneWSManager.onStartDateSelectionChange( estimateId, sDate,  order, name);                                         
     }
     
     

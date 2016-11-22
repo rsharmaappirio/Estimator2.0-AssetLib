@@ -19,9 +19,9 @@ public class E2_MilestoneDataUtil_WS {
     
     public static List<E2_Estimate_Milestone_Week__c> getEstimateMilestoneWeeks(Set<String> weekIds, Set<String> milestoneIds){
       //method to get milestone week for given set of milestoneIds and weekIds
-      return [SELECT ID, Text__c, TextColorCode__c, Estimate_Milestone__c, Estimate_Week__c   
+      return [SELECT ID, Text__c, TextColorCode__c, Estimate_Milestone__c, Estimate_Week_Milestone__c   
                 FROM E2_Estimate_Milestone_Week__c
-                WHERE Estimate_Week__c IN :weekIds
+                WHERE Estimate_Week_Milestone__c IN :weekIds
                 AND Estimate_Milestone__c IN :milestoneIds];
     }
     
@@ -35,16 +35,16 @@ public class E2_MilestoneDataUtil_WS {
     
     public static List<E2_Estimate_Milestone_Week__c> getEstimateMilestoneWeeksforWeek(String weekId, String milestoneId){
       //method to get milestone week for given set of milestoneIds and weekIds
-      return [SELECT ID, Text__c, TextColorCode__c, Estimate_Milestone__c, Estimate_Week__c   
+      return [SELECT ID, Text__c, TextColorCode__c, Estimate_Milestone__c, Estimate_Week_Milestone__c   
                 FROM E2_Estimate_Milestone_Week__c
-                WHERE Estimate_Week__c = :weekId
+                WHERE Estimate_Week_Milestone__c = :weekId
                 AND Estimate_Milestone__c = :milestoneId];
     }
     
     public static List<E2_Estimate_Milestone__c> getEstimateMilestoneAndAllWeeks(String estimateId){
       //method to get estimate milestone and all milestone week records for an estimate 
       return  [SELECT Id, Name, Milestone1__c, Milestone2__c, Order__c,  
-                 (SELECT ID, Text__c, TextColorCode__c, Estimate_Week__c, Estimate_Milestone__c
+                 (SELECT ID, Text__c, TextColorCode__c, Estimate_Week_Milestone__c, Estimate_Milestone__c
                   FROM Estimate_Milestone_Weeks__r)  
                   FROM E2_Estimate_Milestone__c
                   WHERE Estimate__c = :estimateId
@@ -58,5 +58,13 @@ public class E2_MilestoneDataUtil_WS {
                   WHERE E2_Milestone_Library__c = :selectedLibrary
                   AND Is_Active__c = true
                   ORDER BY Order__c ASC];    
+    }
+    
+    //method to get E2_Estimate_Week_Milestone__c records for an estimateId
+    public static List<E2_Estimate_Week_Milestone__c> getEstimateWeekMilestoneRecords(String estimateId){
+        return [SELECT Id, Date__c, Name, Order__c, Estimate__c
+              FROM E2_Estimate_Week_Milestone__c                                                    
+              WHERE Estimate__c = :estimateId
+              ORDER BY Date__c ASC, Order__c ASC];
     }
 }

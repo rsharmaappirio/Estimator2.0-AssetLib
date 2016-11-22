@@ -21,6 +21,11 @@
         <members>E2_BatchUpdateUltimateParentScopeTest</members>
         <members>E2_CapacityController</members>
         <members>E2_CapacityControllerTest</members>
+        <members>E2_Clone_Estimate_WSManager</members>
+        <members>E2_Clone_Estimate_WS</members>
+        <members>E2_Clone_Estimate_WSManagerTest</members>
+        <members>E2_Clone_Estimate_WSTest</members>
+        <members>E2_Clone_DataUtil_WS</members>
         <members>E2_Constants</members>
         <members>E2_Constants</members>
         <members>E2_ConstantsTest</members>

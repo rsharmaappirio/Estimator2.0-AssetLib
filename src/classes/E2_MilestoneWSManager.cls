@@ -14,6 +14,8 @@ public class E2_MilestoneWSManager {
    public static final string DATE_SLASH = '/'; 
    public static final string MILESTONE1_ID = 'milestone1';
    public static final string MILESTONE2_ID = 'milestone2';
+   public static final integer NO_OF_DAYS_IN_WEEK = 7;
+   public static final string WEEKNAME_PREFIX = 'Week';
    
     
     public static string addFromTemplate(string selectedTemplate, string estimateId){
@@ -62,7 +64,7 @@ public class E2_MilestoneWSManager {
         
         for(E2_Estimate_Milestone_Week__c rwW : E2_MilestoneDataUtil_WS.getEstimateMilestoneWeeks(weekIds, milestoneIds)){
                system.debug('rwW>>>' +rwW);
-               string key = rwW.Estimate_Milestone__c + SEPARATOR + rwW.Estimate_Week__c;
+               string key = rwW.Estimate_Milestone__c + SEPARATOR + rwW.Estimate_Week_Milestone__c;
                milestoneWeekMap.put(key, rwW);           
         }
          
@@ -77,7 +79,7 @@ public class E2_MilestoneWSManager {
                 eRW.TextColorCode__c = colorCode;
                 lstToUpdate.add(eRW);
             }else{
-                E2_Estimate_Milestone_Week__c eRW = new E2_Estimate_Milestone_Week__c(Text__c = text, TextColorCode__c = colorCode, Estimate_Milestone__c = rwW.milestoneId, Estimate_Week__c = rwW.weekId);
+                E2_Estimate_Milestone_Week__c eRW = new E2_Estimate_Milestone_Week__c(Text__c = text, TextColorCode__c = colorCode, Estimate_Milestone__c = rwW.milestoneId, Estimate_Week_Milestone__c = rwW.weekId);
                 lstToInsert.add(eRW);
             }
         }
@@ -110,7 +112,7 @@ public class E2_MilestoneWSManager {
         
         for(E2_Estimate_Milestone_Week__c rwW : E2_MilestoneDataUtil_WS.getEstimateMilestoneWeeks(weekIds, milestoneIds)){
                
-               string key = rwW.Estimate_Milestone__c + SEPARATOR + rwW.Estimate_Week__c;
+               string key = rwW.Estimate_Milestone__c + SEPARATOR + rwW.Estimate_Week_Milestone__c;
                milestoneWeekMap.put(key, rwW);           
         }
          
@@ -123,7 +125,7 @@ public class E2_MilestoneWSManager {
                 eRW.TextColorCode__c = colorCode;
                 lstToUpdate.add(eRW);
             }else{
-                E2_Estimate_Milestone_Week__c eRW = new E2_Estimate_Milestone_Week__c(TextColorCode__c = colorCode, Estimate_Milestone__c = rwW.rowId, Estimate_Week__c = rwW.weekId);
+                E2_Estimate_Milestone_Week__c eRW = new E2_Estimate_Milestone_Week__c(TextColorCode__c = colorCode, Estimate_Milestone__c = rwW.rowId, Estimate_Week_Milestone__c = rwW.weekId);
                 lstToInsert.add(eRW);
             }
         }
@@ -189,7 +191,7 @@ public class E2_MilestoneWSManager {
         
         for(E2_Estimate_Milestone_Week__c rwW : E2_MilestoneDataUtil_WS.getEstimateMilestoneWeeks(weekIds, milestoneIds)){
                
-               string key = rwW.Estimate_Milestone__c + SEPARATOR + rwW.Estimate_Week__c;
+               string key = rwW.Estimate_Milestone__c + SEPARATOR + rwW.Estimate_Week_Milestone__c;
                milestoneWeekMap.put(key, rwW);           
         }
          
@@ -207,7 +209,7 @@ public class E2_MilestoneWSManager {
                     eRW.Text__c = text;
                     lstToUpdate.add(eRW);
                 }else{
-                    E2_Estimate_Milestone_Week__c eRW = new E2_Estimate_Milestone_Week__c(Text__c = text, Estimate_Milestone__c = rwW.rowId, Estimate_Week__c = rwW.weekId);
+                    E2_Estimate_Milestone_Week__c eRW = new E2_Estimate_Milestone_Week__c(Text__c = text, Estimate_Milestone__c = rwW.rowId, Estimate_Week_Milestone__c = rwW.weekId);
                     lstToInsert.add(eRW);
                 }
             }
@@ -234,7 +236,7 @@ public class E2_MilestoneWSManager {
        
        // when no related record exist in database; do insert else do modify
        if(resWeeks.isEmpty()){
-          resWeeks.add(new E2_Estimate_Milestone_Week__c( Text__c = text, Estimate_Week__c = weekId, Estimate_Milestone__c = milestoneId));
+          resWeeks.add(new E2_Estimate_Milestone_Week__c( Text__c = text, Estimate_Week_Milestone__c = weekId, Estimate_Milestone__c = milestoneId));
        } 
        
        try{
@@ -307,7 +309,7 @@ public class E2_MilestoneWSManager {
                                                       
              List<E2_MilestoneWS.E2_MilestoneRowColumn> colRows = new List<E2_MilestoneWS.E2_MilestoneRowColumn>();
              for(E2_Estimate_Milestone_Week__c colRow : res.Estimate_Milestone_Weeks__r){
-               colRows.add(new E2_MilestoneWS.E2_MilestoneRowColumn(colRow.id, colRow.Estimate_Week__c, 
+               colRows.add(new E2_MilestoneWS.E2_MilestoneRowColumn(colRow.id, colRow.Estimate_Week_Milestone__c, 
                                                                     (colRow.Text__c == null ? '' : colRow.Text__c) , 
                                                                     colRow.TextColorCode__c == null ? '' : colRow.TextColorCode__c));
              }
@@ -332,21 +334,21 @@ public class E2_MilestoneWSManager {
         string cssClass = '';
         string header = '{"menu": { "items": [{ "title": "Insert 1 right", "command" : "insert_1_right" },{ "title" : "Insert 2 right", "command" : "insert_2_right" }, { "title" : "Insert 1 left", "command" : "insert_1_left" }, { "title" : "Insert 2 left", "command" : "insert_2_left" }, { "title" : "Delete column", "command" : "delete_column" }]}}';
         
-        for(CMC_Estimate_Week__c estimateWeek : E2_TimelineDataUtil_WS.getEstimateWeekRecords(estimateId)){
+        for(E2_Estimate_Week_Milestone__c estimateWeekMilestone : E2_MilestoneDataUtil_WS.getEstimateWeekMilestoneRecords(estimateId)){
              
-              Date weekDate = estimateWeek.Date__c;
+              Date weekDate = estimateWeekMilestone.Date__c;
               string sDate = weekDate.month() + DATE_SLASH + weekDate.day() + DATE_SLASH + weekDate.year(); 
               string name = weekDate.month() + DATE_SLASH + weekDate.day();   
               string nameWithYear = weekDate.month() + '/' + weekDate.day() + '/' + String.valueOf(weekDate.year()).right(2);
-              columns.add(new E2_MilestoneWS.E2_MilestoneColumn(estimateWeek.id, 
+              columns.add(new E2_MilestoneWS.E2_MilestoneColumn(estimateWeekMilestone.id, 
                                             //name,
                                             nameWithYear,
-                                            estimateWeek.id,
+                                            estimateWeekMilestone.id,
                                             width,
                                             behavior,
                                             editor,
                                             groupName,
-                                            estimateWeek.Order__c == null ? 1 : estimateWeek.Order__c.intValue(),
+                                            estimateWeekMilestone.Order__c == null ? 1 : estimateWeekMilestone.Order__c.intValue(),
                                             selectable,
                                             resizable,
                                             cssClass,
@@ -355,5 +357,263 @@ public class E2_MilestoneWSManager {
                                             ));                                       
         }
         return columns;
+    }
+    
+    // method to delete columns
+    public static string deleteColumn(string estimateId, string weekId){
+        List<E2_Estimate_Week_Milestone__c> milestoneWeeksToUpsert = new List<E2_Estimate_Week_Milestone__c>();
+        List<E2_Estimate_Week_Milestone__c> milestoneWeeksToDelete = new List<E2_Estimate_Week_Milestone__c>();
+        
+        boolean incrementalUpdateRequired = false;
+        //integer noOfColumnsToDelete = 1;
+        boolean dateUpdateRequiredForSucceedingRecords = false;
+        Date newStartDate; 
+        Decimal newOrder; 
+        for(E2_Estimate_Week_Milestone__c estimateWeekMilestone : E2_MilestoneDataUtil_WS.getEstimateWeekMilestoneRecords(estimateId)){
+            
+            // we don't need to process or update records whose order or start date is less than the current week
+            if(incrementalUpdateRequired){
+               if(dateUpdateRequiredForSucceedingRecords){
+                   // set the new start date for this record
+                   estimateWeekMilestone.Date__c = newStartDate;
+                   // reset newStartDate variable with date + 7 days
+                   newStartDate = estimateWeekMilestone.Date__c.addDays(NO_OF_DAYS_IN_WEEK);
+               } 
+               //check that order is already populated
+               if(estimateWeekMilestone.Order__c <> NULL){
+                   // set the new order for this record
+                   estimateWeekMilestone.Order__c = newOrder;
+                   // reset newOrder variable with +1 increment
+                   newOrder = estimateWeekMilestone.Order__c + 1;
+                   // set the week name with the order
+                   estimateWeekMilestone.Name = WEEKNAME_PREFIX + estimateWeekMilestone.Order__c;
+                   milestoneWeeksToUpsert.add(estimateWeekMilestone);               
+               }
+            }
+            
+            //delete the selected week record   
+            if(estimateWeekMilestone.id == weekId){
+               milestoneWeeksToDelete.add(estimateWeekMilestone);
+               
+               // set the newOrder of succeeding record based on this records order
+               newOrder = estimateWeekMilestone.Order__c;
+               if(estimateWeekMilestone.Order__c <> NULL && estimateWeekMilestone.Order__c.intValue() > 1){
+                 // set the new start date to this records date for the succeeding records
+                 newStartDate = estimateWeekMilestone.Date__c;
+                 dateUpdateRequiredForSucceedingRecords = true;  
+               } 
+               incrementalUpdateRequired = true;
+            }                                    
+        }
+        
+        // process insert/update in database           
+        try{ 
+           if(!milestoneWeeksToDelete.isEmpty()) delete milestoneWeeksToDelete;                               
+           if(!milestoneWeeksToUpsert.isEmpty()) upsert milestoneWeeksToUpsert;
+           
+           resetOrderOnMilestoneWeeks(estimateId);
+        }catch(Exception ex){
+           return 'Failed: ' + ex.getMessage();
+        }                                                                                         
+        return 'Success';
+    }
+    
+    // method to add more columns on Left
+    public static string addMoreColumnsOnLeft(string estimateId, 
+                                                   string weekId, 
+                                                   integer noOfColumnsToAdd){                                                   
+        List<E2_Estimate_Week_Milestone__c> milestoneWeeksToUpsert = new List<E2_Estimate_Week_Milestone__c>();
+        
+        boolean incrementalUpdateRequired = false;
+        boolean dateUpdateRequiredForSucceedingRecords = false;
+        
+        // retrieve all the existing estimate week records in the ascending order of start date
+        for(E2_Estimate_Week_Milestone__c estimateWeekMilestone : E2_MilestoneDataUtil_WS.getEstimateWeekMilestoneRecords(estimateId)){
+            
+            if(incrementalUpdateRequired){
+               // change the succeeding dates only when adding in between the columns
+               // if it is first column selected then we don't need to change the dates
+               if(dateUpdateRequiredForSucceedingRecords) estimateWeekMilestone.Date__c = estimateWeekMilestone.Date__c.addDays(NO_OF_DAYS_IN_WEEK * noOfColumnsToAdd);
+               
+               estimateWeekMilestone.Order__c = estimateWeekMilestone.Order__c + noOfColumnsToAdd;
+               estimateWeekMilestone.Name = WEEKNAME_PREFIX + estimateWeekMilestone.Order__c;
+               milestoneWeeksToUpsert.add(estimateWeekMilestone);               
+            }
+            
+            if(estimateWeekMilestone.id == weekId){
+                
+               if(estimateWeekMilestone.Order__c <> NULL && estimateWeekMilestone.Order__c.intValue() > 1){
+                   estimateWeekMilestone.Date__c = estimateWeekMilestone.Date__c.addDays(NO_OF_DAYS_IN_WEEK * (noOfColumnsToAdd));
+                   dateUpdateRequiredForSucceedingRecords = true;
+               }       
+               
+               // inrement the order with the number of columns now adding at left position
+               estimateWeekMilestone.Order__c = estimateWeekMilestone.Order__c + noOfColumnsToAdd;
+               // change week name with the new order
+               estimateWeekMilestone.Name = WEEKNAME_PREFIX + estimateWeekMilestone.Order__c;
+               // add in to upsert list
+               milestoneWeeksToUpsert.add(estimateWeekMilestone);  
+               
+               integer order = estimateWeekMilestone.Order__c.intValue();
+               Date sDate = estimateWeekMilestone.Date__c;
+               
+               for(integer indx = 1; indx <= noOfColumnsToAdd; indx++){   
+                  integer newOrderToBeAssigned = (order - indx);
+                  Date newDateToBeAssinged = sDate.addDays(NO_OF_DAYS_IN_WEEK * (-indx));
+                  milestoneWeeksToUpsert.add(createMilestoneColumnOverload(estimateId, newDateToBeAssinged, newOrderToBeAssigned, WEEKNAME_PREFIX + newOrderToBeAssigned));               
+               }
+               incrementalUpdateRequired = true;
+            }
+        }
+        
+        // process insert/update in database           
+        try{                                
+           if(!milestoneWeeksToUpsert.isEmpty()) upsert milestoneWeeksToUpsert;
+        }catch(Exception ex){
+           return 'Failed: ' + ex.getMessage();
+        }                                                                                         
+        return 'Success';
+    }
+    
+    // method to add more columns on right
+    public static string addMoreColumnsOnRight(string estimateId, 
+                                                   string weekId, 
+                                                   integer noOfColumnsToAdd){                                                   
+        List<E2_Estimate_Week_Milestone__c> milestoneWeeksToUpsert = new List<E2_Estimate_Week_Milestone__c>();
+        boolean incrementalUpdateRequired = false;
+        for(E2_Estimate_Week_Milestone__c estimateWeekMilestone : E2_MilestoneDataUtil_WS.getEstimateWeekMilestoneRecords(estimateId)){
+            
+            if(incrementalUpdateRequired){
+               estimateWeekMilestone.Date__c = estimateWeekMilestone.Date__c.addDays(NO_OF_DAYS_IN_WEEK * noOfColumnsToAdd);
+               estimateWeekMilestone.Order__c = estimateWeekMilestone.Order__c + noOfColumnsToAdd;
+               estimateWeekMilestone.Name = WEEKNAME_PREFIX + estimateWeekMilestone.Order__c;
+               milestoneWeeksToUpsert.add(estimateWeekMilestone);               
+            }
+            
+            
+            if(estimateWeekMilestone.id == weekId){
+               integer order = estimateWeekMilestone.Order__c.intValue();
+               Date sDate = estimateWeekMilestone.Date__c;
+               for(integer indx = 1; indx <= noOfColumnsToAdd; indx++){                   
+                  milestoneWeeksToUpsert.add(createMilestoneColumnOverload(estimateId, sDate.addDays(NO_OF_DAYS_IN_WEEK * indx), order + indx, WEEKNAME_PREFIX + (order + indx)));               
+               }
+               incrementalUpdateRequired = true;
+            }                                    
+        }
+        
+        // process insert/update in database           
+        try{                                
+           upsert milestoneWeeksToUpsert;
+           //resetOrderOnEstimateWeeks(estimateId);
+        }catch(Exception ex){
+           return 'Failed: ' + ex.getMessage();
+        }                                                                                         
+        return 'Success';
+    }
+    
+    // method to create estimate weeks on build
+    public static string onBuild(string estimateId, string sDate, integer noOfColumnsToAdd){
+        List<E2_Estimate_Week_Milestone__c> milestoneWeeksToUpsert = new List<E2_Estimate_Week_Milestone__c>();
+        Date startDate = date.valueOf(sDate);
+        
+        List<E2_Estimate_Week_Milestone__c> existingList = [SELECT Id, Order__c
+                                          FROM E2_Estimate_Week_Milestone__c                                                    
+                                          WHERE Estimate__c = :estimateId
+                                          ORDER BY Date__c ASC];
+                                          
+        // No need to build new weeks when there are weeks already defined.
+        // build feature is just used to create fist time weeks and than this feature doesn't 
+        // need to work.
+        if(!existingList.isEmpty()){
+            return 'Success';
+        }
+        
+        
+        for(integer indx = 0; indx < noOfColumnsToAdd; indx++){
+            milestoneWeeksToUpsert.add(createMilestoneColumnOverload(estimateId, startDate.addDays(NO_OF_DAYS_IN_WEEK * indx), indx + 1, WEEKNAME_PREFIX + (indx + 1)));
+        }
+        
+        // process insert/update in database           
+        try{                                
+          if(!milestoneWeeksToUpsert.isEmpty()) upsert milestoneWeeksToUpsert;
+        }catch(Exception ex){
+           return 'Failed: ' + ex.getMessage();
+        }                                                                                         
+        return 'Success';
+        
+    }
+    
+    
+    // method to create estimate week on selection of start date on the page
+    public static string onStartDateSelectionChange(string estimateId, 
+                                                  string sDate, 
+                                                  integer order,
+                                                  string name){
+                                                  
+        List<E2_Estimate_Week_Milestone__c> milestoneWeeksToUpsert = new List<E2_Estimate_Week_Milestone__c>();
+        Date startDate = date.valueOf(sDate);
+        Integer index = 0;
+        for(E2_Estimate_Week_Milestone__c estimateWeekMilestone : E2_MilestoneDataUtil_WS.getEstimateWeekMilestoneRecords(estimateId)){
+                                                 
+             estimateWeekMilestone.Date__c = startDate.addDays(NO_OF_DAYS_IN_WEEK * index);
+             estimateWeekMilestone.Name = WEEKNAME_PREFIX + (index + 1);
+             estimateWeekMilestone.Order__c = index + 1;
+             milestoneWeeksToUpsert.add(estimateWeekMilestone);
+             index++;
+        }
+        // there are no column exists than create new                                          
+        if(milestoneWeeksToUpsert.isEmpty()){
+          milestoneWeeksToUpsert.add(createMilestoneColumn(estimateId, sDate, order, name));
+        }   
+        // process insert/update in database           
+        try{                                
+           upsert milestoneWeeksToUpsert;
+        }catch(Exception ex){
+           return 'Failed: ' + ex.getMessage();
+        }                                                                                         
+        return 'Success';                                          
+    }
+    
+    public static void resetOrderOnMilestoneWeeks(string estimateId){
+           List<E2_Estimate_Week_Milestone__c> milestoneWeeksToUpdate = new List<E2_Estimate_Week_Milestone__c>();
+           integer displayOrder = 1;
+           for(E2_Estimate_Week_Milestone__c eW : [SELECT Id, Name, Order__c
+                                          FROM E2_Estimate_Week_Milestone__c                                                    
+                                          WHERE Estimate__c = :estimateId
+                                          ORDER BY Date__c ASC]){
+                 eW.Order__c = displayOrder;
+                 eW.Name = WEEKNAME_PREFIX + eW.Order__c;
+                 displayOrder++;
+                 milestoneWeeksToUpdate.add(eW); 
+           }
+           
+           if(!milestoneWeeksToUpdate.isEmpty()){
+               update milestoneWeeksToUpdate;
+           }
+    }
+    
+    // method to create timeline columns on load
+    public static E2_Estimate_Week_Milestone__c createMilestoneColumnOverload(string estimateId, 
+                                                  date sDate, 
+                                                  integer order,
+                                                  string name){
+       E2_Estimate_Week_Milestone__c milestoneWeek = new E2_Estimate_Week_Milestone__c(Name = name,
+                                                                    Date__c = sDate, 
+                                                                    Estimate__c = estimateId,
+                                                                    Order__c = Decimal.valueOf(order)
+                                                                    );
+       return milestoneWeek;                                                             
+    }
+    
+    // method to create timeline column 
+    public static E2_Estimate_Week_Milestone__c createMilestoneColumn(string estimateId, 
+                                                  string sDate, 
+                                                  integer order,
+                                                  string name){
+       E2_Estimate_Week_Milestone__c milestoneWeek = new E2_Estimate_Week_Milestone__c(Name = name,
+                                                                    Date__c = date.valueOf(sDate), 
+                                                                    Estimate__c = estimateId,                                                                     
+                                                                    Order__c = Decimal.valueOf(order));
+       return milestoneWeek;                                                             
     }
 }

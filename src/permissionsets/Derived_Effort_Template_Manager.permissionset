@@ -97,6 +97,26 @@
         <enabled>false</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>E2_Clone_DataUtil_WS</apexClass>
+        <enabled>false</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>E2_Clone_Estimate_WS</apexClass>
+        <enabled>false</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>E2_Clone_Estimate_WSManager</apexClass>
+        <enabled>false</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>E2_Clone_Estimate_WSManagerTest</apexClass>
+        <enabled>false</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>E2_Clone_Estimate_WSTest</apexClass>
+        <enabled>false</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>E2_Constants</apexClass>
         <enabled>false</enabled>
     </classAccesses>
@@ -602,16 +622,6 @@
     <fieldPermissions>
         <editable>false</editable>
         <field>E2_Effort__c.Speciality__c</field>
-        <readable>false</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>false</editable>
-        <field>E2_Estimate_Milestone_Week__c.Estimate_Week_Milestone__c</field>
-        <readable>false</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>false</editable>
-        <field>E2_Estimate_Milestone_Week__c.Estimate_Week__c</field>
         <readable>false</readable>
     </fieldPermissions>
     <fieldPermissions>

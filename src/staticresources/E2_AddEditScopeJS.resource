@@ -92,7 +92,7 @@ var jstree_options = {
          // this method is used to validate if the scope detail is dirty than don't progress and show the save warning
          var IFRAME_KEY = global_scopeId + AddEditScope.ENDS_WITH;
          var scope_detail_obj = document.getElementById(IFRAME_KEY);
-         if(scope_detail_obj && scope_detail_obj.contentWindow.TrackScopeUpdates.is_Dirty()) {
+         if(scope_detail_obj && scope_detail_obj.contentWindow.TrackScopeUpdates && scope_detail_obj.contentWindow.TrackScopeUpdates.is_Dirty()) {
            AddEditScope.showIsDirtyWarning(global_scopeId);
            return false;
          }        
@@ -426,6 +426,16 @@ var AddEditScope = {
     SAVED_SCOPE_NAME : null,
     SELECTED_NODE : '',
     UPDATE_DISPLAY_ORDER : false,
+    OPEN_NODES : null,
+    // RS 11/22: S-452962 : method re-initiate JStree on cloning scope, 
+    // add new scope or add from template. This method get all open nodes
+    // in jstree in OPEN_NODES as array
+    re_init_tree : function() {
+        AddEditScope.OPEN_NODES = $(treeId).jstree(true).get_state()['core']['open'];
+        $(treeId).jstree('destroy');
+        $(treeId).jstree(jstree_options);
+        AddEditScope.tree_init();
+    },
     reload_Scope_frame : function(result) {
         $.each(result, function(indx, scope) {
             var frame_id = '#' + scope + AddEditScope.ENDS_WITH;
@@ -532,9 +542,8 @@ var AddEditScope = {
             $(loadSpinner).show().css('height', $(document).outerHeight());
             global_scopeId = null;
             //to refresh scope loe we need to reload jstree
-            $(treeId).jstree('destroy');
-            $(treeId).jstree(jstree_options);
-            AddEditScope.tree_init();
+            // RS 11/22: S-452962 : refresh steps moved to new method
+            AddEditScope.re_init_tree();
         }
     },
     delete_scope_asyncCallback: {
@@ -554,9 +563,8 @@ var AddEditScope = {
                 AddEditScope.delete_scope_arr = [];
                
                 // call the tree_init back to get the deleted node
-                $(treeId).jstree('destroy');
-                $(treeId).jstree(jstree_options);
-                AddEditScope.tree_init();
+                // RS 11/22: S-452962 : refresh steps moved to new method
+                AddEditScope.re_init_tree();
                 return;
                 
             }
@@ -581,12 +589,6 @@ var AddEditScope = {
         onSuccess: function(result) {
             result = (result.length > 0 ? result[0] : result); 
             if (result.indexOf('Fail') != -1) {
-                //alert(result);
-                //$(loadSpinner).hide();
-                //for (var prop in AddEditScope.delete_call_register) {
-                //    delete AddEditScope.delete_call_register[prop];
-                //}
-                //return;
                 
                 var exception = 'INSUFFICIENT_ACCESS_OR_READONLY';
                 if(result.toLowerCase().indexOf(exception.toLowerCase()) != -1){
@@ -600,9 +602,8 @@ var AddEditScope = {
                     delete AddEditScope.delete_call_register[_a];
                 }
                 // call the tree_init back to get the deleted node
-                $(treeId).jstree('destroy');
-                $(treeId).jstree(jstree_options);
-                AddEditScope.tree_init();
+                // RS 11/22: S-452962 : refresh steps moved to new method
+                AddEditScope.re_init_tree();
                 return;
                 
             }
@@ -610,9 +611,8 @@ var AddEditScope = {
             if (AddEditScope.delete_call_register && JSON.stringify(AddEditScope.delete_call_register) == '{}') {
                 $(loadSpinner).hide();
                 //CustomAlert.show('Scope(s) have been removed successfully!!!');
-                $(treeId).jstree('destroy');
-                $(treeId).jstree(jstree_options);
-                AddEditScope.tree_init();
+                // RS 11/22: S-452962 : refresh steps moved to new method
+                AddEditScope.re_init_tree();
             }
         },
         onFailure: function(error) {
@@ -651,9 +651,8 @@ var AddEditScope = {
                 }
                 
                 // call the tree_init back to get the deleted node
-                $(treeId).jstree('destroy');
-                $(treeId).jstree(jstree_options);
-                AddEditScope.tree_init();
+                // RS 11/22: S-452962 : refresh steps moved to new method
+                AddEditScope.re_init_tree();
                 return;
             }
             // if there is no failure; delete respective call registers
@@ -713,10 +712,9 @@ var AddEditScope = {
                 $(loadSpinner).hide();
                     
                 // call the tree_init back to get the deleted node
-                $(treeId).jstree('destroy');
-                $(treeId).jstree(jstree_options);
-                AddEditScope.tree_init();
-                
+                // RS 11/22: S-452962 : refresh steps moved to new method
+                AddEditScope.re_init_tree();
+                AddEditScope.UPDATE_DISPLAY_ORDER = false;
                 return;
             }
             if(AddEditScope.UPDATE_DISPLAY_ORDER == true) {
@@ -728,9 +726,8 @@ var AddEditScope = {
             
             $(loadSpinner).show().css('height', $(document).outerHeight());
             // load the tree again with updated data with reparenting
-            $(treeId).jstree('destroy');
-            $(treeId).jstree(jstree_options);
-            AddEditScope.tree_init();
+            // RS 11/22: S-452962 : refresh steps moved to new method
+            AddEditScope.re_init_tree();
         },
         onFailure: function(error) {
             alert(error);
@@ -792,6 +789,9 @@ var AddEditScope = {
             $.each(result, function(indx, node) {
                 //console.log('MI::::' + node.title + '-' + node.display_order);
                 AddEditScope.create_node(node, parseInt(node.display_order));
+                if(AddEditScope.OPEN_NODES && AddEditScope.OPEN_NODES.indexOf(node.id) == -1) {
+                    $(treeId).jstree(true).close_node(node);
+                }
             });
             // clear the result
             result = [];
@@ -826,6 +826,7 @@ var AddEditScope = {
             } else {
                 $(loadSpinner).hide();
             }
+            AddEditScope.OPEN_NODES = null;
         },
         onFailure: function(error) {
             alert(error);
@@ -926,10 +927,9 @@ var AddEditScope = {
     },
 
     closeAddNewModelPopup: function() {
-        $(treeId).jstree('destroy');
-        $(treeId).jstree(jstree_options);
         $(loadSpinner).show().css('height', $(document).outerHeight());
-        AddEditScope.tree_init();
+        // RS 11/22: S-452962 : refresh steps moved to new method
+        AddEditScope.re_init_tree();
         AddEditScope.hideAddNewModal();
         CustomAlert.show('New Scope have been added successfully!!!');
     },
@@ -969,9 +969,8 @@ var AddEditScope = {
     scopesUpdatedCallback: {
         onSuccess: function(result) {
             if (result.length > 0) {
-                    $(treeId).jstree('destroy');
-                    $(treeId).jstree(jstree_options);
-                    AddEditScope.tree_init();
+                    // RS 11/22: S-452962 : refresh steps moved to new method
+                    AddEditScope.re_init_tree();
                     // End
                     $(loadSpinner).hide();
                     CustomAlert.show('Scopes has been successfully updated!!!');
@@ -988,10 +987,9 @@ var AddEditScope = {
     showSaveSuccessMessage: function(scope_id, scope_name){
     	AddEditScope.SAVED_SCOPE_ID = scope_id;
         AddEditScope.SAVED_SCOPE_NAME = scope_name;
-    	$(treeId).jstree('destroy');
-        $(treeId).jstree(jstree_options);
         $(loadSpinner).show().css('height', $(document).outerHeight());
-        AddEditScope.tree_init();
+        // RS 11/22: S-452962 : refresh steps moved to new method
+        AddEditScope.re_init_tree();
     },
 
     showAddNewModal: function() {
@@ -1297,6 +1295,12 @@ var AddEditScope = {
             result = (result.length > 0 ? result[0] : result);
             // check for failure message
             if (result.indexOf('Fail') != -1) {
+                var exception = 'INSUFFICIENT_ACCESS_OR_READONLY';
+                if(result.toLowerCase().indexOf(exception.toLowerCase()) != -1){
+                  CustomAlert.showError('Re-ordering Failed: You do not have permission to re-order this scope!!! Please contact scope owner!!');    
+                }else{
+                  alert(result);
+                }
                 $(loadSpinner).hide();
                 return;
             }

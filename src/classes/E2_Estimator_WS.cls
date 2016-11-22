@@ -95,31 +95,4 @@ global without sharing class E2_Estimator_WS {
     webservice static List<E2_TreeNode> cloneScopeWithChild(string scopeIdCSV) {
       return E2_Estimator_WSManager.cloneScopeWithChild(scopeIdCSV);
     } 
-    
-    // Start : Estimate clone functionality
-    // clone Estimate 
-    webservice static string cloneEstimate(string estimateId) {
-        return E2_Estimator_WSManager.cloneEstimate( estimateId );
-    } 
-    
-    // clone Scopes
-    webservice static string cloneEstimateScopes(string estimateId, string newEstimateId) {
-        return E2_Estimator_WSManager.cloneEstimateScopes( estimateId, newEstimateId);
-    }
-    
-    // clone Capacity
-    webservice static string cloneEstimateCapacity(string estimateId, string newEstimateId) {
-        return E2_Estimator_WSManager.cloneEstimateCapacity( estimateId, newEstimateId);
-    }
-    
-    // clone estimate milestones
-    webservice static string cloneEstimateMilestone(string estimateId, string newEstimateId) {
-        return E2_Estimator_WSManager.cloneEstimateMilestone( estimateId, newEstimateId);
-    }
-    
-    // clone timeline with rate card
-    webservice static string cloneEstimateTimeline(string estimateId, string newEstimateId) {
-        return E2_Estimator_WSManager.cloneEstimateTimeline( estimateId, newEstimateId);
-    }
-    // End : Estimate clone functionality
 }

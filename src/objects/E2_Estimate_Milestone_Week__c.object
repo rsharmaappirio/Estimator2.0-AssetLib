@@ -72,27 +72,16 @@
     </fields>
     <fields>
         <fullName>Estimate_Week_Milestone__c</fullName>
-        <deleteConstraint>SetNull</deleteConstraint>
         <externalId>false</externalId>
         <label>Estimate Week Milestone</label>
         <referenceTo>E2_Estimate_Week_Milestone__c</referenceTo>
         <relationshipLabel>Estimate Milestone Weeks</relationshipLabel>
         <relationshipName>Estimate_Milestone_Weeks</relationshipName>
-        <required>false</required>
+        <relationshipOrder>1</relationshipOrder>
+        <reparentableMasterDetail>false</reparentableMasterDetail>
         <trackTrending>false</trackTrending>
-        <type>Lookup</type>
-    </fields>
-    <fields>
-        <fullName>Estimate_Week__c</fullName>
-        <deleteConstraint>SetNull</deleteConstraint>
-        <externalId>false</externalId>
-        <label>Estimate Week</label>
-        <referenceTo>CMC_Estimate_Week__c</referenceTo>
-        <relationshipLabel>Estimate Milestone Weeks</relationshipLabel>
-        <relationshipName>Estimate_Milestone_Weeks</relationshipName>
-        <required>false</required>
-        <trackTrending>false</trackTrending>
-        <type>Lookup</type>
+        <type>MasterDetail</type>
+        <writeRequiresMasterRead>false</writeRequiresMasterRead>
     </fields>
     <fields>
         <fullName>TextColorCode__c</fullName>

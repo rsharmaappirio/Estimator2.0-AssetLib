@@ -364,7 +364,7 @@ public with sharing class E2_Test_Utils {
   
   //insert E2_Estimate_Milestone_Week__c
   public static E2_Estimate_Milestone_Week__c insertMilestoneWeek(Id milestoneId, Id weekId, Boolean isInsert){
-    E2_Estimate_Milestone_Week__c milestoneWk = new E2_Estimate_Milestone_Week__c(Estimate_Milestone__c = milestoneId, Estimate_Week__c = weekId, 
+    E2_Estimate_Milestone_Week__c milestoneWk = new E2_Estimate_Milestone_Week__c(Estimate_Milestone__c = milestoneId, Estimate_Week_Milestone__c = weekId, 
                                                          TextColorCode__c = 'Red'); 
     if(isInsert) {
       insert milestoneWk;
@@ -393,6 +393,16 @@ public with sharing class E2_Test_Utils {
     }
     return TLMilestone; 
     
+  }
+  
+  //insert Milestone week
+  public static E2_Estimate_Week_Milestone__c insertEstimateWeekMilestone(String estimateId, Boolean isInsert){
+    E2_Estimate_Week_Milestone__c week = new E2_Estimate_Week_Milestone__c(Name = 'Week1',Estimate__c = estimateId, Order__c = 2,
+                                                         Date__c = system.today());
+    if(isInsert) {
+      insert week;
+    }
+    return week;                                                     
   }
   
 

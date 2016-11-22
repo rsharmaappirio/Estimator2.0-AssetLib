@@ -893,13 +893,13 @@
                                                     <td><span class="overview-label">Calculated Costs:</span>&nbsp;{!CMC_Presales_LOE__c.CurrencyIsoCode}&nbsp;<apex:outputfield value="{!estimate.Calculated_Costs__c}"/></td>
                                                     <td><span class="overview-label">Calculated Margin:</span>&nbsp;<apex:outputfield value="{!estimate.Calculated_Margin__c}"/></td>
                                                 </tr>
-                                                <apex:outputText rendered="{!estimate.Mode__c != 'fixed'}">
+                                                <!--apex:outputText rendered="{!estimate.Mode__c != 'fixed'}"-->
                                                 <tr>
                                                     <td><span class="overview-label">Discount:</span>&nbsp;<apex:inputfield onchange="changeDiscount();return false;" styleClass="slds-input" style="line-height: 20px;min-height: 20px;width: 40px;" value="{!estimate.Discount_Percent__c}"/>%</td>
                                                     <td><span class="overview-label">Discount Amt:</span>&nbsp;{!CMC_Presales_LOE__c.CurrencyIsoCode}&nbsp;<!--apex:outputfield value="{!estimate.Discount_Amount__c}"/--><apex:inputText onchange="changeDiscountAmount();return false;" styleClass="slds-input mandate-numeric-estimate" style="line-height: 20px;min-height: 20px;width: 80px;" value="{!discountAmount}"/></td>
                                                     <td></td>
                                                 </tr>
-                                                </apex:outputText>
+                                                <!--/apex:outputText-->
                                                 <apex:outputText rendered="{!estimate.Mode__c == 'fixed'}">
                                                 <tr>
                                                     <td><span class="overview-label">Fixed Fee Buffer:</span>&nbsp;<apex:inputfield onchange="changeDiscount();return false;" styleClass="slds-input" style="line-height: 20px;min-height: 20px;width: 40px;" value="{!estimate.Fixed_Fee_Buffer__c}"/>%</td>

@@ -360,11 +360,11 @@
          <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Risk_percentage__c}"/>
          </apex:form>
          <div id="loadingSpinner" class="slds-spinner_container" style="display: none !important;">
-            <div class="slds-spinner--brand slds-spinner slds-spinner--medium" aria-hidden="false" role="alert">
+            <div class="slds-spinner--brand slds-spinner slds-spinner--large" aria-hidden="false" role="alert" style="top: 35.4%;">
                <div class="slds-spinner__dot-a"></div>
                <div class="slds-spinner__dot-b"></div>
             </div>
-            <div id="spinnerProcess" style="position: absolute;top: 49%;left: 52%;">Processing</div>
+            <div id="spinnerProcess" style="position: absolute;top: 34%;left: 53%;font-size: 18px;">Processing</div>
          </div>
       </apex:define>
       <apex:define name="footer">
