@@ -39,21 +39,21 @@
                   <div class="slds-col slds-no-flex slds-align-bottom">
                      <div class="slds-button-group" role="group" >
                          <apex:commandButton rendered="{!isEditable}" styleClass="slds-button slds-button--neutral slds-button--brand" title="Build Capacity" value="Build Capacity" action="{!buildCapacity}"/>
+                        <apex:commandButton rendered="{!isEditable}" styleClass="slds-button slds-button--neutral" title="Clone Estimate" value="Clone Estimate" onclick="ClonePresalesLOE.cloneEstimate('{!$CurrentPage.parameters.id}');return false;"/>
                         <apex:commandButton rendered="{!isEditable}" styleClass="slds-button slds-button--neutral" title="Add Scope From Library" value="Add Scope from Library" onclick="return AddEditScope.addfromtemplate_click(this);"/>
                         <apex:commandButton rendered="{!isEditable}" styleClass="slds-button slds-button--neutral" title="Add New Scope" value="Add New Scope" onclick="return AddEditScope.addnew_click(this);" style="border-right: 0px;"/>
                         <div class="slds-dropdown-trigger slds-is-open" aria-expanded="true" aria-haspopup="true">
-                            <button class="slds-button slds-button--neutral" onclick="return false;" value="Export Scope as" style="border-radius: 0px;">Export Scope as</button>
-                            <button class="slds-button slds-button--icon-border-filled slds-button--last" name="more" id="lc-230-more" type="button"></button>
+                            <button class="slds-button slds-button--icon-border-filled slds-button--last" name="more" id="lc-230-more" type="button" style="border-radius: 0px;"></button>
                             <div class="slds-dropdown slds-dropdown--right slds-dropdown--actions" id="lc-236-dd">
                                 <ul class="dropdown__list" role="menu">
                                     <li id="lc-234-xls-item" class="slds-dropdown__item" tabindex="-1" role="menuitem option">
-                                        <a id="lc-234-xls" data-value="XLS" class="slds-truncate" tabindex="-1" href="javascript:void(0);" onclick="window.location.href='/apex/E2_ExportScopeItemstoXLS?id={!estimate.id}';return false;">XLS</a>
+                                        <a id="lc-234-xls" data-value="XLS" class="slds-truncate" tabindex="-1" href="javascript:void(0);" onclick="window.location.href='/apex/E2_ExportScopeItemstoXLS?id={!estimate.id}';return false;">Export Scope as XLS</a>
                                     </li>
                                     <li id="lc-235-csv-item" class="slds-dropdown__item" tabindex="-1" role="menuitem option">
-                                        <a id="lc-235-csv" data-value="CSV" class="slds-truncate" tabindex="-1" href="javascript:void(0);" onclick="window.location.href='/apex/E2_ExportScopeItemsToCSV?id={!estimate.id}';return false;">CSV</a>
+                                        <a id="lc-235-csv" data-value="CSV" class="slds-truncate" tabindex="-1" href="javascript:void(0);" onclick="window.location.href='/apex/E2_ExportScopeItemsToCSV?id={!estimate.id}';return false;">Export Scope as CSV</a>
                                     </li>
                                     <li id="lc-233-conga-item" class="slds-dropdown__item" tabindex="-1" role="menuitem option">
-                                        <a id="lc-233-conga" data-value="Conga Export" class="slds-truncate" tabindex="-1" href="javascript:void(0);" onclick="window.open('https://composer.congamerge.com?SessionId={!$API.Session_ID}&ServerUrl={!$API.Partner_Server_URL_80}&id={!estimate.id}&QueryId=[E2Estimate]{!$Label.E2_Scope_Export_Query}?pv0={!estimate.id},[E2UltimateScope]{!$Label.E2_Ultimate_Scope_Export_Query}?pv0={!estimate.id}&TemplateGroup=E2&DS2=1&DS3=1&OFN={Template.Label}+-+{!URLENCODE(estimate.name)}&DS8=1', '', 'width=600,height=400,top=0');return false;" >Conga Export</a>
+                                        <a id="lc-233-conga" data-value="Conga Export" class="slds-truncate" tabindex="-1" href="javascript:void(0);" onclick="window.open('https://composer.congamerge.com?SessionId={!$API.Session_ID}&ServerUrl={!$API.Partner_Server_URL_80}&id={!estimate.id}&QueryId=[E2Estimate]{!$Label.E2_Scope_Export_Query}?pv0={!estimate.id},[E2UltimateScope]{!$Label.E2_Ultimate_Scope_Export_Query}?pv0={!estimate.id}&TemplateGroup=E2&DS2=1&DS3=1&OFN={Template.Label}+-+{!URLENCODE(estimate.name)}&DS8=1', '', 'width=600,height=400,top=0');return false;" >Export Scope as Conga Export</a>
                                     </li>
                                 </ul>
                              </div>
@@ -269,6 +269,13 @@
             </div>
          </div>
          <br/>
+         <div id="loadingCloneSpinner" class="slds-spinner_container" style="display: none !important;">
+            <div class="slds-spinner--brand slds-spinner slds-spinner--large" aria-hidden="false" role="alert" style="top: 35.4%;">
+               <div class="slds-spinner__dot-a"></div>
+               <div class="slds-spinner__dot-b"></div>
+            </div>
+            <div id="spinnerProcess" style="position: absolute;top: 34%;left: 53%;font-size: 18px;">Processing</div>
+         </div>
       </apex:define>
       <apex:define name="footer">
          <!--   <div style="text-align:right;"> -->
@@ -345,8 +352,10 @@
          <script type="text/javascript">
             var estimateId = '{!estimate.id}';
             var global_scopeId = '{!$CurrentPage.parameters.scopeid}';
+            var clone_error_message = '{!$Label.E2_Estimate_Cloning_Error_Message}';
          </script>
          <apex:includescript value="{!$Resource.E2_AddEditScopeJS}"/>
+         <apex:includescript value="{!$Resource.E2_CloneEstimateJS}"/>
       </apex:define>
    </apex:composition>
 </apex:page>

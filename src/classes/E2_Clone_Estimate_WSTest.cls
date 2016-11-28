@@ -6,10 +6,12 @@
  * Created By: Jitendra Jangid (Appirio)
  * 
  * Date Modified      Modified By                  Description of the update
+ * Nov 22, 2016       Jitendra Jangid              S-454105 :  Web service E2_Clone_Estimate_WS
+ * Nov 24, 2016       Jitendra Jangid              Added new test methods[testCloneMilestoneWeeks()  and testcloneResourceWeeks()] and updated existing test methods[testCloneEstimateMilestone() and testCloneEstimateTimeline()] corresponding to changes noted in main class.
 *  =====================================================================*/
 
 @isTest
-private class E2_Clone_Estimate_WSTest {
+private class E2_Clone_Estimate_WSTest{
 
   public static CMC_Presales_LOE__c estimate;
   public static E2_Scope__c parentSC, childSC, child_childSC, parentSC1, childSC1, child_childSC1;
@@ -27,11 +29,10 @@ private class E2_Clone_Estimate_WSTest {
   public static testmethod void testCloneEstimate(){
        
        sysAdmin = getSysAdminUser();
-       estimate = [SELECT Id, Name FROM CMC_Presales_LOE__c];
        
        System.runAs(sysAdmin){
            Test.startTest();
-           
+           estimate = [SELECT Id, Name FROM CMC_Presales_LOE__c];
             string newEstimateId = E2_Clone_Estimate_WS.cloneEstimate(estimate.Id);
             System.assert(newEstimateId.indexOf('Failed: ') == -1, 'Unit test failed: an error encountered while cloning estimate.');
           
@@ -59,11 +60,10 @@ private class E2_Clone_Estimate_WSTest {
    public static testmethod void testCloneEstimateCapacity(){
        
        sysAdmin = getSysAdminUser();
-       estimate = [SELECT Id, Name FROM CMC_Presales_LOE__c];
        
        System.runAs(sysAdmin){
            Test.startTest();
-           
+           estimate = [SELECT Id, Name FROM CMC_Presales_LOE__c];
            string newEstimateId = E2_Clone_Estimate_WS.cloneEstimate(estimate.Id);
            
            String returnMessage = E2_Clone_Estimate_WS.cloneEstimateCapacity(estimate.Id , newEstimateId);
@@ -77,45 +77,108 @@ private class E2_Clone_Estimate_WSTest {
    public static testmethod void testCloneEstimateMilestone(){
        
        sysAdmin = getSysAdminUser();
-       estimate = [SELECT Id, Name FROM CMC_Presales_LOE__c];
        
        System.runAs(sysAdmin){
            Test.startTest();
-           
+           estimate = [SELECT Id, Name FROM CMC_Presales_LOE__c];
            string newEstimateId = E2_Clone_Estimate_WS.cloneEstimate(estimate.Id);
            
            String returnMessage = E2_Clone_Estimate_WS.cloneEstimateMilestone(estimate.Id , newEstimateId);
-           System.assertEquals(returnMessage, 'success', 'Unit test failed: an error encountered while cloning estimate milestone.');
+           System.assert(!returnMessage.equalsIgnoreCase('success') && !returnMessage.startsWith('Failed'), 'An error encountered while cloning estimate milestone.');
+          
+           Test.stopTest();
+       }
+    } 
+    
+    public static testmethod void testCloneMilestoneWeeks(){
+       
+       sysAdmin = getSysAdminUser();
+       
+       System.runAs(sysAdmin){
+           Test.startTest();
+           estimate = [SELECT Id, Name FROM CMC_Presales_LOE__c];
+           string newEstimateId = E2_Clone_Estimate_WS.cloneEstimate(estimate.Id);
+           String milestoneWeekJSON = E2_Clone_Estimate_WSManager.cloneEstimateMilestone(estimate.Id , newEstimateId);
+           
+           String returnMessage = E2_Clone_Estimate_WS.cloneMilestoneWeeks(milestoneWeekJSON , newEstimateId);
+           System.assert(returnMessage.equalsIgnoreCase('success'), 'An error encountered while cloning milestone weeks.');
           
            Test.stopTest();
        }
     }
     
+    
+    
     public static testmethod void testCloneEstimateTimeline(){
        
        sysAdmin = getSysAdminUser();
-       estimate = [SELECT Id, Name FROM CMC_Presales_LOE__c];
        
        System.runAs(sysAdmin){
            Test.startTest();
-           
+           estimate = [SELECT Id, Name FROM CMC_Presales_LOE__c];
            string newEstimateId = E2_Clone_Estimate_WS.cloneEstimate(estimate.Id);
            
            String returnMessage = E2_Clone_Estimate_WS.cloneEstimateTimeline(estimate.Id , newEstimateId);
-           System.assertEquals(returnMessage, 'success', 'Unit test failed: an error encountered while cloning timelined.');
+           System.assert(!returnMessage.equalsIgnoreCase('success') && !returnMessage.startsWith('Failed'), 'An error encountered while cloning timeline.');
            
            Test.stopTest();
        }
    } 
    
-   public static testmethod void testDeleteEstimate(){
+   public static testmethod void testcloneResourceWeeks(){
        
        sysAdmin = getSysAdminUser();
-       estimate = [SELECT Id, Name FROM CMC_Presales_LOE__c];
        
        System.runAs(sysAdmin){
            Test.startTest();
+           estimate = [SELECT Id, Name FROM CMC_Presales_LOE__c];
+           List<CMC_Estimate_Resource_Week__c> lsResourceWeek=[Select Estimate_Resource__r.ID,Estimate_Resource__r.Estimate__c,
+                                                               Estimate_Week__r.ID,Estimate_Week__r.Estimate__c 
+                                                               FROM CMC_Estimate_Resource_Week__c];
+           List<E2_Clone_Estimate_WSManager.TimelineWrapper> lsTimelineWrapper=new List<E2_Clone_Estimate_WSManager.TimelineWrapper>();
            
+           string newEstimateId = E2_Clone_Estimate_WS.cloneEstimate(estimate.Id);
+           
+           for(CMC_Estimate_Resource_Week__c rWeek: lsResourceWeek){
+                CMC_Estimate_Resource__c estimateResource=rWeek.Estimate_Resource__r;
+                CMC_Estimate_Resource__c clonedEstimateResource=estimateResource.clone(false, true, false, false);
+                clonedEstimateResource.Estimate__c=newEstimateId;
+                insert clonedEstimateResource;
+                CMC_Estimate_Week__c estimateWeek=rWeek.Estimate_Week__r;
+                CMC_Estimate_Week__c clonedEstimateWeek=estimateWeek.clone(false, true, false, false);
+                clonedEstimateWeek.Estimate__c=newEstimateId;
+                insert clonedEstimateWeek;
+                E2_Clone_Estimate_WSManager.TimelineWrapper resource=new E2_Clone_Estimate_WSManager.TimelineWrapper();
+                resource.key=rWeek.Estimate_Resource__r.ID;
+                resource.value=clonedEstimateResource.id;
+                resource.isWeek=false;
+                E2_Clone_Estimate_WSManager.TimelineWrapper week=new E2_Clone_Estimate_WSManager.TimelineWrapper();
+                week.key=rWeek.Estimate_Week__r.ID;
+                week.value=clonedEstimateWeek.id;
+                week.isWeek=true;
+                lsTimelineWrapper.add(resource);
+                lsTimelineWrapper.add(week);
+          }
+          String jsonResourceWeek=JSON.serialize(lsTimelineWrapper);
+           
+           
+           String returnMessage = E2_Clone_Estimate_WS.cloneResourceWeeks(jsonResourceWeek, newEstimateId);
+           System.assert(returnMessage.equalsIgnoreCase('success'), 'An error encountered while cloning resource weeks.');
+           
+           Test.stopTest();
+       }
+   } 
+   
+   
+   
+   public static testmethod void testDeleteEstimate(){
+       
+       sysAdmin = getSysAdminUser();
+       
+       System.runAs(sysAdmin){
+           Test.startTest();
+           estimate = [SELECT Id, Name FROM CMC_Presales_LOE__c];
+       
            string newEstimateId = E2_Clone_Estimate_WS.cloneEstimate(estimate.Id);
            
            String returnMessage = E2_Clone_Estimate_WS.deleteEstimate(newEstimateId);

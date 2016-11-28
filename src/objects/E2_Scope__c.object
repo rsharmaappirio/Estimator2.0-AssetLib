@@ -279,6 +279,10 @@
                 <fullName>Story</fullName>
                 <default>false</default>
             </picklistValues>
+            <picklistValues>
+                <fullName>Capability</fullName>
+                <default>false</default>
+            </picklistValues>
             <restrictedPicklist>true</restrictedPicklist>
             <sorted>false</sorted>
         </picklist>
@@ -450,6 +454,10 @@ IF(NOT(ISBLANK(Parent_Scope__c)),Parent_Scope__c, NULL)))))))))))</formula>
         <picklistValues>
             <picklist>Scope_Item_Type__c</picklist>
             <values>
+                <fullName>Capability</fullName>
+                <default>false</default>
+            </values>
+            <values>
                 <fullName>Component</fullName>
                 <default>false</default>
             </values>
@@ -500,6 +508,10 @@ IF(NOT(ISBLANK(Parent_Scope__c)),Parent_Scope__c, NULL)))))))))))</formula>
         </picklistValues>
         <picklistValues>
             <picklist>Scope_Item_Type__c</picklist>
+            <values>
+                <fullName>Capability</fullName>
+                <default>false</default>
+            </values>
             <values>
                 <fullName>Component</fullName>
                 <default>false</default>

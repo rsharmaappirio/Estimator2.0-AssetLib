@@ -30,9 +30,19 @@ global without sharing class E2_Clone_Estimate_WS {
         return E2_Clone_Estimate_WSManager.cloneEstimateMilestone( estimateId, newEstimateId);
     }
     
+    // clone milestones weeks
+    webservice static string cloneMilestoneWeeks(string milestoneWeekJSON, string newEstimateId) {
+        return E2_Clone_Estimate_WSManager.cloneMilestoneWeeks( milestoneWeekJSON, newEstimateId);
+    }
+    
     // S-454105 :clone timeline with rate card
     webservice static string cloneEstimateTimeline(string estimateId, string newEstimateId) {
         return E2_Clone_Estimate_WSManager.cloneEstimateTimeline( estimateId, newEstimateId);
+    }
+    
+    // clone estimate resource weeks
+    webservice static string cloneResourceWeeks(string resourceWeekJSON, string newEstimateId) {
+        return E2_Clone_Estimate_WSManager.cloneResourceWeeks( resourceWeekJSON, newEstimateId);
     }
     
     // S-454105 :DELETE ESTIMATE

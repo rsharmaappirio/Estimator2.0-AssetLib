@@ -533,8 +533,10 @@
         }
 
         dd.range.end = end;
+        // RJ: 11/23: Scroll Row into view
+        _grid.scrollRowIntoView(end.row);
         // scroll the viewport in case scroll bar is visible
-         _grid.scrollCellIntoView(end.row, end.cell);
+        _grid.scrollCellIntoView(end.row, end.cell);
         _decorator.show(new Slick.Range(dd.range.start.row, dd.range.start.cell, end.row, end.cell));
     }
 
@@ -2586,17 +2588,27 @@ var Timeline = {
                 response = response.replace('data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,', '');
                 //console.log('NEWRESPONSE' + response);
                 navigator.msSaveBlob(Timeline.b64toBlob(response, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'), 'Report.xlsx'); 
-            } else{
+            
+                
+            }else if(typeof sforce != 'undefined' && typeof sforce.one != 'undefined'){
+                 
+                 // Lightning experience show - working
+                 window.top.location.href = document.getElementById("downloadLink").getAttribute("href");
+                 
+                
+            }else {
                 //alert('in Firefox/Mozilla/Chrome');
                 // use vanilla way of calling click action on anchor tag
                 // jquery click doesn't work on anchor tags
+              
+                // Does Not work in lightning
                 document.getElementById("downloadLink").click();
+                
             }
             
             $('#myGrid').css({'width': '99%', height: '450px'});
             grid.resizeCanvas(); 
-            //grid.destroy();
-            //gridMainInitiate();
+           
             loadSpinner.hide();
             loader.hide();
         }); 
@@ -2883,7 +2895,7 @@ var Timeline = {
                             if(data[row].id == Timeline.fixedRowsTypes.total.id){
                                  //$(cellNode).empty().html(Timeline.getSumOfBelowRows()).css({'text-align' : 'center', 'background-color': '#666666', 'color' : '#fff'});
                                  var rate = Timeline.getAvgOfBelowRows(cellNode, row, dataContext, colDef);
-                                 $(cellNode).empty().html(parseFloat(isNaN(rate) ? 0 : rate).toFixed(2).toCommaFrmt()).css(Timeline.calcuation_cols_css);
+                                 //$(cellNode).empty().html(parseFloat(isNaN(rate) ? 0 : rate).toFixed(2).toCommaFrmt()).css(Timeline.calcuation_cols_css);
                                  
                             }
                             return;
@@ -2914,7 +2926,7 @@ var Timeline = {
                             if(data[row].id == Timeline.fixedRowsTypes.total.id){
                                  //$(cellNode).empty().html(Timeline.getSumOfBelowRows()).css({'text-align' : 'center', 'background-color': '#666666', 'color' : '#fff'});
                                  var cost = Timeline.getAvgOfBelowRows(cellNode, row, dataContext, colDef);
-                                 $(cellNode).empty().html(parseFloat(isNaN(cost) ? 0 : cost).toFixed(2).toCommaFrmt()).css(Timeline.calcuation_cols_css);
+                                 //$(cellNode).empty().html(parseFloat(isNaN(cost) ? 0 : cost).toFixed(2).toCommaFrmt()).css(Timeline.calcuation_cols_css);
                             }
                             return;
                         }
@@ -3192,6 +3204,7 @@ var Timeline = {
                         if(indx1 >= Timeline.fixedColumns && typeof colItem.usedForCalculation != 'undefined' && colItem.usedForCalculation){
                             //added code for colspan
                              //metadata.selectable = true;
+                             metadata.focusable = false; 
                              var val = currentRow[columns[indx1].field];
                              var nextCellIndex = indx1 + 1;
                              var colspan = 1;
@@ -3222,6 +3235,7 @@ var Timeline = {
                         if(indx1 >= Timeline.fixedColumns && typeof colItem.usedForCalculation != 'undefined' && colItem.usedForCalculation){
                             //added code for colspan
                              //metadata.selectable = true;
+                             metadata.focusable = false;
                              var val = currentRow[columns[indx1].field];
                              var nextCellIndex = indx1 + 1;
                              var colspan = 1;
@@ -3244,6 +3258,7 @@ var Timeline = {
                 }else if(typeof data[row] != 'undefined' && data[row].id == Timeline.fixedRowsTypes.total.id){
                     
                    metadata['cssClasses'] = 'slds-totalhrsperweek-cell';
+                   metadata.focusable = false;
                    return metadata;
                 }else if(typeof data[row] != 'undefined' && data[row].id == Timeline.fixedRowsTypes.weekname.id){
                     
@@ -3927,7 +3942,10 @@ var Timeline = {
                               typeof columns[to.fromCell + j].usedForCalculation != 'undefined' && 
                               columns[to.fromCell + j].usedForCalculation == true &&
                               typeof data[to.fromRow + i].id != 'undefined' && 
-                              typeof columns[to.fromCell + j].field != 'undefined'){ 
+                              typeof columns[to.fromCell + j].field != 'undefined'
+                              && data[to.fromRow + i].id != Timeline.fixedRowsTypes.capacityneedsperphase.id
+                              && data[to.fromRow + i].id != Timeline.fixedRowsTypes.hoursperphase.id
+                              && data[to.fromRow + i].id != Timeline.fixedRowsTypes.total.id){ 
                         
                         if(args.oneCellToMultiple){
                             val = args.clippedRange[0][0];
@@ -3974,6 +3992,11 @@ var Timeline = {
                                     && ((typeof val != undefined && !Timeline.numFieldValidator(val).valid) || val == '')){
                                 val = '0';
                             }
+                            
+                            if(typeof val == 'undefined' || val == 'undefined'){
+                                val = '';
+                            }
+                            
                             //console.log(val);
                             data[to.fromRow + i][columns[to.fromCell + j].field] = val;
                            

@@ -26,7 +26,7 @@ public with sharing class E2_Clone_DataUtil_WS {
    	return [Select e.Source_Scope__c, e.Scope_Group__c, e.Parent_Scope__c, e.Name, 
                    e.Presales_LOE__c, e.Description__c , e.LOE_Hrs__c, 
                    e.Complexity__c, e.Scope_Item_Type__c, e.Is_Active__c, e.Scope_Flag__c, 
-                   e.E2_Assumption__c, e.RecordTypeId, e.Display_Order__c,
+                   e.E2_Assumption__c, e.RecordTypeId, e.Display_Order__c, e.Sequence__c,
             (Select Id, Name, Scope__c, Complexity_Factor_High__c, Resource_Role__c, Phase__c, Effort_Hrs__c, Speciality__c, 
              Complexity_Factor_Low__c, Is_Active__c, Source_Effort__c FROM Efforts__r),
              (SELECT Id, Scope__c, Asset__c FROM E2_Recommended_Assets__r),
@@ -58,7 +58,7 @@ public with sharing class E2_Clone_DataUtil_WS {
   }
   
   // S-454105 :Get Milestone Week Junction object by Milestone and week-milestone
-  public static list<E2_Estimate_Milestone_Week__c> getMilestonesWeeks(set<id> milestones, set<id> weeks) {
+  public static list<E2_Estimate_Milestone_Week__c> getMilestonesWeeks(set<string> milestones, set<string> weeks) {
       return [SELECT Estimate_Milestone__c, Estimate_Week_Milestone__c, Text__c, TextColorCode__c 
               FROM E2_Estimate_Milestone_Week__c 
               WHERE Estimate_Milestone__c IN: milestones AND Estimate_Week_Milestone__c IN: weeks];
@@ -91,7 +91,7 @@ public with sharing class E2_Clone_DataUtil_WS {
   }
   
   // S-454105 :Get Resource Week Junction object by Resource request and weeks
-  public static list<CMC_Estimate_Resource_Week__c> getResourceWeeks(set<id> resources, set<id> weeks) {
+  public static list<CMC_Estimate_Resource_Week__c> getResourceWeeks(set<string> resources, set<string> weeks) {
       return [SELECT Hours__c, Estimate_Resource__c, Estimate_Week__c 
               FROM CMC_Estimate_Resource_Week__c 
               WHERE Estimate_Resource__c IN: resources AND Estimate_Week__c IN: weeks];

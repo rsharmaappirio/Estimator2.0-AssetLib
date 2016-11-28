@@ -8,6 +8,7 @@
  * Date Modified      Modified By                  Description of the update
  * Nov 07, 2016       Jitendra Jangid              S-448268: Cloned scope item on right click
  * Nov 22, 2016       Jitendra Jangid              I-244800: E2_Estimator_WSManagerTest test class got failed while running test in prod.
+ * Nov 24, 2016       Jitendra Jangid              Placed all SOQL queries inside Start and Stop test block in all Test Methods.
 *  =====================================================================*/
 @isTest(seeAllData=false)
 public class E2_Estimator_WSManagerTest {
@@ -25,10 +26,11 @@ public class E2_Estimator_WSManagerTest {
   
   public static testmethod void testRetrieveAllScopeTreeNodesOnEstimateId(){
        sysAdmin = getSysAdminUser();
-       estimate = [SELECT Id, Name FROM CMC_Presales_LOE__c];
        
        System.runAs(sysAdmin){
            Test.startTest();
+           
+           estimate = [SELECT Id, Name FROM CMC_Presales_LOE__c];
            
            List<E2_TreeNode> treeLst = E2_Estimator_WSManager.retrieveAllScopeTreeNodesOnEstimateId(estimate.Id);
            System.assertEquals(6, treeLst.size(), 'Does not return 6 scopes associated with the estimate.');
@@ -40,12 +42,11 @@ public class E2_Estimator_WSManagerTest {
   public static testmethod void testGetChildScopeDetailNodes(){
        sysAdmin = getSysAdminUser();
        
-       parentSC = [SELECT Id, Name,Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c, LOE_Hrs__c, Is_Active__c
-                      FROM E2_Scope__c WHERE Parent_Scope__c = null AND RecordTypeId != :recTypeId AND Name='Parent_Scope_001'];
-       
        System.runAs(sysAdmin){
            Test.startTest();
           
+           parentSC = [SELECT Id, Name,Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c, LOE_Hrs__c, Is_Active__c
+                      FROM E2_Scope__c WHERE Parent_Scope__c = null AND RecordTypeId != :recTypeId AND Name='Parent_Scope_001'];
            
            E2_TreeNodeMap treeMap = E2_Estimator_WSManager.getChildScopeDetailNodes(parentSC.Id);
            System.assertEquals(treeMap.nodeList.size(), 1, 'Doesnot return 1 scope child to parent scope');
@@ -56,13 +57,14 @@ public class E2_Estimator_WSManagerTest {
   
   public static testmethod void testGetScopeDetailNodes(){
        sysAdmin = getSysAdminUser();
-       parentSC = [SELECT Id, Name,Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c, LOE_Hrs__c, Is_Active__c
-                  FROM E2_Scope__c WHERE Parent_Scope__c = null AND RecordTypeId != :recTypeId AND Name='Parent_Scope_001'];
-       childSC = [SELECT Id, Name, Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c, LOE_Hrs__c, Is_Active__c
-                  FROM E2_Scope__c WHERE Parent_Scope__c = :parentSC.Id];
                   
        System.runAs(sysAdmin){
            Test.startTest();
+           
+           parentSC = [SELECT Id, Name,Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c, LOE_Hrs__c, Is_Active__c
+                  FROM E2_Scope__c WHERE Parent_Scope__c = null AND RecordTypeId != :recTypeId AND Name='Parent_Scope_001'];
+           childSC = [SELECT Id, Name, Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c, LOE_Hrs__c, Is_Active__c
+                  FROM E2_Scope__c WHERE Parent_Scope__c = :parentSC.Id];
            
            E2_TreeNodeMap treeMap = E2_Estimator_WSManager.getScopeDetailNodes(parentSC.Id);
            System.assertEquals(parentSC.Id, treeMap.scope_id, 'returns same scope id');
@@ -74,10 +76,11 @@ public class E2_Estimator_WSManagerTest {
   
   public static testmethod void testGetParentNodesWithEffortsOnEstimateId(){
        sysAdmin = getSysAdminUser();
-       estimate = [SELECT Id, Name FROM CMC_Presales_LOE__c];
        
        System.runAs(sysAdmin){
            Test.startTest();
+           
+           estimate = [SELECT Id, Name FROM CMC_Presales_LOE__c];
            
            List<E2_TreeNode> treeLst = E2_Estimator_WSManager.getParentNodesWithEffortsOnEstimateId(estimate.Id);
            System.assertEquals(2, treeLst.size() , 'Does not return 2 parent node attached with estimate.');   
@@ -88,11 +91,12 @@ public class E2_Estimator_WSManagerTest {
   
   public static testmethod void testGetImmediateChildNodesWithEffortsOnScopeId(){
        sysAdmin = getSysAdminUser();
-       parentSC = [SELECT Id, Name,Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c, LOE_Hrs__c, Is_Active__c
-                      FROM E2_Scope__c WHERE Parent_Scope__c = null AND RecordTypeId != :recTypeId AND Name='Parent_Scope_001'];
                       
        System.runAs(sysAdmin){
            Test.startTest();
+           
+           parentSC = [SELECT Id, Name,Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c, LOE_Hrs__c, Is_Active__c
+                      FROM E2_Scope__c WHERE Parent_Scope__c = null AND RecordTypeId != :recTypeId AND Name='Parent_Scope_001'];
            
            List<E2_TreeNode> treeLst =  E2_Estimator_WSManager.getImmediateChildNodesWithEffortsOnScopeId(parentSC.Id);
            System.assertEquals(treeLst.size(), 1 + 1, 'Doesnot return the only immediate child scope and only effort to this scope');
@@ -104,14 +108,16 @@ public class E2_Estimator_WSManagerTest {
   public static testmethod void testCloneScopeWithChild(){
        
        sysAdmin = getSysAdminUser();
-       parentSC = [SELECT Id, Name,Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c, LOE_Hrs__c, Is_Active__c
-                  FROM E2_Scope__c WHERE Parent_Scope__c = null AND RecordTypeId != :recTypeId AND Name='Parent_Scope_001'];
-       childSC = [SELECT Id, Name, Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c, LOE_Hrs__c, Is_Active__c
-                  FROM E2_Scope__c WHERE Parent_Scope__c = :parentSC.Id];
-       String scopeToBeCloned= parentSC.Id +',' + childSC.Id;
+       
        
        System.runAs(sysAdmin){
            Test.startTest();
+           
+           parentSC = [SELECT Id, Name,Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c, LOE_Hrs__c, Is_Active__c
+                  FROM E2_Scope__c WHERE Parent_Scope__c = null AND RecordTypeId != :recTypeId AND Name='Parent_Scope_001'];
+           childSC = [SELECT Id, Name, Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c, LOE_Hrs__c, Is_Active__c
+                  FROM E2_Scope__c WHERE Parent_Scope__c = :parentSC.Id];
+           String scopeToBeCloned= parentSC.Id +',' + childSC.Id;
            
            List<E2_TreeNode> resultedClonedNode=E2_Estimator_WSManager.cloneScopeWithChild(scopeToBeCloned);
            system.assert(resultedClonedNode != null && resultedClonedNode.size() == 2, 'Unit test failed: selected scope has not been successfully cloned.'+resultedClonedNode.size());
@@ -123,27 +129,26 @@ public class E2_Estimator_WSManagerTest {
   public static testmethod void testGetClonedNodesTemplate(){
        
        sysAdmin = getSysAdminUser();
-       parentSC = [SELECT Id, Name,Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c, LOE_Hrs__c, Is_Active__c
-                  FROM E2_Scope__c WHERE Parent_Scope__c = null AND RecordTypeId != :recTypeId AND Name='Parent_Scope_001'];
-       childSC = [SELECT Id, Name, Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c, LOE_Hrs__c, Is_Active__c
-                  FROM E2_Scope__c WHERE Parent_Scope__c = :parentSC.Id];
-       child_childSC = [SELECT Id, Name, Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c, LOE_Hrs__c, Is_Active__c
-                       FROM E2_Scope__c WHERE Parent_Scope__c = :childSC.Id]; 
-                       
-       parentSC1 = [SELECT Id, Name,Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c, LOE_Hrs__c, Is_Active__c
-                    FROM E2_Scope__c WHERE Parent_Scope__c = null AND RecordTypeId != :recTypeId AND Name='Parent_Scope_002'];
-       childSC1 = [SELECT Id, Name, Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c, LOE_Hrs__c, Is_Active__c
-                  FROM E2_Scope__c WHERE Parent_Scope__c = :parentSC1.Id];
-       child_childSC1 = [SELECT Id, Name, Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c,LOE_Hrs__c, Is_Active__c
-                         FROM E2_Scope__c WHERE Parent_Scope__c = :childSC1.Id];
-       scopeGroup = [SELECT Id, Name FROM E2_Scope_Group__c];
        
-       String scopeIds = parentSC.Id+ ','+ child_childSC.Id+ ',' + parentSC1.Id+ ','+ child_childSC1.Id ; 
-        
        System.runAs(sysAdmin){
            Test.startTest();
+           
+           List<E2_Scope__c> lsParentSC = [SELECT Id, Name,Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c, LOE_Hrs__c, Is_Active__c
+                  FROM E2_Scope__c WHERE Parent_Scope__c = null AND RecordTypeId != :recTypeId];
+           childSC = [SELECT Id, Name, Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c, LOE_Hrs__c, Is_Active__c
+                  FROM E2_Scope__c WHERE Parent_Scope__c = :lsParentSC[0].Id];
+           child_childSC = [SELECT Id, Name, Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c, LOE_Hrs__c, Is_Active__c
+                       FROM E2_Scope__c WHERE Parent_Scope__c = :childSC.Id]; 
+                       
+           childSC1 = [SELECT Id, Name, Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c, LOE_Hrs__c, Is_Active__c
+                  FROM E2_Scope__c WHERE Parent_Scope__c = :lsParentSC[1].Id];
+           child_childSC1 = [SELECT Id, Name, Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c,LOE_Hrs__c, Is_Active__c
+                         FROM E2_Scope__c WHERE Parent_Scope__c = :childSC1.Id];
+           scopeGroup = [SELECT Id, Name FROM E2_Scope_Group__c];
+       
+           String scopeIds = lsParentSC[0].Id+ ','+ child_childSC.Id+ ',' + lsParentSC[1].Id+ ','+ child_childSC1.Id ; 
           
-           List<E2_TreeNode> cloned_msg = E2_Estimator_WSManager.getClonedNodesTemplate(scopeIds, scopeGroup.Id, parentSC.Id);
+           List<E2_TreeNode> cloned_msg = E2_Estimator_WSManager.getClonedNodesTemplate(scopeIds, scopeGroup.Id, lsParentSC[0].Id);
            system.assertNotEquals(cloned_msg.size(), 0, 'Success message is returned');
           
            Test.stopTest();
@@ -153,11 +158,12 @@ public class E2_Estimator_WSManagerTest {
   public static testmethod void testRetrieveAllScopeTreeNodesOnScopeGroup(){
        
        sysAdmin = getSysAdminUser();
-       scopeGroup = [SELECT Id, Name FROM E2_Scope_Group__c];
        
        System.runAs(sysAdmin){
            Test.startTest();
-           
+       
+           scopeGroup = [SELECT Id, Name FROM E2_Scope_Group__c];
+               
            List<E2_TreeNode> treeLst1 = E2_Estimator_WSManager.retrieveAllScopeTreeNodesOnScopeGroup(scopeGroup.Id);
            System.assertEquals(2,treeLst1.size(), 'Does not return 2 scopes associated with the group.');
           
@@ -168,12 +174,13 @@ public class E2_Estimator_WSManagerTest {
   public static testmethod void testUpdateScopeFlag(){
        
        sysAdmin = getSysAdminUser();
-       estimate = [SELECT Id, Name FROM CMC_Presales_LOE__c];
-       parentSC = [SELECT Id, Name,Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c, LOE_Hrs__c, Is_Active__c
-                  FROM E2_Scope__c WHERE Parent_Scope__c = null AND RecordTypeId != :recTypeId AND name='Parent_Scope_001'];
        
        System.runAs(sysAdmin){
            Test.startTest();
+       
+           estimate = [SELECT Id, Name FROM CMC_Presales_LOE__c];
+           parentSC = [SELECT Id, Name,Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c, LOE_Hrs__c, Is_Active__c
+                      FROM E2_Scope__c WHERE Parent_Scope__c = null AND RecordTypeId != :recTypeId AND name='Parent_Scope_001'];
            
            string error=E2_Estimator_WSManager.updateScopeFlag(estimate.Id,'flagred');
            System.assert(error.startsWith('Failed:'), 'Unit Test failed: An error should be generated since estimate id has passed instead of scope id.');
@@ -196,14 +203,15 @@ public class E2_Estimator_WSManagerTest {
   public static testmethod void testGetFormatedScopeName(){
        
        sysAdmin = getSysAdminUser();
-       parentSC = [SELECT Id, Name,Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c, LOE_Hrs__c, Is_Active__c
-                  FROM E2_Scope__c WHERE Parent_Scope__c = null AND RecordTypeId != :recTypeId AND Name='Parent_Scope_001'];
-       childSC = [SELECT Id, Name, Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c, LOE_Hrs__c, Is_Active__c
-                  FROM E2_Scope__c WHERE Parent_Scope__c = :parentSC.Id];
-     
        
        System.runAs(sysAdmin){
            Test.startTest();
+           
+           parentSC = [SELECT Id, Name,Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c, LOE_Hrs__c, Is_Active__c
+                      FROM E2_Scope__c WHERE Parent_Scope__c = null AND RecordTypeId != :recTypeId AND Name='Parent_Scope_001'];
+           childSC = [SELECT Id, Name, Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c, LOE_Hrs__c, Is_Active__c
+                      FROM E2_Scope__c WHERE Parent_Scope__c = :parentSC.Id];
+       
            
           String test_scopeName = E2_Estimator_WSManager.getFormatedScopeName(parentSC);
           system.assert(test_scopeName != null);
@@ -218,14 +226,15 @@ public class E2_Estimator_WSManagerTest {
   public static testmethod void testReparentScope(){
        
        sysAdmin = getSysAdminUser();
-       scopeGroup = [SELECT Id, Name FROM E2_Scope_Group__c];
-       parentSC = [SELECT Id, Name,Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c, LOE_Hrs__c, Is_Active__c
-                  FROM E2_Scope__c WHERE Parent_Scope__c = null AND RecordTypeId != :recTypeId AND Name='Parent_Scope_001'];
-       childSC = [SELECT Id, Name, Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c, LOE_Hrs__c, Is_Active__c
-                  FROM E2_Scope__c WHERE Parent_Scope__c = :parentSC.Id];
        
        System.runAs(sysAdmin){
            Test.startTest();
+       
+           scopeGroup = [SELECT Id, Name FROM E2_Scope_Group__c];
+           parentSC = [SELECT Id, Name,Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c, LOE_Hrs__c, Is_Active__c
+                      FROM E2_Scope__c WHERE Parent_Scope__c = null AND RecordTypeId != :recTypeId AND Name='Parent_Scope_001'];
+           childSC = [SELECT Id, Name, Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c, LOE_Hrs__c, Is_Active__c
+                      FROM E2_Scope__c WHERE Parent_Scope__c = :parentSC.Id];
            
            String result=E2_Estimator_WSManager.reparentScope(scopeGroup.Id, null);
            system.assert(result.startsWith('Failed:'), 'Unit test failed: An error should be thrown when invalid scope id passed.');
@@ -243,14 +252,16 @@ public class E2_Estimator_WSManagerTest {
   public static testmethod void testUpdateScopesDisplayOrder(){
        
        sysAdmin = getSysAdminUser();
-       parentSC = [SELECT Id, Name,Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c, LOE_Hrs__c, Is_Active__c
-                  FROM E2_Scope__c WHERE Parent_Scope__c = null AND RecordTypeId != :recTypeId AND Name='Parent_Scope_001'];
-       childSC = [SELECT Id, Name, Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c, LOE_Hrs__c, Is_Active__c
-                  FROM E2_Scope__c WHERE Parent_Scope__c = :parentSC.Id];
-       String jsonString = '[{"scopeId":"' + parentSC.id + '", "displayOrder":"1", "sequence":"1"},{"scopeId":"' + childSC.id + '", "displayOrder":"2", "sequence":"2"}]';
+       
        
        System.runAs(sysAdmin){
            Test.startTest();
+           
+           parentSC = [SELECT Id, Name,Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c, LOE_Hrs__c, Is_Active__c
+                  FROM E2_Scope__c WHERE Parent_Scope__c = null AND RecordTypeId != :recTypeId AND Name='Parent_Scope_001'];
+           childSC = [SELECT Id, Name, Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c, LOE_Hrs__c, Is_Active__c
+                      FROM E2_Scope__c WHERE Parent_Scope__c = :parentSC.Id];
+           String jsonString = '[{"scopeId":"' + parentSC.id + '", "displayOrder":"1", "sequence":"1"},{"scopeId":"' + childSC.id + '", "displayOrder":"2", "sequence":"2"}]';
            
            String statusStr = E2_Estimator_WSManager.updateScopesDisplayOrder(jsonString);
            System.assertEquals(statusStr, 'success');
@@ -263,24 +274,24 @@ public class E2_Estimator_WSManagerTest {
        
        sysAdmin = getSysAdminUser();
        
-       estimate = [SELECT Id, Name FROM CMC_Presales_LOE__c];
-       parentSC = [SELECT Id, Name,Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c, LOE_Hrs__c, Is_Active__c
-                  FROM E2_Scope__c WHERE Parent_Scope__c = null AND RecordTypeId != :recTypeId AND Name='Parent_Scope_001'];
-       childSC = [SELECT Id, Name, Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c, LOE_Hrs__c, Is_Active__c
-                  FROM E2_Scope__c WHERE Parent_Scope__c = :parentSC.Id];
-       child_childSC = [SELECT Id, Name, Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c, LOE_Hrs__c, Is_Active__c
-                       FROM E2_Scope__c WHERE Parent_Scope__c = :childSC.Id];
-       parentSC1 = [SELECT Id, Name,Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c, LOE_Hrs__c, Is_Active__c
-                    FROM E2_Scope__c WHERE Parent_Scope__c = null AND RecordTypeId != :recTypeId AND Name='Parent_Scope_002'];
-       childSC1 = [SELECT Id, Name, Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c, LOE_Hrs__c, Is_Active__c
-                  FROM E2_Scope__c WHERE Parent_Scope__c = :parentSC1.Id];
-       child_childSC1 = [SELECT Id, Name, Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c,LOE_Hrs__c, Is_Active__c
-                         FROM E2_Scope__c WHERE Parent_Scope__c = :childSC1.Id];        
-                  
-       String scopeIds = parentSC.Id+ ','+ child_childSC.Id+ ',' + parentSC1.Id+ ','+ child_childSC1.Id ; 
-       
        System.runAs(sysAdmin){
            Test.startTest();
+           
+           estimate = [SELECT Id, Name FROM CMC_Presales_LOE__c];
+           List<E2_Scope__c> lsParentSC = [SELECT Id, Name,Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c, LOE_Hrs__c, Is_Active__c
+                      FROM E2_Scope__c WHERE Parent_Scope__c = null AND RecordTypeId != :recTypeId];
+           childSC = [SELECT Id, Name, Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c, LOE_Hrs__c, Is_Active__c
+                      FROM E2_Scope__c WHERE Parent_Scope__c = :lsParentSC[0].Id];
+           child_childSC = [SELECT Id, Name, Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c, LOE_Hrs__c, Is_Active__c
+                           FROM E2_Scope__c WHERE Parent_Scope__c = :childSC.Id];
+           
+           childSC1 = [SELECT Id, Name, Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c, LOE_Hrs__c, Is_Active__c
+                      FROM E2_Scope__c WHERE Parent_Scope__c = :lsParentSC[1].Id];
+           child_childSC1 = [SELECT Id, Name, Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c,LOE_Hrs__c, Is_Active__c
+                             FROM E2_Scope__c WHERE Parent_Scope__c = :childSC1.Id];        
+                      
+           String scopeIds = lsParentSC[0].Id+ ','+ child_childSC.Id+ ',' + lsParentSC[1].Id+ ','+ child_childSC1.Id ; 
+           
            
            List<E2_TreeNode> test_Scope1 =  E2_Estimator_WSManager.getSelectedScopeNodes(scopeIds, estimate.Id, null);
            system.assert(test_Scope1 != null);
@@ -292,17 +303,19 @@ public class E2_Estimator_WSManagerTest {
    public static testmethod void testUpdateScopesStatus(){
        
        sysAdmin = getSysAdminUser();
-       parentSC = [SELECT Id, Name,Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c, LOE_Hrs__c, Is_Active__c
-                  FROM E2_Scope__c WHERE Parent_Scope__c = null AND RecordTypeId != :recTypeId AND Name='Parent_Scope_001'];
-       childSC = [SELECT Id, Name, Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c, LOE_Hrs__c, Is_Active__c
-                  FROM E2_Scope__c WHERE Parent_Scope__c = :parentSC.Id];
-       child_childSC = [SELECT Id, Name, Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c, LOE_Hrs__c, Is_Active__c
-                       FROM E2_Scope__c WHERE Parent_Scope__c = :childSC.Id];
-                       
-       string allscopesIds = parentSC.Id +',' + childSC.Id + ',' + child_childSC.Id;
+       
        
        System.runAs(sysAdmin){
            Test.startTest();
+           
+           parentSC = [SELECT Id, Name,Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c, LOE_Hrs__c, Is_Active__c
+                      FROM E2_Scope__c WHERE Parent_Scope__c = null AND RecordTypeId != :recTypeId AND Name='Parent_Scope_001'];
+           childSC = [SELECT Id, Name, Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c, LOE_Hrs__c, Is_Active__c
+                      FROM E2_Scope__c WHERE Parent_Scope__c = :parentSC.Id];
+           child_childSC = [SELECT Id, Name, Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c, LOE_Hrs__c, Is_Active__c
+                           FROM E2_Scope__c WHERE Parent_Scope__c = :childSC.Id];
+                           
+           string allscopesIds = parentSC.Id +',' + childSC.Id + ',' + child_childSC.Id;
            
            
            String scopestatus = E2_Estimator_WSManager.updateScopesStatus('Low', null, child_childSC.Id, allscopesIds);
@@ -319,15 +332,17 @@ public class E2_Estimator_WSManagerTest {
     public static testmethod void testDeleteScopeWithUnauthorizedUser(){
        
        User noSysAdminUser=E2_Test_Utils.insertUser('Appirio SFDC Training Only', true);
-       scopeGroup = [SELECT Id, Name FROM E2_Scope_Group__c];
-       parentSC = [SELECT Id, Name,Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c, LOE_Hrs__c, Is_Active__c
-                  FROM E2_Scope__c WHERE Parent_Scope__c = null AND RecordTypeId != :recTypeId AND Name='Parent_Scope_001'];
-       childSC = [SELECT Id, Name, Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c, LOE_Hrs__c, Is_Active__c
-                  FROM E2_Scope__c WHERE Parent_Scope__c = :parentSC.Id];
+       
        
        System.runAs(noSysAdminUser){
            Test.startTest();
            
+           scopeGroup = [SELECT Id, Name FROM E2_Scope_Group__c];
+           parentSC = [SELECT Id, Name,Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c, LOE_Hrs__c, Is_Active__c
+                      FROM E2_Scope__c WHERE Parent_Scope__c = null AND RecordTypeId != :recTypeId AND Name='Parent_Scope_001'];
+           childSC = [SELECT Id, Name, Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c, LOE_Hrs__c, Is_Active__c
+                      FROM E2_Scope__c WHERE Parent_Scope__c = :parentSC.Id];
+               
            String result = E2_Estimator_WSManager.deleteScope(childSC.Id, parentSC.Id);
            System.assert(result.startsWith('Failed'), 'Unit test failed: An error should be generated in order to insufficient privilege over Scope object.');
           
@@ -339,14 +354,16 @@ public class E2_Estimator_WSManagerTest {
     public static testmethod void testDeleteScope(){
        
        sysAdmin = getSysAdminUser();
-       scopeGroup = [SELECT Id, Name FROM E2_Scope_Group__c];
-       parentSC = [SELECT Id, Name,Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c, LOE_Hrs__c, Is_Active__c
-                  FROM E2_Scope__c WHERE Parent_Scope__c = null AND RecordTypeId != :recTypeId AND Name='Parent_Scope_001'];
-       childSC = [SELECT Id, Name, Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c, LOE_Hrs__c, Is_Active__c
-                  FROM E2_Scope__c WHERE Parent_Scope__c = :parentSC.Id];
+       
        
        System.runAs(sysAdmin){
            Test.startTest();
+           
+           scopeGroup = [SELECT Id, Name FROM E2_Scope_Group__c];
+           parentSC = [SELECT Id, Name,Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c, LOE_Hrs__c, Is_Active__c
+                      FROM E2_Scope__c WHERE Parent_Scope__c = null AND RecordTypeId != :recTypeId AND Name='Parent_Scope_001'];
+           childSC = [SELECT Id, Name, Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c, LOE_Hrs__c, Is_Active__c
+                      FROM E2_Scope__c WHERE Parent_Scope__c = :parentSC.Id];
            
            String result= E2_Estimator_WSManager.deleteScope(scopeGroup.Id, E2_Constants.HASH_TAG);    
            System.assert(result.startsWith('Failed:'), 'Unit test failed: An error should be generated when invalid scope id has passed.');
@@ -362,11 +379,11 @@ public class E2_Estimator_WSManagerTest {
        
        sysAdmin = getSysAdminUser();
        
-       parentSC = [SELECT Id, Name,Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c, LOE_Hrs__c, Is_Active__c
-                  FROM E2_Scope__c WHERE Parent_Scope__c = null AND RecordTypeId != :recTypeId AND Name='Parent_Scope_001'];
-       
        System.runAs(sysAdmin){
            Test.startTest();
+       
+           parentSC = [SELECT Id, Name,Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c, LOE_Hrs__c, Is_Active__c
+                  FROM E2_Scope__c WHERE Parent_Scope__c = null AND RecordTypeId != :recTypeId AND Name='Parent_Scope_001'];
            
            String existing_assets = E2_Estimator_WSManager.getExistingAssetsForScope(parentSC.Id);
            system.assert(existing_assets != null);
@@ -380,20 +397,20 @@ public class E2_Estimator_WSManagerTest {
        
        sysAdmin = getSysAdminUser();
        
-       parentSC = [SELECT Id, Name,Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c, LOE_Hrs__c, Is_Active__c
-                  FROM E2_Scope__c WHERE Parent_Scope__c = null AND RecordTypeId != :recTypeId AND Name='Parent_Scope_001'];
-       recommendedAsset = [SELECT Scope__c, Asset__c FROM E2_Recommended_Asset__c];
-       
-       lstAssets=[Select id from CMC_Asset__c];
-       Id [] fixedSearchResults= new Id[lstAssets.size()];
-       Integer idx=0;
-       for(CMC_Asset__c objAsset:lstAssets){
-          fixedSearchResults[idx]= objAsset.id;
-          idx++;
-       }
-       
        System.runAs(sysAdmin){
            Test.startTest();
+           
+           parentSC = [SELECT Id, Name,Source_Scope__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c, LOE_Hrs__c, Is_Active__c
+                  FROM E2_Scope__c WHERE Parent_Scope__c = null AND RecordTypeId != :recTypeId AND Name='Parent_Scope_001'];
+           recommendedAsset = [SELECT Scope__c, Asset__c FROM E2_Recommended_Asset__c];
+           
+           lstAssets=[Select id from CMC_Asset__c];
+           Id [] fixedSearchResults= new Id[lstAssets.size()];
+           Integer idx=0;
+           for(CMC_Asset__c objAsset:lstAssets){
+              fixedSearchResults[idx]= objAsset.id;
+              idx++;
+           }
            
            Test.setFixedSearchResults(fixedSearchResults);
 
@@ -524,24 +541,6 @@ public class E2_Estimator_WSManagerTest {
   	
   	actionScope = new E2_Action_Scope__c(Answer__c = ans1.Id, Scope__c = parentSC.Id);
     insert actionScope;
-  	
-  	pse__Region__c region = E2_Test_Utils.insertRegion(true);
-    pse__Practice__c practice = E2_Test_Utils.insertPractice(true);
-    
-    pse__Rate_Card__c rateCard = E2_Test_Utils.insertRateCard(acc.Id, region.Id, practice.Id, true);
-    
-    E2_Estimate_Rate_Card__c estimateRC = E2_Test_Utils.insertEstimateRateCard(estimate.Id, true);
-    
-    CMC_Estimate_Resource__c resource = E2_Test_Utils.insertCMCEstimateRes(estimate.Id, true);
-    CMC_Estimate_Week__c week = E2_Test_Utils.insertEstimateWeek(estimate.Id, true);
-    CMC_Estimate_Resource_Week__c resWeek = E2_Test_Utils.insertCMCEstimateResWeek(resource.Id, week.Id, true);
-    E2_Estimate_Week_Milestone__c weekMilestones = new E2_Estimate_Week_Milestone__c(Name = 'Week1',Estimate__c = estimate.Id, Order__c = 2,
-                                                         Date__c = system.today());
-    insert weekMilestones;
-    E2_Estimate_Milestone__c milestone = E2_Test_Utils.insertEstimateMilestone(estimate.Id, true);
-    E2_Estimate_Milestone_Week__c milestoneWk = new E2_Estimate_Milestone_Week__c(Estimate_Milestone__c = milestone.Id, Estimate_Week_Milestone__c = weekMilestones.Id, 
-                                                         TextColorCode__c = 'Red'); 
-    insert milestoneWk;
        
   }
 

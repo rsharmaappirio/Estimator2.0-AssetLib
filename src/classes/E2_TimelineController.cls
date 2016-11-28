@@ -8,6 +8,7 @@
  * Date Modified      Modified By         Description of the update
  * Oct 26th, 2016     Rohit Sharma        S-447680 : Round off the hours to nearest figure on capacity tab.
  * Nov 11th, 2016     Rohit Sharma        S-447474 : Fixed fee calculation support
+ * Nov 23th, 2016     Rohit Sharma        S-455804 : Default fixed fee uplift cost and buffer
 *  =====================================================================*/
 public with sharing class E2_TimelineController extends E2_Master {
     
@@ -18,12 +19,14 @@ public with sharing class E2_TimelineController extends E2_Master {
   public static final string SEPARATOR = ' - ';
   public string estimate_Mode{get;set;}
   public decimal discountAmount{get;set;}
+  public E2_System_setting__c e2SystemSetting{get;set;}
 
   public E2_TimelineController (ApexPages.StandardController std) {
     // constructor : use to initiate the variable
     this.estimate = (CMC_Presales_LOE__c)std.getRecord();
     this.estimateRateCards = new List<E2_Estimate_Rate_Card__c>();
     this.estimate.Discount_Percent__c = (this.estimate.Discount_Percent__c == NULL ? 0 : this.estimate.Discount_Percent__c);
+    e2SystemSetting = E2_System_setting__c.getInstance();
     // populate renderOptions_PhasesJSON field
     populateRenderOptions();
   }
@@ -50,6 +53,7 @@ public with sharing class E2_TimelineController extends E2_Master {
   
   
   public pagereference refreshOverviewPanel(){
+      if(estimate.Id != null) 
      // method to refresh overview panel - Estimate Summary Section above the grid
      this.estimate = [SELECT id, Name, Service_Fees__c,
                         Service_Costs__c,
@@ -74,7 +78,9 @@ public with sharing class E2_TimelineController extends E2_Master {
                         Fixed_Fee_Blended__c,
                         Fixed_Fee_Buffer_Amount__c,
                         Topcoder_Challenge_Fees__c,
-                        Asset_Fees__c 
+                        Asset_Fees__c,
+                        Total_Resource_Hours__c,
+                        E2_Estimate_Total_Weeks__c 
                        FROM CMC_Presales_LOE__c 
                        WHERE Id = :estimate.id];
       
@@ -90,6 +96,17 @@ public with sharing class E2_TimelineController extends E2_Master {
       // Summary above the grid. 
       try{
         this.estimate.Discount__c = NULL;  
+        update this.estimate;
+      }catch(Exception ex){
+        ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, ex.getMessage()));  
+      }
+      refreshOverviewPanel(); 
+  }
+  
+  public void changeFixedFee(){
+      // this method gets invoked when user changes or update the fixed fee buffer input in Estimate 
+      // Summary above the grid. 
+      try{
         update this.estimate;
       }catch(Exception ex){
         ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, ex.getMessage()));  
@@ -300,7 +317,12 @@ public with sharing class E2_TimelineController extends E2_Master {
       if(!string.isBlank(this.estimate_Mode)) {
           this.estimate.Mode__c = this.estimate_Mode;
           if(estimate_Mode == E2_Constants.ESTIMATE_MODE_FIXED_FEE) {
-              this.estimate.Fixed_Fee_Cost_Uplift_Percent__c = E2_Constants.DEFAULT_FIXED_FEE_UPLIFT;
+              // RS: 11/23 : Default fixed fee uplift cost and buffer from custom setting.
+              this.estimate.Fixed_Fee_Cost_Uplift_Percent__c = e2SystemSetting.Fixed_Fee_Cost_Uplift__c;
+              if(this.estimate.Fixed_Fee_Buffer__c == NULL ||
+                 this.estimate.Fixed_Fee_Buffer__c == 0) {
+                  this.estimate.Fixed_Fee_Buffer__c = e2SystemSetting.Fixed_Fee_Buffer__c;
+              }
           }
           try{
             update this.estimate;

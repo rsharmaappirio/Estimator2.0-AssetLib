@@ -58,6 +58,7 @@
         <members>E2_MilestoneController</members>
         <members>E2_MilestoneDataUtil_WS</members>
         <members>E2_MilestoneWS</members>
+        <members>E2_MilestoneWSTest</members>
         <members>E2_MilestoneWSManager</members>
         <members>E2_PaginationUtility</members>
         <members>E2_PaginationUtilityTest</members>
@@ -161,6 +162,10 @@
         <members>E2_Estimate_Milestone__c.Milestone2__c</members>
         <members>E2_Estimate_Milestone_Week__c.Estimate_Milestone__c</members>
         <members>E2_Scope__c.Scope_Group__c</members>
+        <members>E2_Scope__c.Scope_Item_Type__c</members>
+        <members>CMC_Presales_LOE__c.E2_Estimate_Total_Weeks__c</members>
+		<members>E2_System_setting__c.Fixed_Fee_Cost_Uplift__c</members>
+		<members>E2_System_setting__c.Fixed_Fee_Buffer__c</members>
         <name>CustomField</name>
     </types>
     <types>
@@ -171,6 +176,7 @@
         <members>E2_Answer_Action_Deactivate_Child_Scope</members>
         <members>E2_Required_Field_Error_Message</members>
         <members>E2_Scope_is_Required</members>
+        <members>E2_Estimate_Cloning_Error_Message</members>
         <name>CustomLabel</name>
     </types>
     <types>
@@ -237,6 +243,11 @@
         <name>Profile</name>
     </types>
     <types>
+    	<members>E2_Scope__c.Scope</members>
+		<members>E2_Scope__c.Template</members>
+		<name>RecordType</name>
+	</types>
+    <types>
         <members>unfiled$public/E2_Phases_Roles_Matrix</members>
         <members>unfiled$public/E2_Role_Matrix</members>
         <members>unfiled$public/E2_Role_Phase_matrix</members>
@@ -264,6 +275,7 @@
         <members>E2_TimelineJS</members>
         <members>cloneany</members>
         <members>e2_bootstrapmultiselect</members>
+        <members>E2_CloneEstimateJS</members>
         <name>StaticResource</name>
     </types>
     <types>

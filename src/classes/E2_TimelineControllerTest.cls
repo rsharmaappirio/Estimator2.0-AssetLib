@@ -14,7 +14,7 @@ public class E2_TimelineControllerTest {
     estimateResource = [SELECT Id, Rate__c, E2_Role__c, Role__c, Cost__c 
                           FROM CMC_Estimate_Resource__c
                           WHERE Estimate__c = : estimate.Id];
-    E2_System_setting__c customsetting = new E2_System_setting__c(Refresh_Ratacard__c = true);
+    E2_System_setting__c customsetting = new E2_System_setting__c(Refresh_Ratacard__c = true, Fixed_Fee_Buffer__c = 20, Fixed_Fee_Cost_Uplift__c = 5);
     insert customsetting;
     
     User sysAdmin = E2_Test_Utils.insertSysAdminUser(true);    
@@ -105,7 +105,15 @@ public class E2_TimelineControllerTest {
         controller.refreshOverviewPanel();
         controller.discountAmount = 200;
         controller.changeDiscountAmount();
+        estimate.Fixed_Fee_Buffer__c = 20;
+        controller.changeFixedFee();
+        controller.estimateRateCards.add(new E2_Estimate_Rate_Card__c());
         
+        controller.updateEstimateRateCards();
+        controller.estimate.id = null;
+        controller.changeFixedFee();
+        controller.changeDiscount();
+        controller.changeDiscountAmount();
       //stop test
       Test.stopTest();
             
@@ -158,7 +166,6 @@ public class E2_TimelineControllerTest {
     insert capcityList;
     
     estimateResource = E2_Test_Utils.insertCMCEstimateRes(estimate.Id, true);
-    
   }
 
 }

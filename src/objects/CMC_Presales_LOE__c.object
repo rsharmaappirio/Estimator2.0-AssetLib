@@ -59,6 +59,17 @@
         <unique>false</unique>
     </fields>
     <fields>
+        <fullName>E2_Estimate_Total_Weeks__c</fullName>
+        <description>Roll-up custom field from Estimate Week</description>
+        <externalId>false</externalId>
+        <label>Estimate Total Weeks</label>
+        <summaryForeignKey>CMC_Estimate_Week__c.Estimate__c</summaryForeignKey>
+        <summaryOperation>count</summaryOperation>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Summary</type>
+    </fields>
+    <fields>
         <fullName>E2_Is_Primary__c</fullName>
         <defaultValue>true</defaultValue>
         <description>Primary Estimate out of other estimates.</description>
@@ -294,11 +305,11 @@
         <encodingKey>UTF-8</encodingKey>
         <height>600</height>
         <linkType>url</linkType>
-        <masterLabel>Create E2 Estimate</masterLabel>
+        <masterLabel>Create Estimate</masterLabel>
         <openType>sidebar</openType>
         <protected>false</protected>
         <requireRowSelection>false</requireRowSelection>
-        <url>/apex/E2_AddEditEstimate?psr_id={!Presales_Request__c.Id}</url>
+        <url>/apex/E2_AddEditEstimate?psr_id={!Presales_Request__c.Id}&apos;</url>
     </webLinks>
     <webLinks>
         <fullName>E2_Edit_E2_Estimate</fullName>

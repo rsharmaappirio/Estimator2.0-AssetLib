@@ -794,6 +794,7 @@
                 <apex:actionfunction name="refreshRateCardRatesAndCost" action="{!refreshRateCardRatesAndCost}" oncomplete="Timeline.refreshRateCardRatesAndCost_complete();" rerender="ratecard_table"/>
                 <apex:actionfunction name="refreshOverviewPanel" action="{!refreshOverviewPanel}" rerender="overview_panel"/>
                 <apex:actionfunction name="changeDiscount" action="{!changeDiscount}" rerender="overview_panel"/>
+                <apex:actionfunction name="changeFixedFee" action="{!changeFixedFee}" rerender="overview_panel"/>
                 <apex:actionFunction name="changeEstimateMode" oncomplete="loadSpinner.hide();" action="{!changeEstimateMode}" rerender="overview_panel">
                     <apex:param name="firstParam" assignTo="{!estimate_Mode}" value="" />
                 </apex:actionFunction>
@@ -858,7 +859,7 @@
                                       
                                       
                                   </div>
-                                  <div id="overview_div" class="slds-col--padded" style="width:50%"> 
+                                  <div id="overview_div" class="slds-col--padded" style="width:80%"> 
                                     <apex:outputpanel id="overview_panel">
                                         <table style="width:100%" id="overview-table">
                                             <thead>
@@ -877,45 +878,37 @@
                                             </thead>
                                             <tbody>
                                                 <tr>
-                                                    <td><span class="overview-label">Services Fees:</span>&nbsp;<apex:outputfield value="{!estimate.Service_Fees__c}"/></td>
-                                                    <td><span class="overview-label">Services Cost:</span>&nbsp;<apex:outputfield value="{!estimate.Service_Costs__c}"/></td>
-                                                    <td><span class="overview-label">Services Margin:</span>&nbsp;<apex:outputfield value="{!estimate.Service_Margin__c}"/></td>
+                                                    <td style="vertical-align:top;">&nbsp;<span class="overview-label">As Sold Margin:</span><br/>&nbsp;<apex:outputfield value="{!estimate.As_Sold_Margin__c}"/></td> 
+                                                    <td style="vertical-align:top;">&nbsp;<span class="overview-label">Services Fees:</span><br/>&nbsp;<apex:outputfield value="{!estimate.Service_Fees__c}"/></td>
+                                                    <td style="vertical-align:top;">&nbsp;<span class="overview-label">Services Cost:</span><br/>&nbsp;<apex:outputfield value="{!estimate.Service_Costs__c}"/></td>
+                                                    <td style="vertical-align:top;">&nbsp;<span class="overview-label">Services Margin:</span><br/>&nbsp;<apex:outputfield value="{!estimate.Service_Margin__c}"/></td>
+                                                    <td style="vertical-align:top;"><apex:outputText rendered="{!estimate.Mode__c != 'fixed'}">&nbsp;<span class="overview-label">Offshore Blend:</span><br/>&nbsp;<apex:outputfield value="{!estimate.Offshore_Blend__c}"/></apex:outputText></td>
                                                 </tr>
                                                 <apex:outputText rendered="{!estimate.Mode__c == 'fixed'}">
                                                 <tr>
-                                                    <td><span class="overview-label">Fixed Fee Cost Uplift:</span>&nbsp;<apex:outputfield value="{!estimate.Fixed_Fee_Cost_Uplift_Percent__c}"/></td>
-                                                    <td><span class="overview-label">Fixed Fee Cost Uplift Amt:</span>&nbsp;<apex:outputfield value="{!estimate.Fixed_Fee_Cost_Uplift__c}"/></td>
-                                                    <td><span class="overview-label">Services Uplifted Costs:</span>&nbsp;<apex:outputfield value="{!estimate.Services_Uplifted_Costs__c}"/></td>
+                                                    <td style="vertical-align:top;">&nbsp;<span class="overview-label">Fixed Fee Cost Uplift:</span><br/>&nbsp;<apex:outputfield value="{!estimate.Fixed_Fee_Cost_Uplift_Percent__c}"/></td>
+                                                    <td style="vertical-align:top;">&nbsp;<span class="overview-label">Fixed Fee Cost Uplift Amt:</span><br/>&nbsp;{!CMC_Presales_LOE__c.CurrencyIsoCode}&nbsp;<apex:outputfield value="{!estimate.Fixed_Fee_Cost_Uplift__c}"/></td>
+                                                    <td style="vertical-align:top;">&nbsp;<span class="overview-label">Services Uplifted Costs:</span><br/>&nbsp;{!CMC_Presales_LOE__c.CurrencyIsoCode}&nbsp;<apex:outputfield value="{!estimate.Services_Uplifted_Costs__c}"/></td>
+                                                    <td style="vertical-align:top;"><apex:outputText rendered="{!estimate.Mode__c == 'fixed'}">&nbsp;<span class="overview-label">Fixed Fee Buffer:</span><br/>&nbsp;<apex:inputfield onchange="changeFixedFee();return false;" styleClass="slds-input" style="line-height: 20px;min-height: 20px;width: 40px;" value="{!estimate.Fixed_Fee_Buffer__c}"/>%</apex:outputText></td>
+                                                    <td style="vertical-align:top;"><apex:outputText rendered="{!estimate.Mode__c == 'fixed'}">&nbsp;<span class="overview-label">Fixed Fee Buffer Amt:</span><br/>&nbsp;{!CMC_Presales_LOE__c.CurrencyIsoCode}&nbsp;<apex:outputfield value="{!estimate.Fixed_Fee_Buffer_Amount__c}"/></apex:outputText></td>
                                                 </tr>
                                                 </apex:outputText>
                                                 <tr>
-                                                    <td><span class="overview-label">Calculated Fees:</span>&nbsp;{!CMC_Presales_LOE__c.CurrencyIsoCode}&nbsp;<apex:outputfield value="{!estimate.Calculated_Fees__c}"/></td>
-                                                    <td><span class="overview-label">Calculated Costs:</span>&nbsp;{!CMC_Presales_LOE__c.CurrencyIsoCode}&nbsp;<apex:outputfield value="{!estimate.Calculated_Costs__c}"/></td>
-                                                    <td><span class="overview-label">Calculated Margin:</span>&nbsp;<apex:outputfield value="{!estimate.Calculated_Margin__c}"/></td>
-                                                </tr>
-                                                <!--apex:outputText rendered="{!estimate.Mode__c != 'fixed'}"-->
-                                                <tr>
-                                                    <td><span class="overview-label">Discount:</span>&nbsp;<apex:inputfield onchange="changeDiscount();return false;" styleClass="slds-input" style="line-height: 20px;min-height: 20px;width: 40px;" value="{!estimate.Discount_Percent__c}"/>%</td>
-                                                    <td><span class="overview-label">Discount Amt:</span>&nbsp;{!CMC_Presales_LOE__c.CurrencyIsoCode}&nbsp;<!--apex:outputfield value="{!estimate.Discount_Amount__c}"/--><apex:inputText onchange="changeDiscountAmount();return false;" styleClass="slds-input mandate-numeric-estimate" style="line-height: 20px;min-height: 20px;width: 80px;" value="{!discountAmount}"/></td>
-                                                    <td></td>
-                                                </tr>
-                                                <!--/apex:outputText-->
-                                                <apex:outputText rendered="{!estimate.Mode__c == 'fixed'}">
-                                                <tr>
-                                                    <td><span class="overview-label">Fixed Fee Buffer:</span>&nbsp;<apex:inputfield onchange="changeDiscount();return false;" styleClass="slds-input" style="line-height: 20px;min-height: 20px;width: 40px;" value="{!estimate.Fixed_Fee_Buffer__c}"/>%</td>
-                                                    <td><span class="overview-label">Fixed Fee Buffer Amt:</span>&nbsp;{!CMC_Presales_LOE__c.CurrencyIsoCode}&nbsp;<apex:outputfield value="{!estimate.Fixed_Fee_Buffer_Amount__c}"/></td>
-                                                    <td></td>
-                                                </tr>
-                                                </apex:outputText>
-                                                <tr>
-                                                    <td><span class="overview-label">As Sold Margin:</span>&nbsp;<apex:outputfield value="{!estimate.As_Sold_Margin__c}"/></td>
-                                                    <td><span class="overview-label">Blended (List) Rate:</span>&nbsp;<apex:outputfield value="{!estimate.Blended_Rate_Number__c}"/></td>
-                                                    <td><apex:outputText rendered="{!estimate.Mode__c != 'fixed'}"><span class="overview-label">Offshore Blend:</span>&nbsp;<apex:outputfield value="{!estimate.Offshore_Blend__c}"/></apex:outputText></td>
+                                                    <td style="vertical-align:top;">&nbsp;<span class="overview-label">Calculated Fees:</span><br/>&nbsp;{!CMC_Presales_LOE__c.CurrencyIsoCode}&nbsp;<apex:outputfield value="{!estimate.Calculated_Fees__c}"/></td>
+                                                    <td style="vertical-align:top;">&nbsp;<span class="overview-label">Calculated Costs:</span><br/>&nbsp;{!CMC_Presales_LOE__c.CurrencyIsoCode}&nbsp;<apex:outputfield value="{!estimate.Calculated_Costs__c}"/></td>
+                                                    <td style="vertical-align:top;">&nbsp;<span class="overview-label">Calculated Margin:</span><br/>&nbsp;<apex:outputfield value="{!estimate.Calculated_Margin__c}"/></td>
+                                                    <td style="vertical-align:top;">&nbsp;<span class="overview-label">Discount:</span><br/>&nbsp;<apex:inputfield onchange="changeDiscount();return false;" styleClass="slds-input" style="line-height: 20px;min-height: 20px;width: 40px;" value="{!estimate.Discount_Percent__c}"/>%</td>
+                                                    <td style="vertical-align:top;">&nbsp;<span class="overview-label">Discount Amt:</span><br/>&nbsp;{!CMC_Presales_LOE__c.CurrencyIsoCode}&nbsp;<!--apex:outputfield value="{!estimate.Discount_Amount__c}"/--><apex:inputText onchange="changeDiscountAmount();return false;" styleClass="slds-input mandate-numeric-estimate" style="line-height: 20px;min-height: 20px;width: 80px;" value="{!discountAmount}"/></td>
+                                                    
                                                 </tr>
                                                 <tr>
-                                                    <td><span class="overview-label">Total Fees:</span>&nbsp;{!CMC_Presales_LOE__c.CurrencyIsoCode}&nbsp;<apex:outputfield value="{!estimate.Total_Fees__c}"/></td>
-                                                    <td><span class="overview-label">Total:</span>&nbsp;{!CMC_Presales_LOE__c.CurrencyIsoCode}&nbsp;<apex:outputfield value="{!estimate.Final_Total__c}"/></td>
-                                                    <td></td>
+                                               
+                                                    <td style="vertical-align:top;">&nbsp;<span class="overview-label">Total Hours:</span><br/>&nbsp;<apex:outputfield value="{!estimate.Total_Resource_Hours__c}"/></td>
+                                                    <td style="vertical-align:top;">&nbsp;<span class="overview-label">Number Of Weeks:</span><br/>&nbsp;<apex:outputfield value="{!estimate.E2_Estimate_Total_Weeks__c}"/></td>
+                                                    <td style="vertical-align:top;">&nbsp;<span class="overview-label">Blended (List) Rate:</span><br/>&nbsp;<apex:outputfield value="{!estimate.Blended_Rate_Number__c}"/></td>
+                                                    <td style="vertical-align:top;">&nbsp;<span class="overview-label">Total Fees:</span><br/>&nbsp;{!CMC_Presales_LOE__c.CurrencyIsoCode}&nbsp;<apex:outputfield value="{!estimate.Total_Fees__c}"/></td>
+                                                    <td style="vertical-align:top;">&nbsp;<span class="overview-label">Total:</span><br/>&nbsp;{!CMC_Presales_LOE__c.CurrencyIsoCode}&nbsp;<apex:outputfield value="{!estimate.Final_Total__c}"/></td>
+                                               
                                                 </tr>
                                             </tbody>
                                         </table>
@@ -1196,6 +1189,8 @@
                 <input type="hidden" value="{!CMC_Presales_LOE__c.Topcoder_Challenge_Fees__c}" />
                 <input type="hidden" value="{!CMC_Presales_LOE__c.Asset_Fees__c}" />
                 <input type="hidden" value="{!CMC_Presales_LOE__c.Discount__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.Total_Resource_Hours__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Estimate_Total_Weeks__c}" />
                
                
             </apex:form>

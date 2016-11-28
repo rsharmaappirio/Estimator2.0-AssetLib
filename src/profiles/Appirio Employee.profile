@@ -237,6 +237,10 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>E2_MilestoneWSTest</apexClass>
+        <enabled>false</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>E2_PaginationUtility</apexClass>
         <enabled>true</enabled>
     </classAccesses>
@@ -377,6 +381,11 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>CMC_Presales_LOE__c.E2_Dev_hours_per_day__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>CMC_Presales_LOE__c.E2_Estimate_Total_Weeks__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -1108,7 +1117,7 @@
     <recordTypeVisibilities>
         <default>false</default>
         <recordType>E2_Scope__c.Template</recordType>
-        <visible>false</visible>
+        <visible>true</visible>
     </recordTypeVisibilities>
     <tabVisibilities>
         <tab>E2_Derived_Effort_Group__c</tab>

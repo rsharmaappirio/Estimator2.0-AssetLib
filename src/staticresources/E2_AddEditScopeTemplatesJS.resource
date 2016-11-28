@@ -81,48 +81,6 @@ var jstree_options = {
         "items": function($node) {
             var tree = $(treeId).jstree(true);
             return {
-                "Add_Edit_Child": {
-                    "separator_before": false,
-                    "separator_after": false,
-                    "label": "Manage Children",
-                    "action": function(obj) {
-                        $('#helpModal1').find('#theIframe1').attr('src', '/apex/E2_AddNewScopeTemplate?is_Edit=true&scopegroup_id=' + scopeGrpId + '&id=' + $node.id);
-                        $('.custom-new-header').html('Manage Children');
-                        $('#helpModal1').find('#addupdatescopebutton').html('Update');
-                        $('#helpModal1').show();
-                        $('#helpModal1').find('#theIframe1').closest('div.slds-modal__content').scrollTop(0);
-                        $('#helpBackdrop1').show();
-
-                    }
-                },
-                "Add_from_Template": {
-                    "separator_before": false,
-                    "separator_after": false,
-                    "label": "Add from Library",
-                    "action": function(obj) {
-                        //tree.edit($node);                        
-                        AddEditScope.ADD_FROM_TEMPLATE_PARENT_ID = $node.id;
-                        AddEditScope.showAddFromTemplateModal();
-                    }
-                },
-                "Clone_self": {
-                    "separator_before": false,
-                    "separator_after": false,
-                    "label": "Clone self",
-                    "action": function(obj) {
-                        AddEditScope.ADD_FROM_TEMPLATE_PARENT_ID = $node.id;
-                        AddEditScope.cloneScopeWithoutChild($node.id);
-                    }
-                },
-                "Clone_with_child": {
-                    "separator_before": false,
-                    "separator_after": false,
-                    "label": "Clone with children",
-                    "action": function(obj) {
-                        AddEditScope.ADD_FROM_TEMPLATE_PARENT_ID = $node.id;
-                        AddEditScope.cloneScopeWithChild($node.id);
-                    }
-                },
                 "Remove": {
                     "separator_before": false,
                     "separator_after": false,
@@ -145,6 +103,48 @@ var jstree_options = {
 
                         tree.delete_node($node);
                         AddEditScope.delete_scope_async();
+
+                    }
+                },
+                "Clone_self": {
+                    "separator_before": false,
+                    "separator_after": false,
+                    "label": "Clone self",
+                    "action": function(obj) {
+                        AddEditScope.ADD_FROM_TEMPLATE_PARENT_ID = $node.id;
+                        AddEditScope.cloneScopeWithoutChild($node.id);
+                    }
+                },
+                "Clone_with_child": {
+                    "separator_before": false,
+                    "separator_after": false,
+                    "label": "Clone with children",
+                    "action": function(obj) {
+                        AddEditScope.ADD_FROM_TEMPLATE_PARENT_ID = $node.id;
+                        AddEditScope.cloneScopeWithChild($node.id);
+                    }
+                },
+                "Add_from_Template": {
+                    "separator_before": false,
+                    "separator_after": false,
+                    "label": "Add from Library",
+                    "action": function(obj) {
+                        //tree.edit($node);                        
+                        AddEditScope.ADD_FROM_TEMPLATE_PARENT_ID = $node.id;
+                        AddEditScope.showAddFromTemplateModal();
+                    }
+                },
+                "Add_Edit_Child": {
+                    "separator_before": false,
+                    "separator_after": false,
+                    "label": "Manage Children",
+                    "action": function(obj) {
+                        $('#helpModal1').find('#theIframe1').attr('src', '/apex/E2_AddNewScopeTemplate?is_Edit=true&scopegroup_id=' + scopeGrpId + '&id=' + $node.id);
+                        $('.custom-new-header').html('Manage Children');
+                        $('#helpModal1').find('#addupdatescopebutton').html('Update');
+                        $('#helpModal1').show();
+                        $('#helpModal1').find('#theIframe1').closest('div.slds-modal__content').scrollTop(0);
+                        $('#helpBackdrop1').show();
 
                     }
                 }
@@ -252,6 +252,16 @@ var AddEditScope = {
     SAVED_SCOPE_NAME : null,
     GLOBAL_SCOPEID : null,
     UPDATE_DISPLAY_ORDER : false,
+    OPEN_NODES : null,
+    // RS 11/22: S-452962 : method re-initiate JStree on cloning scope, 
+    // add new scope or add from template. This method get all open nodes
+    // in jstree in OPEN_NODES as array
+    re_init_tree : function() {
+        AddEditScope.OPEN_NODES = $(treeId).jstree(true).get_state()['core']['open'];
+        $(treeId).jstree('destroy');
+        $(treeId).jstree(jstree_options);
+        AddEditScope.tree_init();
+    },
     reload_Scope_frame : function(result) {
         $.each(result, function(indx, scope) {
             var frame_id = '#' + scope + AddEditScope.ENDS_WITH;
@@ -318,9 +328,7 @@ var AddEditScope = {
             $(loadSpinner).show().css('height', $(document).outerHeight());
             //to refresh scope loe we need to reload jstree
             AddEditScope.GLOBAL_SCOPEID = null;
-            $(treeId).jstree('destroy');
-            $(treeId).jstree(jstree_options);
-            AddEditScope.tree_init();
+            AddEditScope.re_init_tree();
             CustomAlert.show('Scope have been removed successfully!!!');
         }
     },
@@ -341,9 +349,7 @@ var AddEditScope = {
                   alert(result);
                 }
                 // call the tree_init back to get the deleted node
-                $(treeId).jstree('destroy');
-                $(treeId).jstree(jstree_options);
-                AddEditScope.tree_init();
+                AddEditScope.re_init_tree();
                 return;
             }
             AddEditScope.delete_scope_async();
@@ -372,18 +378,14 @@ var AddEditScope = {
                     delete AddEditScope.delete_call_register[prop];
                 }
                 // call the tree_init back to get the deleted node
-                $(treeId).jstree('destroy');
-                $(treeId).jstree(jstree_options);
-                AddEditScope.tree_init();
+                AddEditScope.re_init_tree();
                 return;
             }
             if (AddEditScope.delete_call_register && AddEditScope.delete_call_register[result]) delete AddEditScope.delete_call_register[result];
             if (AddEditScope.delete_call_register && JSON.stringify(AddEditScope.delete_call_register) == '{}') {
                 $(loadSpinner).hide();
                 //CustomAlert.show('Scope(s) have been removed successfully!!!');
-                $(treeId).jstree('destroy');
-                $(treeId).jstree(jstree_options);
-                AddEditScope.tree_init();
+                AddEditScope.re_init_tree();
                 CustomAlert.show('Scope have been removed successfully!!!');
             }
         },
@@ -408,9 +410,7 @@ var AddEditScope = {
                 alert(result);
                 $(loadSpinner).hide();
                 // call the tree_init back to get the deleted node
-                $(treeId).jstree('destroy');
-                $(treeId).jstree(jstree_options);
-                AddEditScope.tree_init();
+                AddEditScope.re_init_tree();
                 return;
             }
             if (AddEditScope.reparent_call_register && AddEditScope.reparent_call_register[result]) delete AddEditScope.reparent_call_register[result];
@@ -423,13 +423,6 @@ var AddEditScope = {
                 global_scopeId = result;
                 
                 AddEditScope.updateScopeDisplayOrder();
-                
-                // show success message
-                /*CustomAlert.show('Scope have been re-parented successfully!!!');
-                $(loadSpinner).show().css('height', $(document).outerHeight());
-                $(treeId).jstree('destroy');
-                $(treeId).jstree(jstree_options);
-                AddEditScope.tree_init();*/
             }
         },
         onFailure: function(error) {
@@ -472,9 +465,7 @@ var AddEditScope = {
                 $(loadSpinner).hide();
                     
                 // call the tree_init back to get the deleted node
-                $(treeId).jstree('destroy');
-                $(treeId).jstree(jstree_options);
-                AddEditScope.tree_init();
+                AddEditScope.re_init_tree();
                 return;
             }
             if(AddEditScope.UPDATE_DISPLAY_ORDER == true) {
@@ -486,9 +477,7 @@ var AddEditScope = {
             
             
             $(loadSpinner).show().css('height', $(document).outerHeight());
-            $(treeId).jstree('destroy');
-            $(treeId).jstree(jstree_options);
-            AddEditScope.tree_init();
+            AddEditScope.re_init_tree();
         },
         onFailure: function(error) {
             alert(error);
@@ -573,6 +562,9 @@ var AddEditScope = {
             $.each(result, function(indx, node) {
                 console.log('MI::::' + node.title + '-' + node.display_order);
                 AddEditScope.create_node(node, parseInt(node.display_order));
+                if(AddEditScope.OPEN_NODES && AddEditScope.OPEN_NODES.indexOf(node.id) == -1) {
+                    $(treeId).jstree(true).close_node(node);
+                }
             });
             bindEvents();
             
@@ -594,6 +586,7 @@ var AddEditScope = {
             } else {
                 $(loadSpinner).hide();
             }
+            AddEditScope.OPEN_NODES = null;
         },
         onFailure: function(error) {
             alert(error);
@@ -765,10 +758,8 @@ var AddEditScope = {
     },
 
     closeAddNewModelPopup: function() {
-        $(treeId).jstree('destroy');
-        $(treeId).jstree(jstree_options);
         $(loadSpinner).show().css('height', $(document).outerHeight());
-        AddEditScope.tree_init();
+        AddEditScope.re_init_tree();
         AddEditScope.hideAddNewModal();
         CustomAlert.show('Scope have been added successfully!!!');
     },
@@ -807,10 +798,8 @@ var AddEditScope = {
     scopesUpdatedCallback: {
         onSuccess: function(result) {
             if (result.length > 0) {
-                    $(treeId).jstree('destroy');
-                    $(treeId).jstree(jstree_options);
                     $(loadSpinner).show().css('height', $(document).outerHeight());
-                    AddEditScope.tree_init();
+                    AddEditScope.re_init_tree();
                     // End
                     $(loadSpinner).hide();
                     CustomAlert.show('Scopes has been successfully updated!!!');
@@ -827,10 +816,8 @@ var AddEditScope = {
     showSaveSuccessMessage: function(scope_id, scope_name){
     	AddEditScope.SAVED_SCOPE_ID = scope_id;
         AddEditScope.SAVED_SCOPE_NAME = scope_name;
-    	$(treeId).jstree('destroy');
-        $(treeId).jstree(jstree_options);
         $(loadSpinner).show().css('height', $(document).outerHeight());
-        AddEditScope.tree_init();
+        AddEditScope.re_init_tree();
     },
 
     showAddNewModal: function() {

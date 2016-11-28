@@ -36,6 +36,13 @@
         <value>Answer will deactivate predefined child scope if cloned</value>
     </labels>
     <labels>
+        <fullName>E2_Estimate_Cloning_Error_Message</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>E2 Estimate Cloning Error Message</shortDescription>
+        <value>Opps something went wrong with the estimate cloning.\nPlease reach out to helpdesk@appirio.com to log this issue.</value>
+    </labels>
+    <labels>
         <fullName>E2_Required_Field_Error_Message</fullName>
         <categories>E2_AddEditDerivedEfforts</categories>
         <language>en_US</language>

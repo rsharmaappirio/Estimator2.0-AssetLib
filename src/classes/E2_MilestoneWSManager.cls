@@ -174,7 +174,7 @@ public class E2_MilestoneWSManager {
  
     public static string updateBulkText(string jsonstr){
         //method to update bulk Text__c
-        List<E2_MilestoneWS.RowColumnWrapper> lstColorCodes = (List<E2_MilestoneWS.RowColumnWrapper>)JSON.deserialize(jsonstr, List<E2_MilestoneWS.RowColumnWrapper>.class);
+        List<E2_MilestoneWS.MilestoneWeekWrapper> lstColorCodes = (List<E2_MilestoneWS.MilestoneWeekWrapper>)JSON.deserialize(jsonstr, List<E2_MilestoneWS.MilestoneWeekWrapper>.class);
         Set<String> weekIds = new Set<String>();
         Set<String> milestoneIds = new Set<String>();
         Map<String, E2_Estimate_Milestone_Week__c> milestoneWeekMap = new Map<String, E2_Estimate_Milestone_Week__c>();
@@ -183,10 +183,10 @@ public class E2_MilestoneWSManager {
         List<E2_Estimate_Milestone__c> lstMilestoneToInsert = new List<E2_Estimate_Milestone__c>();
         List<E2_Estimate_Milestone__c> lstMilestoneToUpdate = new List<E2_Estimate_Milestone__c>();
         
-        for(E2_MilestoneWS.RowColumnWrapper rwW : lstColorCodes){
+        for(E2_MilestoneWS.MilestoneWeekWrapper rwW : lstColorCodes){
             
             weekIds.add(rwW.weekId);
-            milestoneIds.add(rwW.rowId);    
+            milestoneIds.add(rwW.milestoneId);    
         }
         
         for(E2_Estimate_Milestone_Week__c rwW : E2_MilestoneDataUtil_WS.getEstimateMilestoneWeeks(weekIds, milestoneIds)){
@@ -195,21 +195,23 @@ public class E2_MilestoneWSManager {
                milestoneWeekMap.put(key, rwW);           
         }
          
-       for(E2_MilestoneWS.RowColumnWrapper rwW : lstColorCodes){
-            string key = rwW.rowId + SEPARATOR + rwW.weekId;
-            string text = rwW.value;
+       for(E2_MilestoneWS.MilestoneWeekWrapper rwW : lstColorCodes){
+            string key = rwW.milestoneId + SEPARATOR + rwW.weekId;
+            string text = rwW.text;
+            string colorCode = rwW.textcolorcode;
             
-            if(rwW.weekId == MILESTONE1_ID && String.isNotBlank(rwW.rowId)){
-               lstMilestoneToUpdate.add(new E2_Estimate_Milestone__c( id = rwW.rowId, Milestone1__c = text));
-            }else if(rwW.weekId == MILESTONE2_ID && String.isNotBlank(rwW.rowId)){
-               lstMilestoneToUpdate.add(new E2_Estimate_Milestone__c( id = rwW.rowId, Milestone2__c = text)); 
+            if(rwW.weekId == MILESTONE1_ID && String.isNotBlank(rwW.milestoneId)){
+               lstMilestoneToUpdate.add(new E2_Estimate_Milestone__c( id = rwW.milestoneId, Milestone1__c = text));
+            }else if(rwW.weekId == MILESTONE2_ID && String.isNotBlank(rwW.milestoneId)){
+               lstMilestoneToUpdate.add(new E2_Estimate_Milestone__c( id = rwW.milestoneId, Milestone2__c = text)); 
             }else{
                 if(milestoneWeekMap.containsKey(key)){
                     E2_Estimate_Milestone_Week__c eRW = milestoneWeekMap.get(key);
                     eRW.Text__c = text;
+                    eRW.TextColorCode__c = colorCode;
                     lstToUpdate.add(eRW);
                 }else{
-                    E2_Estimate_Milestone_Week__c eRW = new E2_Estimate_Milestone_Week__c(Text__c = text, Estimate_Milestone__c = rwW.rowId, Estimate_Week_Milestone__c = rwW.weekId);
+                    E2_Estimate_Milestone_Week__c eRW = new E2_Estimate_Milestone_Week__c(Text__c = text, TextColorCode__c = colorCode, Estimate_Milestone__c = rwW.milestoneId, Estimate_Week_Milestone__c = rwW.weekId);
                     lstToInsert.add(eRW);
                 }
             }

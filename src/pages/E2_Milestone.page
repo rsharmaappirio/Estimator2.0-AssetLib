@@ -35,7 +35,8 @@
     <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/controls/slick.columnpicker.js"></script>
     <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/slick.formatters.js"></script>
     <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/slick.editors.js"></script>
-    <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/slick.grid.js"></script>
+    <!--script type="text/javascript" src="{!$Resource.E2_SlickGrid}/slick.grid.js"></script-->
+    <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/slick.grid.new.js"></script>
     <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/lib/js/require.js"></script>
     <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/lib/js/underscore.js"></script>
     
@@ -47,13 +48,17 @@
     <script type="text/javascript" src="{!$Resource.E2_MilestoneJS}"></script>
     
     <apex:composition template="E2_Template">
-        <apex:define name="title">Schedule Milestone</apex:define>
+        <apex:define name="title">Milestone Schedule</apex:define>
         <apex:define name="header">
             <c:E2_PermissionMessage rendered="{!NOT(isEditable)}" />
             <c:E2_Header psr_id="{!psrId}" step="6" />
         </apex:define>
         <apex:define name="body">
             <style rel="stylesheet" type="text/css">
+                .slick-row.selected {
+                    background: #0070d2 none repeat scroll 0 0;
+                    z-index: 10;
+                }
                 a.delete_button, a.delete_button:hover, a.delete_button:active, a.delete_button:focus{
                     background: transparent url({!$Resource.E2_SLDS1}/assets/icons/utility/delete_60.png) no-repeat scroll center center / 15px 15px;
                     height: 15px;

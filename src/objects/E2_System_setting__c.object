@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fields>
+        <fullName>Fixed_Fee_Buffer__c</fullName>
+        <defaultValue>0</defaultValue>
+        <description>Fixed Fee Buffer %</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Fixed Fee Buffer %</inlineHelpText>
+        <label>Fixed Fee Buffer:</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>0</scale>
+        <trackTrending>false</trackTrending>
+        <type>Percent</type>
+    </fields>
+    <fields>
+        <fullName>Fixed_Fee_Cost_Uplift__c</fullName>
+        <defaultValue>0</defaultValue>
+        <description>Fixed Fee Cost Uplift Percent of Service Costs</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Fixed Fee Cost Uplift Percent of Service Costs</inlineHelpText>
+        <label>Fixed Fee Cost Uplift</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>0</scale>
+        <trackTrending>false</trackTrending>
+        <type>Percent</type>
+    </fields>
+</CustomObject>
