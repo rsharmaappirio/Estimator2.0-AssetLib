@@ -20,6 +20,11 @@ global without sharing class E2_Clone_Estimate_WS {
         return E2_Clone_Estimate_WSManager.cloneEstimateScopes( estimateId, newEstimateId);
     }
     
+    // S-454105 : reParentScope
+    webservice static string reParentClonedScopes(string clonedSourceJSON, string newEstimateId) { 
+        return E2_Clone_Estimate_WSManager.reParentClonedScopes(clonedSourceJSON, newEstimateId);
+    }
+    
     // S-454105 :clone Capacity
     webservice static string cloneEstimateCapacity(string estimateId, string newEstimateId) {
         return E2_Clone_Estimate_WSManager.cloneEstimateCapacity( estimateId, newEstimateId);

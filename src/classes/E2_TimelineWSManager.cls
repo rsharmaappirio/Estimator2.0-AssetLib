@@ -736,7 +736,8 @@ public class E2_TimelineWSManager {
     
     // method to bulk update weeks 
     // To update hours in bulk on copy and paste to cells - (Vikash - 12th Sep 2016)
-   public static string updateResourceWeeks(string jsonstr){
+       
+    public static string updateResourceWeeks(string jsonstr){
         List<E2_TimelineWS.CellWrapper> lstWeeks = (List<E2_TimelineWS.CellWrapper>)JSON.deserialize(jsonstr, List<E2_TimelineWS.CellWrapper>.class);
         
         Set<String> weekIds = new Set<String>();
@@ -760,87 +761,6 @@ public class E2_TimelineWSManager {
         
         
         for(E2_TimelineWS.CellWrapper rWeek: lstWeeks){
-            //CMC_Estimate_Week__c estimateWeek = new CMC_Estimate_Week__c();
-            String rowType = rWeek.rowId;
-            // RS I-239841 : Condition added to save Phase on copy paste
-            if(rowType.equalsIgnoreCase(PHASE_TEXT)) {
-                if(!weekToUpdateMap.containsKey(rWeek.cellId)) weekToUpdateMap.put(rWeek.cellId, new CMC_Estimate_Week__c( id = rWeek.cellId ));
-                CMC_Estimate_Week__c estimateWeek = weekToUpdateMap.get(rWeek.cellId);
-                estimateWeek.Phase__c = rWeek.value;
-                weekToUpdateMap.put(rWeek.cellId, estimateWeek);
-                //lstWeekToUpdate.add(new CMC_Estimate_Week__c ( id = rWeek.cellId, Phase__c = rWeek.value));
-            }else if(rowType.equalsIgnoreCase(MILESTONE_TEXT)) {
-                if(!weekToUpdateMap.containsKey(rWeek.cellId)) weekToUpdateMap.put(rWeek.cellId, new CMC_Estimate_Week__c( id = rWeek.cellId ));
-                
-                CMC_Estimate_Week__c estimateWeek = weekToUpdateMap.get(rWeek.cellId);
-                estimateWeek.Milestone__c = rWeek.value;
-                weekToUpdateMap.put(rWeek.cellId, estimateWeek);
-                //lstWeekToUpdate.add(new CMC_Estimate_Week__c ( id = rWeek.cellId, Milestone__c = rWeek.value));
-            }else if(rowType.equalsIgnoreCase(MILESTONE1_TEXT)) {
-                if(!weekToUpdateMap.containsKey(rWeek.cellId)) weekToUpdateMap.put(rWeek.cellId, new CMC_Estimate_Week__c( id = rWeek.cellId ));
-                
-                CMC_Estimate_Week__c estimateWeek = weekToUpdateMap.get(rWeek.cellId);
-                estimateWeek.E2_Milestone1__c = rWeek.value;
-                weekToUpdateMap.put(rWeek.cellId, estimateWeek);
-                //lstWeekToUpdate.add(new CMC_Estimate_Week__c ( id = rWeek.cellId, E2_Milestone1__c = rWeek.value));
-            }else if(rowType.equalsIgnoreCase(MILESTONE2_TEXT)) {
-                if(!weekToUpdateMap.containsKey(rWeek.cellId)) weekToUpdateMap.put(rWeek.cellId, new CMC_Estimate_Week__c( id = rWeek.cellId ));
-                
-                CMC_Estimate_Week__c estimateWeek = weekToUpdateMap.get(rWeek.cellId);
-                estimateWeek.E2_Milestone2__c = rWeek.value;
-                weekToUpdateMap.put(rWeek.cellId, estimateWeek);
-                //lstWeekToUpdate.add(new CMC_Estimate_Week__c ( id = rWeek.cellId, E2_Milestone2__c = rWeek.value));
-            }else{
-                String key = rWeek.rowId + KEY_SEPARATOR + rWeek.cellId;
-                if(resourceWeekMap.containsKey(key)){
-                    CMC_Estimate_Resource_Week__c eRW = resourceWeekMap.get(key);
-                    eRW.Hours__c = Integer.valueOf(rWeek.value.trim()); 
-                    lstToUpdate.add(eRW);
-                }else{
-                    CMC_Estimate_Resource_Week__c eRW = new CMC_Estimate_Resource_Week__c(Hours__c = Integer.valueOf(rWeek.value.trim()), Estimate_Resource__c = rWeek.rowId, Estimate_Week__c = rWeek.cellId);
-                    lstToInsert.add(eRW);
-                }
-                
-                
-            }
-            
-        }
-        
-        try{
-         if(!weekToUpdateMap.isEmpty()) update weekToUpdateMap.values();
-         if(!lstToUpdate.isEmpty()) update lstToUpdate;
-         if(!lstToInsert.isEmpty()) insert lstToInsert;
-        }catch(Exception ex){
-         return 'Failed: ' + ex.getMessage(); 
-        }
-         
-        return 'Success';
-    }
-    
-    public static string updateResourceWeeks2(string jsonstr){
-        List<E2_TimelineWS.CellWrapper2> lstWeeks = (List<E2_TimelineWS.CellWrapper2>)JSON.deserialize(jsonstr, List<E2_TimelineWS.CellWrapper2>.class);
-        
-        Set<String> weekIds = new Set<String>();
-        Set<String> resourceIds = new Set<String>();
-        Map<String, CMC_Estimate_Resource_Week__c> resourceWeekMap = new Map<String, CMC_Estimate_Resource_Week__c>();
-        List<CMC_Estimate_Resource_Week__c> lstToInsert = new List<CMC_Estimate_Resource_Week__c>();
-        List<CMC_Estimate_Resource_Week__c> lstToUpdate = new List<CMC_Estimate_Resource_Week__c>();
-        //List<CMC_Estimate_Week__c> lstWeekToUpdate = new List<CMC_Estimate_Week__c>();
-        Map<String, CMC_Estimate_Week__c> weekToUpdateMap = new Map<String, CMC_Estimate_Week__c>();
-        
-        
-        for(E2_TimelineWS.CellWrapper2 rWeek : lstWeeks){
-            weekIds.add(rWeek.cellId);
-            resourceIds.add(rWeek.rowId);    
-        }
-        
-        for(CMC_Estimate_Resource_Week__c rwW : E2_TimelineDataUtil_WS.getEstimateResourceWeekRecords(weekIds, resourceIds)){
-               string key = rwW.Estimate_Resource__c + KEY_SEPARATOR + rwW.Estimate_Week__c;
-               resourceWeekMap.put(key, rwW); 
-        }
-        
-        
-        for(E2_TimelineWS.CellWrapper2 rWeek: lstWeeks){
             //CMC_Estimate_Week__c estimateWeek = new CMC_Estimate_Week__c();
             String rowType = rWeek.rowId;
             // RS I-239841 : Condition added to save Phase on copy paste

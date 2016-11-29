@@ -166,6 +166,14 @@
         <members>CMC_Presales_LOE__c.E2_Estimate_Total_Weeks__c</members>
 		<members>E2_System_setting__c.Fixed_Fee_Cost_Uplift__c</members>
 		<members>E2_System_setting__c.Fixed_Fee_Buffer__c</members>
+		<members>E2_Estimate_Milestone_Week__c.Estimate_Week_Milestone__c</members>
+		<members>E2_Recommended_Asset__c.Scope__c</members>
+		<members>E2_Recommended_Asset__c.Asset__c</members>
+		<members>E2_Recommended_Asset__c.Hours_Saved__c</members>
+		<members>E2_Recommended_Asset__c.Scope_Asset_Key__c</members>
+		<members>E2_Estimate_Week_Milestone__c.Order__c</members>
+		<members>E2_Estimate_Week_Milestone__c.Date__c</members>
+		<members>E2_Estimate_Week_Milestone__c.Estimate__c</members>
         <name>CustomField</name>
     </types>
     <types>
@@ -198,6 +206,8 @@
         <members>E2_Scope__c</members>
         <members>E2_Timeline_Milestone__c</members>
         <members>E2_Timeline_Milestone__c</members>
+        <members>E2_Recommended_Asset__c</members>
+        <members>E2_Estimate_Week_Milestone__c</members>
         <name>CustomObject</name>
     </types>
     <types>

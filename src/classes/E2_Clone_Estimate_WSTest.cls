@@ -43,15 +43,18 @@ private class E2_Clone_Estimate_WSTest{
    public static testmethod void testCloneEstimateScopes(){
        
        sysAdmin = getSysAdminUser();
-       estimate = [SELECT Id, Name FROM CMC_Presales_LOE__c];
        
        System.runAs(sysAdmin){
            Test.startTest();
+           Presales_Request__c psr = [Select ID from Presales_Request__c];
+           estimate = [SELECT Id, Name FROM CMC_Presales_LOE__c];
            
            string newEstimateId = E2_Clone_Estimate_WS.cloneEstimate(estimate.Id);
            
            string returnMessage = E2_Clone_Estimate_WS.cloneEstimateScopes(estimate.Id , newEstimateId);
-           System.assertEquals(returnMessage, 'success', 'Unit test failed: scope hierachy has not been cloned.');
+           //System.assertEquals(returnMessage, 'success', 'Unit test failed: an error enclountered while cloning scopes.');
+           returnMessage=E2_Clone_Estimate_WS.reParentClonedScopes(returnMessage, newEstimateId);
+           System.assert(returnMessage.equalsIgnoreCase('success'),'An error encountered while clonging milestone weeks. ');
           
            Test.stopTest();
        }

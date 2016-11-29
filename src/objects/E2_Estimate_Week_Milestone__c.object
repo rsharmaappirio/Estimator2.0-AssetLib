@@ -47,23 +47,30 @@
     <allowInChatterGroups>false</allowInChatterGroups>
     <compactLayoutAssignment>SYSTEM</compactLayoutAssignment>
     <deploymentStatus>Deployed</deploymentStatus>
-    <description>Junction object between Estimate Milestone and Estimate Week. Used in Estimator 2.0 App</description>
     <enableActivities>false</enableActivities>
     <enableBulkApi>true</enableBulkApi>
     <enableFeeds>false</enableFeeds>
     <enableHistory>false</enableHistory>
     <enableReports>true</enableReports>
-    <enableSearch>false</enableSearch>
+    <enableSearch>true</enableSearch>
     <enableSharing>true</enableSharing>
     <enableStreamingApi>true</enableStreamingApi>
     <externalSharingModel>ControlledByParent</externalSharingModel>
     <fields>
-        <fullName>Estimate_Milestone__c</fullName>
+        <fullName>Date__c</fullName>
         <externalId>false</externalId>
-        <label>Estimate Milestone</label>
-        <referenceTo>E2_Estimate_Milestone__c</referenceTo>
-        <relationshipLabel>Estimate Milestone Weeks</relationshipLabel>
-        <relationshipName>Estimate_Milestone_Weeks</relationshipName>
+        <label>Date</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Date</type>
+    </fields>
+    <fields>
+        <fullName>Estimate__c</fullName>
+        <externalId>false</externalId>
+        <label>Estimate</label>
+        <referenceTo>CMC_Presales_LOE__c</referenceTo>
+        <relationshipLabel>Estimate Week Milestones</relationshipLabel>
+        <relationshipName>Estimate_Week_Milestones</relationshipName>
         <relationshipOrder>0</relationshipOrder>
         <reparentableMasterDetail>false</reparentableMasterDetail>
         <trackTrending>false</trackTrending>
@@ -71,57 +78,32 @@
         <writeRequiresMasterRead>false</writeRequiresMasterRead>
     </fields>
     <fields>
-        <fullName>Estimate_Week_Milestone__c</fullName>
-        <deleteConstraint>SetNull</deleteConstraint>
+        <fullName>Order__c</fullName>
         <externalId>false</externalId>
-        <label>Estimate Week Milestone</label>
-        <referenceTo>E2_Estimate_Week_Milestone__c</referenceTo>
-        <relationshipLabel>Estimate Milestone Weeks</relationshipLabel>
-        <relationshipName>Estimate_Milestone_Weeks</relationshipName>
+        <label>Order</label>
+        <precision>18</precision>
         <required>false</required>
+        <scale>0</scale>
         <trackTrending>false</trackTrending>
-        <type>Lookup</type>
-    </fields>
-    <fields>
-        <fullName>Estimate_Week__c</fullName>
-        <deleteConstraint>SetNull</deleteConstraint>
-        <externalId>false</externalId>
-        <label>Estimate Week</label>
-        <referenceTo>CMC_Estimate_Week__c</referenceTo>
-        <relationshipLabel>Estimate Milestone Weeks</relationshipLabel>
-        <relationshipName>Estimate_Milestone_Weeks_del</relationshipName>
-        <required>false</required>
-        <trackTrending>false</trackTrending>
-        <type>Lookup</type>
-    </fields>
-    <fields>
-        <fullName>TextColorCode__c</fullName>
-        <description>Stores the hex color code for the milestone descriptions</description>
-        <externalId>false</externalId>
-        <label>TextColorCode</label>
-        <length>80</length>
-        <required>false</required>
-        <trackTrending>false</trackTrending>
-        <type>Text</type>
+        <type>Number</type>
         <unique>false</unique>
     </fields>
-    <fields>
-        <fullName>Text__c</fullName>
-        <description>Field stores the text value milestone description</description>
-        <externalId>false</externalId>
-        <label>Text</label>
-        <length>32768</length>
-        <trackTrending>false</trackTrending>
-        <type>LongTextArea</type>
-        <visibleLines>3</visibleLines>
-    </fields>
-    <label>Estimate Milestone Week</label>
+    <label>Estimate Week Milestone</label>
+    <listViews>
+        <fullName>All</fullName>
+        <columns>NAME</columns>
+        <columns>Date__c</columns>
+        <columns>Estimate__c</columns>
+        <columns>Order__c</columns>
+        <filterScope>Everything</filterScope>
+        <label>All</label>
+        <language>en_US</language>
+    </listViews>
     <nameField>
-        <displayFormat>EMW-{0000000000}</displayFormat>
-        <label>Estimate Milestone Week Name</label>
-        <type>AutoNumber</type>
+        <label>Week Name</label>
+        <type>Text</type>
     </nameField>
-    <pluralLabel>Estimate Milestone Weeks</pluralLabel>
+    <pluralLabel>Estimate Week Milestones</pluralLabel>
     <searchLayouts/>
     <sharingModel>ControlledByParent</sharingModel>
 </CustomObject>

@@ -39,11 +39,13 @@ public class E2_Clone_Estimate_WSManager {
             List<E2_Scope__c> scopeList = new List<E2_Scope__c>();
             Map<string, E2_Scope__c> hasChildrenScope = new Map<string, E2_Scope__c>();
             Map<string, E2_Scope__c> clonedSourceMap = new Map<string, E2_Scope__c>();
+            list<E2_Clone_Estimate_WSManager.ScopeMapping> mappingList = new list<E2_Clone_Estimate_WSManager.ScopeMapping>();
 
             for(E2_Scope__c scope : E2_Clone_DataUtil_WS.getFullScopesDetailsByEstimateId(estimateId)){
                 E2_Scope__c cloneScope = scope.clone(false, true, false, false);
                 cloneScope.Source_Scope__c = scope.id;
                 cloneScope.Presales_LOE__c = newEstimateId;
+                cloneScope.Parent_Scope__c = null;
                 scopeList.add(cloneScope);
                 clonedSourceMap.put(scope.id, cloneScope);
                 if(!scope.Efforts__r.isEmpty() || !scope.E2_Recommended_Assets__r.isEmpty()
@@ -57,14 +59,49 @@ public class E2_Clone_Estimate_WSManager {
                     // TODO : RS check with DML governor limit later.
                     // clone scope child efforts, assets, question and answers
                     E2_Estimator_WSManager.cloneScopesChild(scopeList, hasChildrenScope, clonedSourceMap);
-                    // reparent new scopes upto five level in hierachy.
-                    E2_Estimator_WSManager.reParentClonedScopes(clonedSourceMap);
+                    for(id clonedId : clonedSourceMap.KeySet()) {
+                        E2_Clone_Estimate_WSManager.ScopeMapping scopeMapping = new E2_Clone_Estimate_WSManager.ScopeMapping();
+                        scopeMapping.key = clonedId;
+                        scopeMapping.value = clonedSourceMap.get(clonedId).Id;
+                        mappingList.add(scopeMapping);
+                    }
+                    return JSON.serialize(mappingList);
                 } catch (Exception ex) {
                     deleteEstimate(newEstimateId);
                     return FAILED_PREFIX + ERROR_MESSAGE;
                 }   
             }
         }
+        return SUCCESS_MESSAGE;
+    }
+    
+    public static string reParentClonedScopes(string clonedSourceJSON, string newEstimateId) {
+        try {
+            // RS : Re-parent all cloned child scopes in new estimate/scope group hierarchy 
+            list<E2_Scope__c> scopesToUpdate = new list<E2_Scope__c>();
+            list<E2_Clone_Estimate_WSManager.ScopeMapping> mappingList = (list<E2_Clone_Estimate_WSManager.ScopeMapping>)JSON.deserialize(clonedSourceJSON, list<E2_Clone_Estimate_WSManager.ScopeMapping>.class);
+            map<string, string> clonedSourceMap = new map<string, string>();
+            for(E2_Clone_Estimate_WSManager.ScopeMapping scopemap : mappingList) {
+                clonedSourceMap.put(scopemap.key, scopemap.value);
+            }
+            for(E2_Scope__c scope : E2_dataUtil_WS.getParentScopeIds(clonedSourceMap.KeySet())) {
+             	string clonedScope = clonedSourceMap.get(scope.Id);
+                string parentScope = null;
+                if(scope.Parent_Scope__c != null && clonedSourceMap.containsKey(scope.Parent_Scope__c)) {
+                	parentScope = scope.Parent_Scope__c;
+                }
+                if(parentScope != null && clonedScope != null) {            		
+                	E2_Scope__c scopeToUpdate = new E2_Scope__c(Id = clonedScope, Parent_Scope__c = clonedSourceMap.get(parentScope));
+                	scopesToUpdate.add(scopeToUpdate);
+                }
+    		}
+            if(!scopesToUpdate.isEmpty()) {
+            	update scopesToUpdate;
+            }
+        } catch (Exception ex) {
+            deleteEstimate(newEstimateId);
+            return FAILED_PREFIX + ERROR_MESSAGE;
+        }  
         return SUCCESS_MESSAGE;
     }
     
@@ -295,6 +332,12 @@ public class E2_Clone_Estimate_WSManager {
     	public string key;
     	public string value;
     	public boolean isWeek;
+    }
+    
+    // wrapper class for cloned scopes mapping
+    public class ScopeMapping {
+        public string key;
+        public string value;
     }
     // End : Estimate clone functionality
 }

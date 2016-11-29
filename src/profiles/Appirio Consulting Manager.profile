@@ -98,15 +98,15 @@
     </classAccesses>
     <classAccesses>
         <apexClass>E2_Clone_DataUtil_WS</apexClass>
-        <enabled>false</enabled>
+        <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
         <apexClass>E2_Clone_Estimate_WS</apexClass>
-        <enabled>false</enabled>
+        <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
         <apexClass>E2_Clone_Estimate_WSManager</apexClass>
-        <enabled>false</enabled>
+        <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
         <apexClass>E2_Clone_Estimate_WSManagerTest</apexClass>
@@ -635,6 +635,16 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>E2_Estimate_Milestone_Week__c.Estimate_Week_Milestone__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>E2_Estimate_Milestone_Week__c.Estimate_Week__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>E2_Estimate_Milestone_Week__c.TextColorCode__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -700,6 +710,16 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>E2_Estimate_Week_Milestone__c.Date__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>E2_Estimate_Week_Milestone__c.Order__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>E2_Favourite_Scope__c.Unique_Scope_User_Id__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -746,6 +766,16 @@
     <fieldPermissions>
         <editable>false</editable>
         <field>E2_Question__c.Weighted_Effort_LOE__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>E2_Recommended_Asset__c.Hours_Saved__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>E2_Recommended_Asset__c.Scope_Asset_Key__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -949,6 +979,15 @@
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
         <modifyAllRecords>false</modifyAllRecords>
+        <object>E2_Estimate_Milestone_Week__c</object>
+        <viewAllRecords>false</viewAllRecords>
+    </objectPermissions>
+    <objectPermissions>
+        <allowCreate>true</allowCreate>
+        <allowDelete>true</allowDelete>
+        <allowEdit>true</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>false</modifyAllRecords>
         <object>E2_Estimate_Milestone__c</object>
         <viewAllRecords>false</viewAllRecords>
     </objectPermissions>
@@ -959,6 +998,15 @@
         <allowRead>true</allowRead>
         <modifyAllRecords>false</modifyAllRecords>
         <object>E2_Estimate_Rate_Card__c</object>
+        <viewAllRecords>false</viewAllRecords>
+    </objectPermissions>
+    <objectPermissions>
+        <allowCreate>true</allowCreate>
+        <allowDelete>true</allowDelete>
+        <allowEdit>true</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>false</modifyAllRecords>
+        <object>E2_Estimate_Week_Milestone__c</object>
         <viewAllRecords>false</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
@@ -986,6 +1034,15 @@
         <allowRead>true</allowRead>
         <modifyAllRecords>false</modifyAllRecords>
         <object>E2_Question__c</object>
+        <viewAllRecords>false</viewAllRecords>
+    </objectPermissions>
+    <objectPermissions>
+        <allowCreate>true</allowCreate>
+        <allowDelete>true</allowDelete>
+        <allowEdit>true</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>false</modifyAllRecords>
+        <object>E2_Recommended_Asset__c</object>
         <viewAllRecords>false</viewAllRecords>
     </objectPermissions>
     <objectPermissions>

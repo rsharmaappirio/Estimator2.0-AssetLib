@@ -1669,7 +1669,8 @@ function AutoCompleteEditor(args) {
     var scope = this;
     
     this.init = function () {
-      $input = $("<INPUT id='" + (typeof args.item.id == 'undefined' ? 'new' : args.item.id) + "' type=text class='editor-text' />");
+      $input = $("<INPUT placeholder='" + (typeof args.item.id == 'undefined' ? Timeline.ADD_RESOURCE_LABEL : '') + "' id='" + (typeof args.item.id == 'undefined' ? 'new' : args.item.id) + "' type=text class='editor-text' />");    
+      //$input = $("<INPUT id='" + (typeof args.item.id == 'undefined' ? 'new' : args.item.id) + "' type=text class='editor-text' />");
       
       $input.appendTo(args.container)
             .keydown(function(e){
@@ -2508,7 +2509,7 @@ var Timeline = {
     hoursperphase_cols_css : {'text-align' : 'center', 'background-color': '#0070d2', 'color' : '#fff', 'font-weight' : 'bold'},
     rt_json : [],
     cellOldText : '',
-    
+    ADD_RESOURCE_LABEL : 'Type here to add resource...',
     renderGrid: function(){
         grid.setCellCssStyles("label_highlights", {
            1: {
@@ -2544,8 +2545,12 @@ var Timeline = {
         
         grid.render();
         
+        Timeline.applyAddNewRowResourceCellLabel();
         
-        
+    },
+    
+    applyAddNewRowResourceCellLabel: function(){
+        if(Timeline.getGridOptions().enableAddRow)  $(grid.getCellNode(grid.getData().length, 2)).append('<span class="add-resource-label">' + Timeline.ADD_RESOURCE_LABEL + '</span>');
     },
     
      // Method to convert b64 to blob for IE10+ export
@@ -2622,6 +2627,7 @@ var Timeline = {
        
        $('#myGrid').css({'width': '15000px', height: '15000px'});
        grid.resizeCanvas();
+       Timeline.applyAddNewRowResourceCellLabel();
        
        //grid.destroy();
        //gridMainInitiate();
@@ -4589,6 +4595,9 @@ var Timeline = {
                 return;
             }
             
+            // Refresh top panel on estimate on resource change
+            if(typeof refreshOverviewPanel === 'function') refreshOverviewPanel();
+            
             // process success
             sforce.apex.execute(WEBSERVICE_NAME, "getTimelineColumns", {
                 estimateId: estimateId
@@ -4623,6 +4632,9 @@ var Timeline = {
                 loader.hide();
                 return;
             }
+            
+            // Refresh top panel on estimate on resource change
+            if(typeof refreshOverviewPanel === 'function') refreshOverviewPanel();
             
             // process success
             sforce.apex.execute(WEBSERVICE_NAME, "getTimelineColumns", {
@@ -5469,7 +5481,7 @@ var Timeline = {
     updateResourceWeeks: function(jsonstr) {
         loader.show();
         
-        sforce.apex.execute(WEBSERVICE_NAME, "updateResourceWeeks2", {
+        sforce.apex.execute(WEBSERVICE_NAME, "updateResourceWeeks", {
             jsonstr: jsonstr
         }, Timeline.updateResourceWeeks_Callback);
         

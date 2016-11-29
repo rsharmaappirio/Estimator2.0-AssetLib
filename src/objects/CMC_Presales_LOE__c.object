@@ -309,7 +309,7 @@
         <openType>sidebar</openType>
         <protected>false</protected>
         <requireRowSelection>false</requireRowSelection>
-        <url>/apex/E2_AddEditEstimate?psr_id={!Presales_Request__c.Id}&apos;</url>
+        <url>/apex/E2_AddEditEstimate?psr_id={!Presales_Request__c.Id}</url>
     </webLinks>
     <webLinks>
         <fullName>E2_Edit_E2_Estimate</fullName>

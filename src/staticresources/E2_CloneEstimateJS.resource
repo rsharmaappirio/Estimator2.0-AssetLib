@@ -4,8 +4,13 @@
         ESTIMATE_ID : null,
         CLONED_ESITMATE_ID : null,
         cloneEstimate : function(estimateId) {
-            $(loadSpinner.message_div_id).html("Cloning Estimate");
-            loadSpinner.show();
+            // confirm from the user for this action first before actually 
+            // starting the clone process. 
+            if(!confirm('Are you sure to clone this estimate?')){
+              return false;   
+            }
+            $(loadingCloneSpinner.message_div_id).html("Cloning Estimate");
+            loadingCloneSpinner.show();
             ClonePresalesLOE.ESTIMATE_ID = estimateId;
             sforce.apex.execute("E2_Clone_Estimate_WS", "cloneEstimate", {
                 estimateId: estimateId
@@ -17,7 +22,7 @@
                 result = (result.length > 0 ? result[0] : result); 
                 if (result.indexOf('Fail') != -1) {
                     alert(result);
-                    loadSpinner.hide();
+                    loadingCloneSpinner.hide();
                     return ;
                 }
                 ClonePresalesLOE.CLONED_ESITMATE_ID = result;
@@ -25,11 +30,11 @@
             },
             onFailure: function(error) {
                 alert(clone_error_message);
-                loadSpinner.hide();
+                loadingCloneSpinner.hide();
             }
         },
         cloneScope : function() {
-            $(loadSpinner.message_div_id).html("Cloning Scopes");
+            $(loadingCloneSpinner.message_div_id).html("Cloning Scopes");
             sforce.apex.execute("E2_Clone_Estimate_WS", "cloneEstimateScopes", {
                 estimateId: ClonePresalesLOE.ESTIMATE_ID,
                 newEstimateId: ClonePresalesLOE.CLONED_ESITMATE_ID
@@ -40,7 +45,34 @@
                 result = (result.length > 0 ? result[0] : result); 
                 if (result.indexOf('Fail') != -1) {
                     alert(result);
-                    loadSpinner.hide();
+                    loadingCloneSpinner.hide();
+                    return ;
+                }
+                if (result.indexOf('success') != -1) {
+                    ClonePresalesLOE.cloneCapacity();
+                } else {
+                    ClonePresalesLOE.reparentCloneScope(result);
+                }
+            },
+            onFailure: function(error) {
+                ClonePresalesLOE.deleteEstimate();
+                alert(clone_error_message);
+                loadingCloneSpinner.hide();
+            }
+        },
+        reparentCloneScope : function(resultString) {
+            $(loadingCloneSpinner.message_div_id).html("Cloning Scopes");
+            sforce.apex.execute("E2_Clone_Estimate_WS", "reParentClonedScopes", {
+                clonedSourceJSON: resultString,
+                newEstimateId: ClonePresalesLOE.CLONED_ESITMATE_ID
+            }, ClonePresalesLOE.reparentCloneScope_callback);
+        },
+        reparentCloneScope_callback : {
+            onSuccess: function(result) {
+                result = (result.length > 0 ? result[0] : result); 
+                if (result.indexOf('Fail') != -1) {
+                    alert(result);
+                    loadingCloneSpinner.hide();
                     return ;
                 }
                 ClonePresalesLOE.cloneCapacity();
@@ -48,11 +80,11 @@
             onFailure: function(error) {
                 ClonePresalesLOE.deleteEstimate();
                 alert(clone_error_message);
-                loadSpinner.hide();
+                loadingCloneSpinner.hide();
             }
         },
         cloneCapacity : function() {
-            $(loadSpinner.message_div_id).html("Cloning Capacity");
+            $(loadingCloneSpinner.message_div_id).html("Cloning Capacity");
             sforce.apex.execute("E2_Clone_Estimate_WS", "cloneEstimateCapacity", {
                 estimateId: ClonePresalesLOE.ESTIMATE_ID,
                 newEstimateId: ClonePresalesLOE.CLONED_ESITMATE_ID
@@ -63,7 +95,7 @@
                 result = (result.length > 0 ? result[0] : result); 
                 if (result.indexOf('Fail') != -1) {
                     alert(result);
-                    loadSpinner.hide();
+                    loadingCloneSpinner.hide();
                     return ;
                 }
                 ClonePresalesLOE.cloneMilestone();
@@ -71,11 +103,11 @@
             onFailure: function(error) {
                 ClonePresalesLOE.deleteEstimate();
                 alert(clone_error_message);
-                loadSpinner.hide();
+                loadingCloneSpinner.hide();
             }
         },
         cloneMilestone : function() {
-            $(loadSpinner.message_div_id).html("Cloning Estimate Milestones");
+            $(loadingCloneSpinner.message_div_id).html("Cloning Estimate Milestones");
             sforce.apex.execute("E2_Clone_Estimate_WS", "cloneEstimateMilestone", {
                 estimateId: ClonePresalesLOE.ESTIMATE_ID,
                 newEstimateId: ClonePresalesLOE.CLONED_ESITMATE_ID
@@ -86,7 +118,7 @@
                 result = (result.length > 0 ? result[0] : result); 
                 if (result.indexOf('Fail') != -1) {
                     alert(result);
-                    loadSpinner.hide();
+                    loadingCloneSpinner.hide();
                     return ;
                 }
                 if (result.indexOf('success') != -1) {
@@ -98,11 +130,11 @@
             onFailure: function(error) {
                 ClonePresalesLOE.deleteEstimate();
                 alert(clone_error_message);
-                loadSpinner.hide();
+                loadingCloneSpinner.hide();
             }
         },
         cloneMilestoneWeek : function(resultString) {
-            $(loadSpinner.message_div_id).html("Cloning Milestones Week");
+            $(loadingCloneSpinner.message_div_id).html("Cloning Milestones Week");
             sforce.apex.execute("E2_Clone_Estimate_WS", "cloneMilestoneWeeks", {
                 milestoneWeekJSON: resultString,
                 newEstimateId: ClonePresalesLOE.CLONED_ESITMATE_ID
@@ -113,7 +145,7 @@
                 result = (result.length > 0 ? result[0] : result); 
                 if (result.indexOf('Fail') != -1) {
                     alert(result);
-                    loadSpinner.hide();
+                    loadingCloneSpinner.hide();
                     return ;
                 }
                 ClonePresalesLOE.cloneTimeline();
@@ -121,11 +153,11 @@
             onFailure: function(error) {
                 ClonePresalesLOE.deleteEstimate();
                 alert(clone_error_message);
-                loadSpinner.hide();
+                loadingCloneSpinner.hide();
             }
         },
         cloneTimeline : function() {
-            $(loadSpinner.message_div_id).html("Cloning Resource Timeline");
+            $(loadingCloneSpinner.message_div_id).html("Cloning Resource Timeline");
             sforce.apex.execute("E2_Clone_Estimate_WS", "cloneEstimateTimeline", {
                 estimateId: ClonePresalesLOE.ESTIMATE_ID,
                 newEstimateId: ClonePresalesLOE.CLONED_ESITMATE_ID
@@ -136,7 +168,7 @@
                 result = (result.length > 0 ? result[0] : result); 
                 if (result.indexOf('Fail') != -1) {
                     alert(result);
-                    loadSpinner.hide();
+                    loadingCloneSpinner.hide();
                     return ;
                 }
                 if (result.indexOf('success') != -1) {
@@ -149,11 +181,11 @@
             onFailure: function(error) {
                 ClonePresalesLOE.deleteEstimate();
                 alert(clone_error_message);
-                loadSpinner.hide();
+                loadingCloneSpinner.hide();
             }
         },
         cloneResourceWeek : function(resultString) {
-            $(loadSpinner.message_div_id).html("Cloning Resource Week");
+            $(loadingCloneSpinner.message_div_id).html("Cloning Resource Week");
             sforce.apex.execute("E2_Clone_Estimate_WS", "cloneResourceWeeks", {
                 resourceWeekJSON: resultString,
                 newEstimateId: ClonePresalesLOE.CLONED_ESITMATE_ID
@@ -164,7 +196,7 @@
                 result = (result.length > 0 ? result[0] : result); 
                 if (result.indexOf('Fail') != -1) {
                     alert(result);
-                    loadSpinner.hide();
+                    loadingCloneSpinner.hide();
                     return ;
                 }
                 CustomAlert.show('Estimate has been cloned successfully!!! Re-directing to cloned estimate.');
@@ -173,22 +205,22 @@
             onFailure: function(error) {
                 ClonePresalesLOE.deleteEstimate();
                 alert(clone_error_message);
-                loadSpinner.hide();
+                loadingCloneSpinner.hide();
             }
         },
         deleteEstimate : function() {
-            $(loadSpinner.message_div_id).html("Deleting Estimate");
+            $(loadingCloneSpinner.message_div_id).html("Deleting Estimate");
             sforce.apex.execute("E2_Clone_Estimate_WS", "deleteEstimate", {
                 estimateId: ClonePresalesLOE.CLONED_ESITMATE_ID
             }, ClonePresalesLOE.deleteEstimate_callback);
         },
         deleteEstimate_callback : {
             onSuccess: function(result) {
-                loadSpinner.hide();
+                loadingCloneSpinner.hide();
             },
             onFailure: function(error) {
                 alert(clone_error_message);
-                loadSpinner.hide();
+                loadingCloneSpinner.hide();
             }
         },
         reDirectToClonedEstimate : function() {
@@ -196,16 +228,16 @@
         }
         
     }
-var loadSpinner = {
+var loadingCloneSpinner = {
     client_id : '#loadingCloneSpinner',
     message_div_id : '#spinnerProcess',
     DEFAULT_MESSAGE : 'Preocessing',
     show: function(){
-        $(loadSpinner.client_id).show().css('height', $(document).outerHeight());
+        $(loadingCloneSpinner.client_id).show().css('height', $(document).outerHeight());
     },
     
     hide: function(){
-        $(loadSpinner.message_div_id).html(loadSpinner.DEFAULT_MESSAGE);
-        $(loadSpinner.client_id).hide();
+        $(loadingCloneSpinner.message_div_id).html(loadingCloneSpinner.DEFAULT_MESSAGE);
+        $(loadingCloneSpinner.client_id).hide();
     }
 }    

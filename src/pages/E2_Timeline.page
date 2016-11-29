@@ -59,7 +59,25 @@
         <apex:define name="body">
             <style rel="stylesheet" type="text/css">
             
-               
+                /*** STYLE TO SUPPORT RESOURCE LABEL INFO TEXT ***/
+                span.add-resource-label{
+                    color:#999999;font-style: italic;font-weight:normal;
+                    font-size:14px;
+                }
+            
+                ::-webkit-input-placeholder { /* Chrome/Opera/Safari */
+                  color:#999999;font-style: italic;
+                }
+                ::-moz-placeholder { /* Firefox 19+ */
+                  color:#999999;font-style: italic;
+                }
+                :-ms-input-placeholder { /* IE 10+ */
+                  color:#999999;font-style: italic;
+                }
+                :-moz-placeholder { /* Firefox 18- */
+                  color:#999999;font-style: italic;
+                }
+                /***END: STYLE TO SUPPORT RESOURCE LABEL INFO TEXT ***/
             
                 div.info_icon{
                     background: transparent url({!$Resource.E2_SLDS1}/assets/icons/utility/info_60.png) no-repeat scroll center right / 15px 15px;
@@ -905,7 +923,7 @@
                                                
                                                     <td style="vertical-align:top;">&nbsp;<span class="overview-label">Total Hours:</span><br/>&nbsp;<apex:outputfield value="{!estimate.Total_Resource_Hours__c}"/></td>
                                                     <td style="vertical-align:top;">&nbsp;<span class="overview-label">Number Of Weeks:</span><br/>&nbsp;<apex:outputfield value="{!estimate.E2_Estimate_Total_Weeks__c}"/></td>
-                                                    <td style="vertical-align:top;">&nbsp;<span class="overview-label">Blended (List) Rate:</span><br/>&nbsp;<apex:outputfield value="{!estimate.Blended_Rate_Number__c}"/></td>
+                                                    <td style="vertical-align:top;">&nbsp;<span class="overview-label">Blended (List) Rate:</span><br/>&nbsp;{!CMC_Presales_LOE__c.CurrencyIsoCode}&nbsp;<apex:outputfield value="{!estimate.Blended_Rate_Number__c}"/></td>
                                                     <td style="vertical-align:top;">&nbsp;<span class="overview-label">Total Fees:</span><br/>&nbsp;{!CMC_Presales_LOE__c.CurrencyIsoCode}&nbsp;<apex:outputfield value="{!estimate.Total_Fees__c}"/></td>
                                                     <td style="vertical-align:top;">&nbsp;<span class="overview-label">Total:</span><br/>&nbsp;{!CMC_Presales_LOE__c.CurrencyIsoCode}&nbsp;<apex:outputfield value="{!estimate.Final_Total__c}"/></td>
                                                
