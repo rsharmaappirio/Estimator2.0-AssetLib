@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <customSettingsType>Hierarchy</customSettingsType>
+    <description>Custom setting object to store estimator 2.0 system settings</description>
+    <enableFeeds>false</enableFeeds>
     <fields>
         <fullName>Fixed_Fee_Buffer__c</fullName>
         <defaultValue>0</defaultValue>
@@ -26,4 +29,36 @@
         <trackTrending>false</trackTrending>
         <type>Percent</type>
     </fields>
+    <fields>
+        <fullName>Floor_Safe__c</fullName>
+        <externalId>false</externalId>
+        <label>Floor Safe</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Percent</type>
+    </fields>
+    <fields>
+        <fullName>Refresh_Ratacard__c</fullName>
+        <defaultValue>false</defaultValue>
+        <description>Field to control refresh rates and cost of resources in estimate from e2 timeline page.</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Field to control refresh rates and cost of resources in estimate from e2 timeline page.</inlineHelpText>
+        <label>Refresh Ratacard</label>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>Timeline_Discounts__c</fullName>
+        <externalId>false</externalId>
+        <label>Timeline Discounts</label>
+        <length>80</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <label>E2 System Settings</label>
+    <visibility>Public</visibility>
 </CustomObject>

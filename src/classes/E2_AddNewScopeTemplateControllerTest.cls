@@ -8,7 +8,7 @@ private class E2_AddNewScopeTemplateControllerTest {
   public static Presales_Request__c psr;
   
   public static testmethod void testViewScope(){
-    scope = [SELECT Id FROM E2_Scope__c WHERE Parent_Scope__c = null];
+    scope = [SELECT Id, Effort_Quantity__c FROM E2_Scope__c WHERE Parent_Scope__c = null];
     scopeGrp = [SELECT Id FROM E2_Scope_Group__c limit 1];
     effortLst = [SELECT Id FROM E2_Effort__c WHERE Scope__c = :scope.Id];
     
@@ -184,6 +184,10 @@ private class E2_AddNewScopeTemplateControllerTest {
             
               controller.pageAction();
               system.assert(controller.is_New == true);
+              
+              controller.clipboardData = '[ {"property1" : "test1", "property2" : "test2", "property3" : "test3","property4" : "Epic","property5" : "HIGH" ,"property6" : "10.10"}]';
+              controller.processClipboardData();
+              System.assertEquals(controller.childScopes.size(), 1, 'should have 1 childscope added');
               
               controller.clipboardData = '[ {"property1" : "", "property2" : "", "property3" : ""}]';
               controller.processClipboardData();

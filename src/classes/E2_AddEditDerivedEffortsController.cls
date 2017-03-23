@@ -6,7 +6,10 @@
  * Created By: Rahul Jain (Appirio)
  * 
  * Date Modified      Modified By                  Description of the update
- * May 18, 2016       Rohit Sharma                      
+ * May 18, 2016       Rohit Sharma                
+ * Dec 27, 2016       Rohit Sharma                 Updated DerivedEffort inner class: add variable for Of Level and To Level
+ * Feb 1st, 2017      Rohit Sharma                 S-456643 :Condition added on page re-direct to add 
+                                                   customerMode parameter in request.
 *  =====================================================================*/
 public with sharing class E2_AddEditDerivedEffortsController extends E2_Master {
   public CMC_Presales_LOE__c estimate {get;set;}
@@ -20,6 +23,8 @@ public with sharing class E2_AddEditDerivedEffortsController extends E2_Master {
   }
   //page action method on loading of page
   public PageReference pageAction(){
+    PageReference page = super.validateForTimelineEstimate(this.estimate);
+    if(page <> NULL) return page;
     super.validateAccess(this.estimate);
     //if estimate id is null then return, else display derived effort 
     if(this.estimate.id == NULL){
@@ -33,7 +38,6 @@ public with sharing class E2_AddEditDerivedEffortsController extends E2_Master {
   }
   //save method
   public PageReference save(){
-    system.debug('in save method');
     Savepoint sp = Database.setSavepoint();        
     try{
         estimate.E2_Derived_Effort_Template__c = deffortTemplateIds;
@@ -45,6 +49,8 @@ public with sharing class E2_AddEditDerivedEffortsController extends E2_Master {
     }
     PageReference pg = Page.E2_AddEditDerivedEfforts;
     pg.getParameters().put('id', this.estimate.id);
+    if(ApexPages.currentPage().getParameters().get(E2_Constants.PAGE_PARAMETER_CUSTOMERMODE) != null)  
+        pg.getParameters().put(E2_Constants.PAGE_PARAMETER_CUSTOMERMODE,ApexPages.currentPage().getParameters().get(E2_Constants.PAGE_PARAMETER_CUSTOMERMODE));
     pg.setRedirect(true);
     return pg;      
   }
@@ -76,7 +82,9 @@ public with sharing class E2_AddEditDerivedEffortsController extends E2_Master {
   public PageReference buildCapacity() {
     E2_CapacityController.reBuildCapacity(this.estimate);
     PageReference pg = Page.E2_Capacity;
-    pg.getParameters().put('id', this.estimate.id);    
+    pg.getParameters().put('id', this.estimate.id);
+    if(ApexPages.currentPage().getParameters().get(E2_Constants.PAGE_PARAMETER_CUSTOMERMODE) != null)  
+        pg.getParameters().put(E2_Constants.PAGE_PARAMETER_CUSTOMERMODE,ApexPages.currentPage().getParameters().get(E2_Constants.PAGE_PARAMETER_CUSTOMERMODE));
     return pg; 
   }
   //utility method to get derived Efforts Template for a group Id
@@ -110,6 +118,9 @@ public with sharing class E2_AddEditDerivedEffortsController extends E2_Master {
     public Decimal includeWhenHrs{get;set;}
     public Decimal allocationMin{get;set;}
     public decimal derivedHrs{get;set;}
+    // 12/27 : Resource level
+    public String ofLevel{get;set;}
+    public String toLevel{get;set;}
     //constructor
     public DerivedEffort(E2_Derived_Effort__c derivedEffort){
         this.derivedEffort = derivedEffort;
@@ -123,6 +134,9 @@ public with sharing class E2_AddEditDerivedEffortsController extends E2_Master {
         this.includeWhenHrs = derivedEffort.Include_When_Hours__c;    
         this.derivedHrs = derivedEffort.Derived_Hrs__c;
         this.allocationMin = derivedEffort.Allocation_Min__c;
+        // 12/27 : Define resource level
+        this.ofLevel = derivedEffort.Of_level__c;
+        this.toLevel = derivedEffort.Level__c;
     }
     //method to add Phase
     public void addPhase(E2_Derived_Effort__c derivedEffort) {

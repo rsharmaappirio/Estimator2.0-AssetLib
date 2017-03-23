@@ -7,6 +7,11 @@
  * 
  * Date Modified      Modified By                  Description of the update
    May, 18th, 2016    Rahul Jain                   Removed hardcoding, added constants/comments   
+   Dec, 12th, 2016    Rohit Sharma                 Modified the lines below in the processClipboardData method to suffice the feature for copy and paste - type/complexity/effort hrs
+                                                   added a supporting overload method getEffortsInstanceList with effortsStr as argument string.
+                                                   S-437670: Copy paste the Type and complexity field along with the Scope name ,description 
+                                                   and assumptions while creating the scopes.
+                                                   
 *  =====================================================================*/
 public with sharing class E2_AddNewScopeController {
     public E2_Scope__c scope{get;set;}
@@ -16,9 +21,18 @@ public with sharing class E2_AddNewScopeController {
     public boolean is_Edit{get;set;}
     public string estimateId{get;set;}
     public string dmlOperationMessage{get;set;}
+    public static boolean showNameError{get;set;}
+    public static boolean pageFocusToBottom{get;set;}
     private static final string URL_VALUE_TRUE = 'true';
-
-    public string clipboardData{get;set;}
+    private static final integer MAX_LENGTH_SCOPENAME = 80;
+    private static final string DEFAULT_PHASE = 'Build';
+    private static final string DEFAULT_ROLE = 'Developer';
+    private static final integer DEFAULT_COMPLEXITY_ADDER = 0;
+    private static final integer DEFAULT_COMPLEXITY_SUBTRACTOR = 0;
+    private static final string SEPARATOR = ' - ';
+    
+    transient public string clipboardData{get;set;}
+    
     //constructor
     public E2_AddNewScopeController(ApexPages.StandardController std) {
        this.scope = (E2_Scope__c)std.getRecord();
@@ -31,9 +45,13 @@ public with sharing class E2_AddNewScopeController {
     }
     //wrapper class to define clipboard info
     public class ClipboardInfo{
-        public string property1{get;set;}   
-        public string property2{get;set;}   
-        public string property3{get;set;}       
+        public string property1{get;set;} // scope name  
+        public string property2{get;set;} // scope description  
+        public string property3{get;set;} // scope assumption 
+        
+        public string property4{get;set;} // scope type
+        public string property5{get;set;} // scope complexity
+        public string property6{get;set;} // effort hours for default role and phase
     }
     
     public class ClipboardInfoList{
@@ -43,6 +61,8 @@ public with sharing class E2_AddNewScopeController {
     //method to process clipboard data
     public pagereference processClipboardData(){
         try{
+             showNameError = false;
+             pageFocusToBottom = false;
              String StringIn = this.clipboardData;
              
              if(this.childScopes.size() > 0 && this.childScopes[this.childScopes.size() - 1].scope.name == null && this.childScopes[this.childScopes.size() - 1].scope.id == null){
@@ -52,19 +72,45 @@ public with sharing class E2_AddNewScopeController {
              if(StringIn <> NULL && StringIn <> ''){
                  StringIn = '{"list1":' + StringIn + '}';
                  ClipboardInfoList infoList = (ClipboardInfoList)JSON.deserialize(StringIn, ClipboardInfoList.class);
+                 integer scopeIndex = 0;
                  for(ClipboardInfo info : infoList.list1){
-                    if(info.property1 <> NULL && string.isNotEmpty(info.property1) && string.isNotBlank(info.property1)) this.childScopes.add(new Scope(new E2_Scope__c(Description__c = info.property2, E2_Assumption__c = info.property3 , Is_Active__c = true, Name = info.property1, Complexity__c = E2_Constants.MEDIUM), getEffortsInstanceList()));
+                    if(info.property1 <> NULL && string.isNotEmpty(info.property1) && string.isNotBlank(info.property1)) {
+                        // RS: 12/12/2016: Modified below lines to support property4,5,6 inclusion in the save operation.
+                        //                 Saving the life of users to a ton by allowing them to also copy and paste the type, complexity and default - developer hours.
+                        Scope scopeInstance = new Scope(new E2_Scope__c(Display_Order__c = E2_Constants.DEFAULT_SCOPE_DISPLAY_ORDER + scopeIndex,
+                                                                        Description__c = info.property2, 
+                                                                       E2_Assumption__c = info.property3 , 
+                                                                       Is_Active__c = true, Name = info.property1, 
+                                                                       Scope_Item_Type__c = ((info.property4 <> NULL && string.isNotEmpty(info.property4) 
+                                                                                             && string.isNotBlank(info.property4)) && E2_Constants.SCOPE_TYPES.contains(info.property4.toLowerCase()) ? 
+                                                                                                               info.property4 : 
+                                                                                                               ''), // default empty
+                                                                       Complexity__c = ((info.property5 <> NULL && string.isNotEmpty(info.property5) 
+                                                                                        && string.isNotBlank(info.property5)) && E2_Constants.SCOPE_COMPLEXITIES.contains(info.property5.toLowerCase()) ? 
+                                                                                                               info.property5 : 
+                                                                                                               E2_Constants.MEDIUM) //default medium
+                                                                       ),
+                                                       getEffortsInstanceList(info.property6));
+                        //if(this.childScopes.size() > scopeIndex){
+                            //this.childScopes.add(scopeIndex, scopeInstance);
+                        //} else {
+                            this.childScopes.add(scopeInstance);
+                        //}
+                        if(info.property1.length() > MAX_LENGTH_SCOPENAME)  showNameError = true;
+                        scopeIndex++;
+                    }
+                    
                  }      
              }
+             pageFocusToBottom = true;
         }catch(Exception ex){
             ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, ex.getMessage()));
         }
-         
-        this.clipboardData = E2_Constants.BLANK;
         return null;
     }
     //page action method on page load
     public PageReference pageAction(){
+        showNameError = false;
         this.estimateId = ApexPages.CurrentPage().getParameters().get(E2_Constants.URL_KEY_ESTIMATE_ID);
         // New
         if(this.scope.id == null){
@@ -84,16 +130,21 @@ public with sharing class E2_AddNewScopeController {
     
     //method to add new child scope 
     public pagereference addNewScope(){
-        if(this.childScopes.size() > 0){
-          this.childScopes.add(0, new Scope(new E2_Scope__c(Is_Active__c = true, Complexity__c = E2_Constants.MEDIUM), getEffortsInstanceList()));
-        }else{
-          this.childScopes.add(new Scope(new E2_Scope__c(Is_Active__c = true, Complexity__c = E2_Constants.MEDIUM), getEffortsInstanceList())); 
-        }        
+        showNameError = false;
+        pageFocusToBottom = true;
+        //if(this.childScopes.size() > 0){
+          //this.childScopes.add(0, new Scope(new E2_Scope__c(Is_Active__c = true, Complexity__c = E2_Constants.MEDIUM), getEffortsInstanceList()));
+        //}else{
+          this.childScopes.add(new Scope(new E2_Scope__c(Is_Active__c = true, Complexity__c = E2_Constants.MEDIUM, 
+                                            Display_Order__c = E2_Constants.DEFAULT_SCOPE_DISPLAY_ORDER), getEffortsInstanceList())); 
+        //}        
         return null;                
     }
     
     //method to save scope
     public pagereference saveScope(){
+        showNameError = false;
+        pageFocusToBottom = false;
         List<E2_Scope__c> scopeListToUpsert = new List<E2_Scope__c>();        
         List<E2_Effort__c> masterScope_Efforts = new List<E2_Effort__c>();        
         List<E2_Scope__c> scopeListToDelete = new List<E2_Scope__c>();
@@ -136,6 +187,7 @@ public with sharing class E2_AddNewScopeController {
                 }
                 if(sc.scope.Id == null ){
                     sc.scope.Is_Active__c = true;
+                    sc.scope.Effort_Quantity__c = this.scope.Effort_Quantity__c;
                 }
                 if(sc.scope.Name == null ){
                   ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, System.Label.E2_Scope_is_Required ));
@@ -266,6 +318,31 @@ public with sharing class E2_AddNewScopeController {
         //efforts.add(new E2_Effort__c(Complexity_Factor_High__c = 0, Complexity_Factor_Low__c = 0, Effort_Hrs__c = 0));        
         return efforts;
     }
+    
+    public List<E2_Effort__c> getEffortsInstanceList(string effortsStr){
+        // RS: 12/12/2016: Added this method; This is an overload of the default method
+        //                 Allowing the users to add effort records too; if they have defined hours in the copy/paste in sheet.
+        List<E2_Effort__c> efforts = getEffortsInstanceList();
+        
+        try{
+            integer effortHours = integer.valueof(decimal.valueof(effortsStr));
+            if(effortHours > 0) {
+            efforts.add(new E2_Effort__c(Name = DEFAULT_ROLE + SEPARATOR + DEFAULT_PHASE,
+                                     Is_Active__c = true, 
+                                     Complexity_Factor_High__c = DEFAULT_COMPLEXITY_ADDER, 
+                                     Complexity_Factor_Low__c = DEFAULT_COMPLEXITY_SUBTRACTOR, 
+                                     Effort_Hrs__c = effortHours,
+                                     Phase__c = DEFAULT_PHASE,
+                                     Resource_Role__c = DEFAULT_ROLE));
+            }
+        }catch(Exception ex){
+            system.debug('Error at the time of converting the string to integer - may be a null or a blank or non integral provided');
+        }
+        
+                
+        return efforts;
+    }
+    
     //wrapper class for Scope
     public class Scope{
         public string key{get;set;}
@@ -276,6 +353,7 @@ public with sharing class E2_AddNewScopeController {
 
         public boolean isDeleted{get;set;}
         public string slider_state{get;set;}
+        public boolean hasNameError{get;set;}
         
         public decimal getEffortsSize(){
             decimal hrs = 0;
@@ -300,8 +378,12 @@ public with sharing class E2_AddNewScopeController {
         public Scope(E2_Scope__c scope, List<E2_Effort__c> efforts){            
             this.efforts = new List<Effort>();
             this.isDeleted = false;
+            this.hasNameError = false;
             this.slider_state = '';
             this.isCloned = false;
+            if(scope.Name != NULL && scope.Name.length() > 80) {
+                this.hasNameError = true;
+            }
             if(scope.Source_Scope__c != NULL){
                 this.isCloned = true;               
             }
@@ -327,11 +409,14 @@ public with sharing class E2_AddNewScopeController {
         //method to remove scope
         public pagereference remove(){
             this.isDeleted = true;
+            E2_AddNewScopeController.showNameError  = false;
+            E2_AddNewScopeController.pageFocusToBottom = false;
             return null;            
         }
         //method to add new efforts
         public pagereference addNewEffort(){
             this.efforts.add(new Effort(new E2_Effort__c(Complexity_Factor_High__c = 0, Complexity_Factor_Low__c = 0, Effort_Hrs__c = 0)));
+            E2_AddNewScopeController.pageFocusToBottom = false;
             return null;
         }
     }
@@ -361,6 +446,7 @@ public with sharing class E2_AddNewScopeController {
         //method to remove effort 
         public pagereference remove(){
             this.isDeleted = true;
+            E2_AddNewScopeController.pageFocusToBottom = false;
             return null;            
         }
     }

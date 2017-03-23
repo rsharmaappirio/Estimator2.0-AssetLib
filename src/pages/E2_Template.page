@@ -4,8 +4,9 @@
 <html xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
 <head>
     <title><apex:insert name="title"/></title>  
-    <link type="text/css" rel="stylesheet" href="{!URLFOR($Resource.cloneany, '/slds/styles/salesforce-lightning-design-system-vf.min.css')}" />
+    <!--link type="text/css" rel="stylesheet" href="{!URLFOR($Resource.cloneany, '/slds/styles/salesforce-lightning-design-system-vf.min.css')}" /-->
     <link type="text/css" rel="stylesheet" href="{!URLFOR($Resource.cloneany, '/jstree/themes/proton/style.min.css')}" />
+    <link type="text/css" rel="stylesheet" href="{!URLFOR($Resource.E2_SLDS1, '/assets/styles/salesforce-lightning-design-system.min.css')}" />
     <apex:includeScript value="../../soap/ajax/36.0/connection.js" />
     <apex:includeScript value="../../soap/ajax/15.0/apex.js" />
     <apex:includeScript value="{!URLFOR($Resource.cloneany, '/libs/jquery.js')}" />
@@ -54,12 +55,23 @@
           flex-wrap:wrap;    
         }
         
+        
+        
     </style>
     <style rel="stylesheet" type="text/css">
       #deliveryWizard .progressBar .section {
         width:25%;
         /**font-size:12px;**/
       }
+      
+      .slds .slds-page-header {
+            padding: 5px 5px 8px;
+      }
+      
+      .slds .slds-page-header__title {
+            font-size: 20px;
+            margin-top: 0;
+        }
     </style>
 </head> 
 <body style="padding:5px;"> 

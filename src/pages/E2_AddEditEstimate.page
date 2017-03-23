@@ -1,13 +1,13 @@
 <apex:page standardController="CMC_Presales_LOE__c" extensions="E2_AddEditEstimateController" action="{!pageAction}"
    showHeader="false" standardStylesheets="true" sidebar="false" applyHtmlTag="false" applyBodyTag="false">
    <apex:composition template="E2_Template">
-      <apex:define name="title">Create Estimate</apex:define>
+      <apex:define name="title"><apex:outputText rendered="{!$CurrentPage.parameters.id != null}" >Edit Estimate | {!estimate.Name}</apex:outputText><apex:outputText rendered="{!$CurrentPage.parameters.id == null}" >Create Estimate</apex:outputText></apex:define>
       <apex:define name="header">
          <c:E2_PermissionMessage rendered="{!NOT(isEditable)}"/>
          <c:E2_Header psr_id="{!psrId}" step="1"/>
       </apex:define>
       <apex:define name="body">
-         <apex:form >
+         <apex:form id="frm">
          <div xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
             <apex:outputPanel rendered="{!hasMessages}">
                <div class="slds-notify_container" style="position:static">
@@ -65,8 +65,9 @@
                         <!--button class="slds-button slds-button--neutral" onclick="return false;">Help</button-->
                         <apex:commandButton rendered="{!isEditable}" styleClass="slds-button slds-button--neutral" title="Save" value="Save" action="{!save}"/>
                         <apex:commandButton rendered="{!isEditable}" styleClass="slds-button slds-button--neutral" title="Cancel" value="Cancel"  action="{!cancel}" />
-                        <apex:commandButton rendered="{!AND(isEditable,$CurrentPage.parameters.id != null)}" styleClass="slds-button slds-button--neutral" title="Clone" value="Clone" onclick="ClonePresalesLOE.cloneEstimate('{!$CurrentPage.parameters.id}');return false;"/>
+                        <apex:commandButton rendered="{!AND(isEditable,$CurrentPage.parameters.id != null)}" styleClass="slds-button slds-button--neutral" title="Clone" value="Clone" onclick="ClonePresalesLOE.showCloneEstimatePopup();return false;"/>
                         <!--                   <apex:commandButton styleClass="slds-button slds-button--neutral" title="Next" rendered="{!IF($CurrentPage.parameters.id = null, false, IF(isEditable = true, true, false))}" value="Next" action="{!saveAndNext}"/> -->
+                        <apex:commandButton id="setPrimaryBtn" rendered="{!AND(isEditable, NOT(ISBLANK(estimate.Id)), NOT(isPrimary))}" styleClass="slds-button slds-button--neutral" title="Set Primary" value="Set Primary" onclick="AddEditEstimate.setPrimary('{!estimate.Id}', '{!psr.Id}');return false;"/>
                         <apex:commandButton rendered="{!AND(isEditable,$CurrentPage.parameters.id != null)}" styleClass="slds-button slds-button--neutral slds-button--brand" title="Build Capacity" value="Build Capacity" action="{!buildCapacity}"/>
                      </div>
                   </div>
@@ -147,7 +148,8 @@
                           <div class="slds-form-element">
                              <label class="slds-form-element__label" for="text-input-02">Is Primary</label>
                              <div class="slds-form-element__control">
-                                <apex:inputField id="text-input-02" value="{!estimate.E2_Is_Primary__c}"/>
+                                <apex:outputField id="isPrimaryFlag" value="{!estimate.Default__c}"/>
+                                <apex:inputHidden id="isPrimaryInputHidden" value="{!estimate.Default__c}"/>
                              </div>
                           </div>
                       </div>
@@ -346,7 +348,6 @@
          <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Reviewer__c}"/>
          <input type="hidden" value="{!CMC_Presales_LOE__c.E2_SA__c}"/>
          <input type="hidden" value="{!CMC_Presales_LOE__c.E2_AE__c}"/>
-         <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Is_Primary__c}"/>
          <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Total_Hrs__c}"/> 
          <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Derived_Effort_Template__c}"/>    
          <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Total_Strategy_Hrs__c}"/>
@@ -358,6 +359,8 @@
          <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Last_Build_Datetime__c}"/>
          <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Risk__c}"/>
          <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Risk_percentage__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Is_Active__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Parent_Estimate__c}" />
          </apex:form>
          <div id="loadingCloneSpinner" class="slds-spinner_container" style="display: none !important;">
             <div class="slds-spinner--brand slds-spinner slds-spinner--large" aria-hidden="false" role="alert" style="top: 35.4%;">
@@ -366,6 +369,40 @@
             </div>
             <div id="spinnerProcess" style="position: absolute;top: 34%;left: 53%;font-size: 18px;">Processing</div>
          </div>
+         <div id="cloneModal" role="dialog" class="slds-modal slds-fade-in-open"  style="display: none !important;">
+            <div class="slds-modal__container" tabindex="0" style="width:20%;">
+              <div class="slds-modal__header">
+                  <h2 class="slds-text-heading--small">Clone Estimate</h2>
+               </div>
+              <div class="slds-modal__content" style="height:50px;">
+                  <div class="slds-text-longform">
+                     <fieldset class="slds-form-element" style="left:40px;top:20px;">
+                          <div class="slds-form-element__control">
+                            <span>
+                              <input class="slds-radio" style="display:inline;" type="radio" id="fullClone" name="cloneTimeline" value="fullClone"  checked="checked"/>
+                              <label class="slds-radio__label" for="fullClone">
+                                <span class="slds-radio--faux"></span>
+                                <span class="slds-form-element__label">Full clone</span>
+                              </label>
+                            </span>
+                            <span>
+                              <input class="slds-radio" style="display:inline;" type="radio" id="cloneTimeline" name="cloneTimeline" value="activeOnly"/>
+                              <label class="slds-radio__label" for="cloneTimeline">
+                                <span class="slds-radio--faux"></span>
+                                <span class="slds-form-element__label">Clone with active timelines</span>
+                              </label>
+                            </span>
+                          </div>
+                        </fieldset>
+                        </div>
+               </div>
+               <div class="slds-modal__footer">
+                <button class="slds-button slds-button--neutral" onclick="ClonePresalesLOE.cloneEstimate('{!$CurrentPage.parameters.id}');return false;">Clone</button>
+                <button class="slds-button slds-button--neutral" onclick="ClonePresalesLOE.hideCloneEstimatePopup();return false;">Cancel</button>
+              </div>
+            </div>
+          </div>
+          <div id="cloneModaldrop2" class="slds-backdrop slds-backdrop--open"  style="display: none !important;"></div>
       </apex:define>
       <apex:define name="footer">
          
@@ -381,6 +418,7 @@
             var has_errors = '{!hasMessages}';  
             var clone_error_message = '{!$Label.E2_Estimate_Cloning_Error_Message}';
             var cloneEstimate = '{!$CurrentPage.parameters.clone}';
+            var estimateIsActive = {!CMC_Presales_LOE__c.E2_Is_Active__c};
             if(cloneEstimate != undefined && cloneEstimate != null && cloneEstimate != '' && 
                 cloneEstimate == '{!$CurrentPage.parameters.id}') {
                 ClonePresalesLOE.cloneEstimate('{!$CurrentPage.parameters.id}');

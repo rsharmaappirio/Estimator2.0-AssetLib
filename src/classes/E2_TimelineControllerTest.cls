@@ -1,3 +1,15 @@
+/**=====================================================================
+ * Appirio, Inc
+ * Name: E2_TimelineControllerTest
+ * Description: Includes unit test method for E2_TimelineController class
+ * Created Date: Aug 08, 2016
+ * Created By: Arpita Boss (Appirio)
+ * 
+ * Date Modified      Modified By                  Description of the update
+ * Feb 27, 2017       Jitendra Jangid              S-404442: Create multiple timelines on an estimate.
+*  =====================================================================*/
+
+
 @isTest(seeAllData=false)
 public class E2_TimelineControllerTest {
   public static Account acc1;
@@ -6,10 +18,9 @@ public class E2_TimelineControllerTest {
   public static List<E2_Capacity__c> capcityList ;
   public static CMC_Estimate_Resource__c estimateResource;
   
-  public static testmethod void testTimeLine(){
+  public static testmethod void testTimeline(){
     acc1 = [SELECT Id FROM Account];
-    estimate = [SELECT Id, Discount_Percent__c, CurrencyIsoCode FROM CMC_Presales_LOE__c];
-    system.debug('estimate>>>' +estimate);
+    estimate = [SELECT Id, Discount_Percent__c,E2_Parent_Estimate__c, CurrencyIsoCode,E2_Is_specific_to_timeline__c,E2_Is_Active__c,CreatedDate,E2_Timeline_Name__c FROM CMC_Presales_LOE__c];
     capcityList = [SELECT Id FROM E2_Capacity__c];
     estimateResource = [SELECT Id, Rate__c, E2_Role__c, Role__c, Cost__c 
                           FROM CMC_Estimate_Resource__c
@@ -24,101 +35,46 @@ public class E2_TimelineControllerTest {
       
       ApexPages.StandardController stdController = new ApexPages.StandardController(estimate);
       E2_TimelineController controller = new E2_TimelineController(stdController);
+      
+    //   Creating timeline version from existing timeline
+    
+    //   String timelineJSON='[{"cloneFrom":"'+estimate.ID+'","currencyISOCode":"'+estimate.CurrencyIsoCode+'"}]';
+      String timelineJSON=getEstimateWrapper(estimate.ID,estimate.CurrencyIsoCode);
+      timelineJSON=E2_Clone_Estimate_WSManager.createNewTimeline(timelineJSON);
+      timelineJSON=E2_Clone_Estimate_WSManager.cloneTimelineRateCards(timelineJSON);
+      E2_Clone_Estimate_WSManager.cloneTimelineVersion(timelineJSON);
+      list<E2_Clone_Estimate_WSManager.EstimateWrapper> mappingList = (list<E2_Clone_Estimate_WSManager.EstimateWrapper>)JSON.deserialize(timelineJSON, list<E2_Clone_Estimate_WSManager.EstimateWrapper>.class);
     	
       //start test
       Test.startTest();  
         controller.pageAction();
-        system.assert(controller.estimateRateCards.size() > 0);
-
-        controller.populateCapacityNeeds();
-        system.assert(controller.capacityNeeds_JSON <> null);
-        id eRCId = null;
-        for(E2_Estimate_Rate_Card__c eRC : controller.estimateRateCards) {
-            eRC.Discounted_Rate__c = 2000;
-            eRC.Resource_Cost__c = 5000;
-            if(eRC.Resource_Role__c == 'Developer') {
-                eRCId = eRC.Id;
-            }
-        }
+        // controller.estimateRateCards member variable has removed during implementation of multi timeline. so, updated the assert statement.[Jitendra Jangid: 02/20/2017]
+        system.assert(controller.timelineEstimates.size() > 0);
+        controller.newTimelineId=mappingList.get(0).newTimelineId;
+        // Called controller.updateTimelineStatus() method to cover catch part.
+        pageRef=controller.updateTimelineStatus();
+        controller.timelineStatusActive=true;
+        // Called again to cover Happy path
+        pageRef=controller.updateTimelineStatus();
         
-        CMC_Estimate_Resource__c er = new CMC_Estimate_Resource__c();
-        er.Estimate__c = estimate.Id;
-        er.Role__c = 'GS - North America Delivery - Developer';
-        er.E2_Role__c = 'Test Practice - GS - North America Delivery - Developer';
-        er.E2_Estimate_Rate_Card__c = eRCId;
-        er.Order__c = 0;
-        er.Rate__c = 250;
-        er.Cost__c = 105;
-    	insert er;
-    	
-    	CMC_Estimate_Week__c ew = new CMC_Estimate_Week__c();
-    	ew.Estimate__c = estimate.Id;
-    	ew.Date__c = Date.Today();
-    	ew.Order__c = 0;
-    	insert ew;
-    	
-    	CMC_Estimate_Resource_Week__c erw = new CMC_Estimate_Resource_Week__c();
-    	erw.Hours__c = 20;
-    	erw.Estimate_Resource__c = er.Id;
-    	erw.Estimate_Week__c = ew.Id;
-    	insert erw;
-    	
-        controller.updateEstimateRateCards();
-        
-        
-        
-        List<pse__Rate_Card__c> rateCard = [SELECT Id, pse__Role__c, pse__Region__r.Name, pse__Practice__r.Name,
-                  Code__c, pse__Average_Cost_Rate__c,pse__Suggested_Bill_Rate__c, CurrencyIsoCode
-                  FROM pse__Rate_Card__c];
-        
-        for(pse__Rate_Card__c rC : rateCard) {
-            rC.pse__Average_Cost_Rate__c = 30;
-            rC.pse__Suggested_Bill_Rate__c = 100;
-        }
-        update rateCard;
-        
-        pse__Region__c region = [SELECT Id FROM pse__Region__c];
-        pse__Practice__c practice = [SELECT Id FROM pse__Practice__c];
-        List<pse__Rate_Card__c> rateCards = new List<pse__Rate_Card__c>();
-        rateCards.add(E2_Test_Utils.insertRateCard(acc1.Id, region.Id, practice.Id, false));
-        rateCards.add(E2_Test_Utils.insertRateCard(acc1.Id, region.Id, practice.Id, false));
-        
-        rateCards.get(0).pse__Role__c = 'Project Manager';
-        rateCards.get(0).Code__c = 'GSPM';
-        rateCards.get(1).pse__Role__c = 'BI Business Analyst';
-        rateCards.get(1).Code__c = 'GSBBus';
-        
-        insert rateCards;
-        
-        controller.refreshRateCardRatesAndCost();
-        estimate.Discount_Percent__c = 5 ;
-        controller.changeDiscount();
-        controller.discountAmount = 200;
-        controller.changeDiscountAmount();
-        controller.estimate_Mode = E2_Constants.ESTIMATE_MODE_FIXED_FEE;
-        controller.changeEstimateMode();
-        
-        CMC_Estimate_Resource__c resource = E2_Test_Utils.insertCMCEstimateRes(estimate.Id, true);
-        CMC_Estimate_Week__c week = E2_Test_Utils.insertEstimateWeek(estimate.Id, true);
-        CMC_Estimate_Resource_Week__c resWeek = E2_Test_Utils.insertCMCEstimateResWeek(resource.Id, week.Id, true);
-            
-        controller.refreshOverviewPanel();
-        controller.discountAmount = 200;
-        controller.changeDiscountAmount();
-        estimate.Fixed_Fee_Buffer__c = 20;
-        controller.changeFixedFee();
-        controller.estimateRateCards.add(new E2_Estimate_Rate_Card__c());
-        
-        controller.updateEstimateRateCards();
-        controller.estimate.id = null;
-        controller.changeFixedFee();
-        controller.changeDiscount();
-        controller.changeDiscountAmount();
-      //stop test
+        pageRef=controller.refreshTimelineEstimates();
+        controller.timelineName='Phase 0';
+        pageRef=controller.updateTimelineName();
       Test.stopTest();
-            
     }
   }
+  
+  private static String getEstimateWrapper(String estimateID,String CurrencyIsoCode){
+       E2_Clone_Estimate_WSManager.EstimateWrapper eWrapper=new E2_Clone_Estimate_WSManager.EstimateWrapper();
+       eWrapper.cloneFrom=estimateID;
+       eWrapper.currencyISOCode=CurrencyIsoCode;
+       eWrapper.isNewTimeline=false;
+       List<E2_Clone_Estimate_WSManager.EstimateWrapper> lsEstimateWrapper=new List<E2_Clone_Estimate_WSManager.EstimateWrapper>();
+       lsEstimateWrapper.add(eWrapper);
+       return JSON.serialize(lsEstimateWrapper);
+      
+  }
+  
   
   //create test data
   @testSetup 

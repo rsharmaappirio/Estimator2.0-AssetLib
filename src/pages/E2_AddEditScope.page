@@ -8,7 +8,7 @@
 <apex:page standardController="CMC_Presales_LOE__c" extensions="E2_AddEditScopeController" action="{!pageAction}"
    showHeader="false" standardStylesheets="true" sidebar="false" applyHtmlTag="false" applyBodyTag="false">
    <apex:composition template="E2_Template">
-      <apex:define name="title">Add/Edit Scope</apex:define>
+      <apex:define name="title">Add/Edit Scope | {!estimate.Name}</apex:define>
       <apex:define name="header">
          <c:E2_PermissionMessage rendered="{!NOT(isEditable)}"/>
          <c:E2_Header psr_id="{!psrId}" step="2"/>
@@ -39,7 +39,7 @@
                   <div class="slds-col slds-no-flex slds-align-bottom">
                      <div class="slds-button-group" role="group" >
                          <apex:commandButton rendered="{!isEditable}" styleClass="slds-button slds-button--neutral slds-button--brand" title="Build Capacity" value="Build Capacity" action="{!buildCapacity}"/>
-                        <apex:commandButton rendered="{!isEditable}" styleClass="slds-button slds-button--neutral" title="Clone Estimate" value="Clone Estimate" onclick="ClonePresalesLOE.cloneEstimate('{!$CurrentPage.parameters.id}');return false;"/>
+                        <apex:commandButton rendered="{!isEditable}" styleClass="slds-button slds-button--neutral" title="Clone Estimate" value="Clone Estimate" onclick="ClonePresalesLOE.showCloneEstimatePopup();return false;"/>
                         <apex:commandButton rendered="{!isEditable}" styleClass="slds-button slds-button--neutral" title="Add Scope From Library" value="Add Scope from Library" onclick="return AddEditScope.addfromtemplate_click(this);"/>
                         <apex:commandButton rendered="{!isEditable}" styleClass="slds-button slds-button--neutral" title="Add New Scope" value="Add New Scope" onclick="return AddEditScope.addnew_click(this);" style="border-right: 0px;"/>
                         <div class="slds-dropdown-trigger slds-is-open" aria-expanded="true" aria-haspopup="true">
@@ -53,7 +53,7 @@
                                         <a id="lc-235-csv" data-value="CSV" class="slds-truncate" tabindex="-1" href="javascript:void(0);" onclick="window.location.href='/apex/E2_ExportScopeItemsToCSV?id={!estimate.id}';return false;">Export Scope as CSV</a>
                                     </li>
                                     <li id="lc-233-conga-item" class="slds-dropdown__item" tabindex="-1" role="menuitem option">
-                                        <a id="lc-233-conga" data-value="Conga Export" class="slds-truncate" tabindex="-1" href="javascript:void(0);" onclick="window.open('https://composer.congamerge.com?SessionId={!$API.Session_ID}&ServerUrl={!$API.Partner_Server_URL_80}&id={!estimate.id}&QueryId=[E2Estimate]{!$Label.E2_Scope_Export_Query}?pv0={!estimate.id},[E2UltimateScope]{!$Label.E2_Ultimate_Scope_Export_Query}?pv0={!estimate.id}&TemplateGroup=E2&DS2=1&DS3=1&OFN={Template.Label}+-+{!URLENCODE(estimate.name)}&DS8=1', '', 'width=600,height=400,top=0');return false;" >Export Scope as Conga Export</a>
+                                        <a id="lc-233-conga" data-value="Conga Export" class="slds-truncate" tabindex="-1" href="javascript:void(0);" onclick="window.open('https://composer.congamerge.com?SessionId={!$API.Session_ID}&ServerUrl={!$API.Partner_Server_URL_80}&id={!estimate.id}&QueryId=[E2Estimate]{!$Label.E2_Scope_Export_Query}?pv0={!estimate.id},[E2UltimateScope]{!$Label.E2_Ultimate_Scope_Export_Query}?pv0={!estimate.id},[E2Asset]{!$Label.E2_Export_Assets_Query}?pv0={!estimate.id},[E2Scope]{!$Label.E2_Export_Assets_w_Scope_Query}?pv0={!estimate.id}&TemplateGroup=E2&DS2=1&DS3=1&OFN={Template.Label}+-+{!URLENCODE(estimate.name)}&DS8=1', '', 'width=600,height=400,top=0');return false;" >Export Scope as Conga Export</a>
                                     </li>
                                 </ul>
                              </div>
@@ -80,7 +80,7 @@
                         <apex:outputField value="{!estimate.Presales_Request__c}"/>
                      </p>
                       <p class="slds-text-heading--label slds-truncate" title="Opportunity">Opportunity</p>
-                     <p><apex:outputLink value="/{!estimate.Presales_Request__r.Opportunity__c}">{!estimate.Opportunity_Name__c}</apex:outputLink> </p>
+                      <p><apex:outputLink value="/{!estimate.Presales_Request__r.Opportunity__c}">{!estimate.Presales_Request__r.Opportunity_Name__c}</apex:outputLink> </p>
                       <p class="slds-text-heading--label slds-truncate" title="Account">Account</p>
                      <p><apex:outputLink value="/{!estimate.Presales_Request__r.Opportunity__r.AccountId}">{!estimate.Account_Name__c}</apex:outputLink></p>
                   </li>
@@ -142,7 +142,72 @@
                                                </div>
                                             </div>
                                             <div class="slds-col slds-no-flex slds-align-bottom">
-                                               <div class="slds-button-group" role="group">&nbsp;</div>
+                                               <div class="slds-button-group" role="group">&nbsp;
+                                               <a href="javascript:void(0);" class="highlight-scope-parent" title="Highlight Scopes"><img src="{!$Resource.E2_SLDS1}/assets/icons/utility/filterList_60.png" alt="Highlight" height="20px" width="20px" /></a>
+                                               &nbsp;
+                                               <a href="javascript:void(0);" id="removefilter" title="Remove scope filter" style="display:none;"><img src="{!$Resource.E2_SLDS1}/assets/icons/utility/clear_60.png" alt="Remove filter" height="20px" width="20px" /></a>
+                                               <!--&nbsp;
+                                               <a href="javascript:void(0);"><img src="{!$Resource.E2_SLDS1}/assets/icons/utility/undeprecate_60.png" alt="De-activate" height="20px" width="20px" /></a>
+                                               &nbsp;
+                                               <a href="javascript:void(0);"><img src="{!$Resource.E2_SLDS1}/assets/icons/utility/deprecate_60.png" alt="Activate" height="20px" width="20px" /></a-->
+                                               
+                                              </div>
+                                            </div>
+                                         </div>
+                                         <div class="slds-grid highlight-scope" style="padding-top:3px;display:none;">
+                                            <div class="slds-col slds-has-flexi-truncate">
+                                               <div class="slds-media">
+                                                  <div class="slds-media__body">
+                                                  <table class="slds-table slds-max-medium-table--stacked">
+                                                      <tbody>
+                                                          <tr class="slds-hint-parent slds-selection-background">
+                                                            <td class="slds-truncate">
+                                                                <div class="slds-form-element">
+                                                                <label class="slds-form-element__label">Scope Type</label>
+                                                                <div class="slds-form-element__control">
+                                                                   <select id="scope_item_type" class="slds-select">
+                                                                       <option value="">--None--</option>
+                                                                       <apex:repeat var="itemtype" value="{!scopeTypelist}">
+                                                                           <option value="{!itemtype}">{!itemtype}</option>
+                                                                       </apex:repeat>
+                                                                   </select>
+                                                                 </div>
+                                                                 </div>
+                                                             </td>
+                                                             <td class="slds-truncate">
+                                                                <div class="slds-form-element">
+                                                                <label class="slds-form-element__label">Complexity</label>
+                                                                <div class="slds-form-element__control">
+                                                                   <select id="scope_complexity" class="slds-select">
+                                                                       <option value="">--None--</option>
+                                                                       <apex:repeat var="itemtype" value="{!complexitylist}">
+                                                                           <option value="{!itemtype}">{!itemtype}</option>
+                                                                       </apex:repeat>
+                                                                   </select>
+                                                                 </div>
+                                                                 </div>
+                                                            </td>
+                                                            </tr>
+                                                            <tr>
+                                                             <td class="slds-truncate">
+                                                                <label class="slds-checkbox" for="scope_qa">
+                                                                  <input type="checkbox" name="scope_filter" id="scope_qa" value="qa" checked=""/>
+                                                                   <span class="slds-checkbox--faux"></span>
+                                                                   <span class="slds-form-element__label">Q &amp; A</span>
+                                                                 </label>
+                                                            </td>
+                                                            <td class="slds-truncate">
+                                                                 <label class="slds-checkbox" for="scope_asset">
+                                                                  <input type="checkbox" name="scope_filter" id="scope_asset" value="asset" checked=""/>
+                                                                  <span class="slds-checkbox--faux"></span>
+                                                                  <span class="slds-form-element__label">Asset</span>
+                                                                </label>
+                                                            </td>
+                                                          </tr>
+                                                      </tbody>          
+                                                  </table>
+                                                  </div>
+                                               </div>
                                             </div>
                                          </div>
                                       </div>                                    
@@ -181,6 +246,7 @@
          <input type="hidden" value="{!CMC_Presales_LOE__c.Name}"/> 
          <input type="hidden" value="{!CMC_Presales_LOE__c.Presales_Request__c}"/>
          <input type="hidden" value="{!CMC_Presales_LOE__c.Presales_Request__r.Opportunity__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.Presales_Request__r.Opportunity_Name__c}"/>
          <input type="hidden" value="{!CMC_Presales_LOE__c.Presales_Request__r.Opportunity__r.AccountId}"/>
          <input type="hidden" value="{!CMC_Presales_LOE__c.Type__c}"/>
          <input type="hidden" value="{!CMC_Presales_LOE__c.Account_Executive__c}"/>
@@ -197,11 +263,11 @@
          <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Reviewer__c}"/>
          <input type="hidden" value="{!CMC_Presales_LOE__c.E2_SA__c}"/>
          <input type="hidden" value="{!CMC_Presales_LOE__c.E2_AE__c}"/>
-         <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Is_Primary__c}"/>
          <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Total_Hrs__c}"/>  
          <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Derived_Effort_Template__c}"/>
          <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Risk__c}"/>  
          <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Risk_percentage__c}"/>  
+         <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Parent_Estimate__c}" />
          <div id="helpModal" class="slds-modal slds-fade-in-open" role="dialog" style="display: none !important;">
             <div class="slds-modal__container" style="max-width:100%; width:95%;max-height:2400px; height:700px">
                <div class="slds-modal__header">
@@ -262,6 +328,42 @@
             </div>
          </div>
          <div id="helpBackdrop2" class="slds-backdrop slds-backdrop--open" style="display: none !important;"></div>
+         
+         <div id="cloneModal" role="dialog" class="slds-modal slds-fade-in-open"  style="display: none !important;">
+            <div class="slds-modal__container" tabindex="0" style="width:20%;">
+              <div class="slds-modal__header">
+                  <h2 class="slds-text-heading--small">Clone Estimate</h2>
+               </div>
+              <div class="slds-modal__content" style="height:50px;">
+                  <div class="slds-text-longform">
+                     <fieldset class="slds-form-element" style="left:40px;top:20px;">
+                          <div class="slds-form-element__control">
+                            <span>
+                              <input class="slds-radio" style="display:inline;" type="radio" id="fullClone" name="cloneTimeline" value="fullClone" checked="checked"/>
+                              <label class="slds-radio__label" for="fullClone">
+                                <span class="slds-radio--faux"></span>
+                                <span class="slds-form-element__label">Full clone</span>
+                              </label>
+                            </span>
+                            <span>
+                              <input class="slds-radio" style="display:inline;" type="radio" id="cloneTimeline" name="cloneTimeline" value="activeOnly"/>
+                              <label class="slds-radio__label" for="cloneTimeline">
+                                <span class="slds-radio--faux"></span>
+                                <span class="slds-form-element__label">Clone with active timelines</span>
+                              </label>
+                            </span>
+                          </div>
+                        </fieldset>
+                        </div>
+               </div>
+               <div class="slds-modal__footer">
+                <button class="slds-button slds-button--neutral" onclick="ClonePresalesLOE.cloneEstimate('{!$CurrentPage.parameters.id}');return false;">Clone</button>
+                <button class="slds-button slds-button--neutral" onclick="ClonePresalesLOE.hideCloneEstimatePopup();return false;">Cancel</button>
+              </div>
+            </div>
+          </div>
+          <div id="cloneModaldrop2" class="slds-backdrop slds-backdrop--open"  style="display: none !important;"></div>
+         
          <div id="loadingSpinner" class="slds-spinner_container" style="display: none !important;">
             <div class="slds-spinner--brand slds-spinner slds-spinner--large" aria-hidden="false" role="alert">
                <div class="slds-spinner__dot-a"></div>
@@ -341,11 +443,55 @@
                 width: 36px;
                 height:36px;
             }
+            .slds-button--down-arrow {
+                background: url({!$Resource.E2_SLDS1}/assets/icons/utility/down_60.png) no-repeat scroll center center / 16px 16px!important;
+                width: 16px;
+                height:12px;
+                display:inline-block;
+            }
             .slds-dropdown-trigger {
                 float: right;
                 display: flex!important;
             }
-               
+            .highlight {
+                background-color: #e6d478;
+                display: inline-block;
+            }
+            .slds-form-element__label {
+                color: #54698d;
+                display: inline-block;
+                font-size: 75%;
+                font-weight: bold;
+                line-height: 1.5;
+                margin-bottom: 0;
+                margin-right: 0;
+            }
+            .highlight-scope {
+                display : none;
+                background-color:#f4f6f9!important;
+            }
+            .highlight-scope td {
+                padding-top:0px!important;
+                padding-bottom:2px!important;
+                padding-left:2px!important;
+                padding-right:2px!important;
+            }
+            .highlight-scope-parent {
+                cursor:pointer;
+            }
+            
+            .slds .slds-tabs--default__link {
+                     height:25px!important;   
+                     line-height: 25px!important;
+            }
+            .slds .slds-badge-effort-multiplier {
+                background-color : rgba(74, 191, 78, 0.36)!important;
+                border-collapse: collapse!important;    
+                border-style: solid!important;
+                border-width: 0.01px !important;
+                padding-bottom: 0.01px;
+                padding-top: 0.01px;   
+            }
          </style>
       </apex:define>
       <apex:define name="javascript">
@@ -353,6 +499,7 @@
             var estimateId = '{!estimate.id}';
             var global_scopeId = '{!$CurrentPage.parameters.scopeid}';
             var clone_error_message = '{!$Label.E2_Estimate_Cloning_Error_Message}';
+            var estimateIsActive = {!CMC_Presales_LOE__c.E2_Is_Active__c};
          </script>
          <apex:includescript value="{!$Resource.E2_AddEditScopeJS}"/>
          <apex:includescript value="{!$Resource.E2_CloneEstimateJS}"/>

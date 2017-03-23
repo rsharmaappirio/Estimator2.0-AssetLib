@@ -149,6 +149,22 @@
         <visibleLines>25</visibleLines>
     </fields>
     <fields>
+        <fullName>Effort_Quantity__c</fullName>
+        <defaultValue>1</defaultValue>
+        <description>Custom field to store multiplier number X, which will increase the scope effort by number X.</description>
+        <externalId>false</externalId>
+        <inlineHelpText>This factor multiplies the efforts defined the scope .If a multiplier is applied on the parent scope all the child scope efforts automatically inherit that factor multiplication.On reparenting ,the factor of new parent if applied.</inlineHelpText>
+        <label>Effort Quantity</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackFeedHistory>false</trackFeedHistory>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
         <fullName>Is_Active__c</fullName>
         <defaultValue>true</defaultValue>
         <description>Is this scope active?</description>

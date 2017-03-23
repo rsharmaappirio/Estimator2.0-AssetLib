@@ -8,12 +8,16 @@
  * Date Modified      Modified By                  Description of the update
  * Oct 19, 2016       Arpita Bose                  S-448268 : Cloned scope item on right click
  * Oct 27, 2016       Rohit Sharma                 I-241822 : Total effort of scope hierarchy has not displayed over ultimate parent node
+ * Dec 8th, 2016      Rohit Sharma                 S-449145 :Ability to find the Scope by type, Complexity ,Q&A and assets assigned.
+ * Dec 26, 2016       Rahul Jain                   S-459273 : Added resource level field to all queries to for E2_Effort__c object
+ * Feb 08, 2017       Rohit Sharma                 S-447325 : Add multiplier on Scope: Scope/Effort SOQLs updated add Effort_Quantity__c 
+ *                                                 custom field.
 *  =====================================================================*/
 public with sharing class E2_DataUtil_WS {
    
    public static List<CMC_Presales_LOE__c> getEstimates(string estimateId) {
-   	return [SELECT (SELECT Id, Name, Is_Active__c, Parent_Scope__c, LOE_Hrs__c, Description__c
-   	              ,Complexity__c, Scope_Item_Type__c 
+   	return [SELECT (SELECT Id, Name, Is_Active__c, Parent_Scope__c, LOE_Hrs__c, Effort_Quantity__c,  Description__c
+   	              ,Complexity__c, Scope_Item_Type__c
    	               FROM E2_Scopes__r 
    	               WHERE Parent_Scope__c = NULL) 
             FROM CMC_Presales_LOE__c 
@@ -21,7 +25,7 @@ public with sharing class E2_DataUtil_WS {
    }
    
    public static List<E2_Scope__c> getScopesByParentScope(string scopeId) {
-   	return [SELECT Id, Name, LOE_Hrs__c ,Complexity__c, Scope_Item_Type__c, Scope_Flag__c  
+   	return [SELECT Id, Name, LOE_Hrs__c, Effort_Quantity__c, Complexity__c, Scope_Item_Type__c, Scope_Flag__c  
    	        FROM E2_Scope__c 
    	        WHERE Parent_Scope__c =: scopeId];
    }
@@ -29,8 +33,10 @@ public with sharing class E2_DataUtil_WS {
    public static List<E2_Scope__c> getChildScopesOfEstimate(string estimateId){
        // RS : I-241822 : added Ultimate_Parent_Scope__c parent scope in soql query. 
        return [Select e.Source_Scope__c, e.Scope_Group__c, e.Parent_Scope__c, e.Name, 
-                                 e.Presales_LOE__c, e.Description__c , e.LOE_Hrs__c,e.Ultimate_Parent_Id__c, e.Ultimate_Parent_Scope__c, 
-                                 e.Complexity__c, e.Scope_Item_Type__c, e.Is_Active__c, e.Scope_Flag__c, e.Display_Order__c                                  
+                                 e.Presales_LOE__c, e.Description__c , e.LOE_Hrs__c, e.Effort_Quantity__c, e.Ultimate_Parent_Id__c, e.Ultimate_Parent_Scope__c, 
+                                 e.Complexity__c, e.Scope_Item_Type__c, e.Is_Active__c, e.Scope_Flag__c, e.Display_Order__c, 
+                                 (SELECT Id FROM E2_Recommended_Assets__r),
+                                 (SELECT Id FROM Questions__r) 
                                  FROM E2_Scope__c e 
                                  WHERE e.Presales_LOE__c = : estimateId ORDER BY e.Ultimate_Parent_Scope__c NULLS FIRST];   
    }
@@ -39,7 +45,7 @@ public with sharing class E2_DataUtil_WS {
         // RS : I-241822 : added Ultimate_Parent_Scope__c parent scope in soql query.
     	Id recTypeId = E2_RecordTypeClass.getId(E2_Constants.E2_SCOPE_API_NAME, E2_Constants.SCOPE_RT_TEMPLATE);    	
       return [SELECT Source_Scope__c, Scope_Group__c, Parent_Scope__c, Name,Ultimate_Parent_Id__c, Ultimate_Parent_Scope__c, 
-                                 Presales_LOE__c, Description__c , LOE_Hrs__c, 
+                                 Presales_LOE__c, Description__c , LOE_Hrs__c, Effort_Quantity__c,  
                                  Complexity__c, Scope_Item_Type__c, Is_Active__c, Scope_Flag__c, Display_Order__c                                   
                                  FROM E2_Scope__c 
                                  WHERE Scope_Group__c = : scopeGrpId AND RecordTypeId = :recTypeId ORDER BY Ultimate_Parent_Scope__c NULLS FIRST];   
@@ -47,7 +53,7 @@ public with sharing class E2_DataUtil_WS {
    
    public static List<E2_Scope__c> getScopeDetails(string estimateId) {
      return [Select e.Source_Scope__c, e.Scope_Group__c, e.Parent_Scope__c, e.Name, 
-             e.Presales_LOE__c, e.Description__c, e.LOE_Hrs__c,
+             e.Presales_LOE__c, e.Description__c, e.LOE_Hrs__c, e.Effort_Quantity__c,
              e.Complexity__c, e.Scope_Item_Type__c, e.Is_Active__c, e.Scope_Flag__c, 
              (Select Id FROM Child_Scopes__r limit 1), 
              (Select Id FROM Efforts__r limit 1) 
@@ -57,7 +63,7 @@ public with sharing class E2_DataUtil_WS {
    
    public static List<E2_Scope__c> getChildScopeByParentId(string parentId){
    	return [Select e.Source_Scope__c, e.Scope_Group__c, e.Parent_Scope__c, e.Name, 
-                                 e.Presales_LOE__c, e.Description__c , e.LOE_Hrs__c, 
+                                 e.Presales_LOE__c, e.Description__c , e.LOE_Hrs__c, e.Effort_Quantity__c, 
                                  e.Complexity__c, e.Scope_Item_Type__c, e.Is_Active__c, e.Scope_Flag__c, 
                                  e.E2_Assumption__c, (Select Id FROM Child_Scopes__r limit 1) 
             FROM E2_Scope__c e 
@@ -65,24 +71,26 @@ public with sharing class E2_DataUtil_WS {
    }
    
    public static List<E2_scope__c> getFullScopeDetails(string scopeId) { 
+    // 12/26: Updated the query to add resource level field in the query
    	return [Select  
-            (Select Id, Source_Scope__c, Scope_Group__c, Parent_Scope__c, Name, Presales_LOE__c, Description__c, LOE_Hrs__c
+            (Select Id, Source_Scope__c, Scope_Group__c, Parent_Scope__c, Name, Presales_LOE__c, Description__c, LOE_Hrs__c, Effort_Quantity__c
              ,Complexity__c, Scope_Item_Type__c, E2_Assumption__c , Is_Active__c, Scope_Flag__c  
              FROM Child_Scopes__r),
             (Select Id, Name, Scope__c, Complexity_Factor_High__c, Resource_Role__c, Phase__c, Effort_Hrs__c, Speciality__c, 
-             Complexity_Factor_Low__c, Is_Active__c, Source_Effort__c FROM Efforts__r),
+             Complexity_Factor_Low__c, Is_Active__c, Source_Effort__c, Resource_Level__c FROM Efforts__r),
             (SELECT Id, Scope__c, Asset__c FROM E2_Recommended_Assets__r)  
             FROM E2_Scope__c e 
             WHERE e.id = : scopeId];
    }
       
    public static List<E2_scope__c> getFullScopesDetailsWithLimit(List<string> scopeId) {
+    // 12/26: Updated the query to add resource level field in the query
    	return [Select e.Source_Scope__c, e.Scope_Group__c, e.Parent_Scope__c, e.Name, 
-                   e.Presales_LOE__c, e.Description__c , e.LOE_Hrs__c, 
+                   e.Presales_LOE__c, e.Description__c , e.LOE_Hrs__c, e.Effort_Quantity__c, 
                    e.Complexity__c, e.Scope_Item_Type__c, e.Is_Active__c, e.Scope_Flag__c, 
                    e.E2_Assumption__c, e.RecordTypeId, e.Display_Order__c, e.Sequence__c,
             (Select Id, Name, Scope__c, Complexity_Factor_High__c, Resource_Role__c, Phase__c, Effort_Hrs__c, Speciality__c, 
-             Complexity_Factor_Low__c, Is_Active__c, Source_Effort__c FROM Efforts__r),
+             Complexity_Factor_Low__c, Is_Active__c, Source_Effort__c, Resource_Level__c FROM Efforts__r),
              (SELECT Id, Scope__c, Asset__c FROM E2_Recommended_Assets__r),
              (SELECT Id, Question_Text__c, Scope__c, Source_Question__c, 
   			  Type__c, Is_Active__c, Weighted_Effort_LOE__c FROM Questions__r) 
@@ -109,7 +117,7 @@ public with sharing class E2_DataUtil_WS {
    
    public static List<E2_scope__c> getScopeChildList(String scopeId) {
    	return [Select e.Source_Scope__c, e.Scope_Group__c, e.Parent_Scope__c, e.Name, 
-                                 e.Presales_LOE__c, e.Description__c , e.LOE_Hrs__c, 
+                                 e.Presales_LOE__c, e.Description__c , e.LOE_Hrs__c, e.Effort_Quantity__c, 
                                  e.Complexity__c, e.Scope_Item_Type__c, e.Is_Active__c, 
                                  e.Scope_Flag__c, e.E2_Assumption__c, 
                                  (Select Id FROM Child_Scopes__r limit 1) 
@@ -118,7 +126,7 @@ public with sharing class E2_DataUtil_WS {
    }
    
    public static List<E2_Scope__c> getUltimateScopeLOE(string ultimateScopes) {
-  	return [SELECT LOE_Hrs__c,Ultimate_Parent_Id__c, Ultimate_Parent_Scope__c FROM E2_Scope__c WHERE
+  	return [SELECT LOE_Hrs__c, Effort_Quantity__c, Ultimate_Parent_Id__c, Ultimate_Parent_Scope__c FROM E2_Scope__c WHERE
   			Is_Active__c = true AND Ultimate_Parent_Id__c = :ultimateScopes];
   }
    
@@ -160,8 +168,10 @@ public with sharing class E2_DataUtil_WS {
   //AB S-448268 : Method to return all scopes details by scopeId
   public static List<E2_Scope__c> getChildScopesById(set<Id> scopesId){
        return [Select e.Source_Scope__c, e.Scope_Group__c, e.Parent_Scope__c, e.Name, 
-                                 e.Presales_LOE__c, e.Description__c , e.LOE_Hrs__c,e.Ultimate_Parent_Id__c, e.Ultimate_Parent_Scope__c, 
-                                 e.Complexity__c, e.Scope_Item_Type__c, e.Is_Active__c, e.Scope_Flag__c, e.Display_Order__c                                  
+                                 e.Presales_LOE__c, e.Description__c , e.LOE_Hrs__c, e.Effort_Quantity__c, e.Ultimate_Parent_Id__c, e.Ultimate_Parent_Scope__c, 
+                                 e.Complexity__c, e.Scope_Item_Type__c, e.Is_Active__c, e.Scope_Flag__c, e.Display_Order__c,
+                                 (SELECT Id FROM E2_Recommended_Assets__r),
+                                 (SELECT Id FROM Questions__r) 
                                  FROM E2_Scope__c e 
                                  WHERE e.Id IN: scopesId];   
    }

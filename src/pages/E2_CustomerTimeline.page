@@ -1,0 +1,941 @@
+<!--=====================================================================
+ * Appirio, Inc
+ * Name: E2_CustomerTimeline
+ * Description: visualforce page for the resource timeline functionalty in estimator 2.0! in customer mode
+ * Created Date: Feb 01st, 2017
+ * Created By: Rohit Sharma (Appirio)
+ * 
+ * Date Modified      Modified By                  Description of the update
+*  =====================================================================
+-->
+<apex:page standardController="CMC_Presales_LOE__c" extensions="E2_CustomerTimelineController" action="{!pageAction}" 
+   showHeader="false" standardStylesheets="false" sidebar="false" applyHtmlTag="false" applyBodyTag="false">
+    <html>
+<head>
+    
+    <link type="text/css" rel="stylesheet" href="{!URLFOR($Resource.E2_SLDS1, '/assets/styles/salesforce-lightning-design-system.min.css')}" />
+    <apex:includeScript value="../../soap/ajax/36.0/connection.js" />
+    <apex:includeScript value="../../soap/ajax/15.0/apex.js" />
+    
+    <apex:stylesheet value="{!$Resource.E2_SlickGrid}/slick.grid.css" />
+    <apex:stylesheet value="{!$Resource.E2_SlickGrid}/css/smoothness/jquery-ui-1.8.24.custom.css" />
+    <apex:stylesheet value="{!$Resource.E2_SlickGrid}/slick-default-theme.css" />
+    <apex:stylesheet value="{!$Resource.E2_SlickGrid}/plugins/slick.headermenu.css" />
+    <apex:stylesheet value="{!$Resource.E2_SlickGrid}/controls/slick.pager.css" />
+    <apex:stylesheet value="{!$Resource.E2_SlickGrid}/controls/slick.columnpicker.css" />
+    
+
+    
+    
+    <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/lib/firebugx.js"></script>
+    <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/lib/jquery-1.7.min.js"></script>
+    <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/lib/jquery-ui-1.8.24.custom.min.js"></script>
+    <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/lib/jquery.event.drag-2.2.js"></script>
+    <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/lib/jquery.event.drop-2.2.js"></script>
+    <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/lib/jquery.mousewheel.js"></script>
+    <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/slick.core.js"></script>
+    <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/plugins/slick.autotooltips.js"></script>
+    <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/plugins/slick.cellrangedecorator.js"></script>
+    <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/plugins/slick.cellcopymanager.js"></script>
+    <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/plugins/slick.rowselectionmodel.js"></script>
+    <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/plugins/slick.rowmovemanager.js"></script>
+    <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/plugins/slick.headermenu.js"></script>
+    <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/slick.dataview.js"></script>
+    <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/controls/slick.pager.js"></script>
+    <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/controls/slick.columnpicker.js"></script>
+    <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/slick.formatters.js"></script>
+    <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/slick.editors.js"></script>
+    <!--script type="text/javascript" src="{!$Resource.E2_SlickGrid}/slick.grid.js"></script-->
+    <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/slick.grid.new.js"></script>
+    <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/lib/js/require.js"></script>
+    <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/lib/js/underscore.js"></script>
+    
+    <script type="text/javascript">
+        requirejs.config({
+                        baseUrl: '{!$Resource.E2_SlickGrid}/lib/js'  //give the location of the folder which contains require, excel-builder, etc
+                    });
+    </script>
+    <script>sforce.connection.sessionId='{!GETSESSIONID()}';</script>
+    <script type="text/javascript" src="{!$Resource.E2_CustomerTimelineJS}"></script>
+     <script type="text/javascript">
+                var estimateId = '{!estimate.id}';
+                var estimate_name = '{!JSENCODE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(estimate.name,' ','_'),',',''),';',''),'#',''))}';
+                var currency_code = '{!CMC_Presales_LOE__c.CurrencyIsoCode}';
+                var renderOptions_Phases = {!renderOptions_PhasesJSON};
+                var capacityNeeds_JSON = {!capacityNeeds_JSON};
+     </script>
+     <style rel="stylesheet" type="text/css">
+                /*** STYLE TO SUPPORT RESOURCE LABEL INFO TEXT ***/
+                span.add-resource-label{
+                    color:#999999;font-style: italic;font-weight:normal;
+                    font-size:14px;
+                }
+            
+                ::-webkit-input-placeholder { /* Chrome/Opera/Safari */
+                  color:#999999;font-style: italic;
+                }
+                ::-moz-placeholder { /* Firefox 19+ */
+                  color:#999999;font-style: italic;
+                }
+                :-ms-input-placeholder { /* IE 10+ */
+                  color:#999999;font-style: italic;
+                }
+                :-moz-placeholder { /* Firefox 18- */
+                  color:#999999;font-style: italic;
+                }
+                /***END: STYLE TO SUPPORT RESOURCE LABEL INFO TEXT ***/
+            
+                div.info_icon{
+                    background: transparent url({!$Resource.E2_SLDS1}/assets/icons/utility/info_60.png) no-repeat scroll center right / 15px 15px;
+                    
+                }
+            
+                a.delete_button, a.delete_button:hover, a.delete_button:active, a.delete_button:focus{
+                    background: transparent url({!$Resource.E2_SLDS1}/assets/icons/utility/delete_60.png) no-repeat scroll center center / 15px 15px;
+                    height: 15px;
+                    width: 15px;
+                    display:block;
+                    text-decoration: none;
+                    outline: none; 
+                }
+                
+                a.push_button{
+                    background: transparent url({!$Resource.E2_SLDS1}/assets/icons/utility/push_60.png) no-repeat scroll center center / 15px 15px;
+                    height: 15px;
+                    width: 15px;
+                    display:block;
+                }
+                a.replace_button{
+                    
+                    background: transparent url({!$Resource.E2_SLDS1}/assets/icons/utility/replace_60.png) no-repeat scroll center center / 15px 15px;
+                    height: 15px;
+                    width: 15px;
+                    display:block;
+                }
+                a.setup_button, a.setup_button:hover, a.setup_button:active, a.setup_button:focus{
+                    
+                    background: transparent url({!$Resource.E2_SLDS1}/assets/icons/utility/setup_60.png) no-repeat scroll center center / 15px 15px;
+                    height: 15px;
+                    width: 15px;
+                    display:block;
+                    text-decoration: none;
+                    outline: none; 
+                }
+                
+                a.excel_button, a.excel_button:hover, a.excel_button:active, a.excel_button:focus{
+                    background: transparent url({!$Resource.E2_SLDS1}/assets/icons/doctype/excel_60.png) no-repeat scroll center center / 25px 25px;
+                    height: 25px;
+                    width: 25px;
+                    display:block;
+                    text-decoration: none;
+                    outline: none; 
+                }
+                
+                a.question_button, a.question_button:hover, a.question_button:active, a.question_button:focus{
+                    
+                    background: transparent url({!$Resource.E2_SLDS1}/assets/icons/utility/question_60.png) no-repeat scroll center center / 12px 12px;
+                    height: 12px;
+                    width: 12px;
+                    display: inline-block;
+                    text-decoration: none;
+                    outline: none; 
+                }
+                
+                
+                /**.reallyHidden { display: none !important;}**/
+                .Fixed-Header-Style{font-weight:bold;}
+                
+                .hours-cell-style-text-center{text-align:center;}
+                
+                .custom-fix-row{
+                    background-color: #eee!important;
+                    border-color: #ccc!important;
+                    border-style: solid!important;
+                }
+                .cell-story {
+                    white-space: normal !important;
+                    line-height: 19px !important;
+                }
+                
+                .loading-indicator {
+                    display: inline-block;
+                    padding: 12px;
+                    background: white;
+                    -opacity: 0.5;
+                    color: black;
+                    font-weight: bold;
+                    z-index: 9999;
+                    border: 1px solid red;
+                    -moz-border-radius: 10px;
+                    -webkit-border-radius: 10px;
+                    -moz-box-shadow: 0 0 5px red;
+                    -webkit-box-shadow: 0px 0px 5px red;
+                    -text-shadow: 1px 1px 1px white;
+                }
+                
+                .loading-indicator label {
+                    padding-left: 20px;
+                    background: url('{!$Resource.E2_SlickGrid}/images/ajax-loader-small.gif') no-repeat center left;
+                }
+                
+                .dropdown {
+                    position: fixed;
+                }
+                
+                .slick-cell.copied {
+                    background: blue;
+                    background: rgba(0, 0, 255, 0.2);
+                    -webkit-transition: 0.5s background;
+                }
+                
+                .slds *,
+                .slds *::after,
+                .slds *::before {
+                    box-sizing: inherit!important;
+                }
+                
+                .slick-header-column.ui-state-default {
+                    height:22px!important;
+                }
+                
+                #myGrid {
+                    background: white;
+                    outline: 0;
+                    border: 1px solid gray;
+                    font:inherit;
+                }
+                
+                #myGridHead {
+                    background: white;
+                    outline: 0;
+                    border: 1px solid gray;
+                }
+                
+                .grid-header {
+                    border: 1px solid gray;
+                    border-bottom: 0;
+                    border-top: 0;
+                    background: url('{!$Resource.E2_SlickGrid}/images/header-bg.gif') repeat-x center top;
+                    color: black;
+                    height: 24px;
+                    line-height: 24px;
+                }
+                
+                .grid-header label {
+                    display: inline-block;
+                    font-weight: bold;
+                    margin: auto auto auto 6px;
+                }
+                
+                .grid-header .ui-icon {
+                    margin: 4px 4px auto 6px;
+                    background-color: transparent;
+                    border-color: transparent;
+                }
+                
+                .grid-header .ui-icon.ui-state-hover {
+                    background-color: white;
+                }
+                
+                .grid-header #txtSearch {
+                    margin: 0 4px 0 4px;
+                    padding: 2px 2px;
+                    -moz-border-radius: 2px;
+                    -webkit-border-radius: 2px;
+                    border: 1px solid silver;
+                }
+                
+                .options-panel {
+                    -moz-border-radius: 6px;
+                    -webkit-border-radius: 6px;
+                    border: 1px solid silver;
+                    background: #f0f0f0;
+                    padding: 4px;
+                    margin-bottom: 20px;
+                    width: 320px;
+                    position: absolute;
+                    top: 0px;
+                    left: 650px;
+                }
+                /* Individual cell styles */
+                
+                .slick-cell.task-name {
+                    font-weight: bold;
+                    text-align: right;
+                }
+                
+                .slick-cell.task-percent {
+                    text-align: right;
+                }
+                
+                .slick-cell.cell-move-handle {
+                    font-weight: bold;
+                    text-align: right;
+                    border-right: solid gray;
+                    background: #efefef;
+                    cursor: move;
+                }
+                
+                .cell-move-handle:hover {
+                    background: #b6b9bd;
+                }
+                
+                .slick-row.selected .cell-move-handle {
+                    background: #D5DC8D;
+                }
+                
+                .slick-row .cell-actions {
+                    text-align: left;
+                }
+                
+                .slick-row.complete {
+                    background-color: #DFD;
+                    color: #555;
+                }
+                
+                .percent-complete-bar {
+                    display: inline-block;
+                    height: 6px;
+                    -moz-border-radius: 3px;
+                    -webkit-border-radius: 3px;
+                }
+                /* Slick.Editors.Text, Slick.Editors.Date */
+                
+                input.editor-text {
+                    width: 100%;
+                    height: 100%;
+                    border: 0;
+                    margin: 0;
+                    background: transparent;
+                    outline: 0;
+                    padding: 0;
+                    text-align: inherit;
+                }
+                
+                /** SLDS STYLE OF FOCUS ON INPUT
+                input.editor-text:active, input.editor-text:focus {
+                    background-color: #fff;
+                    border-color: #1589ee;
+                    box-shadow: 0 0 3px #0070d2;
+                    outline: 0 none;
+                }
+                **/
+                
+                .ui-datepicker-trigger {
+                    margin-top: 2px;
+                    padding: 0;
+                    vertical-align: top;
+                }
+                
+                /* Slick.Editors.PercentComplete */
+                input.editor-percentcomplete {
+                    width: 100%;
+                    height: 100%;
+                    border: 0;
+                    margin: 0;
+                    background: transparent;
+                    outline: 0;
+                    padding: 0;
+                    float: left;
+                }
+                
+                .editor-percentcomplete-picker {
+                    position: relative;
+                    display: inline-block;
+                    width: 16px;
+                    height: 100%;
+                    background: url("{!$Resource.E2_SlickGrid}/images/pencil.gif") no-repeat center center;
+                    overflow: visible;
+                    z-index: 1000;
+                    float: right;
+                }
+                
+                .editor-percentcomplete-helper {
+                    border: 0 solid gray;
+                    position: absolute;
+                    top: -2px;
+                    left: -9px;
+                    background: url("{!$Resource.E2_SlickGrid}/images/editor-helper-bg.gif") no-repeat top left;
+                    padding-left: 9px;
+                    width: 120px;
+                    height: 182px;
+                    /**display: none;**/ /** remove this because we need to show autofill widget on keyboard key movement **/
+                    overflow: visible;
+                }
+                
+                .editor-percentcomplete-wrapper {
+                    background: #d8dde6;
+                    padding: 4px;
+                    width: 100%;
+                    height: 180px;
+                    border: 1px solid gray;
+                    border-left: 0;
+                }
+                
+                .editor-percentcomplete-buttons {
+                    float: left;
+                }
+                
+                .editor-percentcomplete-buttons button {
+                    width: 100%;
+                }
+                
+                .editor-percentcomplete-slider {
+                    float: left;
+                }
+                
+                .editor-percentcomplete-picker:hover .editor-percentcomplete-helper {
+                    display: block;
+                }
+                
+                .editor-percentcomplete-helper:hover {
+                    display: block;
+                }
+                
+                /** Editor AutoFill **/
+                 /* Slick.Editors.AutoFill */
+                input.editor-autofill {
+                    width: 100%;
+                    height: 100%;
+                    border: 0;
+                    margin: 0;
+                    background: transparent;
+                    outline: 0;
+                    padding: 0;
+                    float: left;
+                }
+                
+                .editor-autofill-picker {
+                    position: relative;
+                    display: inline-block;
+                    width: 100%;
+                    height: 100%;
+                    /**background: url("{!$Resource.E2_SlickGrid}/images/pencil.gif") no-repeat center center;**/
+                    overflow: visible;
+                    z-index: 1000;
+                    float: right;
+                }
+                .editor-autofill-picker1 {
+                    position: relative;
+                    display: inline-block;
+                    width: 16px;
+                    height: 100%;
+                    overflow: visible;
+                    z-index: 1000;
+                    float: right;
+                }
+                .editor-autofill-helper {
+                    border: 0 solid gray;
+                    position: absolute;
+                    top: -2px;
+                    left: -9px;
+                    /**left: -9px;**/
+                    /**background: url("{!$Resource.E2_SlickGrid}/images/editor-helper-bg.gif") no-repeat top left;**/
+                    padding-left: 9px;
+                    width: 451px;
+                    height: 80px;
+                    /**display: none;**/ /** remove this because we need to show autofill widget on keyboard key movement **/
+                    overflow: visible;
+                }
+                
+                .editor-autofill-wrapper {
+                    /**background: beige;**/
+                    background:#fafafa;
+                    padding: 20px 20px;
+                    width: 100%;
+                    height: 24px;
+                    border: 1px solid gray;
+                    border-left: 0;
+                }
+                
+                .editor-autofill-buttons {
+                    float: right;
+                }
+                
+                .editor-autofill-buttons button {
+                    width: 80px;
+                }
+                
+                .editor-autofill-slider {
+                    float: left;
+                    width:100%;
+                }
+                
+                .editor-autofill-slider label {
+                    position: absolute;
+                    width: 20px;
+                    margin-left: -10px;
+                    text-align: center;
+                    margin-top: 20px;
+                    
+                }
+                
+                .editor-autofill-picker:hover .editor-autofill-helper {
+                    display: block;
+                }
+                
+                .editor-autofill-helper:hover {
+                    display: block;
+                }
+                
+                
+                /* Slick.Editors.YesNoSelect */
+                
+                select.editor-yesno {
+                    width: 100%;
+                    margin: 0;
+                    vertical-align: middle;
+                }
+                /* Slick.Editors.Checkbox */
+                
+                input.editor-checkbox {
+                    margin: 0;
+                    height: 100%;
+                    padding: 0;
+                    border: 0;
+                }
+                
+                .cell-effort-driven {
+                    text-align: center;
+                }
+                
+                .cell-reorder {
+                    cursor: move;
+                    background: url("{!$Resource.E2_SlickGrid}/images/drag-handle.png") no-repeat center center;
+                }
+                
+                .cell-selection {
+                    border-right-color: silver;
+                    border-right-style: solid;
+                    background: #f5f5f5;
+                    color: gray;
+                    text-align: right;
+                    font-size: 10px;
+                }
+                
+                .slick-row.selected .cell-selection {
+                    background-color: transparent;
+                    /* show default selected row background */
+                }
+                
+                .slick-group-header-columns {
+                    position: relative;
+                    white-space: nowrap;
+                    cursor: default;
+                    overflow: hidden;
+                }
+                
+                .slick-group-header-columns .slick-header-column {
+                    padding-left: 0px;
+                    padding-right: 0px;
+                }
+                
+                .slick-group-header-columns .slick-column-name {
+                    text-align: center;
+                }
+                
+                .cell-title {
+                    font-weight: bold;
+                }
+                
+                .cell-effort-driven {
+                    text-align: center;
+                }
+                
+                .cell-selection {
+                    border-right-color: silver;
+                    border-right-style: solid;
+                    background: #f5f5f5;
+                    color: gray;
+                    text-align: right;
+                    font-size: 10px;
+                }
+                
+                .slick-row.selected .cell-selection {
+                    background-color: transparent;
+                    /* show default selected row background */
+                }
+                
+                table thead tr th.slds-th {
+                    background-color: #005fb2;
+                    color: #fff;
+                    font-weight: bold !important;
+                }
+                
+                table tbody tr td.slds-td {
+                    background-color: #CCCCCC;
+                    font-weight: bold;
+                }
+                /**
+     * Style the drop-down menu here since the plugin stylesheet mostly contains structural CSS.
+     */
+                
+                .slick-header-menu {
+                    border: 1px solid #718BB7;
+                    background: #f0f0f0;
+                    padding: 2px;
+                    -moz-box-shadow: 2px 2px 2px silver;
+                    -webkit-box-shadow: 2px 2px 2px silver;
+                    min-width: 100px;
+                    z-index: 20;
+                }
+                
+                .slick-header-menuitem {
+                    padding: 2px 4px;
+                    border: 1px solid transparent;
+                    border-radius: 3px;
+                }
+                
+                .slick-header-menuitem:hover {
+                    border-color: silver;
+                    background: white;
+                }
+                
+                .slick-header-menuitem-disabled {
+                    border-color: transparent !important;
+                    background: inherit !important;
+                }
+                
+                .icon-help {
+                    background-image: url({!$Resource.E2_SlickGrid}/images/help.png);
+                }
+                
+                .slick-cell.editable {
+                    background-color: #fff;
+                    border-radius: 4px;
+                    color: #16325c;
+                    transition: border 0.1s linear 0s, background-color 0.1s linear 0s;
+                }
+                
+                
+                .slds-calculated-cell { 
+                    text-align: center!important;
+                    background-color: #666666!important;
+                    color: #fff!important;
+                }
+                
+                .slds-milestones-cell { 
+                    text-align: center!important;
+                    background-color: #aaaaaa!important;
+                    color: #fff!important;
+                }
+                
+                .slds-capacityperphase-cell { 
+                    text-align: center!important;
+                    color: #fff!important;
+                }
+                .slds-capacityperphase-cell div { 
+                    background-color: #000080;
+                }
+                .slds-hoursperphase-cell { 
+                    text-align: center!important;
+                    background-color: #0070d2!important;
+                    color: #fff!important;
+                }
+                .slds-hoursperphase-cell div {
+                    background-color: #0070d2;
+                }
+                .slds-totalhrsperweek-cell { 
+                    text-align: center!important;
+                    background-color: #bacde3!important;
+                    color: #fff!important;
+                }
+                .slds-totalhrsperweek-cell div { 
+                    background-color: #bacde3;
+                }
+                .slds-totalhrsperweek-cell-sum {
+                    text-align: center; 
+                    background-color: #000000!important;
+                    color: #ffffff;
+                    font-weight: bold;
+                }
+                .slds-weekname-cell { 
+                    text-align: center!important;
+                    background-color: #666666!important;
+                    color: #fff!important;
+                }
+                .slds-total-cell { 
+                    text-align: center!important;
+                    background-color: #666666!important;
+                    color: #fff!important;
+                }
+                .slds-weekname-cell div {
+                    background-color: #666666;
+                }
+                
+                 /**body {width:100%; height:100%; overflow:auto; margin:0; }**/
+                 /**html {width:100%; height:100%; overflow:auto; }**/
+                 
+                 .totals {
+                    font-weight: bold;
+                    color: gray;
+                    font-style: italic;
+                  }
+                  .noneline-bottom
+                  {
+                      border-bottom:0;
+                  }
+                  
+                  .strategy_phase_cell{
+                      color: #fff;
+                      background-color: rgb(51, 62, 72);
+                      font-style: italic;
+                  }
+                  
+                  .plan_phase_cell{
+                      color: #fff;
+                      background-color: rgb(240, 109, 30);
+                      font-style: italic;
+                  }
+                  
+                  .architect_phase_cell{
+                      color: #fff;
+                      background-color: rgb(96, 131, 175);
+                      font-style: italic;
+                  }
+                  
+                  .build_phase_cell{
+                      color: #fff;
+                      background-color: rgb(135, 189, 67);
+                      font-style: italic;
+                  }
+                  
+                  .test_phase_cell{
+                      color: #fff;
+                      background-color: rgb(32, 40, 48);
+                      font-style: italic;
+                  }
+                  
+                  .deploy_thrive_phase_cell{
+                      color: #fff;
+                      background-color: rgb(163, 9, 58);
+                      font-style: italic;
+                  }
+                  span.overview-label{
+                      font-weight:bold;
+                      line-height:20px;
+                  }
+                  #overview-table tbody tr td{
+                        background: #e0e5ee none repeat scroll 0 0;
+                        border: 1px solid #ccc;
+                        color: #16325c;
+                        padding: 1px;
+                  }
+                  .slds .slds-tabs--default__link {
+                     height:25px!important;   
+                     line-height: 25px!important;
+                  }
+                  
+                  
+                   .noneline-bottom{
+                          border-right:0;
+                      }
+                      
+                      
+                   .cell-title {
+                      font-weight: bold;
+                    }
+                
+                    #contextMenu {
+                      background: #e1efc7;
+                      border: 1px solid gray;
+                      padding: 2px;
+                      display: inline-block;
+                      min-width: 155px;
+                      -moz-box-shadow: 2px 2px 2px silver;
+                      -webkit-box-shadow: 2px 2px 2px silver;
+                      z-index: 99999;
+                      max-width: 175px;
+                    }
+                    
+                    #phaseContextMenu {
+                      background: #e1efc7;
+                      border: 1px solid gray;
+                      padding: 2px;
+                      display: inline-block;
+                      min-width: 140px;
+                      -moz-box-shadow: 2px 2px 2px silver;
+                      -webkit-box-shadow: 2px 2px 2px silver;
+                      z-index: 99999;
+                      max-width: 180px;
+                    }
+                
+                    #contextMenu li, #phaseContextMenu li {
+                      padding: 4px 4px 4px 14px;
+                      list-style: none;
+                      cursor: pointer;
+                      /**background: url("{!$Resource.E2_SlickGrid}/images/arrow_right_peppermint.png") no-repeat center left;**/
+                      width:10px;
+                      height:10px;
+                      float:left;
+                      border-color: #ccc;
+                      border-style: solid;
+                      border-width: 1px;
+                    }
+                
+                    #contextMenu li:hover, #phaseContextMenu li:hover {
+                      background-color: white;
+                    } 
+                    
+                    .slick-cell.selected {
+                        background-color: beige !important;
+                        color: #000000 !important;
+                        /**border-style: dashed;**/
+                    }
+                    
+                    .header .sign:after{
+                      content:"+";
+                      display:inline-block;      
+                    }
+                    .header.expand .sign:after{
+                      content:"-";
+                    }
+                    
+                    .slds *::-moz-selection {
+                        background: #3297fd none repeat scroll 0 0;
+                        color: #ffffff;
+                        text-shadow: none;
+                    }
+                    ::selection {
+                        background: #3297fd!important;
+                        color: #ffffff!important;
+                        text-shadow: none;
+                    }
+                    tr.jaipurrow{
+                        background-color:#f5ffbf;
+                    }
+                    tr .estimate-summary {
+                        padding-top : 5px!important;
+                        padding-bottom : 5px!important;
+                    }
+                    .estimate-summary .button {
+                        min-height : 21px!important;
+                        line-height: 18px!important;
+                    }
+                    .isRateOverridden {
+                        font-weight: bold!important;
+                        font-style: italic!important;
+                        background-color: #FFA544!important;
+                        color:#000000!important;
+                    }
+            </style>
+    </head>
+    <body>
+          <div class="slds">
+             <!-- PRIMARY CONTENT WRAPPER -->
+             <div class="myapp">
+                
+                <!-- BODY -->
+                <div>
+            <apex:form >
+                <apex:pageMessages />
+                        <div id="manage_timeline_div">
+                               <a id='downloadLink'></a>
+                               <div><span style="display:inline-block;vertical-align: bottom;">Download as&nbsp;</span><a id="" href="javascript:void(0);" class="excel_button" style=" padding-bottom: 2px;display:inline-block;" title="Download Grid in Excel Format" onclick="return Timeline.downloadExcel_Click();">&nbsp;</a>
+                                <span style="display: inline-block;float: right;padding-right: 14px;padding-top: 10px;">CURRENCY:&nbsp;<span style="color: blue;font-weight:bold">{!CMC_Presales_LOE__c.CurrencyIsoCode}</span></span>
+                               </div>
+                               <div style="position:relative">
+                                    <div>
+                                        <div id="myGrid" style="width:100%;min-height:450px"></div>
+                                    </div>
+                                </div>
+                                   
+                        </div>
+
+                
+                <div id="loadingSpinner" class="slds-spinner_container" style="display: none !important;">
+                    <div class="slds-spinner--brand slds-spinner slds-spinner--large" aria-hidden="false" role="alert">
+                       <div class="slds-spinner__dot-a"></div>
+                       <div class="slds-spinner__dot-b"></div>
+                    </div>
+                 </div>
+                
+                <div class="slds-notify_container" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+                    style = "display:none;">
+                    <div class="slds-notify slds-notify--toast slds-theme--success" id="sldsalertdiv" role="alert">
+                       <span class="slds-assistive-text">Success</span>
+                       <button class="slds-button slds-button--icon-inverse slds-notify__close">
+                          <svg aria-hidden="true" class="slds-button__icon slds-button__icon--large">
+                             <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!$Resource.E2_SLDS1}/assets/icons/utility-sprite/svg/symbols.svg#close"></use>
+                          </svg>
+                          <span class="slds-assistive-text">Close</span>
+                       </button>
+                       <div class="notify__content slds-grid">
+                          <svg aria-hidden="true" class="slds-icon slds-icon--small slds-m-right--small slds-col slds-no-flex">
+                             <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!$Resource.E2_SLDS1}/assets/icons/utility-sprite/svg/symbols.svg#notification"></use>
+                          </svg>
+                          <div class="slds-col slds-align-middle">
+                             <h2 class="slds-text-heading--small "></h2>
+                          </div>
+                       </div>
+                    </div>
+                 </div>
+                <!-- PLEASE DONOT REMOVE: This section is important while using standard controller -->
+                <input type="hidden" value="{!CMC_Presales_LOE__c.Name}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.Presales_Request__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.Presales_Request__r.Opportunity__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.Presales_Request__r.Opportunity_Name__c}"/>
+                <input type="hidden" value="{!CMC_Presales_LOE__c.Presales_Request__r.Opportunity__r.AccountId}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.Type__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.Account_Executive__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.Solution_Architect__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.Delivery_Reviewer__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.Date_Scoped__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.Account_Name__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.Description__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.Presales_Request__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.Product__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Version_Notes__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.Opportunity_Name__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Date_Scoped__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Reviewer__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.E2_SA__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.E2_AE__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Total_Hrs__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Derived_Effort_Template__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Last_Build_Datetime__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Risk__c}" />
+                
+                <input type="hidden" value="{!CMC_Presales_LOE__c.CurrencyISOCode}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.Service_Fees__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.Service_Costs__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.Service_Margin__c}" />
+                
+                <input type="hidden" value="{!CMC_Presales_LOE__c.Calculated_Fees__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.Calculated_Costs__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.Calculated_Margin__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.Discount_Percent__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.Discount_Amount__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.Total_Fees__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.As_Sold_Margin__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.Final_Total__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.Blended_Rate_Number__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.Offshore_Blend__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.Mode__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.Services_Uplifted_Costs__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.Fixed_Fee_Cost_Uplift__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.Fixed_Fee_Cost_Uplift_Percent__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.Fixed_Fee_Buffer__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.Fixed_Fee_Blended__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.Fixed_Fee_Buffer_Amount__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.Topcoder_Challenge_Fees__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.Asset_Fees__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.Discount__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.Total_Resource_Hours__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Estimate_Total_Weeks__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Is_Active__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Is_specific_to_timeline__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Parent_Estimate__c}" />
+               
+            </apex:form>
+          
+                </div>
+                <!-- / BODY -->
+             </div>
+             <!-- / PRIMARY CONTENT WRAPPER -->   
+          </div>
+          <!-- / REQUIRED SLDS WRAPPER -->
+    </body>
+    </html>
+    
+</apex:page>

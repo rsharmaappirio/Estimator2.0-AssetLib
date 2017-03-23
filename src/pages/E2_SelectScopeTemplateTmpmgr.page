@@ -3,7 +3,7 @@
    <html>
       <head>
          <title>Select Scope Template / My Scopes</title>
-         <apex:stylesheet value="{!URLFOR($Resource.E2_SLDS1, '/assets/styles/salesforce-lightning-design-system-vf.css')}" />
+         <apex:stylesheet value="{!URLFOR($Resource.E2_SLDS1, '/assets/styles/salesforce-lightning-design-system.css')}" />
          <apex:includeScript value="{!URLFOR($Resource.cloneany, '/libs/jquery.js')}" />
          <apex:includeScript value="../../soap/ajax/36.0/connection.js" />
          <apex:includeScript value="../../soap/ajax/15.0/apex.js" />

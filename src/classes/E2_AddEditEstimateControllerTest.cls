@@ -1,3 +1,15 @@
+/**=====================================================================
+ * Appirio, Inc
+ * Name: E2_AddEditEstimateControllerTest
+ * Description: Contains all test methods to perform unit test over E2_AddEditEstimateController class
+ * Created Date: Apr 8th, 2016
+ * Created By: Arpita Bose (Appirio)
+ * 
+ * Date Modified      Modified By                  Description of the update
+ * May 17, 2016       Arpita Bose (Appirio)        Added Local constants, removed hardcoded strings from the methods.   
+ * Dec 14, 2016       Jitendra Jangid              S-456925: Ability to mark an Estimate as Primary on Create estimate page. [Changes: To increase code coverage added code to insert rate card under createTestData method] 
+*  =====================================================================*/
+
 @isTest(seeAllData=false)
 public class E2_AddEditEstimateControllerTest {
     
@@ -57,7 +69,6 @@ public class E2_AddEditEstimateControllerTest {
         estimate.E2_SA__c = solArchitect.Id;
         estimate.Delivery_Reviewer__c = delReviewer.Id;
         estimate.Account_Executive__c = accExecutive.Id;
-        estimate.E2_Is_Primary__c = true;
         estimate.E2_Date_Scoped__c = system.today();
         estimate.Description__c = 'This is test description';
         insert estimate;
@@ -95,6 +106,9 @@ public class E2_AddEditEstimateControllerTest {
     Account acc;
     Opportunity opp;
     Presales_Request__c psr;
+    pse__Rate_Card__c pseRateCard;
+    pse__Region__c regionUS=E2_Test_Utils.insertRegion(true);
+    pse__Practice__c testPractice=E2_Test_Utils.insertPractice(true);
     
     acc = E2_Test_Utils.insertAccount(true);
     opp = E2_Test_Utils.insertOpportunity(acc.Id, true);
@@ -111,7 +125,12 @@ public class E2_AddEditEstimateControllerTest {
     delReviewer.firstName = 'Test Reviewer';
     insert delReviewer;
     
+    
+    
     psr = E2_Test_Utils.insertPresalesReq(opp.Id, 'Demo', false);
     insert psr;
+    
+    pseRateCard=E2_Test_Utils.insertRateCard(acc.ID,regionUS.ID,testPractice.ID,true);
+    
   }
 }

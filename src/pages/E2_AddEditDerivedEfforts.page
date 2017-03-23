@@ -1,13 +1,16 @@
 <apex:page standardController="CMC_Presales_LOE__c" extensions="E2_AddEditDerivedEffortsController" action="{!pageAction}"
 showHeader="false" standardStylesheets="true" sidebar="false" applyHtmlTag="false" applyBodyTag="false">
 <apex:composition template="E2_Template">
-        <apex:define name="title">Apply Derived Efforts</apex:define>
+        <apex:define name="title">Apply Derived Efforts | {!estimate.Name}</apex:define>
         <apex:define name="header"><c:E2_PermissionMessage rendered="{!NOT(isEditable)}"/><c:E2_Header step="4"/></apex:define>
         <apex:define name="body">
 <apex:form >        
 <style>
 table tbody tr td input[type="text"], table tbody tr td select{
   width:80%;
+}
+.slds .slds-table td, .slds .slds-table th {
+    white-space : normal;
 }
 
 .errorBody{
@@ -65,7 +68,7 @@ table tbody tr td input[type="text"], table tbody tr td select{
             <apex:outputField value="{!estimate.Presales_Request__c}"/>
          </p>
           <p class="slds-text-heading--label slds-truncate" title="Opportunity">Opportunity</p>
-         <p><apex:outputLink value="/{!estimate.Presales_Request__r.Opportunity__c}">{!estimate.Opportunity_Name__c}</apex:outputLink> </p>
+          <p><apex:outputLink value="/{!estimate.Presales_Request__r.Opportunity__c}">{!estimate.Presales_Request__r.Opportunity_Name__c}</apex:outputLink> </p>
           <p class="slds-text-heading--label slds-truncate" title="Account">Account</p>
          <p><apex:outputLink value="/{!estimate.Presales_Request__r.Opportunity__r.AccountId}">{!estimate.Account_Name__c}</apex:outputLink></p>
       </li>
@@ -96,6 +99,8 @@ table tbody tr td input[type="text"], table tbody tr td select{
                     <div class="slds-card__body slds-p-horizontal--small">
                       <div class="slds-text-align--center">
                         <h3 class="slds-text-heading--small slds-p-top--large slds-p-bottom--large">No Derived Effort</h3>
+                      </div>
+                      <div class="slds-text-align--center">
                         <apex:commandButton rendered="{!isEditable}" styleClass="slds-button slds-button--neutral slds-button--small slds-m-bottom--x-large" title="Select Derived Effort Template" value="Select Derived Effort Template" onclick="return AddEditDerivedEffort.addfromtemplate_click(this);"/>
                       </div>
                     </div>
@@ -120,29 +125,35 @@ table tbody tr td input[type="text"], table tbody tr td select{
                       <table class="slds-table slds-table--bordered slds-max-medium-table--stacked-horizontal slds-no-row-hover">
                     <thead>
                       <tr>
-                        <th class="slds-text-heading--label slds-size--1-of-9" scope="col">Derived Effort Name</th>
-                        <th class="slds-text-heading--label slds-size--1-of-9" scope="col">Allocation (%)</th>
-                        <th class="slds-text-heading--label slds-size--1-of-9" scope="col">Of Role</th>
-                        <th class="slds-text-heading--label slds-size--1-of-9" scope="col">In Phase</th>
-                        <th class="slds-text-heading--label slds-size--1-of-9" scope="col">To Role</th>
-                        <th class="slds-text-heading--label slds-size--1-of-9" scope="col">In Phase</th>
-                        <th class="slds-text-heading--label slds-size--1-of-9" scope="col">Include When</th>
-                        <th class="slds-text-heading--label slds-size--1-of-9" scope="col">Allocation Min(%)</th>
-                        <th class="slds-text-heading--label slds-size--1-of-9" scope="col">Calculated Hrs</th>                        
+                        <th class="slds-text-heading--label slds-size--1-of-11" scope="col">Derived Effort Name</th>
+                        <th class="slds-text-heading--label slds-size--1-of-11" scope="col">Allocation (%)</th>
+                        <th class="slds-text-heading--label slds-size--1-of-11" scope="col">Of Role</th>
+                        <th class="slds-text-heading--label slds-size--1-of-11" scope="col">Of Level</th>
+                        <th class="slds-text-heading--label slds-size--1-of-11" scope="col">In Phase</th>
+                        <th class="slds-text-heading--label slds-size--1-of-11" scope="col">To Role</th>
+                        <th class="slds-text-heading--label slds-size--1-of-11" scope="col">To Level</th>
+                        <th class="slds-text-heading--label slds-size--1-of-11" scope="col">In Phase</th>
+                        <th class="slds-text-heading--label slds-size--1-of-11" scope="col">Include When</th>
+                        <th class="slds-text-heading--label slds-size--1-of-11" scope="col">Allocation Min(%)</th>
+                        <th class="slds-text-heading--label slds-size--1-of-11" scope="col">Calculated Hrs</th>                        
                       </tr>
                     </thead>
                     <tbody>
                       <apex:repeat value="{!clonnedDerivedEffortList}" var="derivedEffort">
                       <tr class="slds-hint-parent">
-                        <td class="slds-size--1-of-9" data-label="Name"><apex:outputText value="{!derivedEffort.name}"/></td> 
-                        <td class="slds-size--1-of-9" data-label="Allocation (%)"><apex:outputPanel ><strong>Allocate</strong>&nbsp;&nbsp;</apex:outputPanel><apex:outputText value="{0, number, 0.00}"><apex:param value="{!derivedEffort.allocation}" /></apex:outputText>&nbsp;%</td>
-                        <td class="slds-size--1-of-9" data-label="Of Role"><apex:outputPanel rendered="{!!ISBLANK(derivedEffort.ofRole)}"><strong>Of</strong>&nbsp;&nbsp;</apex:outputPanel><apex:outputText value="{!derivedEffort.ofRole}"/></td>
-                        <td class="slds-size--1-of-9 phasetd" data-label="Of Phase"><apex:outputPanel rendered="{!AND(!ISBLANK(derivedEffort.ofPhase),derivedEffort.ofPhase != '')}"><strong>In</strong>&nbsp;&nbsp;</apex:outputPanel><apex:outputText value="{!derivedEffort.ofPhase}"/></td>
-                        <td class="slds-size--1-of-9" data-label="Role"><apex:outputPanel rendered="{!!ISBLANK(derivedEffort.toRole)}"><strong>To</strong>&nbsp;&nbsp;</apex:outputPanel><apex:outputText value="{!derivedEffort.toRole}"/></td>                        
-                        <td class="slds-size--1-of-9 phasetd" data-label="To Phase"><apex:outputPanel rendered="{!!ISBLANK(derivedEffort.toPhase)}"><strong>In</strong>&nbsp;&nbsp;</apex:outputPanel><apex:outputText value="{!derivedEffort.toPhase}"/></td>
-                        <td class="slds-size--1-of-9" data-label="Include When"><apex:outputPanel rendered="{!!ISBLANK(derivedEffort.includeWhen)}"><strong>When</strong>&nbsp;&nbsp;</apex:outputPanel><apex:outputText value="{!derivedEffort.includeWhen}"/> <apex:outputText rendered="{!AND(!ISBLANK(derivedEffort.includeWhen),derivedEffort.includeWhen!='always')}">&nbsp;<apex:outputText value="{0, number, 0}"><apex:param value="{!derivedEffort.includeWhenHrs}" /></apex:outputText></apex:outputText></td>
-                        <td class="slds-size--1-of-9" data-label="Allocation Min(%)"><apex:outputPanel rendered="{!AND(derivedEffort.allocationMin != NULL,derivedEffort.allocationMin > 0)}" layout="none"><apex:outputPanel ><strong>Minimum</strong>&nbsp;&nbsp;</apex:outputPanel><apex:outputText value="{0, number, 0.00}"><apex:param value="{!derivedEffort.allocationMin}" /></apex:outputText>&nbsp;%</apex:outputPanel></td>
-                        <td class="slds-size--1-of-9" data-label="Derived Hrs"><apex:outputText value="{0, number, 0.00}"><apex:param value="{!derivedEffort.derivedHrs}" /></apex:outputText></td>
+                        <td class="slds-size--1-of-11" data-label="Name"><apex:outputText value="{!derivedEffort.name}"/></td> 
+                        <td class="slds-size--1-of-11" data-label="Allocation (%)"><apex:outputPanel ><strong>Allocate</strong>&nbsp;&nbsp;</apex:outputPanel><apex:outputText value="{0, number, 0.00}"><apex:param value="{!derivedEffort.allocation}" /></apex:outputText>&nbsp;%</td>
+                        <td class="slds-size--1-of-11" data-label="Of Role"><apex:outputPanel rendered="{!!ISBLANK(derivedEffort.ofRole)}"><strong>Of</strong>&nbsp;&nbsp;</apex:outputPanel><apex:outputText value="{!derivedEffort.ofRole}"/></td>
+                        <!-- 12/26 : Added of level in derived effort view-->
+                        <td class="slds-size--1-of-11" data-label="Of Level"><apex:outputPanel rendered="{!!ISBLANK(derivedEffort.ofLevel)}">&nbsp;&nbsp;</apex:outputPanel><apex:outputText value="{!derivedEffort.ofLevel}"/></td>
+                        <td class="slds-size--1-of-11 phasetd" data-label="Of Phase"><apex:outputPanel rendered="{!AND(!ISBLANK(derivedEffort.ofPhase),derivedEffort.ofPhase != '')}"><strong>In</strong>&nbsp;&nbsp;</apex:outputPanel><apex:outputText value="{!derivedEffort.ofPhase}"/></td>
+                        <td class="slds-size--1-of-11" data-label="Role"><apex:outputPanel rendered="{!!ISBLANK(derivedEffort.toRole)}"><strong>To</strong>&nbsp;&nbsp;</apex:outputPanel><apex:outputText value="{!derivedEffort.toRole}"/></td>                        
+                        <!-- 12/26 : Added to level in derived effort view-->
+                        <td class="slds-size--1-of-11" data-label="Level"><apex:outputPanel rendered="{!!ISBLANK(derivedEffort.toLevel)}">&nbsp;&nbsp;</apex:outputPanel><apex:outputText value="{!derivedEffort.toLevel}"/></td>
+                        <td class="slds-size--1-of-11 phasetd" data-label="To Phase"><apex:outputPanel rendered="{!!ISBLANK(derivedEffort.toPhase)}"><strong>In</strong>&nbsp;&nbsp;</apex:outputPanel><apex:outputText value="{!derivedEffort.toPhase}"/></td>
+                        <td class="slds-size--1-of-11" data-label="Include When"><apex:outputPanel rendered="{!!ISBLANK(derivedEffort.includeWhen)}"><strong>When</strong>&nbsp;&nbsp;</apex:outputPanel><apex:outputText value="{!derivedEffort.includeWhen}"/> <apex:outputText rendered="{!AND(!ISBLANK(derivedEffort.includeWhen),derivedEffort.includeWhen!='always')}">&nbsp;<apex:outputText value="{0, number, 0}"><apex:param value="{!derivedEffort.includeWhenHrs}" /></apex:outputText></apex:outputText></td>
+                        <td class="slds-size--1-of-11" data-label="Allocation Min(%)"><apex:outputPanel rendered="{!AND(derivedEffort.allocationMin != NULL,derivedEffort.allocationMin > 0)}" layout="none"><apex:outputPanel ><strong>Minimum</strong>&nbsp;&nbsp;</apex:outputPanel><apex:outputText value="{0, number, 0.00}"><apex:param value="{!derivedEffort.allocationMin}" /></apex:outputText>&nbsp;%</apex:outputPanel></td>
+                        <td class="slds-size--1-of-11" data-label="Derived Hrs"><apex:outputText value="{0, number, 0.00}"><apex:param value="{!derivedEffort.derivedHrs}" /></apex:outputText></td>
                       </tr>
                       </apex:repeat>                      
                     </tbody>
@@ -159,6 +170,7 @@ table tbody tr td input[type="text"], table tbody tr td select{
     <input type="hidden" value="{!CMC_Presales_LOE__c.Name}"/> 
     <input type="hidden" value="{!CMC_Presales_LOE__c.Presales_Request__c}"/>
     <input type="hidden" value="{!CMC_Presales_LOE__c.Presales_Request__r.Opportunity__c}"/>
+    <input type="hidden" value="{!CMC_Presales_LOE__c.Presales_Request__r.Opportunity_Name__c}"/>
     <input type="hidden" value="{!CMC_Presales_LOE__c.Presales_Request__r.Opportunity__r.AccountId}"/>
     <input type="hidden" value="{!CMC_Presales_LOE__c.Type__c}"/>
     <input type="hidden" value="{!CMC_Presales_LOE__c.Account_Executive__c}"/>
@@ -175,11 +187,11 @@ table tbody tr td input[type="text"], table tbody tr td select{
     <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Reviewer__c}"/>
     <input type="hidden" value="{!CMC_Presales_LOE__c.E2_SA__c}"/>
     <input type="hidden" value="{!CMC_Presales_LOE__c.E2_AE__c}"/>
-    <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Is_Primary__c}"/>
     <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Total_Hrs__c}"/>
     <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Derived_Effort_Template__c}"/>
     <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Risk__c}"/>
     <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Risk_percentage__c}"/>
+    <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Parent_Estimate__c}" />
     <br/>       
 
     <div id="helpModal" class="slds-modal slds-fade-in-open" role="dialog" style="display: none !important;">

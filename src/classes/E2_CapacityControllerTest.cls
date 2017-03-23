@@ -7,6 +7,7 @@
  * 
  * Date Modified      Modified By                  Description of the update
  * Oct 17, 2016       Jitendra Jangid              S-447214 : Show capacity distribution by Epics.
+ * Dec 19, 2016       Rohit Sharma                 S-449155 : Define risk factor on capacity
 *  =====================================================================*/
 
 
@@ -27,6 +28,8 @@ public class E2_CapacityControllerTest {
             E2_CapacityController controller = new E2_CapacityController(stdController);
             controller.buildCapacity();
             controller.pageAction();
+            controller.riskPrecent = '25%';
+            controller.updateRisk();
             system.assertEquals(controller.phases.size(), 1);
         system.assertEquals(controller.skillsPhases.size(), 1);
         Test.stopTest();  

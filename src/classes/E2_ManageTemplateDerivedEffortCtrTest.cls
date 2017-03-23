@@ -9,6 +9,7 @@ public class E2_ManageTemplateDerivedEffortCtrTest {
             ApexPages.StandardController stdController = new ApexPages.StandardController(derivedEffGrp);
             E2_ManageTemplateDerivedEffortController controller = new E2_ManageTemplateDerivedEffortController(stdController);
             controller.pageAction();
+            controller.isEditable = true;
             system.assertEquals(controller.derivedEffortTemplates.size(), 4,'Doesnot return 4 derived efforts associated with estimate');
             controller.derivedEffortTemplates.get(2).toPhase.clear();
             controller.updateEfforts();

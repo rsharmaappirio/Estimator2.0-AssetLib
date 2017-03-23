@@ -2,7 +2,7 @@
 public class E2_AddEditDerivedEffortsControllerTest {
 
   public static testmethod void testAddEditDerivedEfforts() {
-    CMC_Presales_LOE__c estimate = [SELECT Id, E2_Derived_Effort_Template__c, Name FROM CMC_Presales_LOE__c];
+    CMC_Presales_LOE__c estimate = [SELECT Id, E2_Derived_Effort_Template__c, E2_Parent_Estimate__c, Name FROM CMC_Presales_LOE__c];
     string derivedEffortGroup = estimate.E2_Derived_Effort_Template__c;
     //create sys admin user
     User sysAdmin = E2_Test_Utils.insertUser(E2_Constants.PROFILE_SYS_ADMIN, true);

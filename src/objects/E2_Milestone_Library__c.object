@@ -59,6 +59,7 @@
     <fields>
         <fullName>Description__c</fullName>
         <externalId>false</externalId>
+        <inlineHelpText>Provides details of the template created .</inlineHelpText>
         <label>Description</label>
         <required>false</required>
         <trackTrending>false</trackTrending>
@@ -67,7 +68,9 @@
     <fields>
         <fullName>Is_Active__c</fullName>
         <defaultValue>true</defaultValue>
+        <description>Marks a template active or inactive .If active then it is available for use to the E2 users .</description>
         <externalId>false</externalId>
+        <inlineHelpText>If active ,then that template is available made available for use in E2 system else not .</inlineHelpText>
         <label>Is_Active?</label>
         <trackTrending>false</trackTrending>
         <type>Checkbox</type>
@@ -75,7 +78,9 @@
     <fields>
         <fullName>Practice__c</fullName>
         <deleteConstraint>SetNull</deleteConstraint>
+        <description>Defines the practice for which the milestone template can be used for .</description>
         <externalId>false</externalId>
+        <inlineHelpText>Defines the practice for which the milestone template can be used for .For instance, SFDC,Workday etc.</inlineHelpText>
         <label>Practice</label>
         <referenceTo>pse__Practice__c</referenceTo>
         <relationshipLabel>Milestone Library</relationshipLabel>

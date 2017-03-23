@@ -9,130 +9,50 @@
  * Oct 26th, 2016     Rohit Sharma        S-447680 : Round off the hours to nearest figure on capacity tab.
  * Nov 11th, 2016     Rohit Sharma        S-447474 : Fixed fee calculation support
  * Nov 23th, 2016     Rohit Sharma        S-455804 : Default fixed fee uplift cost and buffer
+ * Dec 26, 2016       Rahul Jain          S-459273 : Added Resource Level field in getEstimateRateCards method
+ * Dec 27, 2016       Rahul Jain          S-459273 : Updated populateCapacityNeeds method to add resource level logic
 *  =====================================================================*/
 public with sharing class E2_TimelineController extends E2_Master {
     
   public CMC_Presales_LOE__c estimate {get;set;}
-  public List<E2_Estimate_Rate_Card__c> estimateRateCards{get;set;}
-  public string renderOptions_PhasesJSON{get;set;}
-  public string capacityNeeds_JSON{get;set;}
-  public static final string SEPARATOR = ' - ';
-  public string estimate_Mode{get;set;}
-  public decimal discountAmount{get;set;}
   public E2_System_setting__c e2SystemSetting{get;set;}
+  public list<E2_TimelineEstimates> timelineEstimates{get;set;}
+  public string newTimelineId{get;set;}
+  public boolean timelineStatusActive{get;set;}
+  public string timelineName{get;set;}
+  public string capacityNeeds_JSON{get;set;}
 
   public E2_TimelineController (ApexPages.StandardController std) {
     // constructor : use to initiate the variable
     this.estimate = (CMC_Presales_LOE__c)std.getRecord();
-    this.estimateRateCards = new List<E2_Estimate_Rate_Card__c>();
-    this.estimate.Discount_Percent__c = (this.estimate.Discount_Percent__c == NULL ? 0 : this.estimate.Discount_Percent__c);
     e2SystemSetting = E2_System_setting__c.getInstance();
-    // populate renderOptions_PhasesJSON field
-    populateRenderOptions();
+    timelineEstimates = new list<E2_TimelineEstimates>();
+    timelineEstimates.add(new E2_TimelineEstimates(estimate));
+    newTimelineId = NULL;
   }
   
   
-  public void populateRenderOptions(){
-     // method to populate the renderOptions_PhasesJSON variable with phases 
-     // and color code utilize in the phase column/row of the grid
-     
-     this.discountAmount = this.estimate.Discount_Amount__c;
-     Schema.DescribeFieldResult fieldResult = E2_Effort__c.Phase__c.getDescribe();
-     List<Schema.PicklistEntry> ple = fieldResult.getPicklistValues();
-     Map<String, String> phaseColorCodeMap = E2_Constants.PHASE_COLORCODE_MAP;
-     
-     // TODO: For first instance we are not moving these wild characters in constants; as these characters defines the 
-     // logic behind what is happening...
-     this.renderOptions_PhasesJSON = '{';
-     for( Schema.PicklistEntry f : ple){
-      string lineitem = '"' + f.getLabel() + '" : "' + (phaseColorCodeMap.containsKey(f.getLabel()) ? phaseColorCodeMap.get(f.getLabel()) : '') + '"';
-      this.renderOptions_PhasesJSON += (this.renderOptions_PhasesJSON == '{' ? '' : ',') + lineitem;
-     }
-     this.renderOptions_PhasesJSON += '}';
-  }
-  
-  
-  public pagereference refreshOverviewPanel(){
-      if(estimate.Id != null) 
-     // method to refresh overview panel - Estimate Summary Section above the grid
-     this.estimate = [SELECT id, Name, Service_Fees__c,
-                        Service_Costs__c,
-                        Service_Margin__c,                
-                        Calculated_Fees__c,
-                        Calculated_Costs__c,
-                        Calculated_Margin__c,
-                        Discount_Percent__c,
-                        Discount_Amount__c,
-                        Discount__c,
-                        Total_Fees__c,
-                        As_Sold_Margin__c,
-                        Final_Total__c,
-                        Blended_Rate_Number__c,
-                        Offshore_Blend__c,
-                        Ratecard_JSON__c,
-                        Mode__c,
-                        Services_Uplifted_Costs__c,
-                        Fixed_Fee_Cost_Uplift__c,
-                        Fixed_Fee_Cost_Uplift_Percent__c,
-                        Fixed_Fee_Buffer__c,
-                        Fixed_Fee_Blended__c,
-                        Fixed_Fee_Buffer_Amount__c,
-                        Topcoder_Challenge_Fees__c,
-                        Asset_Fees__c,
-                        Total_Resource_Hours__c,
-                        E2_Estimate_Total_Weeks__c 
-                       FROM CMC_Presales_LOE__c 
-                       WHERE Id = :estimate.id];
-      
-      this.estimate.Discount_Percent__c = (this.estimate.Discount_Percent__c == NULL ? 0 : this.estimate.Discount_Percent__c);
-      this.estimate.Fixed_Fee_Buffer__c = (this.estimate.Fixed_Fee_Buffer__c == NULL ? 0 : this.estimate.Fixed_Fee_Buffer__c);
-      this.discountAmount = this.estimate.Discount_Amount__c;
-      return null;
-  }
-  
-  
-  public void changeDiscount(){
-      // this method gets invoked when user changes or update the discount input in Estimate 
-      // Summary above the grid. 
-      try{
-        this.estimate.Discount__c = NULL;  
-        update this.estimate;
-      }catch(Exception ex){
-        ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, ex.getMessage()));  
-      }
-      refreshOverviewPanel(); 
-  }
-  
-  public void changeFixedFee(){
-      // this method gets invoked when user changes or update the fixed fee buffer input in Estimate 
-      // Summary above the grid. 
-      try{
-        update this.estimate;
-      }catch(Exception ex){
-        ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, ex.getMessage()));  
-      }
-      refreshOverviewPanel(); 
-  }
-  
-  public void changeDiscountAmount() {
-      // this method gets invoked when user changes or update the discount input in Estimate 
-      // Summary above the grid. 
-      try{
-        decimal discountPct = (this.discountAmount * 100) / this.estimate.Service_Fees__c;
-        this.estimate.Discount_Percent__c = discountPct;
-        this.estimate.Discount__c = string.valueOf(this.discountAmount);
-        update this.estimate;
-      }catch(Exception ex){
-        ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, ex.getMessage()));  
-      }
-      refreshOverviewPanel();
-  }
-  
-  public PageReference pageAction(){
+  public PageReference pageAction() {
     // method for page action 
+    PageReference page = super.validateForTimelineEstimate(this.estimate);
+    if(page <> NULL) return page;
     super.validateAccess(this.estimate);
+    for(CMC_Presales_LOE__c childEstimate : E2_DataUtil.getMultiTimelineEstimates(estimate.Id)) {
+        timelineEstimates.add(new E2_TimelineEstimates(childEstimate));
+    }
+    if(timelineEstimates.size() == 1) timelineEstimates.get(0).isActive = true; 
+    timelineEstimates.sort();
     populateCapacityNeeds();
-    this.estimateRateCards = E2_Estimator_Manager.getEstimateRateCards(this.estimate.Id, this.estimate.CurrencyISOCode);
+    return null;
+  }
+  
+  public PageReference refreshTimelineEstimates() {
+     timelineEstimates.clear();
+     timelineEstimates.add(new E2_TimelineEstimates(estimate));
+     for(CMC_Presales_LOE__c childEstimate : E2_DataUtil.getMultiTimelineEstimates(estimate.Id)) {
+        timelineEstimates.add(new E2_TimelineEstimates(childEstimate));
+    }
+    timelineEstimates.sort();
     return null;
   }
   
@@ -140,196 +60,36 @@ public with sharing class E2_TimelineController extends E2_Master {
       // method to populate the capacityNeeds_JSON variable with Phase hours
       // Role hours and total capacity needs from Capicity needs calculated 
       // from Scopes
-      // RS : S-447680 : Round off the hours to nearest figure on capacity tab
-    this.capacityNeeds_JSON = '{';
-    
-    string phaseHours_JSON = '{';
-    for(AggregateResult groupedResults : [SELECT SUM(Hours__c) Hours, Phase__c  
-                                          FROM E2_Capacity__c WHERE Estimator__c =: this.estimate.Id  
-                                          GROUP BY Phase__c]) {
-        string phaseHour = '"' + string.valueOf(groupedResults.get('Phase__c')).toLowerCase() + '" : "' + ((Decimal)groupedResults.get('Hours')).round() + '"';
-        phaseHours_JSON += (phaseHours_JSON == '{' ? '' : ',') + phaseHour;
-    }
-    phaseHours_JSON += '},';
-    this.capacityNeeds_JSON += '"PhaseHours" : '+ phaseHours_JSON;
-    string roleHours_JSON = '{';
-    for(AggregateResult groupedResults : [SELECT SUM(Hours__c) Hours, Role__c  
-                                          FROM E2_Capacity__c WHERE Estimator__c =: this.estimate.Id  
-                                          GROUP BY Role__c]) {
-        string roleHour = '"' + string.valueOf(groupedResults.get('Role__c')).toLowerCase() + '" : "' + ((Decimal)groupedResults.get('Hours')).round() + '"';
-        roleHours_JSON += (roleHours_JSON == '{' ? '' : ',') + roleHour;
-    }
-    roleHours_JSON += '},';
-    this.capacityNeeds_JSON += '"RoleHours" : '+ roleHours_JSON;
-    AggregateResult[] totalHours = [SELECT SUM(Hours__c) Hours 
-                                    FROM E2_Capacity__c 
-                                    WHERE Estimator__c =: this.estimate.Id];
-    this.capacityNeeds_JSON += '"TotalHours" : "' + (totalHours[0].get('Hours') == NULL ? '' : ''+ ((Decimal)totalHours[0].get('Hours')).round()) + '"';
-    this.capacityNeeds_JSON += '}';
+    this.capacityNeeds_JSON = E2_Estimator_Manager.populateCapacityNeeds(this.estimate.Id);
   }
   
-   
-  public E2_Estimate_Rate_Card__c getEstimateRateCard(pse__Rate_Card__c rateCard, String currencyCode){
-       // method to get instance of estimate rate card object with the ratecard record association.
-        E2_Estimate_Rate_Card__c estimateRC = new E2_Estimate_Rate_Card__c();
-            estimateRC.Estimate__c = estimate.id;
-            estimateRC.Resource_Role__c = rateCard.pse__Role__c;
-            estimateRC.Region__c = rateCard.pse__Region__r.Name;
-            estimateRC.Practice__c = rateCard.pse__Practice__r.Name;
-            estimateRC.Code__c = rateCard.Code__c;
-            estimateRC.Rate_Card__c = rateCard.Id;
-            estimateRC.CurrencyISOCode = currencyCode;
-            estimateRC.Resource_Cost__c = rateCard.pse__Average_Cost_Rate__c;
-            estimateRC.Bill_Rate__c = rateCard.pse__Suggested_Bill_Rate__c;
-            estimateRC.Discounted_Rate__c = rateCard.pse__Suggested_Bill_Rate__c;
-            estimateRC.Category__c = rateCard.pse__Region__r.Name;
-        return estimateRC;
-  }
-  
-  
-  public PageReference refreshRateCardRatesAndCost(){
-      // this method is invoked by clicking on set cost & rates button
-      // this method readjust the billing rate and the cost rate on estimate resources; estimate rate card records
-      // associated to current estimate. 
-      // TODO: Do we need to record the changes in the practice or region etc
-       if(estimate.CurrencyISOCode <> NULL){
-           Set<Id> rateCardIds = new Set<Id>();
-           string currencyCode = estimate.CurrencyISOCode;
-           List<E2_Estimate_Rate_Card__c> newRateCardsToInsert = new List<E2_Estimate_Rate_Card__c>();
-           List<E2_Estimate_Rate_Card__c> rateCardsToUpdate = new List<E2_Estimate_Rate_Card__c>();
-           
-           List<E2_Estimate_Rate_Card__c> estimateRateCards = E2_DataUtil.getEstimateRateCardRecs(estimate.Id);
-            
-            // create a set of existing rate card ids                                                   
-            for(E2_Estimate_Rate_Card__c erateCard : estimateRateCards){
-                rateCardIds.add(erateCard.Rate_Card__c);
-            }                                                   
-            
-            
-            // check that no new rate card entries exist in the system for this selected currency.  
-            for(pse__Rate_Card__c rateCard : E2_DataUtil.getpseRateCardRecs(rateCardIds, currencyCode)) {
-                newRateCardsToInsert.add(getEstimateRateCard(rateCard, currencyCode));
-            }
-            system.debug('estimateRateCards>>' +estimateRateCards);
-            //update the estimate rate card values 
-            for(E2_Estimate_Rate_Card__c erateCard : estimateRateCards){
-                boolean hasChanged = false;
-                // when original rate does not match bill rate 
-                if(erateCard.Bill_Rate__c <> erateCard.Rate_Card__r.pse__Suggested_Bill_Rate__c){
-                    system.debug('erateCard>>' +erateCard);
-                    if(erateCard.Bill_Rate__c == erateCard.Discounted_Rate__c) erateCard.Discounted_Rate__c = erateCard.Rate_Card__r.pse__Suggested_Bill_Rate__c;
-                    erateCard.Bill_Rate__c = erateCard.Rate_Card__r.pse__Suggested_Bill_Rate__c;
-                    hasChanged = true;
-                }
-                // when original cost doesn't match the resource cost
-                if(erateCard.Resource_Cost__c <> erateCard.Rate_Card__r.pse__Average_Cost_Rate__c){
-                    system.debug('erateCard==>>' +erateCard);
-                    erateCard.Resource_Cost__c = erateCard.Rate_Card__r.pse__Average_Cost_Rate__c;
-                    hasChanged = true;
-                }
-                if(hasChanged){
-                    rateCardsToUpdate.add(erateCard);
-                }
-            }
-            
-            try{
-                if(!rateCardsToUpdate.isEmpty()){
-                    update rateCardsToUpdate;
-                }
-                
-                if(!newRateCardsToInsert.isEmpty()){
-                    insert newRateCardsToInsert;
-                }
-                
-                this.estimateRateCards = E2_DataUtil.getEstimateRateCards(estimate.Id);
-                E2_Estimator_Manager.updateEstimeRateCardJSON(this.estimateRateCards, this.estimate.Id);
-                updateEstimateResources();
-            }catch(Exception ex){
-                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, ex.getMessage()));  
-            }
-        
-       }
-      return null;
-  }
-  
-  
-  public PageReference updateEstimateRateCards(){
-      // When save button is clicked 
-      if(!this.estimateRateCards.isEmpty()){
-        // Create a savepoint 
-        // we don't want to save/update estimate rate cards, when there is a failure in the update
-        // of estimate resources later
-        Savepoint sp = Database.setSavepoint();
-        try{
-            update this.estimateRateCards;
-            // update the rates and cost on the related estimate resources records
-            updateEstimateResources();
-            E2_Estimator_Manager.updateEstimeRateCardJSON(this.estimateRateCards, this.estimate.Id);
-        }catch(Exception ex){
-            Database.rollback(sp);
-            System.debug('Error in update of estimate rate cards:' + ex.getMessage());
-        }
-      }
-      return null;
-  }
-  
-  public void updateEstimateResources(){
-    // method that helps in updating the existing estimate resources related to current estimate
-    // with the updated/new billing rate and the cost rate.
-    Map<String, E2_Estimate_Rate_Card__c> roleRateMap = new Map<String, E2_Estimate_Rate_Card__c>();
-    List<CMC_Estimate_Resource__c> lstEstimateResourcesToUpdate = new List<CMC_Estimate_Resource__c>();
-    //create map
-    for(E2_Estimate_Rate_Card__c estimateRateCard : this.estimateRateCards){
-        roleRateMap.put(estimateRateCard.Practice__c + SEPARATOR + estimateRateCard.Region__c + SEPARATOR +  estimateRateCard.Resource_Role__c, estimateRateCard);
-        
-    }
-    // query existing estimate resource records and update the modified rate 
-    // loop over the existing resources and set the new rate with it
-    for(CMC_Estimate_Resource__c res : [SELECT Id, Rate__c, E2_Role__c, Role__c, Cost__c 
-                                         FROM CMC_Estimate_Resource__c
-                                         WHERE Estimate__c = : this.estimate.Id]){
-        boolean hasChanged = false;   
-        string e2Role = res.E2_Role__c;
-        // check that estimate rate card has a record for resource role and rate has been updated through manage rate card.                                     
-        if(roleRateMap.containsKey(e2Role) && roleRateMap.get(e2Role).Discounted_Rate__c != res.Rate__c){
-            res.Rate__c = roleRateMap.get(e2Role).Discounted_Rate__c;
-            hasChanged = true;
-        }
-        // check that estimate rate card has a record for resource role and cost has been updated through manage rate card.                                     
-        if(roleRateMap.containsKey(e2Role) && roleRateMap.get(e2Role).Resource_Cost__c != res.Cost__c){
-            res.Cost__c = roleRateMap.get(e2Role).Resource_Cost__c;
-            hasChanged = true;
-        }
-        if(hasChanged) lstEstimateResourcesToUpdate.add(res);
-    }
-    
-    try{
-       if(!lstEstimateResourcesToUpdate.isEmpty())   update lstEstimateResourcesToUpdate; 
-    }catch(Exception ex){
-       System.debug(ex.getMessage()); 
-    }
-    
-  }
-  
-  public void changeEstimateMode() {
-      //RS: 11/11 this method gets invoked when user chnages estimate mode to either T & M or Fixed Fee
-      // above summary section
-      if(!string.isBlank(this.estimate_Mode)) {
-          this.estimate.Mode__c = this.estimate_Mode;
-          if(estimate_Mode == E2_Constants.ESTIMATE_MODE_FIXED_FEE) {
-              // RS: 11/23 : Default fixed fee uplift cost and buffer from custom setting.
-              this.estimate.Fixed_Fee_Cost_Uplift_Percent__c = e2SystemSetting.Fixed_Fee_Cost_Uplift__c;
-              if(this.estimate.Fixed_Fee_Buffer__c == NULL ||
-                 this.estimate.Fixed_Fee_Buffer__c == 0) {
-                  this.estimate.Fixed_Fee_Buffer__c = e2SystemSetting.Fixed_Fee_Buffer__c;
+  public PageReference updateTimelineStatus() {
+      if(string.isNotBlank(newTimelineId)){
+          try {
+              update (new CMC_Presales_LOE__c(Id = newTimelineId, E2_Is_Active__c = timelineStatusActive));
+              for(E2_TimelineEstimates timelineEstimate : timelineEstimates) {
+                  if(timelineEstimate.estimateId == newTimelineId) timelineEstimate.isActive = timelineStatusActive;
               }
+          } catch(Exception ex) {
+              ApexPages.addMessage(new ApexPages.message(ApexPages.severity.ERROR,'Error updating timeline status.'+ex.getMessage()));
           }
-          try{
-            update this.estimate;
-          }catch(Exception ex){
-            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, ex.getMessage()));  
-          }
-          refreshOverviewPanel();
       }
+      return null;
+  }
+  
+  public PageReference updateTimelineName() {
+      if(string.isNotBlank(newTimelineId) && string.isNotBlank(timelineName)){
+          try {
+              update (new CMC_Presales_LOE__c(Id = newTimelineId, E2_Timeline_Name__c = timelineName));
+              for(E2_TimelineEstimates timelineEstimate : timelineEstimates) {
+                 if(timelineEstimate.estimateId == newTimelineId) timelineEstimate.timelineName = timelineName;
+              }
+              // update timeline name in base estimate if newTimelineId is equals estimate.Id
+              if(newTimelineId == estimate.Id) estimate.E2_Timeline_Name__c = timelineName;
+          } catch(Exception ex) {
+              ApexPages.addMessage(new ApexPages.message(ApexPages.severity.ERROR,'Error updating timeline status.'+ex.getMessage()));
+          }
+      }
+      return null;
   }
 }

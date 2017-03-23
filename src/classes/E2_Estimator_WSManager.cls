@@ -10,6 +10,9 @@
  *                                                 speical charctors from asset name and Description.
  * Oct 19, 2016       Arpita Bose                  S-448268 : Cloned scope item on right click
  * Oct 27, 2016       Rohit Sharma                 I-241822 : Total effort of scope hierarchy has not displayed over ultimate parent node
+ * Dec 12, 2016       Rohit Sharma                 S-453054 : Set scope type for multiple scope items on scope tree.
+ * Feb 08, 2017       Rohit Sharma                 S-447325 : Add multiplier on Scope: New web service added update scope
+ *                                                 effort multiplier
 *  =====================================================================*/
 public class E2_Estimator_WSManager {
     private final static string NODE_TYPE_SCOPE = 'scope';
@@ -28,8 +31,9 @@ public class E2_Estimator_WSManager {
             nodeList.add(new E2_TreeNode(scope.id, scope.name, getFormatedScopeNameForFlag(scope, totalhrs), 
                              (scope.Parent_Scope__c == NULL ? E2_Constants.HASH_TAG : scope.Parent_Scope__c), 
                              hasChildren, scope.Source_Scope__c, NODE_TYPE_SCOPE, 
-                             (scope.Display_Order__c == NULL ? E2_Constants.DEFAULT_SCOPE_DISPLAY_ORDER : scope.Display_Order__c))
-            );                                                
+                             (scope.Display_Order__c == NULL ? E2_Constants.DEFAULT_SCOPE_DISPLAY_ORDER : scope.Display_Order__c), 
+                             scope.Complexity__c, scope.Scope_Item_Type__c, 
+                             !scope.Questions__r.isEmpty(), !scope.E2_Recommended_Assets__r.isEmpty(), scope.Effort_Quantity__c));
         }
         return nodeList;
     }
@@ -71,7 +75,8 @@ public class E2_Estimator_WSManager {
             nodeList.add(new E2_TreeNode(scope.id, getFormatedScopeName(scope, totalhrs), 
                              (scope.Parent_Scope__c == NULL ? E2_Constants.HASH_TAG : scope.Parent_Scope__c), 
                              hasChildren, scope.Source_Scope__c, NODE_TYPE_SCOPE, 
-                             (scope.Display_Order__c == NULL ? E2_Constants.DEFAULT_SCOPE_DISPLAY_ORDER : scope.Display_Order__c)) 
+                             (scope.Display_Order__c == NULL ? E2_Constants.DEFAULT_SCOPE_DISPLAY_ORDER : scope.Display_Order__c),
+                             scope.Effort_Quantity__c) 
             );                                                
         }
         return nodeList;
@@ -82,25 +87,37 @@ public class E2_Estimator_WSManager {
         string name = scope.name, complexity = scope.Complexity__c, sType = scope.Scope_Item_Type__c, flag = scope.Scope_Flag__c; decimal hrs = scope.LOE_Hrs__c;
         if(hrs == 0) {
             return E2_Constants.NODE_DISPLAY_TEMPLATE_WITHOUT_EFFORTS.replace(E2_Constants.NODE_SCOPE_NAME_FORMAT, name)
+                    .replace(E2_Constants.NODE_SCOPE_ID_FORMAT, scope.id)
                     .replace(E2_Constants.NODE_ADD_CLASS, scope.Is_Active__c ? E2_Constants.BLANK : E2_Constants.NODE_CSS_CLASS);
         }
-        return E2_Constants.NODE_DISPLAY_TEMPLATE.replace(E2_Constants.NODE_SCOPE_NAME_FORMAT, name)
+        string formatedScopeName = E2_Constants.NODE_DISPLAY_TEMPLATE.replace(E2_Constants.NODE_SCOPE_NAME_FORMAT, name)
+                       .replace(E2_Constants.NODE_SCOPE_ID_FORMAT, scope.id)
                        .replace(E2_Constants.NODE_EFFORT_FORMAT, hrs.format())
-                       .replace(E2_Constants.NODE_ADD_CLASS, scope.Is_Active__c ? E2_Constants.BLANK : E2_Constants.NODE_CSS_CLASS);  
+                       .replace(E2_Constants.NODE_ADD_CLASS, scope.Is_Active__c ? E2_Constants.BLANK : E2_Constants.NODE_CSS_CLASS);
+        return scope.Effort_Quantity__c <> NULL && scope.Effort_Quantity__c > 0  && scope.Effort_Quantity__c != 1 ? 
+               formatedScopeName.replace(E2_Constants.CSS_SLDS_BADGE_CUSTOM, E2_Constants.CSS_SLDS_BADGE_EFFORT_MULTIPLIER) : 
+               formatedScopeName;
     }
     
     // method to calculate total LOE hrs on ultimate parent scope
+    // S-447325 : condition added to identify multiplied scopes on JSTree
     public static string getFormatedScopeNameForFlag(E2_Scope__c scope, decimal totalhrs){
         string name = scope.name, complexity = scope.Complexity__c, sType = scope.Scope_Item_Type__c, flag = scope.Scope_Flag__c; decimal hrs = scope.LOE_Hrs__c + totalhrs;
         if(hrs == 0) {
             return E2_Constants.NODE_DISPLAY_TEMPLATE_WITHOUT_EFFORTS_FLAG.replace(E2_Constants.NODE_SCOPE_NAME_FORMAT, name)
+                     .replace(E2_Constants.NODE_SCOPE_ID_FORMAT, scope.id)
                     .replace(E2_Constants.NODE_ADD_CLASS, scope.Is_Active__c ? E2_Constants.BLANK : E2_Constants.NODE_CSS_CLASS)
                     .replace(E2_Constants.NODE_FLAG_COLOR, (scope.Scope_Flag__c == null) ? E2_Constants.BLANK : flag);
         }
-        return E2_Constants.NODE_DISPLAY_TEMPLATE_FLAG.replace(E2_Constants.NODE_SCOPE_NAME_FORMAT, name)
+        string formatedScopeName = E2_Constants.NODE_DISPLAY_TEMPLATE_FLAG.replace(E2_Constants.NODE_SCOPE_NAME_FORMAT, name)
+                        .replace(E2_Constants.NODE_SCOPE_ID_FORMAT, scope.id)
                        .replace(E2_Constants.NODE_EFFORT_FORMAT, hrs.format())
                        .replace(E2_Constants.NODE_ADD_CLASS, scope.Is_Active__c ? E2_Constants.BLANK : E2_Constants.NODE_CSS_CLASS)
                        .replace(E2_Constants.NODE_FLAG_COLOR, (scope.Scope_Flag__c == null) ? E2_Constants.BLANK : flag);
+        return scope.Effort_Quantity__c <> NULL && scope.Effort_Quantity__c > 0  && scope.Effort_Quantity__c != 1 ? 
+               formatedScopeName.replace(E2_Constants.CSS_SLDS_BADGE_CUSTOM, E2_Constants.CSS_SLDS_BADGE_EFFORT_MULTIPLIER) : 
+               formatedScopeName;
+
     }
     
     // method to calculate total LOE hrs on ultimate parent scope : template Pill
@@ -108,11 +125,16 @@ public class E2_Estimator_WSManager {
         string name = scope.name, complexity = scope.Complexity__c, sType = scope.Scope_Item_Type__c, flag = scope.Scope_Flag__c; decimal hrs = scope.LOE_Hrs__c + totalhrs;
         if(hrs == 0) {
             return E2_Constants.NODE_DISPLAY_TEMPLATE_WITHOUT_EFFORTS.replace(E2_Constants.NODE_SCOPE_NAME_FORMAT, name)
+                    .replace(E2_Constants.NODE_SCOPE_ID_FORMAT, scope.id)
                     .replace(E2_Constants.NODE_ADD_CLASS, scope.Is_Active__c ? E2_Constants.BLANK : E2_Constants.NODE_CSS_CLASS);
         }
-        return E2_Constants.NODE_DISPLAY_TEMPLATE.replace(E2_Constants.NODE_SCOPE_NAME_FORMAT, name)
+        string formatedScopeName = E2_Constants.NODE_DISPLAY_TEMPLATE.replace(E2_Constants.NODE_SCOPE_NAME_FORMAT, name)
                        .replace(E2_Constants.NODE_EFFORT_FORMAT, hrs.format())
-                       .replace(E2_Constants.NODE_ADD_CLASS, scope.Is_Active__c ? E2_Constants.BLANK : E2_Constants.NODE_CSS_CLASS);  
+                       .replace(E2_Constants.NODE_SCOPE_ID_FORMAT, scope.id)
+                       .replace(E2_Constants.NODE_ADD_CLASS, scope.Is_Active__c ? E2_Constants.BLANK : E2_Constants.NODE_CSS_CLASS); 
+        return scope.Effort_Quantity__c <> NULL && scope.Effort_Quantity__c > 0  && scope.Effort_Quantity__c != 1 ? 
+               formatedScopeName.replace(E2_Constants.CSS_SLDS_BADGE_CUSTOM, E2_Constants.CSS_SLDS_BADGE_EFFORT_MULTIPLIER) : 
+               formatedScopeName;
     }
     
     //method to reparent scopes 
@@ -186,7 +208,12 @@ public class E2_Estimator_WSManager {
 		List<E2_Scope__c> scopeList = new List<E2_Scope__c>();
         map<string,E2_Scope__c> hasChildrenScope = new map<string,E2_Scope__c>();
         map<string, E2_Scope__c> clonedSourceMap = new map<string, E2_Scope__c>();
-        
+        decimal effortQuantity = 1;
+        if(string.isNotBlank(parentScopeId) && parentScopeId != E2_Constants.HASH_TAG) {
+            for(E2_Scope__c parentScope : [SELECT Effort_Quantity__c FROM E2_Scope__c WHERE Id =:parentScopeId]) {
+                effortQuantity = parentScope.Effort_Quantity__c;
+            }
+        }
         List<String> scopeIDs = scopeIdCSV.split(E2_constants.COMMA);        
         
         for(E2_Scope__c scope : E2_DataUtil_WS.getFullScopesDetailsWithLimit(scopeIDs)){
@@ -195,7 +222,8 @@ public class E2_Estimator_WSManager {
            cloneScope.Presales_LOE__c = estimateId;
            cloneScope.Parent_Scope__c = (parentScopeId == E2_Constants.HASH_TAG ? null : parentScopeId);
            cloneScope.recordTypeId = recTypeId;    
-           cloneScope.Scope_Group__c = null;                      
+           cloneScope.Scope_Group__c = null; 
+           cloneScope.Effort_Quantity__c = (parentScopeId == E2_Constants.HASH_TAG ? scope.Effort_Quantity__c : effortQuantity);
            scopeList.add(cloneScope);
            clonedSourceMap.put(scope.id, cloneScope);
            if(scope.Efforts__r.size() > 0 || scope.E2_Recommended_Assets__r.size() > 0
@@ -218,10 +246,12 @@ public class E2_Estimator_WSManager {
             	string scopeId = (string)scope.Id;  
             	decimal totalhrs = scopeRollhrs.containsKey(scopeId) ? scopeRollhrs.get(scopeId) : 0;
                 nodeList.add(new E2_TreeNode(scope.id, scope.name, getFormatedScopeNameForFlag(scope, totalhrs), 
-                                 (scope.Parent_Scope__c == NULL ? E2_Constants.HASH_TAG : scope.Parent_Scope__c), 
-                                 hasChildren, scope.Source_Scope__c, NODE_TYPE_SCOPE, 
-                                 (scope.Display_Order__c == NULL ? E2_Constants.DEFAULT_SCOPE_DISPLAY_ORDER : scope.Display_Order__c))
-                );                                                
+                             (scope.Parent_Scope__c == NULL ? E2_Constants.HASH_TAG : scope.Parent_Scope__c), 
+                             hasChildren, scope.Source_Scope__c, NODE_TYPE_SCOPE, 
+                             (scope.Display_Order__c == NULL ? E2_Constants.DEFAULT_SCOPE_DISPLAY_ORDER : scope.Display_Order__c), 
+                             scope.Complexity__c, scope.Scope_Item_Type__c, 
+                             !scope.Questions__r.isEmpty(), !scope.E2_Recommended_Assets__r.isEmpty(), scope.Effort_Quantity__c)
+                            );                                                
             }
         }
         return nodeList;												            
@@ -381,7 +411,12 @@ public class E2_Estimator_WSManager {
         boolean hasChildren = true;
         parentScopeId = (parentScopeId == null || parentScopeId == E2_Constants.BLANK ? E2_Constants.HASH_TAG : parentScopeId);
         Id recTypeId = E2_RecordTypeClass.getId(E2_Constants.E2_SCOPE_API_NAME, E2_Constants.SCOPE_RT_TEMPLATE);
-		
+		decimal effortQuantity = 1;
+        if(string.isNotBlank(parentScopeId) && parentScopeId != E2_Constants.HASH_TAG) {
+            for(E2_Scope__c parentScope : [SELECT Effort_Quantity__c FROM E2_Scope__c WHERE Id =:parentScopeId]) {
+                effortQuantity = parentScope.Effort_Quantity__c;
+            }
+        }
 		List<E2_Scope__c> scopeList = new List<E2_Scope__c>();
         map<string,E2_Scope__c> hasChildrenScope = new map<string,E2_Scope__c>();
         map<string, E2_Scope__c> clonedSourceMap = new map<string, E2_Scope__c>();
@@ -394,7 +429,8 @@ public class E2_Estimator_WSManager {
            cloneScope.Parent_Scope__c = (parentScopeId == E2_Constants.HASH_TAG ? null : parentScopeId);
            cloneScope.recordTypeId = recTypeId;    
            cloneScope.Scope_Group__c = scopeGrpId;
-           cloneScope.Presales_LOE__c = null;                      
+           cloneScope.Presales_LOE__c = null;
+           cloneScope.Effort_Quantity__c = (parentScopeId == E2_Constants.HASH_TAG ? scope.Effort_Quantity__c : effortQuantity);
            scopeList.add(cloneScope);
            clonedSourceMap.put(scope.id, cloneScope);
            if(scope.Efforts__r.size() > 0){
@@ -416,9 +452,11 @@ public class E2_Estimator_WSManager {
             	string newScopeId = (string)scope.Id;  
             	decimal totalhrs = scopeRollhrs.containsKey(newScopeId) ? scopeRollhrs.get(newScopeId) : 0;
                 nodeList.add(new E2_TreeNode(scope.id, scope.name, getFormatedScopeNameForFlag(scope, totalhrs), 
-                                 (scope.Parent_Scope__c == NULL ? E2_Constants.HASH_TAG : scope.Parent_Scope__c), 
-                                 hasChildren, scope.Source_Scope__c, NODE_TYPE_SCOPE, 
-                                 (scope.Display_Order__c == NULL ? E2_Constants.DEFAULT_SCOPE_DISPLAY_ORDER : scope.Display_Order__c))
+                             (scope.Parent_Scope__c == NULL ? E2_Constants.HASH_TAG : scope.Parent_Scope__c), 
+                             hasChildren, scope.Source_Scope__c, NODE_TYPE_SCOPE, 
+                             (scope.Display_Order__c == NULL ? E2_Constants.DEFAULT_SCOPE_DISPLAY_ORDER : scope.Display_Order__c), 
+                             scope.Complexity__c, scope.Scope_Item_Type__c, 
+                             !scope.Questions__r.isEmpty(), !scope.E2_Recommended_Assets__r.isEmpty(), scope.Effort_Quantity__c)
                 );                                                
             }
         }        
@@ -448,16 +486,15 @@ public class E2_Estimator_WSManager {
     
     //Method to update display order of scopes when re-parented
     public static string updateScopesDisplayOrder(string scopeJsonStr){
-    	List<E2_Estimator_WSManager.ScopeWrapper> lstScopesWrapper = (List<E2_Estimator_WSManager.ScopeWrapper>)JSON.deserialize(scopeJsonStr, List<E2_Estimator_WSManager.ScopeWrapper>.class);
-    	
-    	List<E2_Scope__c> lstScopes = new List<E2_Scope__c>();
-    	for(E2_Estimator_WSManager.ScopeWrapper scopeWrapper : lstScopesWrapper){
-    		lstScopes.add(new E2_Scope__c(Id= scopeWrapper.scopeId, 
-    		                              Display_Order__c = Integer.valueOf(scopeWrapper.displayOrder),
-    		                              Sequence__c = Integer.valueOf(scopeWrapper.sequence)));
-    	}
-    	
     	try{
+    	    List<E2_Estimator_WSManager.ScopeWrapper> lstScopesWrapper = (List<E2_Estimator_WSManager.ScopeWrapper>)JSON.deserialize(scopeJsonStr, List<E2_Estimator_WSManager.ScopeWrapper>.class);
+    	
+        	List<E2_Scope__c> lstScopes = new List<E2_Scope__c>();
+        	for(E2_Estimator_WSManager.ScopeWrapper scopeWrapper : lstScopesWrapper){
+        		lstScopes.add(new E2_Scope__c(Id= scopeWrapper.scopeId, 
+        		                              Display_Order__c = Integer.valueOf(scopeWrapper.displayOrder),
+        		                              Sequence__c = Integer.valueOf(scopeWrapper.sequence)));
+        	}
     		update lstScopes;
     	}catch(Exception ex){
           return 'Failed: ' + ex.getMessage();
@@ -629,9 +666,11 @@ public class E2_Estimator_WSManager {
             	string scopeId = (string)scope.Id;  
             	decimal totalhrs = scopeRollhrs.containsKey(scopeId) ? scopeRollhrs.get(scopeId) : 0;
                 nodeList.add(new E2_TreeNode(scope.id, scope.name, getFormatedScopeNameForFlag(scope, totalhrs), 
-                                 (scope.Parent_Scope__c == NULL ? E2_Constants.HASH_TAG : scope.Parent_Scope__c), 
-                                 hasChildren, scope.Source_Scope__c, NODE_TYPE_SCOPE, 
-                                 (scope.Display_Order__c == NULL ? E2_Constants.DEFAULT_SCOPE_DISPLAY_ORDER : scope.Display_Order__c))
+                             (scope.Parent_Scope__c == NULL ? E2_Constants.HASH_TAG : scope.Parent_Scope__c), 
+                             hasChildren, scope.Source_Scope__c, NODE_TYPE_SCOPE, 
+                             (scope.Display_Order__c == NULL ? E2_Constants.DEFAULT_SCOPE_DISPLAY_ORDER : scope.Display_Order__c), 
+                             scope.Complexity__c, scope.Scope_Item_Type__c, 
+                             !scope.Questions__r.isEmpty(), !scope.E2_Recommended_Assets__r.isEmpty(), scope.Effort_Quantity__c)
                 );                                                
             }
         }
@@ -639,10 +678,227 @@ public class E2_Estimator_WSManager {
         return nodeList; 
     }
     
+    // RS S-453054 : 12/12 : change Scope Type webservice manager
+    public static string changeScopeType(string selectedScopesJSON) {
+        try {
+            list<E2_Estimator_WSManager.ScopeWrapper> selectedScopes = (list<E2_Estimator_WSManager.ScopeWrapper>)JSON.deserialize(selectedScopesJSON, list<E2_Estimator_WSManager.ScopeWrapper>.class);
+            list<E2_Scope__c> scopesToUpdate = new list<E2_Scope__c>();
+            for(E2_Estimator_WSManager.ScopeWrapper scopeW : selectedScopes) {
+                scopesToUpdate.add(new E2_Scope__c( id = scopeW.scopeId, Scope_Item_Type__c = scopeW.scopeType ) );
+            }
+            update scopesToUpdate;
+            return selectedScopesJSON;
+        } catch(exception ex) {
+            return 'Failed to update scope(s).';
+        }
+    }
+    
+    //RJ : 12/20: Method to retrieve the updated scope in wrapper format to prevent tree to get complete refresh
+    public static string retrieveTreeContentOnScopeDetailSave(string estimateId) {
+        list<E2_Estimator_WSManager.ScopeWrapper> selectedScopes = new list<E2_Estimator_WSManager.ScopeWrapper>();
+        list<E2_Scope__c> allEstimatescopes = E2_DataUtil_WS.getChildScopesOfEstimate(estimateId);
+        map<String, decimal> scopeRollhrs = generateParentHoursMap(allEstimatescopes);
+        for(E2_Scope__c scope : allEstimatescopes) {
+        	string scopeId = (string)scope.Id;  
+        	decimal totalhrs = scopeRollhrs.containsKey(scopeId) ? scopeRollhrs.get(scopeId) : 0;
+        	E2_Estimator_WSManager.ScopeWrapper selectedScope = new E2_Estimator_WSManager.ScopeWrapper();
+        	selectedScope.scopeId = scopeId;
+        	selectedScope.formatedScopeName = getFormatedScopeNameForFlag(scope, totalhrs);
+        	selectedScope.activeStatus = scope.Is_Active__c;
+        	selectedScope.scopeComplexity = scope.Complexity__c;
+        	selectedScopes.add(selectedScope);
+        }
+        return JSON.serialize(selectedScopes);
+    }
+    
+    
+    // RS S-453054 : 12/12 : change Scope status webservice manager
+    public static string changeScopeActiveStatus(string selectedScopesJSON) {
+        try {
+            list<E2_Estimator_WSManager.ScopeWrapper> selectedScopes = (list<E2_Estimator_WSManager.ScopeWrapper>)JSON.deserialize(selectedScopesJSON, list<E2_Estimator_WSManager.ScopeWrapper>.class);
+            string estimateId = selectedScopes.get(0).estimateId;
+            list<E2_Scope__c> scopesToUpdate = new list<E2_Scope__c>();
+            for(E2_Estimator_WSManager.ScopeWrapper scopeW : selectedScopes) {
+                scopesToUpdate.add(new E2_Scope__c( id = scopeW.scopeId, Is_Active__c = scopeW.activeStatus ) );
+            }
+            update scopesToUpdate;
+            selectedScopes = new list<E2_Estimator_WSManager.ScopeWrapper>();
+            list<E2_Scope__c> allEstimatescopes = E2_DataUtil_WS.getChildScopesOfEstimate(estimateId);
+            map<String, decimal> scopeRollhrs = generateParentHoursMap(allEstimatescopes);
+            for(E2_Scope__c scope : allEstimatescopes) {
+            	string scopeId = (string)scope.Id;  
+            	decimal totalhrs = scopeRollhrs.containsKey(scopeId) ? scopeRollhrs.get(scopeId) : 0;
+            	E2_Estimator_WSManager.ScopeWrapper selectedScope = new E2_Estimator_WSManager.ScopeWrapper();
+            	selectedScope.scopeId = scopeId;
+            	selectedScope.formatedScopeName = getFormatedScopeNameForFlag(scope, totalhrs);
+            	selectedScope.activeStatus = scope.Is_Active__c;
+            	selectedScopes.add(selectedScope);
+            }
+            return JSON.serialize(selectedScopes);
+        } catch(exception ex) {
+            return 'Failed to update scope(s).';
+        }
+    }
+    
+    // RS S-453054 : 12/12 : change Scope Complexity webservice manager
+    public static string changeScopeComplexity(string selectedScopesJSON) {
+        try {
+            list<E2_Estimator_WSManager.ScopeWrapper> selectedScopes = (list<E2_Estimator_WSManager.ScopeWrapper>)JSON.deserialize(selectedScopesJSON, list<E2_Estimator_WSManager.ScopeWrapper>.class);
+            string estimateId = selectedScopes.get(0).estimateId;
+            list<E2_Scope__c> scopesToUpdate = new list<E2_Scope__c>();
+            for(E2_Estimator_WSManager.ScopeWrapper scopeW : selectedScopes) {
+                scopesToUpdate.add(new E2_Scope__c( id = scopeW.scopeId, Complexity__c = scopeW.scopeComplexity ) );
+            }
+            update scopesToUpdate;
+            selectedScopes = new list<E2_Estimator_WSManager.ScopeWrapper>();
+            list<E2_Scope__c> allEstimatescopes = E2_DataUtil_WS.getChildScopesOfEstimate(estimateId);
+            map<String, decimal> scopeRollhrs = generateParentHoursMap(allEstimatescopes);
+            for(E2_Scope__c scope : allEstimatescopes) {
+            	string scopeId = (string)scope.Id;  
+            	decimal totalhrs = scopeRollhrs.containsKey(scopeId) ? scopeRollhrs.get(scopeId) : 0;
+            	E2_Estimator_WSManager.ScopeWrapper selectedScope = new E2_Estimator_WSManager.ScopeWrapper();
+            	selectedScope.scopeId = scopeId;
+            	selectedScope.scopeComplexity = scope.Complexity__c;
+            	selectedScope.formatedScopeName = getFormatedScopeNameForFlag(scope, totalhrs);
+            	selectedScopes.add(selectedScope);
+            }
+            return JSON.serialize(selectedScopes);//selectedScopesJSON;
+        } catch(exception ex) {
+            return 'Failed to update scope(s).';
+        }
+    }
+    
+     // RS S-453054 : 12/12 : change Scope Complexity For Scope Library webservice manager
+    public static string changeScopeComplexityForScopeLibrary(string selectedScopesJSON) {
+        try {
+            list<E2_Estimator_WSManager.ScopeWrapper> selectedScopes = (list<E2_Estimator_WSManager.ScopeWrapper>)JSON.deserialize(selectedScopesJSON, list<E2_Estimator_WSManager.ScopeWrapper>.class);
+            string scopeGroupId = selectedScopes.get(0).scopeGroupId;
+            list<E2_Scope__c> scopesToUpdate = new list<E2_Scope__c>();
+            for(E2_Estimator_WSManager.ScopeWrapper scopeW : selectedScopes) {
+                scopesToUpdate.add(new E2_Scope__c( id = scopeW.scopeId, Complexity__c = scopeW.scopeComplexity ) );
+            }
+            update scopesToUpdate;
+            selectedScopes = new list<E2_Estimator_WSManager.ScopeWrapper>();
+            
+            list<E2_Scope__c> allScopes = E2_DataUtil_WS.getChildScopesOfScopeGroup(scopeGroupId);
+            map<String, decimal> scopeRollhrs = generateParentHoursMap(allScopes);
+            for(E2_Scope__c scope : allScopes) {
+            	string scopeId = (string)scope.Id;  
+            	decimal totalhrs = scopeRollhrs.containsKey(scopeId) ? scopeRollhrs.get(scopeId) : 0; 
+            	E2_Estimator_WSManager.ScopeWrapper selectedScope = new E2_Estimator_WSManager.ScopeWrapper();
+                selectedScope.scopeId = scopeId;
+                selectedScope.scopeComplexity = scope.Complexity__c;
+                selectedScope.formatedScopeName = getFormatedScopeName(scope, totalhrs);
+                selectedScopes.add(selectedScope);
+            }
+            return JSON.serialize(selectedScopes);//selectedScopesJSON;
+        } catch(exception ex) {
+            return 'Failed to update scope(s).';
+        }
+    }
+    
+    // RS S-453054 : 12/12 : change Scope status webservice manager
+    public static string changeScopeActiveStatusForScopeLibrary(string selectedScopesJSON) {
+        try {
+            list<E2_Estimator_WSManager.ScopeWrapper> selectedScopes = (list<E2_Estimator_WSManager.ScopeWrapper>)JSON.deserialize(selectedScopesJSON, list<E2_Estimator_WSManager.ScopeWrapper>.class);
+            string scopeGroupId = selectedScopes.get(0).scopeGroupId;
+            list<E2_Scope__c> scopesToUpdate = new list<E2_Scope__c>();
+            for(E2_Estimator_WSManager.ScopeWrapper scopeW : selectedScopes) {
+                scopesToUpdate.add(new E2_Scope__c( id = scopeW.scopeId, Is_Active__c = scopeW.activeStatus ) );
+            }
+            update scopesToUpdate;
+            selectedScopes = new list<E2_Estimator_WSManager.ScopeWrapper>();
+            
+            list<E2_Scope__c> allScopes = E2_DataUtil_WS.getChildScopesOfScopeGroup(scopeGroupId);
+            map<String, decimal> scopeRollhrs = generateParentHoursMap(allScopes);
+            for(E2_Scope__c scope : allScopes) {
+            	string scopeId = (string)scope.Id;  
+            	decimal totalhrs = scopeRollhrs.containsKey(scopeId) ? scopeRollhrs.get(scopeId) : 0; 
+            	E2_Estimator_WSManager.ScopeWrapper selectedScope = new E2_Estimator_WSManager.ScopeWrapper();
+                selectedScope.scopeId = scopeId;
+                selectedScope.activeStatus = scope.Is_Active__c;
+                selectedScope.formatedScopeName = getFormatedScopeName(scope, totalhrs);
+                selectedScopes.add(selectedScope);
+            }
+            return JSON.serialize(selectedScopes);
+        } catch(exception ex) {
+            return 'Failed to update scope(s).';
+        }
+    }
+    
+    
+    // RS S-447325 : 2/02 : add effort multiplier to scope
+    public static string addEffortMultiplier(string selectedScopesJSON) {
+        try {
+            list<E2_Estimator_WSManager.ScopeWrapper> selectedScopes = (list<E2_Estimator_WSManager.ScopeWrapper>)JSON.deserialize(selectedScopesJSON, list<E2_Estimator_WSManager.ScopeWrapper>.class);
+            string estimateId = selectedScopes.get(0).estimateId;
+            list<E2_Scope__c> scopesToUpdate = new list<E2_Scope__c>();
+            for(E2_Estimator_WSManager.ScopeWrapper scopeW : selectedScopes) {
+               scopesToUpdate.add(new E2_Scope__c( id = scopeW.scopeId, Effort_Quantity__c = scopeW.multiplier) );
+            }
+            update scopesToUpdate;
+            selectedScopes = new list<E2_Estimator_WSManager.ScopeWrapper>();
+            
+            list<E2_Scope__c> allEstimatescopes = E2_DataUtil_WS.getChildScopesOfEstimate(estimateId);
+            map<String, decimal> scopeRollhrs = generateParentHoursMap(allEstimatescopes);
+            for(E2_Scope__c scope : allEstimatescopes) {
+            	string scopeId = (string)scope.Id;  
+            	decimal totalhrs = scopeRollhrs.containsKey(scopeId) ? scopeRollhrs.get(scopeId) : 0; 
+            	E2_Estimator_WSManager.ScopeWrapper selectedScope = new E2_Estimator_WSManager.ScopeWrapper();
+                selectedScope.scopeId = scopeId;
+                selectedScope.activeStatus = scope.Is_Active__c;
+                selectedScope.multiplier = scope.Effort_Quantity__c;
+                selectedScope.formatedScopeName = getFormatedScopeNameForFlag(scope, totalhrs);
+                selectedScopes.add(selectedScope);
+            }
+            return JSON.serialize(selectedScopes);
+        } catch(exception ex) {
+            return 'Failed to update scope(s).'+ex.getMessage();
+        }
+    }
+    
+    // RS S-447325 : 2/02 : add effort multiplier to scope on scopeGroup
+    public static string addEffortMultiplierOnScopeGroup(string selectedScopesJSON) {
+        try {
+            list<E2_Estimator_WSManager.ScopeWrapper> selectedScopes = (list<E2_Estimator_WSManager.ScopeWrapper>)JSON.deserialize(selectedScopesJSON, list<E2_Estimator_WSManager.ScopeWrapper>.class);
+            string scopeGroupId = selectedScopes.get(0).scopeGroupId;
+            list<E2_Scope__c> scopesToUpdate = new list<E2_Scope__c>();
+            for(E2_Estimator_WSManager.ScopeWrapper scopeW : selectedScopes) {
+               scopesToUpdate.add(new E2_Scope__c( id = scopeW.scopeId, Effort_Quantity__c = scopeW.multiplier) );
+            }
+            update scopesToUpdate;
+            selectedScopes = new list<E2_Estimator_WSManager.ScopeWrapper>();
+            
+            list<E2_Scope__c> allScopes = E2_DataUtil_WS.getChildScopesOfScopeGroup(scopeGroupId);
+            map<String, decimal> scopeRollhrs = generateParentHoursMap(allScopes);
+            for(E2_Scope__c scope : allScopes) {
+            	string scopeId = (string)scope.Id;  
+            	decimal totalhrs = scopeRollhrs.containsKey(scopeId) ? scopeRollhrs.get(scopeId) : 0; 
+            	E2_Estimator_WSManager.ScopeWrapper selectedScope = new E2_Estimator_WSManager.ScopeWrapper();
+                selectedScope.scopeId = scopeId;
+                selectedScope.activeStatus = scope.Is_Active__c;
+                selectedScope.multiplier = scope.Effort_Quantity__c;
+                selectedScope.formatedScopeName = getFormatedScopeName(scope, totalhrs);
+                selectedScopes.add(selectedScope);
+            }
+            return JSON.serialize(selectedScopes);
+        } catch(exception ex) {
+            return 'Failed to update scope(s).'+ex.getMessage();
+        }
+    }
+    
     //wrapper class for scope 
     public class ScopeWrapper{
     	public string scopeId;
     	public string displayOrder;
     	public string sequence;
+    	public string scopeType;
+    	public boolean activeStatus;
+    	// rs : S-447325 new variable to store scope multiplier value.
+    	public decimal multiplier;
+    	public string scopeComplexity;
+    	public string formatedScopeName;
+    	public string estimateId;
+    	public string scopeGroupId;
     }
 }

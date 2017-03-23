@@ -239,7 +239,7 @@ var clipboardEvent = function(evt){
                 	    json_string += ']';
                 	    //alert(json_string);
                         $('input[id$="inputclipboarddata"]').val(json_string);
-                	}else if(evt.originalEvent.clipboardData&&(evt.originalEvent.clipboardData.types.length == 3 || evt.originalEvent.clipboardData.types.length == 4)){
+                	}else if(evt.originalEvent.clipboardData&&(evt.originalEvent.clipboardData.types.length == 3 || evt.originalEvent.clipboardData.types.length == 4 || evt.originalEvent.clipboardData.types.length == 5)){
                 	    //MS- EXCEL SUPPORT access the clipboard using the api
                         var pastedData = ''; 
                         pastedData = evt.originalEvent.clipboardData.getData('text/html');        
@@ -316,6 +316,9 @@ $( document ).ready(function() {
     validations.load();
     ck_custom_editor.load();
     bindSliders();    
+    if(hasNameError == 'true') {
+        alert("Scope name can not exceed 80 characters. Pasted text has been trimmed.");
+    }
     if(msg.toLowerCase() == 'success'){
        if(CHILD_SCOPE_ARAY.length > 0) {    
             parent&&parent.AddEditScope&&parent.AddEditScope.reload_Scope_frame(CHILD_SCOPE_ARAY);

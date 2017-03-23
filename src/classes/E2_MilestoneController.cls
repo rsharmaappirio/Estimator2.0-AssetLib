@@ -21,6 +21,8 @@ public with sharing class E2_MilestoneController extends E2_Master {
   
   
   public PageReference pageAction(){
+    PageReference page = super.validateForTimelineEstimate(this.estimate);
+    if(page <> NULL) return page;
     // method for page action 
     super.validateAccess(this.estimate);
     return null;

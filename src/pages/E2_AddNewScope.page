@@ -100,7 +100,12 @@
                   </apex:actionfunction>
                   <apex:inputhidden id="inputclipboarddata" value="{!clipboardData}"/> 
                   <div xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+                     <div style="padding-left:5px;padding-right:5px;font-weight:bold;font-style:italic;font-size:80%">NB: This screen supports copy and paste scope(s) from clipboard. However, the 
+                     clipboard data shall be in this <a target="_blank" href="https://docs.google.com/a/appirio.com/spreadsheets/d/1y-75llydqBnN6spzIrHg5fy4YGgWlznlz6SDn9v-lRU/edit?usp=sharing">specified</a> 
+                                  format. Please clone the specified google sheet, populate your scopes data in same format, copy the underline data (except headers) and paste on the
+                                  very first textbox on the screen.</div> 
                      <div class="slds-page-header" role="banner">
+                           
                         <div class="slds-grid">
                            <div class="slds-col slds-has-flexi-truncate">
                               <div class="slds-media">
@@ -171,6 +176,8 @@
                   </div>
                   <div>
 <!--                      <apex:commandButton onclick="return validateData();" styleClass="slds-button slds-button--neutral slds-button--small slds-button--right--float" title="Add Scope" value="Add Scope" action="{!addNewScope}"/> -->
+                     
+                      
                      <table class="slds-table slds-max-medium-table--stacked scope-table">
                         <thead>
                            <tr class="slds-text-heading--label">
@@ -217,7 +224,7 @@
                                     </td>
                                     <td class="slds-truncate" data-label="Scope Name" title="{!childscope.scope.Name}">
                                        <apex:outputpanel >
-                                          <div class="slds-form-element is-required ">
+                                          <div class="slds-form-element is-required {!IF(childscope.hasNameError,'slds-has-error', '')}">
                                              <div class="slds-form-element__control">
                                                 <apex:inputfield styleclass="slds-input scope_name" value="{!childscope.scope.Name}" />
                                              </div>
@@ -316,6 +323,9 @@
                                                       <div class="slds-truncate">Role<abbr class="slds-required" title="required">*</abbr></div>
                                                    </th>
                                                    <th class="slds-is-sortable" scope="col">
+                                                      <div class="slds-truncate">Level</div>
+                                                   </th>
+                                                   <th class="slds-is-sortable" scope="col">
                                                       <div class="slds-truncate">Speciality</div>
                                                    </th>
                                                    <th class="slds-is-sortable" scope="col">
@@ -405,6 +415,17 @@
                                                             </apex:outputpanel>
                                                             <apex:outputfield value="{!effort.effort.Resource_Role__c}" rendered="{!effort.isCloned}"/>
                                                          </td>
+                                                         <!-- 12/26 : Added Resource level in effort view to add/update-->
+                                                         <td class="slds-truncate">
+                                                            <apex:outputpanel rendered="{!NOT(effort.isCloned)}">
+                                                               <div class="slds-form-element">
+                                                                  <div class="slds-form-element__control">
+                                                                     <apex:inputfield styleclass="slds-select" value="{!effort.effort.Resource_Level__c}" rendered="{!NOT(effort.isCloned)}"/>
+                                                                  </div>
+                                                               </div>
+                                                            </apex:outputpanel>
+                                                            <apex:outputfield value="{!effort.effort.Resource_Level__c}" rendered="{!effort.isCloned}"/>
+                                                         </td>
                                                          <td>
                                                             <apex:inputfield styleclass="slds-select" style="width:80%" value="{!effort.effort.Speciality__c}" rendered="{!NOT(effort.isCloned)}"/>
                                                             <apex:outputfield value="{!effort.effort.Speciality__c}" rendered="{!effort.isCloned}"/>
@@ -461,17 +482,21 @@
             <input type="hidden" value="{!E2_Scope__c.LOE_Hrs__c}"/>
             <input type="hidden" value="{!E2_Scope__c.Presales_LOE__c}"/>
             <input type="hidden" value="{!E2_Scope__c.Scope_Item_Type__c}"/>
+            <input type="hidden" value="{!E2_Scope__c.Effort_Quantity__c}"/>
          </apex:form>
       </body>
       <!-- JAVASCRIPT -->
       <script type="text/javascript">
          var msg = '{!dmlOperationMessage}'; 
          var CHILD_SCOPE_ARAY = [];
+         var hasNameError = '{!showNameError}';
+         var pageFocusToBottom = '{!pageFocusToBottom}';
       </script>
       <apex:repeat value="{!childScopes}" var="childscope">
           <script type="text/javascript">
             console.log('{!childscope.scope.Id}');
             CHILD_SCOPE_ARAY.push('{!childscope.scope.Id}');  
+            
           </script>
       </apex:repeat>
       <!-- / JAVASCRIPT -->    

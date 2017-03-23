@@ -1,3 +1,14 @@
+/**=====================================================================
+ * Appirio, Inc
+ * Name: E2_TreeNodeTest
+ * Description: Include all test nethod to perform unit test over E2_TreeNode class 
+ * Created Date: July 7th, 2016
+ * Created By: Rohit Sharma (Appirio)
+ * 
+ * Date Modified      Modified By                  Description of the update
+ * Dec 08, 2016       Jitendra Jangid              S-449145 :Ability to find the Scope by type,Complexity ,Q&A and assets assigned. 
+*  =====================================================================*/
+
 @isTest(seeAllData=false)
 public class E2_TreeNodeTest {
    static testmethod void testcase1(){
@@ -19,4 +30,34 @@ public class E2_TreeNodeTest {
             System.assertEquals(node7.display_order, 3);
         }    
     }
+    
+    //Start: S-449145(Ability to find the Scope by type,Complexity ,Q&A and assets assigned)
+    @isTest
+    public static void testOverloadedConstructor_6(){
+        User sysAdmin = E2_Test_Utils.insertSysAdminUser(false);    
+        System.runAs(sysAdmin){
+            Test.startTest();
+             E2_TreeNode parentNode = new E2_TreeNode('string id','string title', 'string text', 'string parent', false, 'string sourceId', 'string node_type', 3,'High','Epic',true,true);
+             System.assertEquals(parentNode.complexity,'High');
+             System.assertEquals(parentNode.scope_type,'Epic');
+             System.assertEquals(parentNode.hasQuestion,true);
+             System.assertEquals(parentNode.hasAsset,true);
+            Test.stopTest();
+            
+        }
+    }
+
+    @isTest
+    public static void testOverloadedConstructor_8(){
+        User sysAdmin = E2_Test_Utils.insertSysAdminUser(false);    
+        System.runAs(sysAdmin){
+            Test.startTest();
+             E2_TreeNode parentNode = new E2_TreeNode('string id', 'string text', 'string parent', false, 'string sourceId', 'string node_type',1);
+             System.assertEquals(parentNode.display_order,1);
+             
+            Test.stopTest();
+            
+        }
+    }
+    //Stop: S-449145(Ability to find the Scope by type,Complexity ,Q&A and assets assigned)
 }

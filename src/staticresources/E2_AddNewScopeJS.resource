@@ -178,7 +178,7 @@ var clipboardEvent = function(evt){
                         // access the clipboard using the api
                         var pastedData = ''; 
                         pastedData = evt.originalEvent.clipboardData.getData('text/html');        
-                        //alert(pastedData);
+                        
                         var json_string = '[';
                         var index = 0;
                         var prop = 'property';
@@ -207,13 +207,13 @@ var clipboardEvent = function(evt){
                         	});
                         }        
                         json_string += ']';
-                        //alert(json_string);
+                        
                         $('input[id$="inputclipboarddata"]').val(json_string);
                 	}else if(evt.originalEvent.clipboardData&&evt.originalEvent.clipboardData.types.length == 1){
                 	      
                 	    var pastedData = ''; 
                         pastedData = evt.originalEvent.clipboardData.getData('text/plain');        
-                        //alert(pastedData);
+                        
                         var json_string = '[';
                         var index = 0;
                         var prop = 'property';
@@ -238,13 +238,13 @@ var clipboardEvent = function(evt){
                            });
                         }
                 	    json_string += ']';
-                	    //alert(json_string);
+                	    
                         $('input[id$="inputclipboarddata"]').val(json_string);
-                	}else if(evt.originalEvent.clipboardData&&(evt.originalEvent.clipboardData.types.length == 3 || evt.originalEvent.clipboardData.types.length == 4)){
+                	}else if(evt.originalEvent.clipboardData&&(evt.originalEvent.clipboardData.types.length == 3 || evt.originalEvent.clipboardData.types.length == 4 || evt.originalEvent.clipboardData.types.length == 5)){
                 	    //MS- EXCEL SUPPORT access the clipboard using the api
                         var pastedData = ''; 
                         pastedData = evt.originalEvent.clipboardData.getData('text/html');        
-                        //alert(pastedData);
+                        
                         var json_string = '[';
                         var index = 0;
                         var prop = 'property';
@@ -273,13 +273,12 @@ var clipboardEvent = function(evt){
                         	});
                         }        
                         json_string += ']';
-                        //alert(json_string);
+                        
                         $('input[id$="inputclipboarddata"]').val(json_string);
                 	}else if(window.clipboardData && window.clipboardData.getData){
                 	    var pastedData = ''; 
                         pastedData = window.clipboardData.getData('Text');   
-                        //alert(pastedData);
-                        //alert(pastedData);
+                        
                         var json_string = '[';
                         var index = 0;
                         var prop = 'property';
@@ -304,7 +303,7 @@ var clipboardEvent = function(evt){
                            });
                         }
                 	    json_string += ']';
-                	    //alert(json_string);
+                	    
                         $('input[id$="inputclipboarddata"]').val(json_string);
                 	    
                 	}
@@ -318,6 +317,9 @@ $( document ).ready(function() {
     validations.load();
     ck_custom_editor.load();
     bindSliders();    
+    if(hasNameError == 'true') {
+        alert("Scope name can not exceed 80 characters. Pasted text has been trimmed.");
+    }
     if(msg.toLowerCase() == 'success'){
        if(CHILD_SCOPE_ARAY.length > 0) {    
             parent&&parent.AddEditScope&&parent.AddEditScope.reload_Scope_frame(CHILD_SCOPE_ARAY);
@@ -331,16 +333,13 @@ $( document ).ready(function() {
     
     $("input.scope_name").on("paste", function(e){
         e.preventDefault();
-    	
-    	//alert(/plain/.test(e.originalEvent.clipboardData.types));
-        //alert(e.originalEvent.clipboardData.types.length);  
-       
         clipboardEvent(e);
-       
-        
     } );
     
     $("input:text, textarea").first().focus();   
+    if(pageFocusToBottom == 'true') {
+        $( ".scope_name" ).last().focus();
+    }
 });
 
 

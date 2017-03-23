@@ -18,15 +18,11 @@
         <default>false</default>
     </globalPicklistValues>
     <globalPicklistValues>
-        <fullName>Business Analyst</fullName>
-        <default>false</default>
-    </globalPicklistValues>
-    <globalPicklistValues>
-        <fullName>Business Analyst - Jaipur</fullName>
-        <default>false</default>
-    </globalPicklistValues>
-    <globalPicklistValues>
         <fullName>Business Architect</fullName>
+        <default>false</default>
+    </globalPicklistValues>
+    <globalPicklistValues>
+        <fullName>Business Specialist</fullName>
         <default>false</default>
     </globalPicklistValues>
     <globalPicklistValues>
@@ -35,10 +31,6 @@
     </globalPicklistValues>
     <globalPicklistValues>
         <fullName>Change Lead</fullName>
-        <default>false</default>
-    </globalPicklistValues>
-    <globalPicklistValues>
-        <fullName>Cloud Management Lead</fullName>
         <default>false</default>
     </globalPicklistValues>
     <globalPicklistValues>
@@ -74,15 +66,19 @@
         <default>false</default>
     </globalPicklistValues>
     <globalPicklistValues>
-        <fullName>Executive Sponsor</fullName>
-        <default>false</default>
-    </globalPicklistValues>
-    <globalPicklistValues>
         <fullName>Financials Consultant</fullName>
         <default>false</default>
     </globalPicklistValues>
     <globalPicklistValues>
+        <fullName>Financials Lead</fullName>
+        <default>false</default>
+    </globalPicklistValues>
+    <globalPicklistValues>
         <fullName>HCM Consultant</fullName>
+        <default>false</default>
+    </globalPicklistValues>
+    <globalPicklistValues>
+        <fullName>HCM Lead</fullName>
         <default>false</default>
     </globalPicklistValues>
     <globalPicklistValues>
@@ -95,6 +91,10 @@
     </globalPicklistValues>
     <globalPicklistValues>
         <fullName>Integration Consultant</fullName>
+        <default>false</default>
+    </globalPicklistValues>
+    <globalPicklistValues>
+        <fullName>Integration Lead</fullName>
         <default>false</default>
     </globalPicklistValues>
     <globalPicklistValues>
@@ -118,15 +118,15 @@
         <default>false</default>
     </globalPicklistValues>
     <globalPicklistValues>
+        <fullName>Payroll Lead</fullName>
+        <default>false</default>
+    </globalPicklistValues>
+    <globalPicklistValues>
         <fullName>Program Manager</fullName>
         <default>false</default>
     </globalPicklistValues>
     <globalPicklistValues>
         <fullName>Project Manager</fullName>
-        <default>false</default>
-    </globalPicklistValues>
-    <globalPicklistValues>
-        <fullName>Project Manager - Jaipur</fullName>
         <default>false</default>
     </globalPicklistValues>
     <globalPicklistValues>
@@ -143,6 +143,10 @@
     </globalPicklistValues>
     <globalPicklistValues>
         <fullName>Solution Architect</fullName>
+        <default>false</default>
+    </globalPicklistValues>
+    <globalPicklistValues>
+        <fullName>Strategic Advisor</fullName>
         <default>false</default>
     </globalPicklistValues>
     <globalPicklistValues>
@@ -166,16 +170,45 @@
         <default>false</default>
     </globalPicklistValues>
     <globalPicklistValues>
-        <fullName>Technical Lead - Jaipur</fullName>
-        <default>false</default>
-    </globalPicklistValues>
-    <globalPicklistValues>
         <fullName>Trainer</fullName>
         <default>false</default>
     </globalPicklistValues>
     <globalPicklistValues>
         <fullName>UX Consultant</fullName>
         <default>false</default>
+    </globalPicklistValues>
+    <globalPicklistValues>
+        <fullName>QA Automation Engineer</fullName>
+        <default>false</default>
+    </globalPicklistValues>
+    <globalPicklistValues>
+        <fullName>Business Analyst</fullName>
+        <default>false</default>
+    </globalPicklistValues>
+    <globalPicklistValues>
+        <fullName>Business Analyst - Jaipur</fullName>
+        <default>false</default>
+        <isActive>false</isActive>
+    </globalPicklistValues>
+    <globalPicklistValues>
+        <fullName>Cloud Management Lead</fullName>
+        <default>false</default>
+        <isActive>false</isActive>
+    </globalPicklistValues>
+    <globalPicklistValues>
+        <fullName>Executive Sponsor</fullName>
+        <default>false</default>
+        <isActive>false</isActive>
+    </globalPicklistValues>
+    <globalPicklistValues>
+        <fullName>Project Manager - Jaipur</fullName>
+        <default>false</default>
+        <isActive>false</isActive>
+    </globalPicklistValues>
+    <globalPicklistValues>
+        <fullName>Technical Lead - Jaipur</fullName>
+        <default>false</default>
+        <isActive>false</isActive>
     </globalPicklistValues>
     <masterLabel>Roles</masterLabel>
     <sorted>true</sorted>

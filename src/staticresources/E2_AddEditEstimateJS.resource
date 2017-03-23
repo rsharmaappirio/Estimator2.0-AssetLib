@@ -4,8 +4,42 @@
 	   if($('#' + AddEditEstimate.DASHBOARD_ID).length){
 	     $('#' + AddEditEstimate.DASHBOARD_ID).css('height', height + 'px');
 	   }
-	}
+	},
+	
+	//Added for set primary functionality : Vikash Goyal : 12/9/2016
+	setPrimary: function(estimateId, psrId){
+	    $(loadSpinner).show().css('height', $(document).outerHeight());
+	    sforce.apex.execute("CMC_PresalesEstimate", "setPrimary", {
+                newPrimaryId: estimateId,
+                psrId:psrId
+        }, AddEditEstimate.setPrimary_callback);
+        return false;
+	},
+	
+	setPrimary_callback : {
+        onSuccess: function(result) {
+            result = (result.length > 0 ? result[0] : result); 
+            if (result.indexOf('Fail') != -1) {
+                alert(result);
+                $(loadSpinner).hide();
+                return ;
+            }
+            CustomAlert.show('The estimate has been set as primary!!!');
+            $(loadSpinner).hide();
+            
+            //To hide the set primary button and update primary checkbox as checked once set primary button is clicked on estimate
+            $("input[id*=setPrimaryBtn]").hide();
+            $("[id*=isPrimaryFlag]").find("img").attr("src", "/img/checkbox_checked.gif");
+            $("[id*=isPrimaryInputHidden]").val(true);
+        },
+        onFailure: function(error) {
+            alert(error);
+            $(loadSpinner).hide();
+        }
+    }
   }
+  
+  var loadSpinner = '#loadingCloneSpinner';
   
   var CustomAlert = {
         notifyContainerCssSelector : '.slds-notify_container',

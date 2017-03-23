@@ -22,23 +22,59 @@ public class E2_MilestoneWSManager {
        //method to insert E2_Estimate_Milestone__c records from Template based on the type
        //for 'Workday' or 'SFDC'
         system.debug('selectedTemplate>>' +selectedTemplate);
-        List<E2_Estimate_Milestone__c> lstToInsert = new List<E2_Estimate_Milestone__c>();
+        map<string, E2_Estimate_Milestone__c> lstToInsert = new map<string, E2_Estimate_Milestone__c>();
+        map<string, E2_Estimate_Week_Milestone__c> weeksToInsert = new map<string, E2_Estimate_Week_Milestone__c>();
+        list<E2_Estimate_Milestone_Week__c> milestoneScheduleToInsert = new list<E2_Estimate_Milestone_Week__c>();
+        
         List<E2_Estimate_Milestone__c> estimateMilestones = E2_MilestoneDataUtil_WS.getEstimateMilestones(estimateId);
-        system.debug('estimateId>>' +estimateId);
+        List<E2_Estimate_Week_Milestone__c> estimateWeekMilestones = E2_MilestoneDataUtil_WS.getEstimateWeekMilestoneRecords(estimateId);
+        //system.debug('estimateId>>' +estimateId);
         List<E2_Timeline_Milestone__c> lstMilestones = E2_MilestoneDataUtil_WS.getTimelineMilestones(selectedTemplate);
         
-        Integer index = estimateMilestones.size() + 1;
         for(E2_Timeline_Milestone__c milestone : lstMilestones){
-            lstToInsert.add(new E2_Estimate_Milestone__c(Estimate__c = estimateId, 
+            lstToInsert.put(milestone.Id, new E2_Estimate_Milestone__c(Estimate__c = estimateId, 
                                         Milestone1__c = milestone.Milestone1__c, 
                                         Milestone2__c = milestone.Milestone2__c, 
-                                        Order__c = index++));
+                                        Order__c = milestone.Order__c));
+        }
+        Date startDate = Date.today();
+        if(!estimateWeekMilestones.isEmpty()){
+            startDate = estimateWeekMilestones.get(0).Date__c;
+        }
+        
+        List<E2_Week_Milestone_Template__c> lstWeeks = E2_MilestoneDataUtil_WS.getTemplateWeeks(selectedTemplate);
+
+        for(E2_Week_Milestone_Template__c week : lstWeeks) {
+            weeksToInsert.put(week.Id, new E2_Estimate_Week_Milestone__c(Name = week.Name,
+                                                                    Date__c = startDate.addDays(NO_OF_DAYS_IN_WEEK * (Integer.valueOf(week.Order__c)-1)), 
+                                                                    Estimate__c = estimateId,
+                                                                    Order__c = week.Order__c));
         }
         
         //insert and return success, else show the exception
         try{
+            
+            if(!estimateMilestones.isEmpty()){
+                delete estimateMilestones;
+            }
+            
+            if(!estimateWeekMilestones.isEmpty()){
+                delete estimateWeekMilestones;
+            }
             if(!lstToInsert.isEmpty()){
-                insert lstToInsert;
+                insert lstToInsert.values();
+            }
+            if(!weeksToInsert.isEmpty()){
+                insert weeksToInsert.values();
+            }
+            for(E2_Milestone_Week_Template_Junction__c milestoneWeek : E2_MilestoneDataUtil_WS.getTemplateMilestoneWeeksforWeek(weeksToInsert.keySet(), lstToInsert.keySet())) {
+                milestoneScheduleToInsert.add(new E2_Estimate_Milestone_Week__c(Text__c = milestoneWeek.Text__c, 
+                                                                    TextColorCode__c = milestoneWeek.TextColorCode__c, 
+                                                                    Estimate_Milestone__c = lstToInsert.get(milestoneWeek.Timeline_Milestone__c).Id, 
+                                                                    Estimate_Week_Milestone__c = weeksToInsert.get(milestoneWeek.Week_Milestone_Template__c).Id));
+            }
+            if(!milestoneScheduleToInsert.isEmpty()){
+                insert milestoneScheduleToInsert;
             }
         }catch(Exception ex){
             return 'Failed: ' + ex.getMessage();

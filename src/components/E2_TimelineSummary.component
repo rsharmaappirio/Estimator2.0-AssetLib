@@ -1,0 +1,359 @@
+<apex:component controller="E2_TimelineSummaryController" allowDML="true">
+<apex:attribute name="estimate" description="Presales Estimate Id." type="Id" required="true" assignTo="{!estimateId}"/>
+<style type="text/css">
+/**
+    div.e2TimelineSummaryDiv .timeline_summary,.discount_summary,div.e2TimelineSummaryDiv .resource_mix_table {
+        line-height: 1!important;
+    }
+    div.e2TimelineSummaryDiv .timeline_summary td {
+        padding-left:.5rem!important;
+        padding-right:0px!important;
+    }
+    div.e2TimelineSummaryDiv .discount_summary td {
+        padding-left:0px!important;
+        padding-right:1px!important;
+    }
+    div.e2TimelineSummaryDiv .discount_summary th {
+        padding-left:0px!important;
+        padding-right:1px!important;
+    }
+    div.e2TimelineSummaryDiv td,th {
+        border-top:0px!important;
+    }
+    div.e2TimelineSummaryDiv table tr th,div.e2TimelineSummaryDiv table tr td{
+      background-color: transparent!important;
+    }
+    div.e2TimelineSummaryDiv table{
+        border-collapse: separate;
+        border-top: 0px!important;
+        border-bottom: 0px!important;
+    }
+    div.e2TimelineSummaryDiv .resource_mix_table {
+        width : auto!important;
+    }
+    **/
+    div.e2TimelineSummaryDiv .slds-table--cell-buffer tr>td:first-child, div.e2TimelineSummaryDiv .slds-table--cell-buffer tr>th:first-child{
+        padding-left:0px;            
+    }
+    div.e2TimelineSummaryDiv tr.totalRow{
+        border-top: #ded 1px solid;
+        border-bottom: #ded 1px solid;
+        
+    }
+    div.e2TimelineSummaryDiv td {
+        vertical-align: baseline;
+    }
+</style>
+<div class="e2TimelineSummaryDiv">
+<apex:outputPanel rendered="{!pricingMatrix.size > 0}">
+ <div class="slds-grid">
+    <div class="slds-col slds-has-flexi-truncate">
+      <div class="slds-media">
+        <div class="slds-media__body">
+            <h3 class="slds-section-title--divider" style="display:flex;padding-top:5px;padding-bottom:5px;">Pricing Mix</h3>
+          <div class="slds-grid">
+              
+              
+                <table width="100%" cellspacing="0" cellpading="0" border="0">
+                <tr>
+                    <td style="width:70%">
+                        <table class="slds-table slds-table--cell-buffer slds-max-medium-table--stacked-horizontal slds-no-row-hover timeline_summary" style="width:100%;">
+                              <thead>
+                                <tr class="slds-text-title--caps">
+                                  <th scope="col">
+                                    <div class="slds-truncate" title="Name">Name</div>
+                                  </th>
+                                  <th scope="col">
+                                    <div class="slds-truncate" title="Net Fee">Net Fee</div>
+                                  </th>
+                                  <th scope="col">
+                                    <div class="slds-truncate" title="Calculated Cost">Calculated Cost</div>
+                                  </th>
+                                  <th scope="col">
+                                    <div class="slds-truncate" title="Discount">Discount</div>
+                                  </th>
+                                  <th scope="col">
+                                    <div class="slds-truncate" title="ASM">ASM</div>
+                                  </th>
+                                  <th scope="col">
+                                    <div class="slds-truncate" title="Total Hours">Total Hours</div>
+                                  </th>
+                                  <th scope="col">
+                                    <div class="slds-truncate" title="JDC Hours">JDC Hours</div>
+                                  </th>
+                                  <th scope="col">
+                                    <div class="slds-truncate" title="JDC Usage">JDC Usage</div>
+                                  </th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                  <apex:variable var="index" value="{!1}"/> 
+                                  <apex:variable var="totalFee" value="{!0}"/>
+                                  <apex:variable var="totalCalFee" value="{!0}"/>
+                                  <apex:variable var="totalCost" value="{!0}"/>
+                                  <apex:variable var="totalPhaseHours" value="{!0}"/>
+                                  <apex:variable var="totalJaipurHours" value="{!0}"/>
+                                  <apex:variable var="totalDiscount" value="{!0}"/>
+                                  <apex:variable var="currency" value=""/>
+                                  <apex:repeat value="{!pricingMatrix}" var="timeline">
+                                      <apex:variable var="totalCalFee" value="{!totalCalFee + timeline.Calculated_Fees__c}"/>
+                                      <apex:variable var="totalDiscount" value="{!totalDiscount + timeline.Discount_Amount__c}"/>
+                                      <apex:variable var="currency" value="{!timeline.CurrencyISOCode}"/>
+                                      <tr>
+                                      <apex:variable var="timelineName" value="{!IF(ISBLANK(timeline.E2_Timeline_Name__c),'Timeline version ',timeline.E2_Timeline_Name__c)}{!IF(ISBLANK(timeline.E2_Timeline_Name__c),index,'')}" />
+                                      <th scope="row" data-label="Name">
+                                        <div style="max-width:130px;" title="{!timelineName}">{!timelineName}</div>
+                                      </th>
+                                      <td data-label="Net Fee">
+                                        <div class="slds-truncate" title="{!currency} {!timeline.Total_Fees__c}">
+                                            {!currency}&nbsp;<apex:outputText value="{0,number,###,###,###.##}">
+                                                <apex:param value="{!timeline.Total_Fees__c}" />
+                                            </apex:outputText>
+                                            </div>
+                                        <apex:variable var="totalFee" value="{!totalFee + timeline.Total_Fees__c}"/>
+                                      </td>
+                                      <td data-label="Calculated Cost">
+                                        <div class="slds-truncate" title="{!currency} {!timeline.Calculated_Costs__c}">
+                                        {!currency}&nbsp;<apex:outputText value="{0,number,###,###,###.##}">
+                                                <apex:param value="{!timeline.Calculated_Costs__c}" />
+                                            </apex:outputText>
+                                        </div>
+                                        <apex:variable var="totalCost" value="{!totalCost + timeline.Calculated_Costs__c}"/>
+                                      </td>
+                                      <td data-label="Discount">
+                                        <div class="slds-truncate" title="{!timeline.Discount_Amount__c}">{!currency}&nbsp;
+                                        <apex:outputText value="{0,number,###,###,###.##}">
+                                                <apex:param value="{!timeline.Discount_Amount__c}" />
+                                            </apex:outputText>
+                                            </div>
+                                      </td>
+                                      <td data-label="ASM">
+                                        <div class="slds-truncate" title="{!timeline.As_Sold_Margin__c}"><apex:outputfield value="{!timeline.As_Sold_Margin__c}"/></div>
+                                      </td>
+                                      <td data-label="Total Hours">
+                                        <div class="slds-truncate" title="{!timeline.Total_Resource_Hours__c}"><apex:outputfield value="{!timeline.Total_Resource_Hours__c}"/></div>
+                                        <apex:variable var="totalPhaseHours" value="{!totalPhaseHours + timeline.Total_Resource_Hours__c}"/>
+                                      </td>
+                                      <td data-label="JDC Hours">
+                                        <div class="slds-truncate" title="{!timeline.Hours_Jaipur__c}"><apex:outputfield value="{!timeline.Hours_Jaipur__c}"/></div>
+                                        <apex:variable var="totalJaipurHours" value="{!totalJaipurHours + timeline.Hours_Jaipur__c}"/>
+                                      </td>
+                                      <td data-label="JDC Usage">
+                                        <div class="slds-truncate" title="{!timeline.Jaipur_Hours__c}"><apex:outputfield value="{!timeline.Jaipur_Hours__c}"/></div>
+                                      </td>
+                                      <apex:variable var="index" value="{!index+1}"/>
+                                      </tr>
+                                  </apex:repeat>
+                                  <tr class="totalRow">
+                                      <th scope="row" data-label="Name">
+                                        <div class="slds-truncate" title="Total Fee"><strong>Total Fee</strong></div>
+                                      </th>
+                                      <td data-label="Net Fee">
+                                        <div class="slds-truncate" title="{!currency} {!totalFee}">
+                                            {!currency}&nbsp;<apex:outputText value="{0,number,###,###,###.##}">
+                                                <apex:param value="{!totalFee}" />
+                                            </apex:outputText>
+                                            </div>
+                                      </td>
+                                      <td data-label="Calculated Cost">
+                                        <div class="slds-truncate" title="{!currency} {!totalCost}">
+                                            {!currency}&nbsp;<apex:outputText value="{0,number,###,###,###.##}">
+                                                <apex:param value="{!totalCost}" />
+                                            </apex:outputText>
+                                            </div>
+                                      </td>
+                                      <td data-label="Discount">
+                                        <div class="slds-truncate" title="{!currency} {!totalDiscount}">
+                                            {!currency}&nbsp;<apex:outputText value="{0,number,###,###,###.##}">
+                                                <apex:param value="{!totalDiscount}" />
+                                            </apex:outputText>
+                                            </div>
+                                      </td>
+                                      <td data-label="ASM">
+                                          <apex:variable var="margin" value="{!ROUND((IF(totalFee == 0, 0, 1)-(IF(totalCost == 0, 0, totalCost)/IF(totalFee == 0, 1, totalFee))) * 100,2)}%"/>
+                                        <div class="slds-truncate" title="{!margin}">{!margin}</div>
+                                      </td>
+                                      <td data-label="Total Hours">
+                                        <div class="slds-truncate" title="{!totalPhaseHours}">{!totalPhaseHours}</div>
+                                      </td>
+                                      <td data-label="JDC Hours">
+                                        <div class="slds-truncate" title="{!totalJaipurHours}">{!totalJaipurHours}</div>
+                                      </td>
+                                      <td data-label="JDC Usage">
+                                        <apex:variable var="jdcUsages" value="{!ROUND((IF(totalJaipurHours == 0, 0, totalJaipurHours)/IF(totalPhaseHours == 0, 1, totalPhaseHours)) * 100,2)}%"/>
+                                        <div class="slds-truncate" title="{!jdcUsages}">{!jdcUsages}</div>
+                                      </td>
+                                    </tr>
+                                    <apex:variable var="floorSafe" value="{!IF(AND(e2SystemSetting.Floor_Safe__c != 0,totalCost != 0),ROUND((totalCost * e2SystemSetting.Floor_Safe__c)/100,2),0)}"/>
+                                    <apex:variable var="maxDiscount" value="{!IF(totalCalFee != 0,totalCalFee - floorSafe,0)}"/>
+                                    <tr>
+                                       <th scope="row" data-label="Name">
+                                        <div class="slds-truncate" title="Floor of safe"><strong>Floor of safe</strong></div>
+                                      </th> 
+                                      <td data-label="Floor Safe">
+                                        <div class="slds-truncate" title="{!currency} {!floorSafe}">
+                                            {!currency}&nbsp;<apex:outputText value="{0,number,###,###,###.##}">
+                                                <apex:param value="{!floorSafe}" />
+                                            </apex:outputText>
+                                            </div>
+                                      </td>
+                                      <td data-label="Calculated Cost"></td>
+                                      <td data-label="Discount"></td>
+                                      <td data-label="ASM"></td>
+                                      <td data-label="Total Hours"></td>
+                                      <td data-label="JDC Hours"></td>
+                                      <td data-label="JDC Usage"></td>
+                                    </tr>
+                                    <tr>
+                                       <th scope="row" data-label="Name">
+                                        <div class="slds-truncate" title="Max Discount"><strong>Max Discount</strong></div>
+                                      </th> 
+                                      <td data-label="Max Discount">
+                                        <div class="slds-truncate" title="{!currency} {!maxDiscount}">
+                                            {!currency}&nbsp;<apex:outputText value="{0,number,###,###,###.##}">
+                                                <apex:param value="{!maxDiscount}" />
+                                            </apex:outputText>
+                                            </div>
+                                      </td>
+                                      <td data-label="Calculated Cost"></td>
+                                      <td data-label="Discount"></td>
+                                      <td data-label="ASM"></td>
+                                      <td data-label="Total Hours"></td>
+                                      <td data-label="JDC Hours"></td>
+                                      <td data-label="JDC Usage"></td>
+                                    </tr>
+                              </tbody>
+                            </table>
+                    </td>
+                    <td style="width:30%;vertical-align:top;">
+                        <apex:outputText rendered="{!timelineDiscounts.size > 0}">
+                            <table class="slds-table slds-table--cell-buffer slds-max-medium-table--stacked-horizontal slds-no-row-hover discount_summary" style="width:100%;">
+                              <thead>
+                                <tr class="slds-text-title--caps">
+                                  <th scope="col">
+                                    <div class="slds-truncate" title="Discount %">Discount %</div>
+                                  </th>
+                                  <apex:repeat value="{!timelineDiscounts}" var="timelineDiscount">
+                                      <th scope="col">
+                                        <div class="slds-truncate" title="{!ROUND(timelineDiscount,2)}%">{!ROUND(timelineDiscount,2)}%</div>
+                                      </th>
+                                  </apex:repeat>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                      <tr>
+                                      <td scope="col">Discount Amount</td>
+                                      <apex:repeat value="{!timelineDiscounts}" var="timelineDiscount">
+                                      <td data-label="{!ROUND(timelineDiscount,2)}%">
+                                        <div class="slds-truncate" title="{!currency} {!ROUND((IF(totalFee == 0, 0, totalFee)/timelineDiscount) * 100,2)}">
+                                            {!currency}&nbsp;<apex:outputText value="{0,number,###,###,###.##}">
+                                                <apex:param value="{!ROUND((IF(totalFee == 0, 0, totalFee) *timelineDiscount)/100,2)}" />
+                                            </apex:outputText>
+                                        </div>
+                                      </td>
+                                      </apex:repeat>
+                                      </tr>
+                                      <tr>
+                                      <td scope="col">Total Fee</td>
+                                      <apex:repeat value="{!timelineDiscounts}" var="timelineDiscount">
+                                      <td data-label="{!ROUND(timelineDiscount,2)}%">
+                                        <div class="slds-truncate" title="{!currency} {!ROUND(IF(totalCalFee == 0, 0, totalCalFee) - ((IF(totalCalFee == 0, 0, totalCalFee) *timelineDiscount)/100),2)}">
+                                            {!currency}&nbsp;<apex:outputText value="{0,number,###,###,###.##}">
+                                                <apex:param value="{!ROUND(IF(totalCalFee == 0, 0, totalCalFee) - ((IF(totalCalFee == 0, 0, totalCalFee) *timelineDiscount)/100),2)}" />
+                                            </apex:outputText>
+                                        </div>
+                                      </td>
+                                      </apex:repeat>
+                                      </tr>
+                                      <tr class="totalRow">
+                                      <th scope="col">
+                                        <div class="slds-truncate" title="ASM"><strong>ASM</strong></div>
+                                      </th>
+                                      <apex:repeat value="{!timelineDiscounts}" var="timelineDiscount">
+                                          <apex:variable var="discountedFee" value="{!ROUND(IF(totalCalFee == 0, 0, totalCalFee) - ((IF(totalCalFee == 0, 0, totalCalFee) *timelineDiscount)/100),2)}"/>
+                                      <td data-label="{!ROUND(timelineDiscount,2)}%">
+                                        <div class="slds-truncate" title="{!ROUND((IF(discountedFee == 0, 0, 1)-(IF(totalCost == 0, 0, totalCost)/IF(discountedFee == 0, 1, discountedFee))) * 100,2)}%">
+                                           {!ROUND((IF(discountedFee == 0, 0, 1)-(IF(totalCost == 0, 0, totalCost)/IF(discountedFee == 0, 1, discountedFee))) * 100,2)}%
+                                        </div>
+                                      </td>
+                                      </apex:repeat>
+                                      </tr>
+                              </tbody>
+                            </table>
+                            </apex:outputText>
+            
+                    </td>
+                </tr>
+    
+              </table>              
+
+
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+<apex:outputPanel rendered="{!hourSummaryMap != NULL}">
+    <apex:repeat value="{!hourSummaryMap}" var="timelineId">
+       <apex:variable var="timeline" value="{!activeTimelineMap[timelineId]}"/>
+       <apex:variable var="timelineName" value="{!IF(ISBLANK(timeline.E2_Timeline_Name__c),'Timeline version ',timeline.E2_Timeline_Name__c)}{!IF(ISBLANK(timeline.E2_Timeline_Name__c),index,'')}" />
+        <apex:variable var="hoursMap" value="{!hourSummaryMap[timelineId]}"/>
+        <apex:variable var="levels" value="{!timelineLevels[timelineId]}"/>
+        <apex:variable var="totalKey" value="Total" />
+        <apex:variable var="totalHours" value="{!hoursMap[totalKey]}"/>
+        <div class="slds-grid" style="padding-top:10px;">
+    <div class="slds-col slds-has-flexi-truncate resource_mix_table">
+      <div class="slds-media">
+        <div class="slds-media__body">
+            <h3 class="slds-section-title--divider" style="display:flex;padding-top:5px;padding-bottom:5px;">{!timelineName} : Resource Mix</h3>
+          <div class="slds-grid">
+              <table class="slds-table slds-table--cell-buffer slds-max-medium-table--stacked-horizontal slds-no-row-hover">
+                  <thead>
+                    <tr class="slds-text-title--caps">
+                      <th scope="col">
+                        <div class="slds-truncate" title="Resource Level">Resource Level</div>
+                      </th>
+                      <th scope="col">
+                        <div class="slds-truncate" title="Hours">Total Hours</div>
+                      </th>
+                      <th scope="col">
+                        <div class="slds-truncate" title="% of Total Hours">% of Total Hours</div>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                      <apex:repeat value="{!levels}" var="level">
+                          <apex:variable var="levelName" value="{!level}"/>
+                          <apex:variable var="hours" value="{!hoursMap[level]}"/>
+                          <tr>
+                              <th scope="row" data-label="Resource Level">
+                                <div class="slds-truncate" title="{!level}">{!level}</div>
+                              </th> 
+                              <td data-label="Hours">
+                                  <div class="slds-truncate" title="{!hours}">{!hours}</div>
+                                  </td>
+                              <td data-label="% of Total Hours">{!ROUND((IF(hours == 0, 0, hours)/IF(totalHours == 0, 1, totalHours)) * 100,2)}%</td>
+                            </tr>
+                      </apex:repeat>
+                      <tr class="totalRow">
+                              <th scope="row" data-label="Resource Level">
+                                <div class="slds-truncate" title="Total"><strong>Total</strong></div>
+                              </th> 
+                              <td data-label="Hours">
+                                  <div class="slds-truncate" title="{!totalHours}">{!totalHours}</div>
+                                  </td>
+                              <td data-label="% of Total Hours">{!ROUND((IF(totalHours == 0, 0, totalHours)/IF(totalHours == 0, 1, totalHours)) * 100,2)}%</td>
+                            </tr>
+                  </tbody>
+              </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+    </apex:repeat>
+</apex:outputPanel>
+</apex:outputPanel>
+</div>
+</apex:component>

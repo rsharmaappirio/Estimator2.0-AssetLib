@@ -17,7 +17,9 @@ public with sharing class E2_ManageTemplateDerivedEffortController {
 	public List<SelectOption> phasePicklist{get;set;}
 	public List<SelectOption> rolePicklist{get;set;}
 	public List<SelectOption> includeWhenPicklist{get;set;}
+	public List<SelectOption> levelPicklist{get;set;}
 	public string errorString{get;set;}
+	public boolean isEditable{get;set;}
 	
 	//constructor	
 	public E2_ManageTemplateDerivedEffortController(ApexPages.StandardController std) {
@@ -25,13 +27,20 @@ public with sharing class E2_ManageTemplateDerivedEffortController {
 		hasNewEffort = false;
 		hasErrorEffort = false;
 		this.derivedEffortTemplates = new List<DerivedEffortTemplate>();
+		this.isEditable = false;
 	}
     //page action method calls when the page loads
 	public PageReference pageAction() {
 		loadTemplates();
+		// RS 25/01: S-453758 : check user access: if logged-in user is derived effort template manager
+        List <PermissionSetAssignment> permissionSetAssigneeList = [SELECT Id From PermissionSetAssignment Where PermissionSet.Name =: E2_CONSTANTS.DERIVED_EFFORT_TEMPLATE_MANAGER AND AssigneeId =: UserInfo.getUserId() LIMIT 1];
+		if(permissionSetAssigneeList.size() > 0) {
+		    this.isEditable = true;
+		}
 		this.phasePicklist = populatePhasePicklistValues();
 		this.rolePicklist = populateRolePicklistValues();
 		this.includeWhenPicklist = populateIncludePicklistValues();
+		this.levelPicklist = populateLevelPicklistValues();
 		return null;
 	}
 	//method to load derived effort template 
@@ -72,68 +81,94 @@ public with sharing class E2_ManageTemplateDerivedEffortController {
 	    }       
 	    return options;  
   	}
+  	
+  	//method to display Level as picklist values 
+	private List<SelectOption> populateLevelPicklistValues() {
+	    List<SelectOption> options = new List<SelectOption>();               
+	    for( Schema.PicklistEntry f : E2_Derived_Effort__c.Of_Level__c.getDescribe().getPicklistValues()){
+	    	options.add(new SelectOption(f.getLabel(), f.getValue()));
+	    }      
+	    return options;  
+  	}
 	
 	//method to add new effort 
 	public PageReference addNewEffort() {
-		E2_Derived_Effort__c derivedEffort = new E2_Derived_Effort__c(Is_Active__c = true,Derived_Effort_Group__c = this.selectedGroup.Id);
-		if(!this.derivedEffortTemplates.isEmpty())
-			this.derivedEffortTemplates.add(0,new DerivedEffortTemplate(derivedEffort));
-		else
-			this.derivedEffortTemplates.add(new DerivedEffortTemplate(derivedEffort));
-		hasNewEffort = true;
+	    if(isEditable) {
+    		E2_Derived_Effort__c derivedEffort = new E2_Derived_Effort__c(Is_Active__c = true,Derived_Effort_Group__c = this.selectedGroup.Id);
+    		if(!this.derivedEffortTemplates.isEmpty())
+    			this.derivedEffortTemplates.add(0,new DerivedEffortTemplate(derivedEffort));
+    		else
+    			this.derivedEffortTemplates.add(new DerivedEffortTemplate(derivedEffort));
+    		hasNewEffort = true;
+	    }
 		return null;
 	}
 	
 	//method to update efforts 
 	public PageReference updateEfforts() {
-		hasErrorEffort = false;
-		hasNewEffort = false;
-		errorString = 'Required values are missing.';
-		Id devRecordTypeId = Schema.getGlobalDescribe().get('E2_Derived_Effort__c').getDescribe()
-							.getRecordTypeInfosByName().get('Template').getRecordTypeId();
-		List<E2_Derived_Effort__c> templatetoDelete = new List<E2_Derived_Effort__c>();
-		List<E2_Derived_Effort__c> templatetoUpsert = new List<E2_Derived_Effort__c>();
-		for(DerivedEffortTemplate template : this.derivedEffortTemplates) {
-		    //if isDelete is true, then delete derived effort else insert a new record 
-			if(template.isDelete) {
-				for(E2_Derived_Effort__c dE : template.derivedEfforts) {
-					if(dE.Id <> NULL) 
-						templatetoDelete.add(dE);
-				}				
-			} else {
-				if(template.name == NULL || template.name == '' || template.allocation == null || 
-				   template.allocation <= 0 || template.toRole == NULL || template.toRole == '' || 
-				   template.toPhase.isEmpty() || template.includeWhen == NULL || template.includeWhen == '' || 
-					(template.includeWhen != 'always' && template.includeWhenHrs <= 0)) {
-					template.hasError = true;
-					hasErrorEffort = true;
-				} else if(template.uniqueKey != template.generateUniqueKey()) {
-					if(template.isNew) {
-						createDerivedEffort( template, templatetoUpsert, devRecordTypeId);
-					} else {
-						for(E2_Derived_Effort__c dE : template.derivedEfforts) {
-							if(dE.Id <> NULL) 
-								templatetoDelete.add(dE);
-						}
-						createDerivedEffort( template, templatetoUpsert, devRecordTypeId);
-					}
-				}
-			}
-		}
-		try{
-			if(!this.hasErrorEffort) {				
-				if(!templatetoDelete.isEmpty())
-					delete templatetoDelete;
-				if(!templatetoUpsert.isEmpty())
-					insert templatetoUpsert;
-				this.loadTemplates();
-			}
-		}catch(DMLException ex){
-		   hasErrorEffort = true;
-		   errorString = ex.getMessage().contains(E2_constants.INSUFFICIENT_ACCESS_OR_READONLY) ? 
-                                    E2_constants.INSUFFICIENT_ERROR_MSSG: 
-                                    ex.getMessage();  
-		}
+	    if(isEditable) {
+    		hasErrorEffort = false;
+    		hasNewEffort = false;
+    		errorString = '';
+    		String requiredFldErr = 'Required values are missing.<br/><br/>';
+    		String levelWithoutRoleErr = ' \'Of Role\' should be selected to specify \'Of Level\'. ';
+    		
+    		Id devRecordTypeId = Schema.getGlobalDescribe().get('E2_Derived_Effort__c').getDescribe()
+    							.getRecordTypeInfosByName().get('Template').getRecordTypeId();
+    		List<E2_Derived_Effort__c> templatetoDelete = new List<E2_Derived_Effort__c>();
+    		List<E2_Derived_Effort__c> templatetoUpsert = new List<E2_Derived_Effort__c>();
+    		
+    		for(DerivedEffortTemplate template : this.derivedEffortTemplates) {
+    		    //if isDelete is true, then delete derived effort else insert a new record 
+    			if(template.isDelete) {
+    				for(E2_Derived_Effort__c dE : template.derivedEfforts) {
+    					if(dE.Id <> NULL) 
+    						templatetoDelete.add(dE);
+    				}				
+    			} else {
+    				if(template.name == NULL || template.name == '' || template.allocation == null || 
+    				   template.allocation <= 0 || template.toRole == NULL || template.toRole == '' || 
+    				   template.toPhase.isEmpty() || template.includeWhen == NULL || template.includeWhen == '' || 
+    					(template.includeWhen != 'always' && template.includeWhenHrs <= 0)) {
+    					template.hasError = true;
+    					hasErrorEffort = true;
+    					if(!errorString.contains(requiredFldErr)) errorString = requiredFldErr + errorString;
+    				}else if(template.uniqueKey != template.generateUniqueKey()) {
+    					if(template.isNew) {
+    						createDerivedEffort( template, templatetoUpsert, devRecordTypeId);
+    					} else {
+    						for(E2_Derived_Effort__c dE : template.derivedEfforts) {
+    							if(dE.Id <> NULL) 
+    								templatetoDelete.add(dE);
+    						}
+    						createDerivedEffort( template, templatetoUpsert, devRecordTypeId);
+    					}
+    				}
+    				
+    				//Jan 12, 2017 : VG : To add error message if level is selected without role
+    				if(!String.isBlank(template.ofLevel) && String.isBlank(template.ofRole)){
+    				    template.hasError = true;
+    					hasErrorEffort = true;
+    					if(!errorString.contains(levelWithoutRoleErr)) errorString += levelWithoutRoleErr;
+    				}
+    			}
+    		}
+    		
+    		try{
+    			if(!this.hasErrorEffort) {				
+    				if(!templatetoDelete.isEmpty())
+    					delete templatetoDelete;
+    				if(!templatetoUpsert.isEmpty())
+    					insert templatetoUpsert;
+    				this.loadTemplates();
+    			}
+    		}catch(DMLException ex){
+    		   hasErrorEffort = true;
+    		   errorString = ex.getMessage().contains(E2_constants.INSUFFICIENT_ACCESS_OR_READONLY) ? 
+                                        E2_constants.INSUFFICIENT_ERROR_MSSG: 
+                                        ex.getMessage();  
+    		}
+	    }
 		return null;
 	}
 	//utility method to create derived effort records based on ofPhase 
@@ -150,7 +185,8 @@ public with sharing class E2_ManageTemplateDerivedEffortController {
 											 Is_Active__c = template.isActive, UniqueKey__c = generatedUniqueKey,
 											 To_Phase__c = toPhase, RecordTypeId = devRecordTypeId,
 											 Derived_Effort_Group__c = this.selectedGroup.Id,
-											 Allocation_Min__c = template.allocationMin);
+											 Allocation_Min__c = template.allocationMin, 
+											 Of_Level__c = template.ofLevel, Level__c = template.toLevel);
 				templatetoUpsert.add(newDE);
 			} else {
 				for(String ofPhase : template.ofPhase) {
@@ -162,7 +198,8 @@ public with sharing class E2_ManageTemplateDerivedEffortController {
 												 Is_Active__c = template.isActive, UniqueKey__c = generatedUniqueKey,
 												 Of_Phase__c = ofPhase, To_Phase__c = toPhase, RecordTypeId = devRecordTypeId,
 												 Derived_Effort_Group__c = this.selectedGroup.Id,
-											 	 Allocation_Min__c = template.allocationMin);
+											 	 Allocation_Min__c = template.allocationMin, 
+											     Of_Level__c = template.ofLevel, Level__c = template.toLevel);
 					templatetoUpsert.add(newDE);
 				}
 			}	
@@ -184,7 +221,10 @@ public with sharing class E2_ManageTemplateDerivedEffortController {
     	public boolean isNew{get;set;}
     	public boolean isDelete{get;set;}
     	public boolean hasError{get;set;}
-    	public boolean isActive{get;set;}    	
+    	public boolean isActive{get;set;}   
+    	// 12/27 : Resource level 
+    	public String ofLevel{get;set;}
+    	public String toLevel{get;set;}
     	//constructor
     	public DerivedEffortTemplate(E2_Derived_Effort__c derivedEffort) {
     		derivedEfforts = new List<E2_Derived_Effort__c>();
@@ -204,11 +244,17 @@ public with sharing class E2_ManageTemplateDerivedEffortController {
     			this.includeWhenHrs = derivedEffort.Include_When_Hours__c;  
     			this.isActive = derivedEffort.Is_Active__c;
     			this.allocationMin = derivedEffort.Allocation_Min__c;
+    			// 12/27 : Resource level
+    			this.ofLevel = derivedEffort.Of_Level__c;
+    			this.toLevel = derivedEffort.Level__c;
+    			
     			//check for UniqueKey__c of derived effort
     			this.uniqueKey = !String.isBlank(derivedEffort.UniqueKey__c) ? derivedEffort.UniqueKey__c :
     						derivedEffort.Name + E2_Constants.SEPARATOR + (!String.isBlank(this.ofRole) ? this.ofRole : '') +
+    						+ (!String.isBlank(this.ofLevel) ? E2_Constants.SEPARATOR + this.ofLevel : '') + 
     						E2_Constants.SEPARATOR + (!String.isBlank(derivedEffort.Of_Phase__c) ? derivedEffort.Of_Phase__c : '') +
-    						E2_Constants.SEPARATOR + this.toRole + E2_Constants.SEPARATOR + this.allocation + E2_Constants.SEPARATOR + 
+    						E2_Constants.SEPARATOR + this.toRole +  (!String.isBlank(this.toLevel) ? E2_Constants.SEPARATOR + this.toLevel : '') +
+    						E2_Constants.SEPARATOR + this.allocation + E2_Constants.SEPARATOR + 
     						derivedEffort.To_Phase__c + E2_Constants.SEPARATOR + (!String.isBlank(this.includeWhen) ? this.includeWhen : '') +
     						E2_Constants.SEPARATOR + this.includeWhenHrs + E2_Constants.SEPARATOR + derivedEffort.Is_Active__c
     						+ E2_Constants.SEPARATOR + this.allocationMin;
@@ -225,8 +271,10 @@ public with sharing class E2_ManageTemplateDerivedEffortController {
     	//method to create unique key 
     	public string generateUniqueKey() {
     		return this.name + E2_Constants.SEPARATOR + (!String.isBlank(this.ofRole) ? this.ofRole : '') +
+    		       (!String.isBlank(this.ofLevel) ? E2_Constants.SEPARATOR + this.ofLevel : '') + 
     			   E2_Constants.SEPARATOR + this.ofPhase + E2_Constants.SEPARATOR + 
-    			   this.toRole + E2_Constants.SEPARATOR + this.allocation + E2_Constants.SEPARATOR + 
+    			   this.toRole + (!String.isBlank(this.toLevel) ? E2_Constants.SEPARATOR + this.toLevel : '') +
+    			   E2_Constants.SEPARATOR + this.allocation + E2_Constants.SEPARATOR + 
     			   this.toPhase + E2_Constants.SEPARATOR + (!String.isBlank(this.includeWhen) ? this.includeWhen : '') +
     			   E2_Constants.SEPARATOR + this.includeWhenHrs + E2_Constants.SEPARATOR + this.isActive
     			   + E2_Constants.SEPARATOR + this.allocationMin;

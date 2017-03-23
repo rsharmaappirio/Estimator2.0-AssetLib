@@ -1,9 +1,12 @@
+<!--
+ 12/26: RJ: Add Level field (not mandatory) in the efforts related list 
+-->
 <apex:page standardController="E2_Scope__c" extensions="E2_EditScopeController" action="{!pageAction}" showHeader="false" standardStylesheets="true" sidebar="false" applyHtmlTag="false" applyBodyTag="false">
     <html xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
 
     <head>
         <title>Edit Scope</title>
-        <link type="text/css" rel="stylesheet" href="{!URLFOR($Resource.cloneany, '/slds/styles/salesforce-lightning-design-system-vf.min.css')}" />
+        <link type="text/css" rel="stylesheet" href="{!URLFOR($Resource.E2_SLDS1, '/assets/styles/salesforce-lightning-design-system.min.css')}" />
         <link type="text/css" rel="stylesheet" href="{!URLFOR($Resource.cloneany, '/jstree/themes/proton/style.min.css')}" />
         <apex:includeScript value="{!URLFOR($Resource.cloneany, '/libs/jquery.js')}" />
         <apex:includeScript value="{!URLFOR($Resource.cloneany, '/jstree/jstree.min.js')}" />
@@ -309,6 +312,49 @@
                     color: #0070d2!important;
                     box-shadow: #0070d2 0 -1px 0 inset;
                 }
+              
+              /*** RJ: 13/12: Added below styles to make edit screen font-size consistent to other pane on the page***/  
+              .slds .slds-page-header {
+                    padding: 5px 5px 8px;
+              }
+              
+              .slds .slds-page-header__title {
+                    font-size: 20px;
+                    margin-top: 0;
+              }
+              
+              /**
+              .slds body, .slds:not(html) {
+                font-size: 12px;
+              }
+              **/
+              .slds .slds-checkbox .slds-form-element__label, .slds .slds-button, .slds-form-element__control, .Typeahead *, .Typeahead *::before, .Typeahead *::after,
+              table tbody tr td, table thead tr th, tr td, tr th{
+                font-size: 12px;
+              }
+              .Typeahead-spinner {
+                    top: 2px;
+              }
+              .slds .slds-button {
+                  line-height: 28px;
+              }
+              .slds .slds-form-element__label {
+                font-size: 90%;
+              } 
+              .slds-effort-multiplier {
+                background-color : rgba(74, 191, 78, 0.36)!important;
+                color:black!important;
+                font-weight:bold!important;
+                font-size:12px!important;
+                padding-top:2px!important;
+                padding-bottom:2px!important;
+            }
+            .slds .slds-select {
+                height:34px!important;
+            }
+            .effortMultiplier {
+                text-align :right!important;
+            }
         </style>
     </head>
 
@@ -340,11 +386,12 @@
                                         <p class="slds-text-heading--label"></p>
                                         <div class="slds-grid">
                                             <h1 class="slds-page-header__title slds-m-right--small slds-truncate slds-align-middle" title="Record Title">Scope Detail</h1>
+                                            
                                             <span>
-                                        <span class="dot dot-red {!If(childScope.scope.Scope_Flag__c = 'Red', 'dot-active', '')}" title="Red"><span class="dot-inner"></span></span>
-                                            <span class="dot dot-yellow {!If(childScope.scope.Scope_Flag__c = 'Yellow', 'dot-active', '')}" title="Yellow"><span class="dot-inner"></span></span>
-                                            <span class="dot dot-green {!If(childScope.scope.Scope_Flag__c = 'Green', 'dot-active', '')}" title="Green"><span class="dot-inner"></span></span>
-                                            <span class="dot {!If(ISBLANK(childScope.scope.Scope_Flag__c), 'dot-active', '')}" title=""><span class="dot-inner"></span></span>
+                                                <span class="dot dot-red {!If(childScope.scope.Scope_Flag__c = 'Red', 'dot-active', '')}" title="Red"><span class="dot-inner"></span></span>
+                                                <span class="dot dot-yellow {!If(childScope.scope.Scope_Flag__c = 'Yellow', 'dot-active', '')}" title="Yellow"><span class="dot-inner"></span></span>
+                                                <span class="dot dot-green {!If(childScope.scope.Scope_Flag__c = 'Green', 'dot-active', '')}" title="Green"><span class="dot-inner"></span></span>
+                                                <span class="dot {!If(ISBLANK(childScope.scope.Scope_Flag__c), 'dot-active', '')}" title=""><span class="dot-inner"></span></span>
                                             </span>
                                             <span style="padding-top:6px;">
                                                   <span class="slds-change-notification">You have unsaved item.</span>
@@ -370,7 +417,7 @@
                                                 <div class="slds-form-element is-required ">
                                                     <label class="slds-form-element__label">Name</label>
                                                     <div class="slds-form-element__control">
-                                                        <apex:inputfield styleclass="slds-input" value="{!childScope.scope.Name}" />
+                                                        <apex:inputfield styleclass="slds-input scope_name" value="{!childScope.scope.Name}" />
                                                     </div>
                                                     <div class="slds-form-element__help" style="display:none">This field is required</div>
                                                 </div>
@@ -396,8 +443,20 @@
                                                         </div>
                                                     </div>
                                                 </div>
+                                                <div class="slds-grid top">
+                                                    <div class="slds-col paddingrightThree slds-size--1-of-2">
+                                                       <div class="slds-form-element">
+                                                            <label class="slds-form-element__label">Effort Multiplier</label>
+                                                            <div class="slds-form-element__control">
+                                                                <apex:inputfield id="scope-effortMultiplier" styleclass="slds-input scope-itemtype mandate-numeric effortMultiplier" value="{!childScope.scope.Effort_Quantity__c}" rendered="{!NOT(is_View)}" html-placeholder="0.00"/>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="slds-col paddingrightThree slds-size--1-of-2">
+                                                    </div>
+                                                </div>
                                                 <Br/>
-                                                <div class="slds-grid">                                                    
+                                                <div class="slds-grid">
                                                         <div class="slds-col slds-size--1-of-2">
                                                             <div class="slds-form-element">
                                                                 <div class="slds-form-element__control">
@@ -413,13 +472,14 @@
                                                         <div class="slds-form-element">
                                                             <div class="slds-form-element__control">
                                                                 <label class="slds-checkbox">
-                                                  <apex:inputfield styleclass="slds-checkbox" value="{!childScope.scope.Is_Active__c}" rendered="{!NOT(is_View)}" />
+                                                  <apex:inputfield id="scope-status" styleclass="slds-checkbox" value="{!childScope.scope.Is_Active__c}" rendered="{!NOT(is_View)}" />
                                                   <span class="slds-checkbox--faux"></span>
                                                   <span class="slds-form-element__label">Active</span>
                                                 </label>
                                                             </div>
                                                         </div>
                                                     </div>
+                                                    
                                                     </div>
                                                 <Br/>
                                                 <div class="slds-grid">
@@ -427,7 +487,8 @@
                                                         <div class="slds-form-element">
                                                             <label class="slds-form-element__label">Created By</label>
                                                             <div class="slds-form-element__control">
-                                                                <apex:outputText value="{!E2_Scope__c.CreatedBy.Name}" />
+                                                                <apex:outputText value="{!E2_Scope__c.CreatedBy.Name}" /><br/>
+                                                                <apex:outputText value="{0,date,MM/dd/yyyy hh:mm a}"> <apex:param value="{!E2_Scope__c.CreatedDate + offset}" /> </apex:outputText>
 
                                                             </div>
                                                         </div>
@@ -438,6 +499,8 @@
                                                             <div class="slds-form-element__control">
                                                                 <apex:outputText value="{!scope.LastModifiedBy.Name}" rendered="{!!ISBLANK(scope.LastModifiedBy.Name)}"/>
                                                                 <apex:outputText value="{!scope.LastModifiedBy.FirstName} {!scope.LastModifiedBy.LastName}" rendered="{!ISBLANK(scope.LastModifiedBy.Name)}"/>
+                                                                 <br/>
+                                                                 <apex:outputText value="{0,date,MM/dd/yyyy hh:mm a}"> <apex:param value="{!lastModifiedDate + offset}" /> </apex:outputText>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -517,6 +580,9 @@
                                                                 </th>
                                                                 <th class="slds-is-sortable" scope="col">
                                                                     <div class="slds-truncate">Role<abbr class="slds-required" title="required">*</abbr></div>
+                                                                </th>
+                                                                <th class="slds-is-sortable" scope="col">
+                                                                    <div class="slds-truncate">Level</div>
                                                                 </th>
                                                                 <th class="slds-is-sortable" scope="col">
                                                                     <div class="slds-truncate">Speciality</div>
@@ -609,6 +675,17 @@
                                                                                 </div>
                                                                             </apex:outputpanel>
                                                                             <apex:outputfield value="{!effort.effort.Resource_Role__c}" rendered="{!effort.isCloned}" />
+                                                                        </td>
+                                                                        <!-- 12/26 : Added Resource level in effort view to add/update-->
+                                                                        <td class="slds-truncate slds-size--1-of-8 whitespace_normal" data-label="Level">
+                                                                            <apex:outputpanel rendered="{!NOT(effort.isCloned)}">
+                                                                                <div class="slds-form-element ">
+                                                                                    <div class="slds-form-element__control">
+                                                                                        <apex:inputfield styleclass="slds-select" value="{!effort.effort.Resource_Level__c}" rendered="{!NOT(effort.isCloned)}" />
+                                                                                    </div>
+                                                                                </div>
+                                                                            </apex:outputpanel>
+                                                                            <apex:outputfield value="{!effort.effort.Resource_Level__c}" rendered="{!effort.isCloned}" />
                                                                         </td>
                                                                         <td class="slds-size--1-of-8 whitespace_normal" data-label="Speciality">
                                                                             <apex:inputfield styleclass="slds-select" style="width:80%" value="{!effort.effort.Speciality__c}" />
@@ -850,6 +927,8 @@
             <input type="hidden" value="{!E2_Scope__c.Presales_LOE__c}" />
             <input type="hidden" value="{!E2_Scope__c.Scope_Flag__c}" />
             <input type="hidden" value="{!E2_Scope__c.CreatedBy.Name}" />
+            <input type="hidden" value="{!E2_Scope__c.CreatedDate}" />
+            <input type="hidden" value="{!E2_Scope__c.LastModifiedDate}" />
             <input type="hidden" value="{!E2_Scope__c.LastModifiedById}" />
             <input type="hidden" value="{!E2_Scope__c.LastModifiedBy.Name}" />
             <apex:inputhidden value="{!is_Dirty}" id="is_Dirty" />
@@ -868,6 +947,8 @@
 		var changeComplexity = '{!scopeQuestionManager.changecomplexty}';
          var scopeToActivate = '{!scopeQuestionManager.scopeToActivate}';
          var scopeToDeactivate = '{!scopeQuestionManager.scopeToDeactivate}';
+         var multiplierUpdated = "{!childScope.multiplierUpdated}";
+         var effortQuantity = "{!childScope.multiplier}";
     </script>
     <!-- / JAVASCRIPT -->
 

@@ -58,7 +58,9 @@
     <externalSharingModel>ControlledByParent</externalSharingModel>
     <fields>
         <fullName>E2_Milestone_Library__c</fullName>
+        <description>The milestone library to which the timeline milestone belongs .</description>
         <externalId>false</externalId>
+        <inlineHelpText>The milestone library to which the timeline milestone belongs .</inlineHelpText>
         <label>Milestone Library</label>
         <referenceTo>E2_Milestone_Library__c</referenceTo>
         <relationshipLabel>Timeline Milestones</relationshipLabel>
@@ -72,7 +74,9 @@
     <fields>
         <fullName>Is_Active__c</fullName>
         <defaultValue>true</defaultValue>
+        <description>Marks a timeline milestone as active (available for use ) or inactive (not available for use) .</description>
         <externalId>false</externalId>
+        <inlineHelpText>Marks a timeline milestone as active (available for use ) or inactive (not available for use) .</inlineHelpText>
         <label>Is_Active?</label>
         <trackTrending>false</trackTrending>
         <type>Checkbox</type>
@@ -80,6 +84,7 @@
     <fields>
         <fullName>Milestone1__c</fullName>
         <externalId>false</externalId>
+        <inlineHelpText>Contains the name of the milestone .These define the milestone on a high level for eg. Phase 0 ,phase1 etc in case of workday practice.</inlineHelpText>
         <label>Milestone 1</label>
         <length>255</length>
         <required>false</required>
@@ -90,6 +95,7 @@
     <fields>
         <fullName>Milestone2__c</fullName>
         <externalId>false</externalId>
+        <inlineHelpText>Contains the name of the Milestone .Often this milestone is a part of the milestone 1 defined in the template .</inlineHelpText>
         <label>Milestone 2</label>
         <length>255</length>
         <required>false</required>
@@ -99,7 +105,9 @@
     </fields>
     <fields>
         <fullName>Order__c</fullName>
+        <description>Stores the row number of the milestones defined.</description>
         <externalId>false</externalId>
+        <inlineHelpText>Stores the row number of the milestones defined in the template.This gets updated when the user reorders the milestones by drag and drop feature.</inlineHelpText>
         <label>Order</label>
         <precision>18</precision>
         <required>false</required>

@@ -6,7 +6,7 @@
  * Created By: Rohit Sharma (Appirio)
  * 
  * Date Modified      Modified By                  Description of the update
-    
+   Dec 14, 2016       Rohit Sharma                 S-456645 : Search on child scopes on scope library.    
 *  =====================================================================*/
 global class E2_ScopeWrapper implements Comparable {
     public Boolean isSelected {get; set;}
@@ -14,7 +14,7 @@ global class E2_ScopeWrapper implements Comparable {
     public Boolean isFavorite {get; set;}
     
     public enum SORT_BY {
-        ByScopeName,ByComplexity,ByGroup,ByEfforts,ByLastView
+        ByScopeName,ByComplexity,ByGroup,ByEfforts,ByLastView,ByParentScope
     }
     
     public enum SORT_ORDER {

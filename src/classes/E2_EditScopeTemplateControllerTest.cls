@@ -60,7 +60,16 @@ public class E2_EditScopeTemplateControllerTest {
     E2_Scope__c scope1 =  E2_Test_Utils.insertScope(false);
     scope1.recordTypeId = recTypeId1;
     scope1.Presales_LOE__c = estimate.id;  
+    scope1.Effort_Quantity__c = 2;  
     insert scope1;
+    
+    E2_Scope__c childScope =  E2_Test_Utils.insertScope(false);
+    childScope.recordTypeId = recTypeId1;
+    childScope.Presales_LOE__c = estimate.id; 
+    childScope.Ultimate_Parent_Scope__c=scope1.ID;
+    childScope.Parent_Scope__c=scope1.ID;
+    insert childScope;
+    
     
     E2_Effort__c source_effort = E2_Test_Utils.insertEffort(true, scope.Id);
     
@@ -80,6 +89,7 @@ public class E2_EditScopeTemplateControllerTest {
             
             ApexPages.StandardController stdController = new ApexPages.StandardController(scope);
             E2_EditScopeTemplateController controller = new E2_EditScopeTemplateController(stdController);
+           
             controller.pageAction();
             
                   E2_EditScopeTemplateController.Scope scope_wrap = controller.childScope;
@@ -109,17 +119,23 @@ public class E2_EditScopeTemplateControllerTest {
                   String effortsJson = JSON.serialize(lstEfforts, true);
                   controller.effortsJson = effortsJson;
                   controller.addBulkEfforts();
-                    
+                  controller.saveScope();
+                  
+                  //Scope wrapper instance
+                  E2_EditScopeTemplateController.Scope scopeWrapper=new E2_EditScopeTemplateController.Scope(scope1,effortLst1); 
+                  controller.childScope=scopeWrapper; 
+                  controller.childScope.multiplier=1;
+                  scopeWrapper.efforts.get(0).isDeleted=true;
                   controller.saveScope();     
                   List<E2_Scope__c> scopeList = E2_DataUtil.getScopeAndChildrenOnScopeIdForEditScope(scope.id);
-                  system.assertEquals(scopeList[0].Efforts__r.size(), 5, '5 efforts should saved');
+                  system.assertEquals(scopeList[0].Efforts__r.size(),4, '4 efforts should saved');
                   
                   for(E2_EditScopeTemplateController.Effort eff: scope_wrap.efforts){
                      eff.remove();    
                   }         
                   controller.saveScope();     
                   scopeList = E2_DataUtil.getScopeAndChildrenOnScopeIdForEditScope(scope.id);
-                  system.assertEquals(scopeList[0].Efforts__r.size(), 0, 'both efforts should removed');
+                  system.assertEquals(scopeList[0].Efforts__r.size(), 4, '4 effort should removed');
                     
                   scope_wrap.remove();
                     

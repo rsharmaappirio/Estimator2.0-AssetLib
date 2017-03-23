@@ -6,72 +6,127 @@
  * Created By: 
  * 
  * Date Modified      Modified By                  Description of the update
- *                      
+ * Dec 8th, 2016      Rohit Sharma                 S-449145 :Ability to find the Scope by type, 
+                                                   Complexity ,Q&A and assets assigned.      
+ * Dec 26, 2016       Rahul Jain                   S-459273 : Added Resource Level field in getEstimateRateCards, generateDerivedHours, loadEfforts method
+ * Feb 08, 2017       Rohit Sharma                 S-447325 : Add multiplier on Scope : code updated to add Effort multiplier on effort
+ *                                                 hours for epic level capacity calculation.
 *  =====================================================================*/
 public with sharing class E2_Estimator_Manager {
     
+    private final static integer PERCENT_DENOMINATOR = 100;
+    private final static string TOTAL_CONSTANTS = 'total';
+    
     //method to generate Derived Hours based on estimate Id and E2_Derived_Effort__c
-    public static void generateDerivedHours(Id estimateId,List<E2_Derived_Effort__c> e2DerivedEfforts) {    	
-    	if(estimateId!=null){
+    public static void generateDerivedHours(Id estimateId,List<E2_Derived_Effort__c> e2DerivedEfforts) {
+        // validate that this is for any valid estimate id
+    	if(estimateId <> NULL){
        		Map<String, Decimal> idrolephaseToHoursMap = new Map<String, Decimal>();
 	    	Set<Id> estimateIds = new Set<Id>();
 	       	estimateIds.add(estimateId);
+	       	// load the efforts in the map 
 	       	loadEfforts(estimateIds, idrolephaseToHoursMap);
+	       	
+	       	// traverse through all the e2 drived efforts (template) records associated with this estimate.
+	       	// 12/26 : RS : Method re-evaluated and updated to remove unnecessary if-else logic
 	        for(E2_Derived_Effort__c derivedEffort: e2DerivedEfforts){
 	          decimal hrs = 0;
-	          if(String.isBlank(derivedEffort.Of_Role__c) && !String.isBlank(derivedEffort.Of_Phase__c))
-	          	hrs = derivedhrsWithoutOfRoleOrOfPhase(idrolephaseToHoursMap, 
-	          								E2_Constants.SEPARATOR + derivedEffort.Of_Phase__c.toLowerCase());
-	          else if(!String.isBlank(derivedEffort.Of_Role__c) && String.isBlank(derivedEffort.Of_Phase__c))
-	          	hrs = derivedhrsWithoutOfRoleOrOfPhase(idrolephaseToHoursMap, 
-	          											derivedEffort.Of_Role__c.toLowerCase() + E2_Constants.SEPARATOR);
-	          else if(String.isBlank(derivedEffort.Of_Role__c) && String.isBlank(derivedEffort.Of_Phase__c))
-	          	hrs = derivedhrsWithoutOfRoleAndOfPhase(idrolephaseToHoursMap);
-	          else {
-	          	string derivedKey = derivedEffort.Of_Role__c.toLowerCase() + 
-	          					E2_Constants.SEPARATOR + derivedEffort.Of_Phase__c.toLowerCase();                 
-	          	if(idrolephaseToHoursMap.containsKey(derivedKey))
-	             hrs = idrolephaseToHoursMap.get(derivedKey);
-	          }
-	          hrs = hrs * (derivedEffort.Allocation__c/100);
+	          string keys = (String.isBlank(derivedEffort.Of_Role__c) ? E2_Constants.BLANK : 
+	                (derivedEffort.Of_Role__c.toLowerCase() + (String.isBlank(derivedEffort.Of_level__c) ? 
+	                    E2_Constants.BLANK : E2_Constants.SEPARATOR + derivedEffort.Of_level__c.toLowerCase())));
+	                
+	          keys += (String.isBlank(derivedEffort.Of_Phase__c) ? E2_Constants.BLANK : 
+	                 (!string.isBlank(keys) ? E2_Constants.SEPARATOR : E2_Constants.BLANK) + derivedEffort.Of_Phase__c.toLowerCase());
+	                 
+	                 
+	         if(String.isBlank( keys )) {
+	             hrs = idrolephaseToHoursMap.get( TOTAL_CONSTANTS );
+	         } else if(idrolephaseToHoursMap.containsKey( keys )) {
+	             hrs = idrolephaseToHoursMap.get( keys );
+	         }
+	          hrs = hrs * (derivedEffort.Allocation__c/PERCENT_DENOMINATOR);
 	          derivedEffort.Derived_Hrs__c = hrs;       
 	       	}  
     	}
     }
-    //method to get derived hours if Role or Phase does not exist 
-    private static Decimal derivedhrsWithoutOfRoleOrOfPhase(Map<String, Decimal> idrolephaseToHoursMap,string partialKey) {
+    //method to get derived hours if Role or Phase does not exist
+    // VG : 01/10/2017 : Commented as NOT IN USE
+    /*private static Decimal derivedhrsWithoutOfRoleOrOfPhase(Map<String, Decimal> idrolephaseToHoursMap,string partialKey) {
     	decimal hrs = 0;
     	for(string idroleKey : idrolephaseToHoursMap.KeySet()) {
     		if(idroleKey.indexOf(partialKey) != -1)
     		hrs = hrs + idrolephaseToHoursMap.get(idroleKey);
     	}
     	return hrs;
-    }
-    //method to get derived hours if Role and Phase does not exist 
-    private static Decimal derivedhrsWithoutOfRoleAndOfPhase(Map<String, Decimal> idrolephaseToHoursMap) {
+    }*/
+    //method to get derived hours if Role and Phase does not exist
+    // VG : 01/10/2017 : Commented as NOT IN USE
+    /*private static Decimal derivedhrsWithoutOfRoleAndOfPhase(Map<String, Decimal> idrolephaseToHoursMap) {
     	decimal hrs = 0;
     	for(decimal idroleKey : idrolephaseToHoursMap.values()) {
     		hrs = hrs + idroleKey;
     	}
     	return hrs;
-    }
+    }*/
     //method to load efforts based on complexity 
     private static void loadEfforts(Set<Id> estimateIds, 
     								Map<String, Decimal> idrolephaseToHoursMap) {
-          for(AggregateResult result : 
-          					E2_DataUtil.getEffortsOnEstimateIds(estimateIds)){
-              string role = ((string)result.get('Role')).toLowerCase();
-              string phase = ((string)result.get('Phase')).toLowerCase();
-              string rolePhaseKey = role + E2_Constants.SEPARATOR + phase;
+    	   // 12/26: Updated the code below to add level field based calculations.
+    	  // for total sum of effort hours 
+          if(!idrolephaseToHoursMap.containsKey(TOTAL_CONSTANTS)){
+            idrolephaseToHoursMap.put(TOTAL_CONSTANTS, 0);
+          }
+          // RS :S-447325: Effort_Quantity__c custom field added in SOQL
+          for(E2_Effort__c result : [Select  e.Low_Effort_Hrs__c, e.High_Effort_Hrs__c,
+                                            e.Effort_Hrs__c, e.Resource_Role__c , e.Phase__c ,
+                                            e.Scope__r.Presales_LOE__c , e.Scope__r.Complexity__c 
+                                            ,e.Resource_Level__c, e.Scope__r.Effort_Quantity__c 
+                                            From E2_Effort__c e
+                                            where e.Scope__r.Presales_LOE__c in : estimateIds AND e.Scope__r.Is_Active__c = true]){
+                                                
+              string role = result.Resource_Role__c.toLowerCase();
+              string level = string.isBlank(result.Resource_Level__c) ? E2_Constants.BLANK : result.Resource_Level__c.toLowerCase();
+              string phase = result.Phase__c.toLowerCase();
+              
+              string rolePhaseKey = role + ((String.isEmpty(level)) ? E2_Constants.BLANK : E2_Constants.SEPARATOR + level) + E2_Constants.SEPARATOR + phase;
+              
               decimal hrs = 0;
-              string complexity = ((string)result.get('Complexity')).toLowerCase();
-              if(complexity == E2_Constants.LOW) hrs = (decimal)result.get('lowHrs');
-              if(complexity == E2_Constants.MEDIUM) hrs = (decimal)result.get('midHrs');
-              if(complexity == E2_Constants.HIGH) hrs = (decimal)result.get('highHrs');
+              string complexity = ((string)result.Scope__r.Complexity__c.toLowerCase());
+              if(complexity == E2_Constants.LOW) hrs = (decimal)result.get('Low_Effort_Hrs__c');
+              if(complexity == E2_Constants.MEDIUM) hrs = (decimal)result.get('Effort_Hrs__c');
+              if(complexity == E2_Constants.HIGH) hrs = (decimal)result.get('High_Effort_Hrs__c');
+              // RS :S-447325: add Effort Multiplier into effort hours
+              if(result.Scope__r.Effort_Quantity__c > 0) hrs = hrs * result.Scope__r.Effort_Quantity__c;
+              // for total sum of effort hours 
+              idrolephaseToHoursMap.put(TOTAL_CONSTANTS, idrolephaseToHoursMap.get(TOTAL_CONSTANTS) + hrs);
+              
+              //for role + level + phase || role + phase
               if(!idrolephaseToHoursMap.containsKey(rolePhaseKey)){
                  idrolephaseToHoursMap.put(rolePhaseKey, 0);
               }
               idrolephaseToHoursMap.put(rolePhaseKey, idrolephaseToHoursMap.get(rolePhaseKey) + hrs);
+              
+              //for role
+              if(!idrolephaseToHoursMap.containsKey(role)){
+                 idrolephaseToHoursMap.put(role, 0);
+              }
+              
+              if(String.isEmpty(level)) idrolephaseToHoursMap.put(role, idrolephaseToHoursMap.get(role) + hrs);
+              
+              //for role + level
+              string rolePlusLevel = role + E2_Constants.SEPARATOR + level;
+              if(!String.isEmpty(level) && !idrolephaseToHoursMap.containsKey(rolePlusLevel)){
+                 idrolephaseToHoursMap.put(rolePlusLevel, 0);
+              }
+              if(!String.isEmpty(level)) idrolephaseToHoursMap.put(rolePlusLevel, idrolephaseToHoursMap.get(rolePlusLevel) + hrs);
+              
+              
+              //for phase
+              if(!idrolephaseToHoursMap.containsKey(phase)){
+                 idrolephaseToHoursMap.put(phase, 0);
+              }
+              idrolephaseToHoursMap.put(phase, idrolephaseToHoursMap.get(phase) + hrs);
+              //system.debug('idrolephaseToHoursMap'+idrolephaseToHoursMap);
           }
     }
     
@@ -107,6 +162,11 @@ public with sharing class E2_Estimator_Manager {
 				estimateRC.Bill_Rate__c = rateCard.pse__Suggested_Bill_Rate__c;
 				estimateRC.Discounted_Rate__c = rateCard.pse__Suggested_Bill_Rate__c;
 		    	estimateRC.Category__c = rateCard.pse__Region__r.Name;
+		    	//need resource level to be queried and updated now
+		    	estimateRC.Resource_Level__c = rateCard.E2_Resource_Level__c;
+		    	// S-469552 : VG : March 2, 2017
+                estimateRC.Practice_Id__c = rateCard.pse__Practice__c;
+                estimateRC.Region_Id__c = rateCard.pse__Region__c;
 		    	newEstimateRateCards.add(estimateRC);		
 			}
 			if(!newEstimateRateCards.isEmpty()) {
@@ -114,7 +174,8 @@ public with sharing class E2_Estimator_Manager {
 				   insert newEstimateRateCards;
 				   // QUERYING AGAIN FOR RETURNING THE ORDERED LIST BY REGION & ROLE
         		   estimateRateCards = E2_DataUtil.getEstimateRateCards(estimateId);
-        		   updateEstimeRateCardJSON(estimateRateCards, estimateId);
+        		   //no need to updated ratecard json now; do not need in e2
+        		   //updateEstimeRateCardJSON(estimateRateCards, estimateId);
 			    }catch(Exception ex){
 			       system.debug('Error in new estimate rate card creation:' + ex.getMessage()); 
 			    }
@@ -124,7 +185,8 @@ public with sharing class E2_Estimator_Manager {
 	
 	}
 	
-	public static void updateEstimeRateCardJSON(List<E2_Estimate_Rate_Card__c> estimateRateCards,Id estimateId) {
+	//no need to updated ratecard json now; do not need in e2
+	/*public static void updateEstimeRateCardJSON(List<E2_Estimate_Rate_Card__c> estimateRateCards,Id estimateId) {
       List<RateCardJSONWrapper> ratecards = new List<RateCardJSONWrapper>();
       for(E2_Estimate_Rate_Card__c estimateRateCard : estimateRateCards) {
        ratecards.add(populateRateCard(estimateRateCard));   
@@ -136,7 +198,7 @@ public with sharing class E2_Estimator_Manager {
 		  rt_JSON = rt_JSON != null ?rt_JSON.replaceAll('Rate_Card', 'Rate Card') : rt_JSON;
 		  update (new CMC_Presales_LOE__c(Id = estimateId, Ratecard_JSON__c = rt_JSON));
       }
-     }
+     }*/
   
       public static RateCardJSONWrapper populateRateCard(E2_Estimate_Rate_Card__c erc) {
         RateCardJSONWrapper rateCard = new RateCardJSONWrapper();
@@ -154,6 +216,49 @@ public with sharing class E2_Estimator_Manager {
         rateCard.Code = erc.Code__c;
         rateCard.Category = erc.Category__c;
         return rateCard;
+  }
+  
+  public static string populateCapacityNeeds(string estimateId) {
+      // method to populate the capacityNeeds_JSON variable with Phase hours
+      // Role hours and total capacity needs from Capicity needs calculated 
+      // from Scopes
+      // RS : S-447680 : Round off the hours to nearest figure on capacity tab
+      
+      // RS : get estimate capacity needs from primary timeline
+      
+    string capacityNeeds_JSON = '{';
+    
+    string phaseHours_JSON = '{';
+    for(AggregateResult groupedResults : [SELECT SUM(Hours__c) Hours, Phase__c  
+                                          FROM E2_Capacity__c WHERE Estimator__c =: estimateId  
+                                          GROUP BY Phase__c]) {
+        string phaseHour = '"' + string.valueOf(groupedResults.get('Phase__c')).toLowerCase() + '" : "' + ((Decimal)groupedResults.get('Hours')).round() + '"';
+        phaseHours_JSON += (phaseHours_JSON == '{' ? '' : ',') + phaseHour;
+    }
+    phaseHours_JSON += '},';
+    capacityNeeds_JSON += '"PhaseHours" : '+ phaseHours_JSON;
+    
+    // 12/27: Added resource level related changes in the query and json formation
+    string roleHours_JSON = '{';
+    for(AggregateResult groupedResults : [SELECT SUM(Hours__c) Hours, Role__c, Level__c  
+                                          FROM E2_Capacity__c WHERE Estimator__c =: estimateId  
+                                          GROUP BY Role__c, Level__c]) {
+        string roleHour = '"' + string.valueOf(groupedResults.get('Role__c')).toLowerCase() 
+        + (groupedResults.get('Level__c') == NULL || string.valueOf(groupedResults.get('Level__c')) == '' ? 
+                                    E2_Constants.BLANK : 
+                                    E2_Constants.HYPHEN_SEPARATOR + string.valueOf(groupedResults.get('Level__c')).toLowerCase()) 
+        + '" : "' + ((Decimal)groupedResults.get('Hours')).round() + '"';
+        roleHours_JSON += (roleHours_JSON == '{' ? '' : ',') + roleHour;
+    }
+    
+    roleHours_JSON += '},';
+    capacityNeeds_JSON += '"RoleHours" : '+ roleHours_JSON;
+    AggregateResult[] totalHours = [SELECT SUM(Hours__c) Hours 
+                                    FROM E2_Capacity__c 
+                                    WHERE Estimator__c =: estimateId];
+    capacityNeeds_JSON += '"TotalHours" : "' + (totalHours[0].get('Hours') == NULL ? '' : ''+ ((Decimal)totalHours[0].get('Hours')).round()) + '"';
+    capacityNeeds_JSON += '}';
+    return capacityNeeds_JSON;
   }
   
   //

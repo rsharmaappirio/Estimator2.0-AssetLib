@@ -6,7 +6,10 @@
  * Created By: Arpita Bose (Appirio)
  * 
  * Date Modified      Modified By                  Description of the update
-
+   Dec 8th, 2016      Rohit Sharma          S-449145 :Ability to find the Scope by type, 
+                                            Complexity ,Q&A and assets assigned.
+   Feb 08, 2017       Rohit Sharma        S-447325 : Add multiplier on Scope: New variable to store 
+                                          scope multiplier and new constructor to get multiplier value in wrapper.
 *  =====================================================================*/
 global class E2_TreeNode {
     webservice string title; 
@@ -24,6 +27,11 @@ global class E2_TreeNode {
     webservice decimal loe_hrs;
     webservice string description;    
     webservice decimal display_order;
+    // new variables to map scope type, questions count, asset count
+    webservice string scope_type;
+    webservice boolean hasQuestion;
+    webservice boolean hasAsset;
+    webservice decimal multiplier;
     
     
     public E2_TreeNode(string title, boolean isFolder, boolean isLazy, string key){
@@ -63,6 +71,15 @@ global class E2_TreeNode {
         this.display_order = displayOrder;
     }
     
+    // for full scope details 
+    public E2_TreeNode(string id,string title, string text, string parent, boolean hasChildren, string sourceId, string node_type, decimal displayOrder, string complexity, string scope_type, boolean hasQuestion, boolean hasAsset){
+        this( id, title, text, parent, hasChildren, sourceId, node_type, displayOrder);
+        this.complexity = complexity;
+        this.scope_type = scope_type;
+        this.hasQuestion = hasQuestion;
+        this.hasAsset = hasAsset;
+    }
+    
     // for efforts
     public E2_TreeNode(string id, string text, string parent, boolean hasChildren, string sourceId, string node_type){
         this.parent = parent;
@@ -85,6 +102,11 @@ global class E2_TreeNode {
         this.display_order = displayOrder;
     }
     
+    public E2_TreeNode(string id, string text, string parent, boolean hasChildren, string sourceId, string node_type, decimal displayOrder, decimal multiplier){
+        this( id, text,  parent,  hasChildren,  sourceId,  node_type, displayOrder);
+        this.multiplier = multiplier;
+    }
+    
     // for details    
     public E2_TreeNode(string id, string text, string parent, boolean hasChildren, string sourceId,
                        string complexity, decimal loe_hrs, string description){
@@ -99,4 +121,10 @@ global class E2_TreeNode {
         this.description = description;
     }
     
+    // for full scope details 
+    public E2_TreeNode(string id,string title, string text, string parent, boolean hasChildren, string sourceId, string node_type,
+            decimal displayOrder, string complexity, string scope_type, boolean hasQuestion, boolean hasAsset, decimal multiplier){
+        this( id, title,  text,  parent,  hasChildren,  sourceId,  node_type,  displayOrder,  complexity,  scope_type,  hasQuestion,  hasAsset);
+        this.multiplier = multiplier;
+    }
 }

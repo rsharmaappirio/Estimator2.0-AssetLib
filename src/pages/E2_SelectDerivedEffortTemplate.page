@@ -1,9 +1,9 @@
 <apex:page controller="E2_SelectDerivedEffortTemplateController" action="{!pageAction}"
-   showHeader="false" standardStylesheets="true" sidebar="false" applyHtmlTag="false" applyBodyTag="false">
+   showHeader="false" standardStylesheets="false" sidebar="false" applyHtmlTag="false" applyBodyTag="false">
    <html>
       <head>
          <title>Select Derived Efforts Template</title>
-         <apex:stylesheet value="{!URLFOR($Resource.E2_SLDS1, '/assets/styles/salesforce-lightning-design-system-vf.css')}" />
+         <apex:stylesheet value="{!URLFOR($Resource.E2_SLDS1, '/assets/styles/salesforce-lightning-design-system.css')}" />
          <apex:includeScript value="{!URLFOR($Resource.cloneany, '/libs/jquery.js')}" />
          <apex:includeScript value="{!$Resource.E2_SelectDerivedEffortTemplateJS}"/>
          <style>
@@ -105,6 +105,10 @@
                            <apex:column styleClass="slds-truncate">
                               <apex:facet name="header">Description</apex:facet>
                               <apex:outputPanel layout="none">{!de.derivedGroups.Description__c}</apex:outputPanel>
+                           </apex:column>
+                           <apex:column rendered="{!isTemplateManager}" styleClass="slds-truncate">
+                              <apex:facet name="header">Is Active?</apex:facet>
+                              <apex:outputPanel layout="none"><apex:outputField value="{!de.derivedGroups.Is_Active__c}"/></apex:outputPanel>
                            </apex:column>
                         </apex:dataTable>
                         <table width="100%">

@@ -173,6 +173,30 @@
         <type>Checkbox</type>
     </fields>
     <fields>
+        <fullName>Level__c</fullName>
+        <description>D.E computed will be applied to Role to this level .If the level field is blank then the D.E is applied to the Role with no level against that role in the respective phase.Seniority (hence bill rate) of a role is defined on the resource using the level in ascending order (Associate to Managing)</description>
+        <externalId>false</externalId>
+        <globalPicklist>E2_Resource_Level</globalPicklist>
+        <inlineHelpText>D.E computed will be applied to Role to this level .Seniority of a role is defined on the resource using the level in ascending order (Associate to Managing).</inlineHelpText>
+        <label>Level</label>
+        <required>false</required>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Picklist</type>
+    </fields>
+    <fields>
+        <fullName>Of_Level__c</fullName>
+        <description>Contains the level of the resource role needed in DE.The Role+level defined here will reference to the Role+level include in Capacity. The level when left blank will refer only the effort with same role and no level defined on the scope efforts.</description>
+        <externalId>false</externalId>
+        <globalPicklist>E2_Resource_Level</globalPicklist>
+        <inlineHelpText>D.E is computed using the role of the level defined in this field.Seniority (hence bill rate)of a role is defined on the resource using the level in ascending order (Associate to Managing).</inlineHelpText>
+        <label>Of Level</label>
+        <required>false</required>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Picklist</type>
+    </fields>
+    <fields>
         <fullName>Of_Phase__c</fullName>
         <externalId>false</externalId>
         <globalPicklist>E2_Phases</globalPicklist>
@@ -305,6 +329,33 @@
             </values>
         </picklistValues>
         <picklistValues>
+            <picklist>E2_Resource_Level</picklist>
+            <values>
+                <fullName>Associate Consultant</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>Associate Consultant - Indy</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>Consultant</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>Managing Consultant</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>Principal Consultant</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>Senior Consultant</fullName>
+                <default>false</default>
+            </values>
+        </picklistValues>
+        <picklistValues>
             <picklist>E2_Role</picklist>
             <values>
                 <fullName>Account Director</fullName>
@@ -323,15 +374,11 @@
                 <default>false</default>
             </values>
             <values>
-                <fullName>Business Analyst</fullName>
-                <default>false</default>
-            </values>
-            <values>
-                <fullName>Business Analyst - Jaipur</fullName>
-                <default>false</default>
-            </values>
-            <values>
                 <fullName>Business Architect</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>Business Specialist</fullName>
                 <default>false</default>
             </values>
             <values>
@@ -340,10 +387,6 @@
             </values>
             <values>
                 <fullName>Change Lead</fullName>
-                <default>false</default>
-            </values>
-            <values>
-                <fullName>Cloud Management Lead</fullName>
                 <default>false</default>
             </values>
             <values>
@@ -379,15 +422,19 @@
                 <default>false</default>
             </values>
             <values>
-                <fullName>Executive Sponsor</fullName>
-                <default>false</default>
-            </values>
-            <values>
                 <fullName>Financials Consultant</fullName>
                 <default>false</default>
             </values>
             <values>
+                <fullName>Financials Lead</fullName>
+                <default>false</default>
+            </values>
+            <values>
                 <fullName>HCM Consultant</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>HCM Lead</fullName>
                 <default>false</default>
             </values>
             <values>
@@ -400,6 +447,10 @@
             </values>
             <values>
                 <fullName>Integration Consultant</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>Integration Lead</fullName>
                 <default>false</default>
             </values>
             <values>
@@ -423,6 +474,10 @@
                 <default>false</default>
             </values>
             <values>
+                <fullName>Payroll Lead</fullName>
+                <default>false</default>
+            </values>
+            <values>
                 <fullName>Program Manager</fullName>
                 <default>false</default>
             </values>
@@ -431,7 +486,7 @@
                 <default>false</default>
             </values>
             <values>
-                <fullName>Project Manager - Jaipur</fullName>
+                <fullName>QA Automation Engineer</fullName>
                 <default>false</default>
             </values>
             <values>
@@ -448,6 +503,10 @@
             </values>
             <values>
                 <fullName>Solution Architect</fullName>
+                <default>false</default>
+            </values>
+            <values>
+                <fullName>Strategic Advisor</fullName>
                 <default>false</default>
             </values>
             <values>
@@ -468,10 +527,6 @@
             </values>
             <values>
                 <fullName>Technical Lead</fullName>
-                <default>false</default>
-            </values>
-            <values>
-                <fullName>Technical Lead - Jaipur</fullName>
                 <default>false</default>
             </values>
             <values>

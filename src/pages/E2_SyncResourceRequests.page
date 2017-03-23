@@ -16,6 +16,8 @@
             </apex:facet>
         </apex:actionstatus>
     </apex:outputpanel>
+    
+<apex:pageMessages id="msgs" />
  
  <apex:outputPanel id="out">
  
@@ -39,6 +41,7 @@
       <apex:column headerValue="Action" value="{! actions[rr.Estimate_Resource_Id__c]}" />
       <apex:column value="{!rr.pse__Region__c}"/>
       <apex:column value="{!rr.pse__Resource_Role__c}"/>
+      <apex:column value="{!rr.E2_Resource_Level__c}"/>
       <apex:column value="{!rr.pse__Start_Date__c}"/>
       <apex:column value="{!rr.pse__End_Date__c}"/>
       <apex:column value="{!rr.pse__SOW_Hours__c}"/>
@@ -52,7 +55,7 @@
     <apex:pageBlock >
      <apex:form >   
     	<apex:commandButton rendered="{!!workDone}" value="Cancel" action="{!cancel}" status="status"/>&nbsp;
-    	<apex:commandButton rendered="{!selectedPSR!=null && !workDone}" value="{!dynamicButtonName}" rerender="out" action="{!syncData}" status="status"/>
+    	<apex:commandButton rendered="{!selectedPSR!=null && !workDone}" value="{!dynamicButtonName}" rerender="out, msgs" action="{!syncData}" status="status"/>
    	 	<apex:commandButton rendered="{!workDone}" value="Return to Opportunity" action="{!cancel}" status="status"/>
    	 </apex:form>
     </apex:pageBlock>
@@ -61,6 +64,7 @@
       <apex:pageBlockTable value="{!endResults}" var="rr">
       <apex:column value="{!rr.pse__Region__c}"/>
       <apex:column value="{!rr.pse__Resource_Role__c}"/>
+      <apex:column value="{!rr.E2_Resource_Level__c}"/>
       <apex:column value="{!rr.pse__Start_Date__c}"/>
       <apex:column value="{!rr.pse__End_Date__c}"/>
       <apex:column value="{!rr.pse__SOW_Hours__c}"/> 

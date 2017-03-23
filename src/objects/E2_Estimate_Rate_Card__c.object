@@ -59,11 +59,13 @@
     <externalSharingModel>ControlledByParent</externalSharingModel>
     <fields>
         <fullName>Bill_Rate__c</fullName>
+        <description>Proposed cost for a resource to a client .</description>
         <externalId>false</externalId>
+        <inlineHelpText>Proposed cost for a resource to a client .</inlineHelpText>
         <label>Bill Rate</label>
         <precision>18</precision>
         <required>false</required>
-        <scale>0</scale>
+        <scale>2</scale>
         <trackHistory>false</trackHistory>
         <trackTrending>false</trackTrending>
         <type>Currency</type>
@@ -92,11 +94,13 @@
     </fields>
     <fields>
         <fullName>Discounted_Rate__c</fullName>
+        <description>Rate after discount is applied on total cost.</description>
         <externalId>false</externalId>
+        <inlineHelpText>Rate after discount is applied on total cost.</inlineHelpText>
         <label>Discounted Rate</label>
         <precision>18</precision>
         <required>false</required>
-        <scale>0</scale>
+        <scale>2</scale>
         <trackHistory>false</trackHistory>
         <trackTrending>false</trackTrending>
         <type>Currency</type>
@@ -114,6 +118,21 @@
         <trackTrending>false</trackTrending>
         <type>MasterDetail</type>
         <writeRequiresMasterRead>false</writeRequiresMasterRead>
+    </fields>
+    <fields>
+        <fullName>Practice_Id__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <description>Stores the practice ID for the rate card used on an estimate.</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Stores the practice ID for the rate card used on an estimate.</inlineHelpText>
+        <label>Practice Id</label>
+        <referenceTo>pse__Practice__c</referenceTo>
+        <relationshipLabel>Estimate Rate Cards</relationshipLabel>
+        <relationshipName>Estimate_Rate_Cards</relationshipName>
+        <required>false</required>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
     </fields>
     <fields>
         <fullName>Practice__c</fullName>
@@ -140,6 +159,21 @@
         <type>Lookup</type>
     </fields>
     <fields>
+        <fullName>Region_Id__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <description>Stores region Id of the rate card used on estimate.</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Stores region Id of the rate card used on estimate.</inlineHelpText>
+        <label>Region Id</label>
+        <referenceTo>pse__Region__c</referenceTo>
+        <relationshipLabel>Estimate Rate Cards</relationshipLabel>
+        <relationshipName>Estimate_Rate_Cards</relationshipName>
+        <required>false</required>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <fields>
         <fullName>Region__c</fullName>
         <description>Resource region from rate card region lookup</description>
         <externalId>false</externalId>
@@ -153,14 +187,32 @@
     </fields>
     <fields>
         <fullName>Resource_Cost__c</fullName>
+        <description>The resource cost incurred to the company.</description>
         <externalId>false</externalId>
+        <inlineHelpText>The resource cost incurred to the company.</inlineHelpText>
         <label>Resource Cost</label>
         <precision>18</precision>
         <required>false</required>
-        <scale>0</scale>
+        <scale>2</scale>
         <trackHistory>false</trackHistory>
         <trackTrending>false</trackTrending>
         <type>Currency</type>
+    </fields>
+    <fields>
+        <fullName>Resource_Level__c</fullName>
+        <description>Stores the level of resource needed.The level defined on resources will vary the rates for each of the same roles.Eg Principal level of data consultant has higher rate as compare to the senior or associate . 
+Rates of a resource increases with the level (as Associate -lowest  to Managing-highest)
+In case of standard resource role for e.g. just a data consultant (with no level) this level field can be left blank with “none” as the pick list value .This is the default selected value for the level field.</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Rates of a resource increases with the level (as Associate -lowest to Managing-highest). 
+In case of standard role for e.g. just a data consultant (with no level) level field shall have the default value i.e. “none”.</inlineHelpText>
+        <label>Resource Level</label>
+        <length>255</length>
+        <required>false</required>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
     </fields>
     <fields>
         <fullName>Resource_Role__c</fullName>

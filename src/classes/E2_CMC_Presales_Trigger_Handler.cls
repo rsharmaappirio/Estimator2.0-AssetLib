@@ -10,8 +10,7 @@
 // 11/17/2015   Saurabh Gupta      For I-191220 : Added condition to handle NullPointer exception
 // 11/20/2015   Saurabh Gupta	   For S-368002 : Added Component on creation of Presales Estimate record
 // 10/27/2016   Vikash Goyal       For I-241434 : Added function to delete child scope records before deleting estimate record
-// 11/11/2016   Rohit Sharma       For S-447474 : Fixed fee calculation support
-
+// 02/21/2017   Rohit Sharma       For S-404442 : Added function to delete estimate resource, milestones and timeline versions
 public with sharing class E2_CMC_Presales_Trigger_Handler {
 	// variables
     public static final String APPIRIO = 'Appirio';
@@ -25,6 +24,12 @@ public with sharing class E2_CMC_Presales_Trigger_Handler {
 	// called on before delete
     public void onBeforeDelete(List <CMC_Presales_LOE__c> oldPresalesList) {
     	deleteChildScopes(oldPresalesList);
+    	// delete all estimate resources
+    	deleteEstimateRsources(oldPresalesList);
+    	// delete all estimate milestones
+    	deleteEstimateMilestones(oldPresalesList);
+    	// delete all related timelines on estimate
+    	deleteTimelines(oldPresalesList);
 	}
 	
 	// RS (S-447474) : 11/11 Method to call on estimate before update
@@ -178,6 +183,53 @@ public with sharing class E2_CMC_Presales_Trigger_Handler {
         }
         catch(DmlException ex){
             presalesList[0].addError(ex.getMessage());
+        }
+    }
+    
+    //Method to delete all child scopes related to estimates
+    private void deleteTimelines(List<CMC_Presales_LOE__c> presalesList){
+        List<CMC_Presales_LOE__c> lstTimelineToDelete = new List<CMC_Presales_LOE__c>(E2_DataUtil.getTimelinesOfEstimate(presalesList));
+        try{
+            if(lstTimelineToDelete.size() > 0){
+                delete lstTimelineToDelete;
+            }
+        }
+        catch(DmlException ex){
+            presalesList[0].addError(ex.getMessage());
+        }
+    }
+    
+    // Method to delete all related estimate resources
+    private void deleteEstimateRsources(List<CMC_Presales_LOE__c> presalesList) {
+        if(!presalesList.isEmpty()) {
+            list<CMC_Estimate_Resource__c> resources = E2_DataUtil.getEstimateResources( presalesList );
+            try{
+                if(resources.size() > 0){
+                    delete resources;
+                }
+            }
+            catch(DmlException ex){
+                presalesList[0].addError(ex.getMessage());
+            }
+        }
+    }
+    
+    // Method to delete all related estimate milestones
+    private void deleteEstimateMilestones(List<CMC_Presales_LOE__c> presalesList) {
+        list<CMC_Presales_LOE__c> estimateToDelete = new list<CMC_Presales_LOE__c>();
+        for(CMC_Presales_LOE__c estimate : presalesList) {
+            if(!estimate.E2_Is_specific_to_timeline__c) estimateToDelete.add(estimate);
+        }
+        if(!estimateToDelete.isEmpty()) {
+            list<E2_Estimate_Milestone__c> milestones = E2_DataUtil.getEstimateMilestones( estimateToDelete );
+            try{
+                if(milestones.size() > 0){
+                    delete milestones;
+                }
+            }
+            catch(DmlException ex){
+                presalesList[0].addError(ex.getMessage());
+            }
         }
     }
     

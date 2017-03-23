@@ -2,7 +2,8 @@ var validations = {
 
 	load : function(){
 	    validations.applyNumericValidation();
-	    validations.applyTraverse();	    
+	    validations.applyTraverse();
+	    validations.scopeNameLengthcheck();
 	},
 	
 	
@@ -12,8 +13,10 @@ var validations = {
 		    $('body div.slds-error--tooltip').remove();
 		    var inputVal = $(this).val();
 		    //var numericReg = /^\d*[0-9](|.\d*[0-9]|,\d*[0-9])?$/;
-		    // var numericReg = /^[0-9]+\.?[0-9]*$/;
-		    var numericReg = /^[0-9]*$/;
+		  //  var numericReg = /^[0-9]+\.?[0-9]*$/;
+		    // JJ: allow decimal without prefixing numeric digit
+		    var numericReg = /^[0-9]*\.?[0-9]*$/;
+		    //var numericReg = /^[0-9]*$/;
 		    if(!numericReg.test(inputVal)) {
                 $(this).val(inputVal.substring(0, inputVal.length - 1)); 
 		        $(document.body).append('<div class="slds slds-error--tooltip"><div class="slds slds-popover slds-popover--tooltip slds-nubbin--bottom" role="tooltip"><div class="slds-popover__body">Numeric only.</div></div></div>');
@@ -87,9 +90,25 @@ var validations = {
 		 }
        }
         
+	},
+	scopeNameLengthcheck : function() {
+	    $("input.scope_name").on("paste", function(e) {
+    	     var pastedData = '';
+    	     var clipboardData = e.originalEvent.clipboardData || window.clipboardData;
+             pastedData = clipboardData.getData('Text');  
+            if(pastedData.length > 80) {
+                alert("Scope Name should be less than 80 characters");
+                e.preventDefault();
+            } else if(pastedData != '') {
+                var value = $(this).val();
+                var newValue = value + pastedData;
+                if(newValue.length > 80) {
+                  alert("Scope Name should be less than 80 characters");
+                  e.preventDefault();  
+                } 
+            }
+        });
 	}
-
-
 }
 
 
@@ -194,9 +213,23 @@ var flag_controller = {
            $(this).addClass('dot-active');
            $(this).siblings('span.dot').removeClass('dot-active');
            
-           
-           if($('select[id$="scope-flag"]:hidden').length) $('select[id$="scope-flag"]:hidden').val($(this).attr('title'));
+           if($('select[id$="scope-flag"]:hidden').length) $('select[id$="scope-flag"]:hidden').val(typeof $(this).attr('title') == 'undefined' ? '' : $(this).attr('title'));
         });
+    }, 
+    
+    setFlagOnFly: function(flagValue){
+        var activeDot;
+        activeDot = $('span.dot').filter(function(){
+                          if(flagValue == ''){ 
+                              return typeof $(this).attr('title') == 'undefined';
+                          }else{      
+                              return $(this).attr('title') == flagValue;
+                          }
+                    });
+        activeDot.addClass('dot-active');
+        activeDot.siblings('span.dot').removeClass('dot-active');
+        
+        if($('select[id$="scope-flag"]:hidden').length) $('select[id$="scope-flag"]:hidden').val(flagValue);
     }
 }
 
@@ -472,8 +505,10 @@ $(document).ready(function() {
     hideSpinner();
     flag_controller.load();
     
+    $("input[type='submit']").removeClass("btn");
     
     if(msg.toLowerCase() == 'success'){
+       if(multiplierUpdated == "true") parent&&parent.AddEditScope&&parent.AddEditScope.addEffortMultiplier&&parent.AddEditScope.addEffortMultiplier(scope_sfdc_id, effortQuantity);
        parent&&parent.AddEditScope&&parent.AddEditScope.closeEditScopeModelPopup&&parent.AddEditScope.closeEditScopeModelPopup();
        if($("input[id$='dmlMessage']").length) $("input[id$='dmlMessage']").val('Fail');
         parent&&parent.AddEditScope&&parent.AddEditScope.updateChildScopeOnParentScopeEdit&&parent.AddEditScope.updateChildScopeOnParentScopeEdit(scope_sfdc_id, scope_sfdc_name, changeComplexity, scopeToActivate, scopeToDeactivate);
@@ -792,6 +827,30 @@ var TrackScopeUpdates = {
 var EditScope = {
     ADD_BULK_EFFORTS_FRAME_ID : 'bulkEffortIframe',
     
+    changeComplexityOnFly: function(complexity){ 
+         if($("[id*=scope-complexity]").length)  $("[id*=scope-complexity]").val(complexity);
+    }, 
+    
+    changeTypeOnFly: function(type){
+        if($("[id*=scope-itemtype]").length) $("[id*=scope-itemtype]").val(type);
+    },
+    
+    changeStatusOnFly: function(status){
+        if($("[id*=scope-status]").length){
+            var chkBoxEle = $("[id*=scope-status]")[0];
+            if(status == true){
+                chkBoxEle.setAttribute("checked", "checked");
+                chkBoxEle.checked = true;
+            }
+            else{
+                chkBoxEle.setAttribute("checked", "");
+                chkBoxEle.checked = false;
+                chkBoxEle.removeAttribute("checked", "");
+            }
+        }
+    },
+    
+    
     addEfforts: function() {
         var func = document.getElementById(EditScope.ADD_BULK_EFFORTS_FRAME_ID).contentWindow.prepareJson;
         if (typeof func != 'undefined') {
@@ -829,7 +888,12 @@ var EditScope = {
         if ($('#' + EditScope.ADD_BULK_EFFORTS_FRAME_ID).length) {
             $('#' + EditScope.ADD_BULK_EFFORTS_FRAME_ID).css('height', height + 'px');
         }
+    },
+    
+    updateEffortMultiplier : function(multiplier) {
+        $("input[Id$='scope-effortMultiplier']").val(multiplier);
     }
+    
 }
 // Question 
 var returnQVal

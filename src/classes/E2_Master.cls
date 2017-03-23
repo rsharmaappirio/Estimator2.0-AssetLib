@@ -36,4 +36,25 @@ public with sharing abstract class E2_Master {
       this.psrId = ApexPages.currentPage().getParameters().get(URL_KEY_PSR_ID);
     }   
   }  
+  
+  //page action method on the load of page
+  public PageReference validateForTimelineEstimate(CMC_Presales_LOE__c estimate){
+    if(estimate.E2_Parent_Estimate__c <> NULL) {
+        // THIS IS THE CLOSEST YOU CAN GET SO FAR
+         String pageName = ApexPages.CurrentPage().getUrl();
+         // IT ALWAYS STARTS WITH /APEX/ SO REMOVE IT
+         pageName = pageName.replaceFirst('/apex/', '');
+         pageName = EncodingUtil.urlEncode(pageName, 'UTF-8');
+         // %3F IS THE VALUE OF THE QUESTION MARK IN UTF-8 
+         string[] pageNameExtra = pageName.split('%3F', 0);
+         // SO YOU MAY SPLIT THE STRING AT THAT POINT
+         // FOR THIS PURPOSE YOU ONLY NEED THE FIRST
+         // IN THE RESULTING ARRAY
+         pageName = pageNameExtra[0];
+        PageReference page = new PageReference('/apex/' + pageName + '?id=' + estimate.E2_Parent_Estimate__c);
+        page.setRedirect(true);
+        return page;
+    }
+    return NULL;
+  }
 }

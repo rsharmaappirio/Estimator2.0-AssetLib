@@ -14,6 +14,23 @@
                 max-height: 200px;
                 overflow-y: auto;
             }
+            /*** RJ: 13/12: Added below styles to make edit screen font-size consistent to other pane on the page***/ 
+            .slds .slds-checkbox .slds-form-element__label, .slds .slds-button, .slds-form-element__control, .Typeahead *, .Typeahead *::before, .Typeahead *::after,
+              table tbody tr td, table thead tr th, tr td, tr th{
+                font-size: 12px;
+              }
+              .Typeahead-spinner {
+                    top: 2px;
+              }
+              .slds .slds-button {
+                  line-height: 28px;
+              }
+              .slds .slds-form-element__label {
+                font-size: 90%;
+              } 
+              .slds .slds-select{
+                height: 34px!important;
+              }
         </style>
     </head>
 

@@ -1,0 +1,139 @@
+<apex:page standardcontroller="Presales_Request__c"  extensions="E2_PresalesLOEReleatedListController" tabstyle="Presales_Request__c"
+ action="{!pageAction}" showHeader="false" standardStylesheets="true" sidebar="false" 
+ applyHtmlTag="false" applyBodyTag="false">
+    <!-- Lightning Desktop theme -->
+    <apex:variable var="uiTheme" value="lightningDesktop" 
+        rendered="{!$User.UIThemeDisplayed == 'Theme4d'}">
+        <link type="text/css" rel="stylesheet" href="{!URLFOR($Resource.E2_SLDS1, '/assets/styles/salesforce-lightning-design-system.min.css')}" />
+    </apex:variable>
+    <style>
+        body {
+            padding:0px!important;
+        }
+        form {
+            width:100%!important;
+            display : inline-flex!important;
+        }
+        .apexp{
+            width: 100%!important;
+            display :flex;
+        }
+    </style>
+    <apex:includeScript value="../../soap/ajax/36.0/connection.js" />
+    <apex:includeScript value="../../soap/ajax/15.0/apex.js" />
+    <apex:includeScript value="{!URLFOR($Resource.cloneany, '/libs/jquery.js')}" />
+    <script>sforce.connection.sessionId='{!GETSESSIONID()}';</script>
+    <script type="text/javascript">
+        function setPrimary() {
+            var presalesId = '{!Presales_Request__c.Id}'; 
+            var checkedCount = $( "input[name='estimateCheckbox']:checked" ).length;
+            if(checkedCount > 1 || checkedCount == 0) { 
+                alert("Please select only 1 record to mark as primary"); 
+            } else {
+                //process if only 1 record is selected 
+                var estimateId = $( "input[name='estimateCheckbox']:checked" ).val();
+                var msg = sforce.apex.execute("CMC_PresalesEstimate","setPrimary",{newPrimaryId: estimateId, psrId: presalesId} ); 
+                msg = msg + ''; 
+                //alert("{! $User.UIThemeDisplayed }" == "Theme4d");
+                if(msg.toLowerCase() == 'success' ){ 
+                    if("{! $User.UIThemeDisplayed }" == "Theme4d")  {
+                        if( (typeof sforce != 'undefined') && sforce && (!!sforce.one) ) {
+                            sforce.one.navigateToSObject('{!Presales_Request__c.Id}');
+                        }
+                    }
+                    else window.top.location = "/{!Presales_Request__c.Id}"; 
+                }else{ 
+                    alert(msg); 
+                } 
+            }
+            return false;
+        }
+        function createEstimate() {
+            if("{! $User.UIThemeDisplayed }" == "Theme4d")  {
+                if( (typeof sforce != 'undefined') && sforce && (!!sforce.one) ) {
+                    sforce.one.navigateToUrl("");
+                }
+            }
+            else {
+                window.top.location = "/apex/E2_AddEditEstimate?psr_id={!Presales_Request__c.Id}"; 
+            }
+        }
+    </script>
+    <body>
+            <apex:includeLightning />
+    <apex:form >
+        <apex:actionstatus id="myStatus">
+           <apex:facet name="start">
+               <div class="waitingSearchDiv" id="el_loading"
+                    style="background-color: #fbfbfb; height: 100%; background: rgba(0, 0, 0, 0.5); width: 100%;border-radius: 5px;">
+                   <div class="waitingHolder"
+                        style="height:20px; width: 150px; z-index: 100000;border-radius: 5px;background:#ECECE3;padding:10px;
+                        text-align: center;vertical-align: middle;border: 1px solid #97CAFF;-moz-box-shadow: 3px 3px 4px #000;
+                        -webkit-box-shadow: 3px 3px 4px #000;box-shadow: 3px 3px 4px #000;">
+                       <img class="waitingImage" src="/img/loading.gif" title="Please Wait..." /> 
+                       <span class="waitingDescription" style="color:black;">Loading...</span>
+                   </div>
+               </div>
+           </apex:facet>
+      </apex:actionstatus>
+      
+    <apex:pageBlock mode="detail" id="pageBlock" title="">  
+            <apex:pageBlockButtons location="top">
+                    <button value="Set Primary" onclick="javascript:setPrimary();return false;">Set Primary</button>
+                     <button value="Create Estimate" onclick="javascript:createEstimate();return false;">Create Estimate</button>
+            </apex:pageBlockButtons>
+            <apex:pageBlockTable value="{!estimateSummary}" var="estimate" rendered="{!estimateSummary.size > 0}">   <!-- The pageBlockTable iterates through the list of the custom Class -->
+                <apex:column headerValue="Action" styleClass="actionColumn" style="line-height:normal;">
+                <input type="checkbox" name="estimateCheckbox" value="{!estimate.estimate.Id}"/>
+                |&nbsp;<apex:outputLink value="/{!estimate.estimate.Id}/e" target="_top" onmousedown="this.href='/{!estimate.estimate.Id}/e'">Edit</apex:outputLink>
+                |&nbsp;<apex:commandLink value="Del" onclick="if(!confirm('Are you sure?')) return false;" action="{!deleteEstimate}" rerender="pageBlock" status="myStatus" oncomplete="rerenderEstimates();return false;">
+                    <apex:param name="estimateIdToDelete" assignTo="{!estimateIdToDelete}" value="{!estimate.estimate.Id}"/>
+                </apex:commandLink>
+            </apex:column>
+                <apex:column headerValue="Presales LOE Name">
+                    <apex:outputLink value="/{!estimate.estimate.Id}" target="_top" onmousedown="this.href='/{!estimate.estimate.Id}'">{!estimate.estimate.Name}</apex:outputLink>
+                </apex:column>
+                <apex:column headerValue="Last Modified Date">
+                    <apex:outputText value="{0,date,MM/dd/yyyy}"> <apex:param value="{!estimate.estimate.LastModifiedDate}" /> </apex:outputText>
+                </apex:column>
+                <apex:column headerValue="Total Fees">
+                   <apex:outputText value="{0,number,###,###,###.##}">
+                    <apex:param value="{!estimate.totalFee}" />
+                </apex:outputText>
+                </apex:column>
+                <apex:column headerValue="As Sold Margin">
+                   <apex:outputText value="{0,number,###,###,###.##}">
+                    <apex:param value="{!estimate.asSoldMargin}" />
+                </apex:outputText>
+                </apex:column>
+                <apex:column headerValue="Blended Rate">
+                   <apex:outputText value="{0,number,###,###,###.##}">
+                    <apex:param value="{!estimate.blendedRate}" />
+                </apex:outputText>
+                </apex:column>
+                <apex:column headerValue="% Jaipur Hours">
+                   <apex:outputText value="{0,number,###,###,###.##}">
+                    <apex:param value="{!estimate.jaipurHoursPct}" />
+                </apex:outputText>
+                </apex:column>
+                <apex:column headerValue="Primary">
+                   <apex:inputCheckbox value="{!estimate.isPrimary}" disabled="true"/>
+                </apex:column>
+                <apex:column headerValue="No of Active Timeline">
+                   <apex:outputText value="{0,number,###,###,###}">
+                        <apex:param value="{!estimate.numberOfActiveTimeline}" />
+                    </apex:outputText>
+                </apex:column>
+                <apex:column headerValue="Created By">
+                     <apex:outputLink value="/{!estimate.estimate.CreatedById}" target="_top">{!estimate.estimate.CreatedBy.Name}</apex:outputLink><br/>
+                     <apex:outputText value="{0,date,MM/dd/yyyy}"> <apex:param value="{!estimate.estimate.CreatedDate}" /> </apex:outputText>
+                </apex:column>
+                <apex:column headerValue="See in SFDC?">
+                   <apex:outputLink value="/{!estimate.estimate.Id}?nooverride=1" target="_top" onmousedown="this.href='/{!estimate.estimate.Id}?nooverride=1'">View</apex:outputLink>
+                </apex:column>
+            </apex:pageblocktable>
+            <apex:pageMessage summary="No Estimate attached to presales request." severity="warning" strength="3" rendered="{!estimateSummary.size == 0}"/>
+    </apex:pageBlock>
+    </apex:form>
+</body>
+</apex:page>

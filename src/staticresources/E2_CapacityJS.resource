@@ -52,3 +52,14 @@ var tabpanel = {
     }
     
 }
+var loadSpinner = {
+    client_id : '#loadingSpinner',
+    
+    show: function(){
+        $(loadSpinner.client_id).show().css('height', $(document).outerHeight()).css('z-index', 99999);
+    },
+    
+    hide: function(){
+        $(loadSpinner.client_id).hide();
+    }
+}

@@ -7,6 +7,9 @@
  * 08 Sep 2016: Modified: RJ : Added E2_Estimate_Rate_Card__r.Resource_Role__c, E2_Estimate_Rate_Card__r.Region__c field in the query method for 
  *                             Capacity Needs and Timeline Hours based on roles
  * 17 Oct 2016: Modified RS : I-239841 : Condition added to save Phase on copy paste, method updateResourceWeeks
+ * 19 Oct 2016: Modified RS : S-455931 : UI/UX-Conditional highlight on the overridden rates cells 
+ * 26 Dec 2016: RJ: Modified getTimelineRows method to add resource level in displayrole
+ * 06 March 2017: RJ: Modified getTimelineRows, addRows, updateRow methods to incorporate changes related to changing rate & cost field type from integer to decimal
 *  =====================================================================*/
 public class E2_TimelineWSManager {
     
@@ -273,7 +276,7 @@ public class E2_TimelineWSManager {
     
     // method to add rows in CMC_Estimate_Resource__c
     public static string addRow(string estimateId, integer order, 
-                                    integer cost, integer rate, string role, string e2role,
+                                    decimal cost, decimal rate, string role, string e2role,
                                     string skill, string rateCode, string estimateRateCardId){
        List<CMC_Presales_LOE__c> estimateList = E2_TimelineDataUtil_WS.getCurrencyISOCodeonEstimate(estimateId);
                                              
@@ -298,7 +301,7 @@ public class E2_TimelineWSManager {
     // method to update a row in CMC_Estimate_Resource__c
     public static string updateRow(string estimateId, string rowId, 
                                     string role, string e2role,
-                                    string skill, string rateCode, integer cost, integer rate, string estimateRateCardId){
+                                    string skill, string rateCode, decimal cost, decimal rate, string estimateRateCardId){
        try{                             
          update new CMC_Estimate_Resource__c(id = rowId,                                                                                        
                                              Role__c = role, 
@@ -620,22 +623,31 @@ public class E2_TimelineWSManager {
              for(CMC_Estimate_Resource_Week__c colRow : res.Estimate_Resource_Weeks__r){
                colRows.add(new E2_TimelineWS.E2_TimelineRowColumn(colRow.id, colRow.Estimate_Week__c, (colRow.Hours__c == null ? 0 : colRow.Hours__c.intValue())));
              }
-             
+            //boolean isRateOverridden = Integer.valueOf(res.E2_Estimate_Rate_Card__r.Bill_Rate__c) != Integer.valueOf(res.Rate__c);
+            boolean isRateOverridden = res.E2_Estimate_Rate_Card__r.Bill_Rate__c != res.Rate__c;
             string resourceRole = (res.E2_Estimate_Rate_Card__c == null ? '' : res.E2_Estimate_Rate_Card__r.Resource_Role__c);
+            string resourceLevel = (res.E2_Estimate_Rate_Card__c == null ? '' : res.E2_Estimate_Rate_Card__r.Resource_Level__c);
             string displayRole = resourceRole;
             string region = (res.E2_Estimate_Rate_Card__c == null ? '' : res.E2_Estimate_Rate_Card__r.Region__c);
             string key = region + SEPARATOR + resourceRole;
             if(E2_Constants.ROLE_RESOURCEROLE_MAP.containsKey(key)){
                 resourceRole = E2_Constants.ROLE_RESOURCEROLE_MAP.get(key);
+            }else if(resourceLevel <> NULL && !string.isBlank(resourceLevel)){
+                resourceRole = resourceRole + E2_Constants.HYPHEN_SEPARATOR + resourceLevel;
             }
             // E2_Constants.ROLE_RESOURCEROLE_MAP
              rows.add(new E2_TimelineWS.E2_TimelineRow(res.id, res.Role__c, 
                       res.E2_Role__c, resourceRole, 
                       res.Skill__c,
-                      (res.Rate__c == null ? 0 : res.Rate__c.intValue()),
+                      (res.Rate__c == null ? 0.00 : res.Rate__c),
                       (res.Order__c == null ? 0 : res.Order__c.intValue()),
-                      (res.Cost__c == null ? 0 : res.Cost__c.intValue()),
-                      displayRole + ' (' + region + ')' 
+                      (res.Cost__c == null ? 0.00 : res.Cost__c),
+                      //displayRole + ' (' + region + ')',  
+                      //12/26: RJ need to show the resource level also
+                      displayRole + ((resourceLevel == NULL || string.isEmpty(resourceLevel)) ? 
+                                         E2_Constants.BLANK : ' - ' + resourceLevel) + ' (' + region + ')', 
+                      
+                      isRateOverridden
                       ,colRows));                                   
          }        
         return rows;
@@ -651,7 +663,7 @@ public class E2_TimelineWSManager {
         boolean selectable = false;
         boolean resizable = false;
         string cssClass = '';
-        string header = '{"menu": { "items": [{ "title": "Insert 1 right", "command" : "insert_1_right" },{ "title" : "Insert 2 right", "command" : "insert_2_right" }, { "title" : "Insert 1 left", "command" : "insert_1_left" }, { "title" : "Insert 2 left", "command" : "insert_2_left" }, { "title" : "Delete column", "command" : "delete_column" }]}}';
+        string header = '{"menu": { "items": [{ "title": "Insert 1 right", "command" : "insert_1_right" },{ "title" : "Insert 2 right", "command" : "insert_2_right" }, { "title" : "Insert 3 right", "command" : "insert_3_right" }, { "title" : "Insert 5 right", "command" : "insert_5_right" }, { "title" : "Insert 10 right", "command" : "insert_10_right" }, { "title" : "Insert 1 left", "command" : "insert_1_left" }, { "title" : "Insert 2 left", "command" : "insert_2_left" }, { "title" : "Insert 3 left", "command" : "insert_3_left" }, { "title" : "Insert 5 left", "command" : "insert_5_left" }, { "title" : "Insert 10 left", "command" : "insert_10_left" }, { "title" : "Delete column", "command" : "delete_column" }]}}';
         
         for(CMC_Estimate_Week__c estimateWeek : E2_TimelineDataUtil_WS.getEstimateWeekRecords(estimateId)){
              

@@ -1,0 +1,116 @@
+<!-- 
+  Appirio, Inc
+ * Name: E2_Analytics
+ * Description: This page shows the analytics view of capacity needed with actuals comparison.
+ * Change Log:
+ 
+-->
+<apex:page standardController="CMC_Presales_LOE__c" extensions="E2_AddEditScopeController" action="{!pageAction}"
+   showHeader="false" standardStylesheets="true" sidebar="false" applyHtmlTag="false" applyBodyTag="false">
+   <apex:composition template="E2_Template">
+      <apex:define name="title">Analytics</apex:define>
+      <apex:define name="header">
+         <c:E2_PermissionMessage rendered="{!NOT(isEditable)}"/>
+         <c:E2_Header psr_id="{!psrId}" step="7"/>
+      </apex:define>
+      <apex:define name="body">
+         <div class="slds">
+                <table class="slds-table slds-max-medium-table--stacked-horizontal slds-no-row-hover">
+                    <!--thead>
+                        <tr>
+                            <th class="slds-text-heading--label slds-size--1-of-3" scope="col">By Phase</th>
+                            <th class="slds-text-heading--label slds-size--1-of-3" scope="col">By Role</th>
+                            <th class="slds-text-heading--label slds-size--1-of-3" scope="col">By Phase
+                                &amp; Role</th>
+                        </tr>
+                    </thead-->
+                    <tbody>
+                        <tr class="slds-hint-parent">
+                            <td class="slds-size--1-of-3" data-label="By Phase">
+                                    <analytics:reportChart cacheResults="false"
+                                        reportid="{!$Setup.E2_DashboardSettings__c.Report1Id__c}"
+                                        size="small"
+                                        filter="{column:'{!$Setup.E2_DashboardSettings__c.Report1pc0__c}', operator:'equals', value:'{!CMC_Presales_LOE__c.id}'}" />
+                                
+                            </td>
+                            <td>
+                                    
+                                    
+                                    <analytics:reportChart cacheResults="false"
+                                        reportid="00O2C000000O7BD"
+                                        size="small"
+                                        filter="{column:'CUST_ID', operator:'equals', value:'{!CMC_Presales_LOE__c.id}'}" />
+                                
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="slds-size--1-of-3" data-label="By Role">
+                                    <analytics:reportChart cacheResults="false"
+                                        reportid="{!$Setup.E2_DashboardSettings__c.Report2Id__c}"
+                                        size="small"
+                                        filter="{column:'{!$Setup.E2_DashboardSettings__c.Report2pc0__c}', operator:'equals', value:'{!CMC_Presales_LOE__c.id}'}" />
+                               
+                            </td>
+                            <td>
+                                    <analytics:reportChart cacheResults="false"
+                                        reportid="00O2C000000O7B8"
+                                        size="small"
+                                        filter="{column:'CUST_ID', operator:'equals', value:'{!CMC_Presales_LOE__c.id}'}" />
+                                
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="slds-size--1-of-3" data-label="By Phase & Role">
+                                    <analytics:reportChart cacheResults="false"
+                                        reportid="{!$Setup.E2_DashboardSettings__c.Report3Id__c}"
+                                        size="small"
+                                        filter="{column:'{!$Setup.E2_DashboardSettings__c.Report3pc0__c}', operator:'equals', value:'{!CMC_Presales_LOE__c.id}'}" />
+                                
+                            </td>
+                            <td>
+                                
+                                
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+         <!-- PLEASE DONOT REMOVE: This section is important while using standard controller -->
+         <input type="hidden" value="{!CMC_Presales_LOE__c.Name}"/> 
+         <input type="hidden" value="{!CMC_Presales_LOE__c.Presales_Request__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.Presales_Request__r.Opportunity__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.Presales_Request__r.Opportunity__r.AccountId}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.Type__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.Account_Executive__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.Solution_Architect__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.Delivery_Reviewer__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.Date_Scoped__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.Account_Name__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.Description__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.Presales_Request__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.Product__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Version_Notes__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.Opportunity_Name__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Date_Scoped__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Reviewer__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.E2_SA__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.E2_AE__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Total_Hrs__c}"/>  
+         <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Derived_Effort_Template__c}"/>
+         <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Risk__c}"/>  
+         <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Risk_percentage__c}"/> 
+         <!-- PLEASE DONOT REMOVE: This section is important while using standard controller -->
+         <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Derived_Effort_Template__c}" />
+         <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Last_Build_Datetime__c}" />
+    
+        
+      </apex:define>
+      <apex:define name="footer">
+        
+      </apex:define>
+      <apex:define name="javascript">
+         
+      </apex:define>
+   </apex:composition>
+</apex:page>

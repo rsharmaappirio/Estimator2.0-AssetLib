@@ -5,6 +5,7 @@
  * Created Date: Aug 12, 2016
  * Created By: Rahul Jain (Appirio)
  * 17 Oct 2016: Modified RS : I-239841 : Condition added to save Phase on copy paste, method updateResourceWeeks
+ * 10 January 2017: Jitendra Jangid : S-459273 - Adding workday ratecard with resource levels.
 *  =====================================================================*/
 @isTest(seeAllData=false)
 public class E2_TimelineWSManagerTest {
@@ -160,7 +161,7 @@ public class E2_TimelineWSManagerTest {
       //start test
       Test.startTest();
       estimate = [SELECT Id, Discount_Percent__c FROM CMC_Presales_LOE__c];
-      estimateRC = [SELECT Id FROM E2_Estimate_Rate_Card__c];
+      estimateRC = [SELECT Id FROM E2_Estimate_Rate_Card__c WHERE Rate_Card__c = null];
       resource = [SELECT Id FROM CMC_Estimate_Resource__c];
       
       string newRow = E2_TimelineWSManager.addRow(estimate.Id, 1, 100, 200, null, null, 'Salesforce', null, estimateRC.Id);
@@ -222,8 +223,8 @@ public class E2_TimelineWSManagerTest {
     System.runAs(sysAdmin){
       //start test
       Test.startTest();
-      estimate = [SELECT Id, Discount_Percent__c FROM CMC_Presales_LOE__c];
-      string onbuildStr = E2_TimelineWSManager.onBuild(estimate.Id, '2016-05-05', 4);
+        estimate = [SELECT Id, Discount_Percent__c FROM CMC_Presales_LOE__c];
+        string onbuildStr = E2_TimelineWSManager.onBuild(estimate.Id, '2016-05-05', 4);
         system.assert(onbuildStr <> null);
         string onbuildStr1 = E2_TimelineWSManager.onBuild(null, '2016-05-05', 4);
         system.assert(onbuildStr1 <> null);
@@ -232,10 +233,24 @@ public class E2_TimelineWSManagerTest {
         
         CMC_Estimate_Week__c testweek = E2_TimelineWSManager.createTimelineColumn(estimate.Id, '2016-05-05',2,'Test column');
         system.assert(testweek <> null);
+        
+        
+//      Start[S-459273 - Adding workday ratecard with resource levels.]
+        Presales_Request__c psr=[Select ID FROM Presales_Request__c];
+        estimate = E2_Test_Utils.insertEstimate(psr.id, true);
+        string onbuildResult = E2_TimelineWSManager.onBuild(estimate.Id, '2017-05-05', 4);
+        system.assert(onbuildResult == 'Success');
+        
+        // To cover: there are no column exists than create new 
+        estimate = E2_Test_Utils.insertEstimate(psr.id, true);
+        string testResult = E2_TimelineWSManager.onStartDateSelectionChange(estimate.Id, '2017-05-05',2, null);
+        system.assert(onbuildResult == 'Success');
+//      End[S-459273 - Adding workday ratecard with resource levels.]        
+        
       // stop test
       Test.stopTest();
+     }
 }
-  }
   
   public static testmethod void testautoFill() {
       User sysAdmin = E2_Test_Utils.insertSysAdminUser(true);    
@@ -325,10 +340,27 @@ public class E2_TimelineWSManagerTest {
         system.assertEquals(deleteCol, 'Success');
         string deleteCol1 = E2_TimelineWSManager.deleteColumn(null, null);
         system.assert(deleteCol <> null);
+        
+        
+//      Start[S-459273 - Adding workday ratecard with resource levels.]
+        resource = E2_Test_Utils.insertCMCEstimateRes(estimate.Id, false);
+        resource.Role__c='GS - Jaipur Delivery - Business Analyst';
+        insert resource;
+        timelineRowLst = E2_TimelineWSManager.getTimelineRows(estimate.Id);
+        system.assert(timelineRowLst.size() > 0);
+        
+        estimateRC=[Select ID FROM E2_Estimate_Rate_Card__c WHERE Resource_Level__c='Senior Consultant' ];
+        resource = E2_Test_Utils.insertCMCEstimateRes(estimate.Id, false);
+        resource.Role__c='GS - North America Delivery - QA Tester - Senior Consultant';
+        resource.E2_Estimate_Rate_Card__c=estimateRC.ID;
+        insert resource;
+        timelineRowLst = E2_TimelineWSManager.getTimelineRows(estimate.Id);
+        system.assert(timelineRowLst.size() > 0);
+//      End[S-459273 - Adding workday ratecard with resource levels.]        
       // stop test
       Test.stopTest();
+     }
 }
-  }
     
   public static testmethod void testUpdateWeeks() {
       User sysAdmin = E2_Test_Utils.insertSysAdminUser(true);    
@@ -387,6 +419,35 @@ public class E2_TimelineWSManagerTest {
     
   }
   
+//      Start[S-459273 - Adding workday ratecard with resource levels.]
+  public static testmethod void testUpdateMilestoneWeeks(){
+    User sysAdmin = E2_Test_Utils.insertSysAdminUser(true);    
+    System.runAs(sysAdmin){
+      //start test
+      Test.startTest();
+        week = [SELECT Id FROM CMC_Estimate_Week__c];
+        String jsonstr = '[{"weekId":"' + week.id + '", "value":"Plan", "type":"phase","colorCode":"#000000"}]' ;
+        String result=E2_TimelineWSManager.updateMilestoneWeeks(jsonstr);
+        system.assert(result=='Success');
+        
+        jsonstr = '[{"weekId":"' + week.id + '", "value":"Plan", "type":"milestone","colorCode":"#000000"}]' ;
+        result=E2_TimelineWSManager.updateMilestoneWeeks(jsonstr);
+        system.assert(result=='Success');
+        
+        jsonstr = '[{"weekId":"' + week.id + '", "value":"Plan", "type":"milestone1","colorCode":"#000000"}]' ;
+        result=E2_TimelineWSManager.updateMilestoneWeeks(jsonstr);
+        system.assert(result=='Success');
+        
+        jsonstr = '[{"weekId":"' + week.id + '", "value":"Plan", "type":"milestone2","colorCode":"#000000"}]' ;
+        result=E2_TimelineWSManager.updateMilestoneWeeks(jsonstr);
+        system.assert(result=='Success');
+         
+      //stop test
+      Test.stopTest();
+    }
+    
+  }
+//      End[S-459273 - Adding workday ratecard with resource levels.]
   
   
   //create test data
@@ -405,7 +466,18 @@ public class E2_TimelineWSManagerTest {
     
     rateCard = E2_Test_Utils.insertRateCard(acc.Id, region.Id, practice.Id, true);
     
+    rateCard = E2_Test_Utils.insertRateCard(acc.Id, region.Id, practice.Id, false);
+    rateCard.E2_Resource_Level__c='Senior Consultant';
+    rateCard.pse__Role__c='QA Tester';
+    insert rateCard;
+    
     estimateRC = E2_Test_Utils.insertEstimateRateCard(estimate.Id, true);
+    estimateRC = E2_Test_Utils.insertEstimateRateCard(estimate.Id, false);
+    estimateRC.Resource_Level__c='Senior Consultant';
+    estimateRC.Rate_Card__c=rateCard.ID;
+    estimateRC.Resource_Role__c='QA Tester';
+    estimateRC.Region__c='GS - North America Delivery';
+    insert estimateRC;
     
     resource = E2_Test_Utils.insertCMCEstimateRes(estimate.Id, true);
     week = E2_Test_Utils.insertEstimateWeek(estimate.Id, false);

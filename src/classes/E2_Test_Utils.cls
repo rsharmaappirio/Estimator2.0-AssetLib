@@ -6,11 +6,58 @@
  * Created By: Arpita Bose (Appirio)
  * 
  * Date Modified      Modified By                  Description of the update
-
+ * Feb 22, 2017       Jitendra Jangid              Add new method to get JSON string for rate card associated with given currency
 *  =====================================================================*/
 @isTest
 public with sharing class E2_Test_Utils {
   
+  //
+  public static String getRateCardJSON(String currencyCode){
+      List<RateCard> lsRateCard= new List <RateCard>();
+      String rateCardJSON=null;
+      //Retrieve list of RateCards associated with given currency
+      
+    	if (String.isNotBlank(currencyCode)) {
+	    	for (pse__Rate_Card__c rateCard : [SELECT Id, pse__Average_Cost_Rate__c, Code__c, pse__Practice__c, pse__Practice__r.Name, pse__Region__c, 
+	    									   pse__Region__r.Name, pse__Role__c, pse__Suggested_Bill_Rate__c, CurrencyIsoCode FROM pse__Rate_Card__c 
+	    									   WHERE CurrencyIsoCode =: currencyCode  
+	    									   ORDER BY pse__Average_Cost_Rate__c DESC]) {
+	    		RateCard obj = new RateCard();
+    			obj.Id = rateCard.Id;
+    			obj.Resource_Cost = (rateCard.pse__Average_Cost_Rate__c).intValue();
+    			obj.Suggested_Cost = (rateCard.pse__Average_Cost_Rate__c).intValue();
+    			obj.Practice = rateCard.pse__Practice__c;
+		        obj.PracticeName = rateCard.pse__Practice__r.Name;
+		        obj.RegionId = rateCard.pse__Region__c;
+		        obj.RegionName = rateCard.pse__Region__r.Name;
+		        obj.Role = rateCard.pse__Role__c;
+		        obj.Rate_Card = (rateCard.pse__Suggested_Bill_Rate__c).intValue();
+		        obj.Rate = (rateCard.pse__Suggested_Bill_Rate__c).intValue();
+		        obj.CurrencyIsoCode = rateCard.CurrencyIsoCode;
+		        obj.Code = rateCard.Code__c;
+		        obj.Category = rateCard.pse__Region__r.Name;
+		        lsRateCard.add(obj);
+	    	}
+	    	
+	    	//Get JSON string for prepare list of rate card instance
+	    	rateCardJSON = populateRateCardJSONObject(lsRateCard);
+	    	if(rateCardJSON != null && String.isNotBlank(rateCardJSON)) {
+		       rateCardJSON = rateCardJSON != null ? rateCardJSON.replaceAll('Resource_Cost', 'Resource Cost') : rateCardJSON;
+		       rateCardJSON = rateCardJSON != null ? rateCardJSON.replaceAll('Suggested_Cost', 'Suggested Cost') : rateCardJSON;
+		       rateCardJSON = rateCardJSON != null ?rateCardJSON.replaceAll('Rate_Card', 'Rate Card') : rateCardJSON;
+		    }
+    	}
+      
+      return rateCardJSON;
+  }
+  
+  //Method to populate RateCard JSON for given currency
+    private static String populateRateCardJSONObject(List<RateCard> lsRateCard) {
+      
+      return JSON.serialize(lsRateCard);
+    	
+    }
+    
   //insert Account
   public static Account insertAccount(Boolean isInsert) {
     Account defaultAccount = new Account();
@@ -94,7 +141,6 @@ public with sharing class E2_Test_Utils {
                                      E2_Reviewer__c = null,
                                      E2_Derived_Effort_Template__c = null,
                                      //E2_Total_Hrs__c = null, //RollUP: Not writable fields
-                                     E2_Is_Primary__c = false,
                                      E2_Last_Build_Datetime__c = null,
                                      E2_SA__c = null,
                                      //E2_Total_Architect_Hrs__c = null,//RollUP: Not writable fields
@@ -130,6 +176,7 @@ public with sharing class E2_Test_Utils {
                                  , Scope_Item_Type__c = 'Component'
                                  , Source_Scope__c = null
                                  , Ultimate_Parent_Scope__c = null
+                                 , Effort_Quantity__c = 1
                                  );
     
     if(isInsert) {                                  
@@ -405,5 +452,42 @@ public with sharing class E2_Test_Utils {
     return week;                                                     
   }
   
+  
+  //insert Milestone week
+  public static E2_Week_Milestone_Template__c insertTemplateWeek(String templateId, Boolean isInsert){
+    E2_Week_Milestone_Template__c week = new E2_Week_Milestone_Template__c(Name = 'Week1',Milestone_Library__c = templateId, Order__c = 2,
+                                                         Date__c = system.today());
+    if(isInsert) {
+      insert week;
+    }
+    return week;                                                     
+  }
+  
+  
+  //insert E2_Milestone_Week_Template_Junction__c
+  public static E2_Milestone_Week_Template_Junction__c insertTemplateMilestoneWeek(Id milestoneId, Id weekId, Boolean isInsert){
+    E2_Milestone_Week_Template_Junction__c milestoneWk = new E2_Milestone_Week_Template_Junction__c(Timeline_Milestone__c = milestoneId, Week_Milestone_Template__c = weekId, 
+                                                         TextColorCode__c = 'Red'); 
+    if(isInsert) {
+      insert milestoneWk;
+    }
+    return milestoneWk;                                                         
+  }
+  //Template to keep Rate Cards
+    public class RateCard {
+    	Id Id;
+    	Decimal Resource_Cost;
+    	Decimal Suggested_Cost;
+    	String Practice;
+    	String PracticeName;
+    	String RegionId;
+    	String RegionName;
+    	String Role;
+    	Decimal Rate_Card;
+    	Decimal Rate;
+    	String CurrencyIsoCode;
+    	String Code;
+    	String Category;
+    }
 
 }

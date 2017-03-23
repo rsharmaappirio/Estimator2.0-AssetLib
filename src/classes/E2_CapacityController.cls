@@ -11,6 +11,11 @@
  * Oct 14, 2016       Rohit Sharma                 S-447214 : Show capacity distribution by Epics.
  * Oct 18, 2016       Rohit Sharma                 I-240559 : Runtime error has appeared on clicking on Capacity tab
  * Oct 19, 2016       Rohit Sharma                 I-240619 : Total of Capacity needs by Phase/Role and by Epic 
+ * Dec 19, 2016       Rohit Sharma                 S-449155 : Define risk factor on capacity
+ * Dec 26, 2016       Rahul Jain                   S-459273 : Updated calculateSpecifiedEfforts for resource level consideration
+ * Feb 1st, 2017      Rohit Sharma                 S-456643 :Condition added on page re-direct to add customerMode parameter in request.
+ * Feb 08, 2017       Rohit Sharma                 S-447325 : Add multiplier on Scope : code updated to add Effort multiplier on effort
+ *                                                 hours for epic level capacity calculation.
 *  =====================================================================*/
 public with sharing class E2_CapacityController extends E2_Master{
     
@@ -28,6 +33,8 @@ public with sharing class E2_CapacityController extends E2_Master{
   public map<string, string> scopeIdMap {get;set;}
   public set<string> scopePhases {get;set;}
   private static string TOTAL = 'total';
+  public List<string> riskList {get;set;}
+  public string riskPrecent {get;set;}
   
   //constructor  
   public E2_CapacityController(ApexPages.StandardController std) {
@@ -47,33 +54,63 @@ public with sharing class E2_CapacityController extends E2_Master{
   
   //page action method on load of page
   public PageReference pageAction(){
+    PageReference page = super.validateForTimelineEstimate(this.estimate);
+    if(page <> NULL) return page;
     super.validateAccess(this.estimate);
     // Method to invoke on page load to get pre-calculated capacity
     this.storedCapacity = E2_DataUtil.getCapacityListByEstimateId(this.estimate.id);
     calculateHours();
     // RS: S-447214 : Method to generate epic level capacity
     generateScopeCapacity();
+    riskList = populateRiskPicklistValues();
     return null;
   }
+  
+  // Method to display Risk % without 'None' option
+  private List<string> populateRiskPicklistValues() {
+      List<string> options = new List<string>();               
+      for( Schema.PicklistEntry f : CMC_Presales_LOE__c.E2_Risk__c.getDescribe().getPicklistValues()){
+        options.add(f.getValue());
+      }      
+      return options;  
+    }
+    
+    // method to update risk % on estimate and re-build Capacity
+    public PageReference updateRisk() {
+        if(!string.isBlank(this.riskPrecent)) {
+            this.estimate.E2_Risk__c = this.riskPrecent;
+            return buildCapacity();
+        }
+        return null;
+    }
+    
   
   // This method re-calculate Estimate capaicity from efforts and derived efforts
   public PageReference buildCapacity() {
     reBuildCapacity(this.estimate);
     PageReference pg = Page.E2_Capacity;
     pg.getParameters().put('id', this.estimate.id);
+    if(ApexPages.currentPage().getParameters().get(E2_Constants.PAGE_PARAMETER_CUSTOMERMODE) != null)  
+        pg.getParameters().put(E2_Constants.PAGE_PARAMETER_CUSTOMERMODE,ApexPages.currentPage().getParameters().get(E2_Constants.PAGE_PARAMETER_CUSTOMERMODE));
     pg.setRedirect(true);
     return pg; 
   }
   
   public static void reBuildCapacity(CMC_Presales_LOE__c estimate) {
+    for(CMC_Presales_LOE__c estimateTemp : E2_DataUtil.getEstimateDerivedEffortId( estimate.Id )) {
+        estimate.E2_Derived_Effort_Template__c = estimateTemp.E2_Derived_Effort_Template__c;
+    }
     // Method invoke on Build Capacity command button
     List<E2_Capacity__c> oldCapacity = E2_DataUtil.getCapacityListByEstimateId(estimate.id);
     if(!oldCapacity.isEmpty()) {
         delete oldCapacity;
     }
     Map<String, E2_Capacity__c> rolePhaseCapacityMatrix = new Map<String, E2_Capacity__c>();
+    // pass by reference: rolePhaseCapacityMatrix and get the hours filled in for specified efforts.
     calculateSpecifiedEfforts(estimate, rolePhaseCapacityMatrix);
+    // Now again pass by reference: rolePhaseCapacityMatrix and get the hours filled in for derived efforts.
     calculateDerivedEfforts(estimate, rolePhaseCapacityMatrix);
+    
     if(!rolePhaseCapacityMatrix.isEmpty()) {
     	// T-522009 : Method to add Risk Factor in total capacity
     	addRiskFactor(estimate, rolePhaseCapacityMatrix);
@@ -87,28 +124,40 @@ public with sharing class E2_CapacityController extends E2_Master{
   
   // Method summed up all efforts hours based on role, phase and skills 
   // and store into Capacity record.
+  // 12/26 : RJ : Method updated to include resource level in capacity needs calculation
   public static void calculateSpecifiedEfforts(CMC_Presales_LOE__c estimate,
                                         Map<String, E2_Capacity__c> rolePhaseCapacityMatrix){
     for(E2_Effort__c ef : E2_DataUtil.getEffortsListByEstimateId(estimate.id)){
         string phase = ef.Phase__c;
-        string rolePhaseKey = phase + E2_Constants.SEPARATOR + ef.Resource_Role__c + 
-                             (ef.Speciality__c != null ? E2_Constants.SEPARATOR + ef.Speciality__r.Name : E2_Constants.BLANK);
+        //string rolePhaseKey = phase + E2_Constants.SEPARATOR + ef.Resource_Role__c + 
+        //                     (ef.Speciality__c != null ? E2_Constants.SEPARATOR + ef.Speciality__r.Name : E2_Constants.BLANK);
+        string rolePhaseKey = phase + E2_Constants.SEPARATOR + ef.Resource_Role__c 
+                             + (ef.Resource_Level__c <> NULL ? E2_Constants.SEPARATOR + ef.Resource_Level__c : E2_Constants.BLANK) 
+                             + (ef.Speciality__c != null ? E2_Constants.SEPARATOR + ef.Speciality__r.Name : E2_Constants.BLANK);
+                             
         if(!rolePhaseCapacityMatrix.containsKey(rolePhaseKey)){
+           //rolePhaseCapacityMatrix.put(rolePhaseKey, new E2_Capacity__c(Hours__c = 0, Estimator__c = estimate.id,
+           //                                                                Role__c = ef.Resource_Role__c, Phase__c = phase,
+           //                                                                Speciality__c = ef.Speciality__c));    
            rolePhaseCapacityMatrix.put(rolePhaseKey, new E2_Capacity__c(Hours__c = 0, Estimator__c = estimate.id,
-                                                                        Role__c = ef.Resource_Role__c, Phase__c = phase,
-                                                                        Speciality__c = ef.Speciality__c));    
+                                                                           Role__c = ef.Resource_Role__c, Phase__c = phase,
+                                                                           Level__c = ef.Resource_Level__c,
+                                                                           Speciality__c = ef.Speciality__c));    
         }
-        E2_Capacity__c capacity = rolePhaseCapacityMatrix.get(rolePhaseKey);
-        decimal hrs = capacity.Hours__c;
+        decimal effortHrs = 0;
         if(ef.Scope__r.Is_Active__c == true){
 	        if(ef.Scope__r.Complexity__c == NULL || ef.Scope__r.Complexity__c.toLowerCase() == E2_Constants.MEDIUM){
-	            hrs += ef.Effort_Hrs__c;
+	            effortHrs = ef.Effort_Hrs__c;
 	        }else if(ef.Scope__r.Complexity__c.toLowerCase() == E2_Constants.HIGH){
-	            hrs += ef.High_Effort_Hrs__c;
+	            effortHrs = ef.High_Effort_Hrs__c;
 	        }else if(ef.Scope__r.Complexity__c.toLowerCase() == E2_Constants.LOW){
-	            hrs += ef.Low_Effort_Hrs__c;
+	            effortHrs = ef.Low_Effort_Hrs__c;
 	        }
+	        // RS : S-447325 : apply effort multiplier on effort hours.
+	        if(ef.Scope__r.Effort_Quantity__c > 0) effortHrs = effortHrs * ef.Scope__r.Effort_Quantity__c;
         }
+        E2_Capacity__c capacity = rolePhaseCapacityMatrix.get(rolePhaseKey);
+        decimal hrs = capacity.Hours__c + effortHrs;
         capacity.Hours__c = hrs;         
     }   
   }
@@ -117,13 +166,19 @@ public with sharing class E2_CapacityController extends E2_Master{
   // and store into Capacity record.
   public static void calculateDerivedEfforts(CMC_Presales_LOE__c estimate,
                                     Map<String, E2_Capacity__c> rolePhaseCapacityMatrix){
+    
+    // we only have run through when estimate is associated with any derived effort template
     if(estimate.E2_Derived_Effort_Template__c <> NULL) { 
     	Map<String, Decimal> roleToHrs = new Map<String, Decimal>();
+    	
+    	// get the derived effort template linked to the current estimate.
         List<E2_Derived_Effort__c> derivedEffortsTemplate = 
                                     E2_DataUtil.getDerivedEffort(estimate.E2_Derived_Effort_Template__c);
+        // pass by reference: derivedEffortsTemplate and load with the derived hours in.                            
         E2_Estimator_Manager.generateDerivedHours(estimate.Id, derivedEffortsTemplate);
         
         Map<String, List<E2_Derived_Effort__c>> combinedderivedEfforts = new Map<String, List<E2_Derived_Effort__c>>();
+        
         for(E2_Derived_Effort__c ef : derivedEffortsTemplate){
             if(!combinedderivedEfforts.containsKey(ef.UniqueKey__c)) 
                 combinedderivedEfforts.put(ef.UniqueKey__c, new List<E2_Derived_Effort__c>());
@@ -141,13 +196,19 @@ public with sharing class E2_CapacityController extends E2_Master{
                 derivedEfforts.get(0).Include_When_Hours__c <= hrs) || 
               (derivedEfforts.get(0).Include_When__c == E2_Constants.IF_HOURS_ARE_LESS_THAN && 
                 derivedEfforts.get(0).Include_When_Hours__c > hrs)) {
+                    
               for(E2_Derived_Effort__c dE : derivedEfforts) {
-                string rolePhaseKey = dE.To_Phase__c + E2_Constants.SEPARATOR + dE.Role__c;
+                string rolePhaseKey = dE.To_Phase__c + E2_Constants.SEPARATOR + dE.Role__c 
+                                + (dE.Level__c <> NULL ? E2_Constants.SEPARATOR + dE.Level__c : E2_Constants.BLANK);
                 if(!rolePhaseCapacityMatrix.containsKey(rolePhaseKey)){
+                   // 12/26 : RJ : added level in capacity needs instance
                    rolePhaseCapacityMatrix.put(rolePhaseKey, new E2_Capacity__c(Hours__c = 0, 
                                                                                 Estimator__c = estimate.id,
                                                                                 Role__c = dE.Role__c, 
-                                                                                Phase__c = dE.To_Phase__c));    
+                                                                                Phase__c = dE.To_Phase__c,
+                                                                                Level__c = dE.Level__c)); 
+                   system.debug('derivedEfforts.get(0).Include_When__c==' + derivedEfforts.get(0).Include_When__c);
+                    system.debug('derivedEfforts.get(0).Include_When_Hours__c==' + derivedEfforts.get(0).Include_When_Hours__c + ' hrs '+hrs);
                    system.debug('==rolePhaseCapacityMatrix>>'+rolePhaseCapacityMatrix.values());                                                             
                 }
                 E2_Capacity__c capacity = rolePhaseCapacityMatrix.get(rolePhaseKey);
@@ -173,12 +234,15 @@ public with sharing class E2_CapacityController extends E2_Master{
   }
   
   // Method to create Capacity matrix from E2 Capacity record
+  // 12/26 : RJ : Method updated to include resource level in capacity needs calculation
   public void calculateHours(){
     for(E2_Capacity__c eC : this.storedCapacity) {
         string phase = eC.Phase__c;
         string role = eC.Role__c;
         If(eC.Hours__c <> NULL) {
-            string rolePhaseKey = phase + E2_Constants.SEPARATOR + role;
+            // 12/26 : RJ : added level in rolephaseKey if exists in capacity needs
+            string rolePhaseKey = phase + E2_Constants.SEPARATOR + role
+                                  + (eC.Level__c <> NULL ? ' - ' + eC.Level__c : E2_Constants.BLANK);
             if(!rolesPhaseToHoursMap.containsKey(rolePhaseKey)){
                rolesPhaseToHoursMap.put(rolePhaseKey, 0);    
             }
@@ -188,11 +252,14 @@ public with sharing class E2_CapacityController extends E2_Master{
                rolesPhaseToHoursMap.put(phaseSumKey, 0);    
             }
             rolesPhaseToHoursMap.put(phaseSumKey, (rolesPhaseToHoursMap.get(phaseSumKey)+eC.Hours__c));
-            if(!rolesToPhaseMap.containsKey(role)) rolesToPhaseMap.put(role, new Set<String>());
+            
+            if(!rolesToPhaseMap.containsKey(role + (eC.Level__c <> NULL ? ' - ' + eC.Level__c : E2_Constants.BLANK))) rolesToPhaseMap.put(role + (eC.Level__c <> NULL ? ' - ' + eC.Level__c : E2_Constants.BLANK), new Set<String>());
             
             if(eC.Speciality__c != null) {
+                // 12/26 : RJ : added level in roleskillPhaseKey if exists in capacity needs
                 string roleskillPhaseKey = phase + E2_Constants.SEPARATOR + 
-                                  role + E2_Constants.SPACE + E2_Constants.OPEN_BRACKET + 
+                                  role + (eC.Level__c <> NULL ? ' - ' + eC.Level__c : E2_Constants.BLANK) 
+                                  + E2_Constants.SPACE + E2_Constants.OPEN_BRACKET + 
                                   eC.Speciality__r.Name + E2_Constants.CLOSE_BRACKET;
                 if(!rolesSkillPhaseToHoursMap.containsKey(roleskillPhaseKey)){
                     rolesSkillPhaseToHoursMap.put(roleskillPhaseKey, eC.Hours__c);    
@@ -201,7 +268,9 @@ public with sharing class E2_CapacityController extends E2_Master{
                    rolesSkillPhaseToHoursMap.put(phaseSumKey, 0);    
                 }
                 rolesSkillPhaseToHoursMap.put(phaseSumKey, (rolesSkillPhaseToHoursMap.get(phaseSumKey)+eC.Hours__c));
-                String roleSkillsKey = role + E2_Constants.SPACE + E2_Constants.OPEN_BRACKET + eC.Speciality__r.Name + E2_Constants.CLOSE_BRACKET;
+                // 12/26 : RJ : added level in roleSkillsKey if exists in capacity needs
+                String roleSkillsKey = role + (eC.Level__c <> NULL ? ' - ' + eC.Level__c : E2_Constants.BLANK)
+                                        + E2_Constants.SPACE + E2_Constants.OPEN_BRACKET + eC.Speciality__r.Name + E2_Constants.CLOSE_BRACKET;
                 if(!rolesSkillToPhaseMap.containsKey(roleSkillsKey)) rolesSkillToPhaseMap.put(roleSkillsKey, new Set<String>());
             }
         }
@@ -292,18 +361,23 @@ public with sharing class E2_CapacityController extends E2_Master{
                }else if(effort.Scope__r.Complexity__c == E2_Constants.HIGH) {
                    loeHrs = effort.High_Effort_Hrs__c;
                }
+               // RS : S-447325 : apply effort multiplier on effort hours.
+               if(effort.Scope__r.Effort_Quantity__c > 0) loeHrs = loeHrs * effort.Scope__r.Effort_Quantity__c;
                if(!scopeRolePhaseMap.containsKey(ultimateScopeId)) {
                 scopeRolePhaseMap.put(ultimateScopeId, new map<string, set<string>>());
                }
                map<string, set<string>> rolePhaseMap = scopeRolePhaseMap.get(ultimateScopeId);
-               if(!rolePhaseMap.containsKey(effort.Resource_Role__c)) rolePhaseMap.put(effort.Resource_Role__c, new set<string>());
-               fillScopeRolePhaseHoursMap(ultimateScopeId, effort.Resource_Role__c, effort.Phase__c, loeHrs);
+               if(!rolePhaseMap.containsKey(effort.Resource_Role__c + (effort.Resource_Level__c <> NULL ? ' - ' + effort.Resource_Level__c : E2_Constants.BLANK))) rolePhaseMap.put(effort.Resource_Role__c  + (effort.Resource_Level__c <> NULL ? ' - ' + effort.Resource_Level__c : E2_Constants.BLANK), new set<string>());
+               fillScopeRolePhaseHoursMap(ultimateScopeId, effort.Resource_Role__c, effort.Phase__c, effort.Resource_Level__c, loeHrs);
            }
       }
   }
   
-  public void fillScopeRolePhaseHoursMap(id ultimateScopeId, string role, string phase, decimal loeHrs) {
-      string scopeKey = ultimateScopeId + E2_Constants.SEPARATOR + role;
+  // Method used to fill scopeRolePhaseHourMap based on role, phase defined in specified/derived efforts
+  // 12/26 : RJ : Method updated to include resource level defined in specified/derived efforts
+  public void fillScopeRolePhaseHoursMap(id ultimateScopeId, string role, string phase, string level, decimal loeHrs) {
+      string scopeKey = ultimateScopeId + E2_Constants.SEPARATOR + role + 
+                        (level <> NULL ? ' - ' + level : E2_Constants.BLANK);
       loeHrs = loeHrs;
       if(!scopeRolePhaseHourMap.containsKey(scopeKey)) scopeRolePhaseHourMap.put(scopeKey, loeHrs);
       else scopeRolePhaseHourMap.put(scopeKey, loeHrs + scopeRolePhaseHourMap.get(scopeKey));
@@ -332,39 +406,46 @@ public with sharing class E2_CapacityController extends E2_Master{
   public Map<String, List<E2_Derived_Effort__c>> calculateDerivedhours() {
       // RS: S-447214 : Method calculate scope wise derived efforts and generate derivedefforts map by 
       // efforts uniqueKey
+      // 12/26 : RS : Method re-evaluated and updated to remove unnecessary if-else logic 
       List<E2_Derived_Effort__c> derivedEffortsTemplate = 
                                     E2_DataUtil.getDerivedEffort(estimate.E2_Derived_Effort_Template__c);
     for(string ultimateScopeId : scopeIdMap.keySet()) {
         for(E2_Derived_Effort__c derivedEffort : derivedEffortsTemplate) {
             String derivedKey = ultimateScopeId;
-	        if(String.isBlank(derivedEffort.Of_Role__c) && !String.isBlank(derivedEffort.Of_Phase__c))
-	            derivedKey += E2_Constants.SEPARATOR + derivedEffort.Of_Phase__c;
-	        else if(!String.isBlank(derivedEffort.Of_Role__c) && String.isBlank(derivedEffort.Of_Phase__c))
-	            derivedKey += E2_Constants.SEPARATOR + derivedEffort.Of_Role__c;
-	        else if(String.isBlank(derivedEffort.Of_Role__c) && String.isBlank(derivedEffort.Of_Phase__c))
-	            derivedKey += E2_Constants.SEPARATOR + TOTAL;
-	        else 
-    	        derivedKey += E2_Constants.SEPARATOR + derivedEffort.Of_Role__c + E2_Constants.SEPARATOR + derivedEffort.Of_Phase__c;
+            
+            string keys = (String.isBlank(derivedEffort.Of_Role__c) ? E2_Constants.BLANK : 
+	                (derivedEffort.Of_Role__c + (String.isBlank(derivedEffort.Of_level__c) ? 
+	                    E2_Constants.BLANK : ' - ' + derivedEffort.Of_level__c)));
+	                
+	          keys += (String.isBlank(derivedEffort.Of_Phase__c) ? E2_Constants.BLANK : 
+	                 (!string.isBlank(keys) ? E2_Constants.SEPARATOR : E2_Constants.BLANK) + derivedEffort.Of_Phase__c);
+	         
+	         if(String.isBlank( keys )) {
+	             derivedKey += E2_Constants.SEPARATOR + TOTAL;
+	         } else {
+	             derivedKey += E2_Constants.SEPARATOR + keys;
+	         }
     	    if(scopeRolePhaseHourMap.containsKey(derivedKey)) {
     	        decimal hrs = scopeRolePhaseHourMap.get(derivedKey);
     	        hrs = hrs * (derivedEffort.Allocation__c/100);
     	        if(derivedEffort.Derived_Hrs__c <> NULL) derivedEffort.Derived_Hrs__c += hrs;
     	        else derivedEffort.Derived_Hrs__c = hrs;
             }
-            }
         }
+    }
         
-        Map<String, List<E2_Derived_Effort__c>> combinedderivedEfforts = new Map<String, List<E2_Derived_Effort__c>>();
-        for(E2_Derived_Effort__c ef : derivedEffortsTemplate){
-            if(!combinedderivedEfforts.containsKey(ef.UniqueKey__c)) 
-                combinedderivedEfforts.put(ef.UniqueKey__c, new List<E2_Derived_Effort__c>());
-            combinedderivedEfforts.get(ef.UniqueKey__c).add(ef);    
-        }
-        return combinedderivedEfforts;
+    Map<String, List<E2_Derived_Effort__c>> combinedderivedEfforts = new Map<String, List<E2_Derived_Effort__c>>();
+    for(E2_Derived_Effort__c ef : derivedEffortsTemplate){
+        if(!combinedderivedEfforts.containsKey(ef.UniqueKey__c)) 
+            combinedderivedEfforts.put(ef.UniqueKey__c, new List<E2_Derived_Effort__c>());
+        combinedderivedEfforts.get(ef.UniqueKey__c).add(ef);    
+    }
+    return combinedderivedEfforts;
   }
   
   public map<string, decimal> generateDerivedHoursMap(Map<String, List<E2_Derived_Effort__c>> combinedderivedEfforts) {
       // RS: S-447214 : Method generate scopeRolePhaseHourMaptemp for derived hours.
+      // 12/26 : RS : Method re-evaluated and updated to remove unnecessary if-else logic
       map<string, decimal> scopeRolePhaseHourMaptemp = new map<string, decimal>();
       for(String uniqueKey : combinedderivedEfforts.KeySet()) {
         List<E2_Derived_Effort__c> derivedEfforts = combinedderivedEfforts.get(uniqueKey);
@@ -374,15 +455,20 @@ public with sharing class E2_CapacityController extends E2_Master{
         }
         for(string ultimateScopeId : scopeIdMap.keySet()) {
             for(E2_Derived_Effort__c derivedEffort : derivedEfforts) {
+                // 12/27 : get unique key for epic based hours for derived efforts
                 String derivedKey = ultimateScopeId;
-            	if(String.isBlank(derivedEffort.Of_Role__c) && !String.isBlank(derivedEffort.Of_Phase__c))
-            	    derivedKey += E2_Constants.SEPARATOR + derivedEffort.Of_Phase__c;
-            	else if(!String.isBlank(derivedEffort.Of_Role__c) && String.isBlank(derivedEffort.Of_Phase__c))
-    	            derivedKey += E2_Constants.SEPARATOR + derivedEffort.Of_Role__c;
-    	        else if(String.isBlank(derivedEffort.Of_Role__c) && String.isBlank(derivedEffort.Of_Phase__c))
-    	            derivedKey += E2_Constants.SEPARATOR + TOTAL;
-    	        else 
-        	       derivedKey += E2_Constants.SEPARATOR + derivedEffort.Of_Role__c + E2_Constants.SEPARATOR + derivedEffort.Of_Phase__c;
+                string keys = (String.isBlank(derivedEffort.Of_Role__c) ? E2_Constants.BLANK : 
+	                (derivedEffort.Of_Role__c + (String.isBlank(derivedEffort.Of_level__c) ? 
+	                    E2_Constants.BLANK : ' - ' + derivedEffort.Of_level__c)));
+	                
+	            keys += (String.isBlank(derivedEffort.Of_Phase__c) ? E2_Constants.BLANK : 
+	                 (!string.isBlank(keys) ? E2_Constants.SEPARATOR : E2_Constants.BLANK) + derivedEffort.Of_Phase__c);
+	         
+	            if(String.isBlank( keys )) {
+	                derivedKey += E2_Constants.SEPARATOR + TOTAL;
+	            } else {
+	                derivedKey += E2_Constants.SEPARATOR + keys;
+	            }
         	    if(scopeRolePhaseHourMap.containsKey(derivedKey)) {
         	        decimal dEhrs = scopeRolePhaseHourMap.get(derivedKey);
         	        dEhrs = dEhrs * (derivedEffort.Allocation__c/100);
@@ -393,8 +479,8 @@ public with sharing class E2_CapacityController extends E2_Master{
                        (derivedEffort.Include_When__c == E2_Constants.IF_HOURS_ARE_LESS_THAN && 
                        derivedEffort.Include_When_Hours__c > hrs)) {
                         map<string, set<string>> rolePhaseMap = scopeRolePhaseMap.get(ultimateScopeId);
-                        if(!rolePhaseMap.containsKey(derivedEffort.Role__c)) rolePhaseMap.put(derivedEffort.Role__c, new set<string>());
-                        fillScopeRolePhaseHoursMapTemp(scopeRolePhaseHourMaptemp, ultimateScopeId, derivedEffort.Role__c, derivedEffort.To_Phase__c, dEhrs); 
+                        if(!rolePhaseMap.containsKey(derivedEffort.Role__c + (String.isBlank(derivedEffort.Level__c) ? E2_Constants.BLANK : ' - ' + derivedEffort.Level__c))) rolePhaseMap.put(derivedEffort.Role__c + (String.isBlank(derivedEffort.Level__c) ? E2_Constants.BLANK : ' - ' + derivedEffort.Level__c), new set<string>());
+                        fillScopeRolePhaseHoursMapTemp(scopeRolePhaseHourMaptemp, ultimateScopeId, derivedEffort.Role__c, derivedEffort.To_Phase__c, derivedEffort.Level__c, dEhrs); 
                      }
         	    }
             }
@@ -416,8 +502,11 @@ public with sharing class E2_CapacityController extends E2_Master{
     }
   }
   
-  public void fillScopeRolePhaseHoursMapTemp(map<string, decimal> scopeRolePhaseHourMaptemp,id ultimateScopeId, string role, string phase, decimal loeHrs) {
-      string scopeKey = ultimateScopeId + E2_Constants.SEPARATOR + role;
+  // Method used to fill scopeRolePhaseHourMap based on role, phase defined in specified/derived efforts
+  // 12/26 : RJ : Method updated to include resource level defined in specified/derived efforts
+  public void fillScopeRolePhaseHoursMapTemp(map<string, decimal> scopeRolePhaseHourMaptemp,id ultimateScopeId, string role, string phase, string level, decimal loeHrs) {
+      string scopeKey = ultimateScopeId + E2_Constants.SEPARATOR + role +
+                        (level <> NULL ? ' - ' + level : E2_Constants.BLANK);
       loeHrs = loeHrs;
       if(!scopeRolePhaseHourMaptemp.containsKey(scopeKey)) scopeRolePhaseHourMaptemp.put(scopeKey, loeHrs);
       else scopeRolePhaseHourMaptemp.put(scopeKey, loeHrs + scopeRolePhaseHourMaptemp.get(scopeKey));

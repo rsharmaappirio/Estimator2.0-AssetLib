@@ -6,13 +6,17 @@
  * Created By: Arpita Bose(Appirio)
  * 08 Sep 2016: Modified: RJ : Added E2_Estimate_Rate_Card__r.Resource_Role__c, E2_Estimate_Rate_Card__r.Region__c field in the query in getEstimateResourceAndResourceWeekRec method for 
  *                             Capacity Needs and Timeline Hours based on roles
+ * 19 Oct 2016: Modified RS : S-455931 : UI/UX-Conditional highlight on the overridden rates cells
+ * 26 Dec 2016: RJ: S-459273 : Inclusion of workday ratecard : Added Resource Level field in getEstimateRateCards, getEstimateResourceAndResourceWeekRec method
 *  =====================================================================*/
 public class E2_TimelineDataUtil_WS {
   //method to get E2_Estimate_Rate_Card__c records for an estimateId
   public static List<E2_Estimate_Rate_Card__c> getEstimateRateCards(String estimateId){
     return [SELECT Id, Resource_Role__c, Estimate__c, Region__c, 
               Practice__c, Code__c, Rate_Card__c, Resource_Cost__c,
-              Bill_Rate__c, Discounted_Rate__c, Category__c  
+              Bill_Rate__c, Discounted_Rate__c, Category__c, 
+              // need to query resource level also
+              Resource_Level__c
               FROM E2_Estimate_Rate_Card__c 
               WHERE Estimate__c = :estimateId
               ORDER BY Practice__c ASC, Region__c ASC, Resource_Role__c ASC];
@@ -54,7 +58,9 @@ public class E2_TimelineDataUtil_WS {
   
   //method to get CMC_Estimate_Resource__c and all Estimate_Resource_Week__c records for an estimateId 
   public static List<CMC_Estimate_Resource__c> getEstimateResourceAndResourceWeekRec(String estimateId){
-    return [SELECT Id, Name, Cost__c, Estimate__c, Order__c, Rate__c, Role__c, E2_Role__c, Skill__c, E2_Estimate_Rate_Card__r.Resource_Role__c, E2_Estimate_Rate_Card__r.Region__c,
+      //12/26: RJ need to show the resource level also
+    return [SELECT Id, Name, Cost__c, Estimate__c, Order__c, Rate__c, Role__c, E2_Role__c, Skill__c, 
+            E2_Estimate_Rate_Card__r.Resource_Role__c, E2_Estimate_Rate_Card__r.Resource_Level__c, E2_Estimate_Rate_Card__r.Region__c, E2_Estimate_Rate_Card__r.Bill_Rate__c, 
               (SELECT ID, Hours__c, Estimate_Week__c, Estimate_Resource__c
                FROM Estimate_Resource_Weeks__r)  
               FROM CMC_Estimate_Resource__c

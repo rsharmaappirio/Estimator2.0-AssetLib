@@ -2,10 +2,13 @@
 showHeader="false" standardStylesheets="true" sidebar="false" applyHtmlTag="false" applyBodyTag="false" docType="html-5.0">
     <script type="text/javascript" src="{!$Resource.E2_CapacityJS}"></script>
 <apex:composition template="E2_Template">
-        <apex:define name="title">Capacity</apex:define>
+        <apex:define name="title">Capacity Needs | {!estimate.Name}</apex:define>
         <apex:define name="header"><c:E2_PermissionMessage rendered="{!NOT(isEditable)}"/><c:E2_Header psr_id="{!psrId}" step="5"/></apex:define>
         <apex:define name="body">
-<apex:form >        
+<apex:form >  
+<apex:actionFunction name="updateRisk" oncomplete="loadSpinner.hide();" action="{!updateRisk}">
+                    <apex:param name="firstParam" assignTo="{!riskPrecent}" value="" />
+                </apex:actionFunction>
 <style>
 table thead tr th.slds-th{
   background-color: #005fb2;
@@ -81,8 +84,21 @@ table tbody tr td.slds-td-scope{
                     <a id="lc-235-csv" data-value="CSV" class="slds-truncate" tabindex="-1" href="javascript:void(0);" onclick="window.location.href='/apex/E2_ExportScopeItemsToCSV?id={!estimate.id}';return false;">CSV</a>
                 </li>
                 <li id="lc-233-conga-item" class="slds-dropdown__item" tabindex="-1" role="menuitem option">
-                    <a id="lc-233-conga" data-value="Conga Export" class="slds-truncate" tabindex="-1" href="javascript:void(0);" onclick="window.open('https://composer.congamerge.com?SessionId={!$API.Session_ID}&ServerUrl={!$API.Partner_Server_URL_80}&id={!estimate.id}&QueryId=[E2Estimate]{!$Label.E2_Scope_Export_Query}?pv0={!estimate.id},[E2UltimateScope]{!$Label.E2_Ultimate_Scope_Export_Query}?pv0={!estimate.id}&TemplateGroup=E2&DS2=1&DS3=1&OFN={Template.Label}+-+{!URLENCODE(estimate.name)}&DS8=1', '', 'width=600,height=400,top=0');return false;" >Conga Export</a>
+                    <a id="lc-233-conga" data-value="Conga Export" class="slds-truncate" tabindex="-1" href="javascript:void(0);" onclick="window.open('https://composer.congamerge.com?SessionId={!$API.Session_ID}&ServerUrl={!$API.Partner_Server_URL_80}&id={!estimate.id}&QueryId=[E2Estimate]{!$Label.E2_Scope_Export_Query}?pv0={!estimate.id},[E2UltimateScope]{!$Label.E2_Ultimate_Scope_Export_Query}?pv0={!estimate.id},[E2Asset]{!$Label.E2_Export_Assets_Query}?pv0={!estimate.id},[E2Scope]{!$Label.E2_Export_Assets_w_Scope_Query}?pv0={!estimate.id}&TemplateGroup=E2&DS2=1&DS3=1&OFN={Template.Label}+-+{!URLENCODE(estimate.name)}&DS8=1', '', 'width=600,height=400,top=0');return false;" >Conga Export</a>
                 </li>
+            </ul>
+         </div>
+      </div>
+      <div class="slds-button-group slds-dropdown-trigger slds-is-open" aria-expanded="true" aria-haspopup="true" role="group">
+        <button class="slds-button slds-button--neutral" onclick="return false;" value="Risk %" style="border-radius: 0px;">Risk %</button>
+        <button class="slds-button slds-button--icon-border-filled slds-button--last" name="more" id="lc-218-more" title="Risk %" type="button"></button>
+        <div class="slds-dropdown slds-dropdown--right slds-dropdown--actions" id="lc-230-dd">
+            <ul class="dropdown__list" role="menu">
+                <apex:repeat value="{!riskList}" var="risk">
+                    <li id="lc-{!risk}-xls-item" class="slds-dropdown__item" tabindex="-1" role="menuitem option">
+                        <a id="lc-{!risk}-xls" data-value="{!risk}" class="slds-truncate" tabindex="-1" href="javascript:void(0);" onclick="updateRisk('{!risk}');loadSpinner.show();">{!risk}</a>
+                    </li>
+                </apex:repeat>
             </ul>
          </div>
       </div>
@@ -106,7 +122,7 @@ table tbody tr td.slds-td-scope{
                         <apex:outputField value="{!estimate.Presales_Request__c}"/>
                      </p>
                       <p class="slds-text-heading--label slds-truncate" title="Opportunity">Opportunity</p>
-                     <p><apex:outputLink value="/{!estimate.Presales_Request__r.Opportunity__c}">{!estimate.Opportunity_Name__c}</apex:outputLink> </p>
+                      <p><apex:outputLink value="/{!estimate.Presales_Request__r.Opportunity__c}">{!estimate.Presales_Request__r.Opportunity_Name__c}</apex:outputLink> </p>
                       <p class="slds-text-heading--label slds-truncate" title="Account">Account</p>
                      <p><apex:outputLink value="/{!estimate.Presales_Request__r.Opportunity__r.AccountId}">{!estimate.Account_Name__c}</apex:outputLink></p>
                   </li>
@@ -125,8 +141,9 @@ table tbody tr td.slds-td-scope{
                         </li>
                         <li class="slds-tabs--default__item slds-text-heading--label" title="Capacity Needs by Epic" role="presentation">
                             <a class="slds-tabs--default__link" href="javascript:void(0);" role="tab" tabindex="0" aria-selected="false" aria-controls="tab-default-2" id="tab-default-2__item">by epic&nbsp;</a>
-                        </li>                                                                       
+                        </li>  
                     </ul>
+                     
                     <div id="tab-default-1" style="padding:0px" class="slds-tabs--default__content slds-show paddingTopZero" role="tabpanel" aria-labelledby="tab-default-1__item">
                         <!-- Scope Capacity Needs end-->
                         <div class="slds-card">
@@ -135,6 +152,7 @@ table tbody tr td.slds-td-scope{
 							      <div class="slds-media__body">
 							        <div style="margin-top: 5px;">
                                       <apex:outputPanel layout="none" rendered="{!!ISNULL(estimate.E2_Last_Build_Datetime__c)}" ><div class="slds-text-heading--label slds-truncate" title="Last Build">Last Build:<span class="slds-badge slds-theme--inverse" style="display:inline-block;"><apex:outputField value="{!estimate.E2_Last_Build_Datetime__c}"/></span></div></apex:outputPanel>
+                                      
                                     </div>
 							      </div>
 							    </div>
@@ -407,6 +425,7 @@ table tbody tr td.slds-td-scope{
     <input type="hidden" value="{!CMC_Presales_LOE__c.Name}"/> 
     <input type="hidden" value="{!CMC_Presales_LOE__c.Presales_Request__c}"/>
     <input type="hidden" value="{!CMC_Presales_LOE__c.Presales_Request__r.Opportunity__c}"/>
+    <input type="hidden" value="{!CMC_Presales_LOE__c.Presales_Request__r.Opportunity_Name__c}"/>
     <input type="hidden" value="{!CMC_Presales_LOE__c.Presales_Request__r.Opportunity__r.AccountId}"/>
     <input type="hidden" value="{!CMC_Presales_LOE__c.Type__c}"/>
     <input type="hidden" value="{!CMC_Presales_LOE__c.Account_Executive__c}"/>
@@ -423,12 +442,18 @@ table tbody tr td.slds-td-scope{
     <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Reviewer__c}"/>
     <input type="hidden" value="{!CMC_Presales_LOE__c.E2_SA__c}"/>
     <input type="hidden" value="{!CMC_Presales_LOE__c.E2_AE__c}"/>
-    <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Is_Primary__c}"/>
     <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Total_Hrs__c}"/> 
     <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Derived_Effort_Template__c}"/>   
     <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Last_Build_Datetime__c}"/>
     <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Risk__c}"/>
     <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Risk_percentage__c}"/>
+    <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Parent_Estimate__c}" />
+    <div id="loadingSpinner" class="slds-spinner_container" style="display: none !important;">
+                    <div class="slds-spinner--brand slds-spinner slds-spinner--large" aria-hidden="false" role="alert">
+                       <div class="slds-spinner__dot-a"></div>
+                       <div class="slds-spinner__dot-b"></div>
+                    </div>
+                 </div>
 </apex:form>               
         </apex:define>
         <apex:define name="footer">

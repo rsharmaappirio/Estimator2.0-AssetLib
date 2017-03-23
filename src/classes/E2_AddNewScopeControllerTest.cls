@@ -1,3 +1,17 @@
+/**=====================================================================
+ * Appirio, Inc
+ * Name: E2_AddNewScopeControllerTest
+ * Description: Includes all test method to Unit test to run over E2_AddNewScopeController class
+ * Created Date: Apr 8th, 2016
+ * Created By: Arpita Bose (Appirio)
+ * 
+ * Date Modified      Modified By                  Description of the update
+ * Dec 13th, 2016     Jitendra Jangid              Modified the lines below in the processClipboardData method to suffice the feature for copy and paste - type/complexity/effort hrs
+                                                   added a supporting overload method getEffortsInstanceList with effortsStr as argument string.
+                                                   S-437670: Copy paste the Type and complexity field along with the Scope name ,description 
+                                                   and assumptions while creating the scopes.
+*  =====================================================================*/
+
 @isTest(seeAllData=false)
 public class E2_AddNewScopeControllerTest {
   public static E2_Scope__c scope;
@@ -6,7 +20,7 @@ public class E2_AddNewScopeControllerTest {
   public static Id recTypeId = E2_RecordTypeClass.getId('E2_Scope__c', E2_Constants.SCOPE_RT_SCOPE);
   
   public static testmethod void testViewScope(){
-    scope = [SELECT Id FROM E2_Scope__c WHERE Parent_Scope__c = null];
+    scope = [SELECT Id, Effort_Quantity__c FROM E2_Scope__c WHERE Parent_Scope__c = null];
     estimate = [SELECT Id FROM CMC_Presales_LOE__c];
     effortLst = [SELECT Id FROM E2_Effort__c WHERE Scope__c = :scope.Id];
     //assmpLst = [SELECT Id FROM E2_Assumption__c WHERE Scope__c = :scope.Id];
@@ -190,10 +204,13 @@ public class E2_AddNewScopeControllerTest {
               controller.pageAction();
               system.assert(controller.is_New == true);
               
+              controller.clipboardData = '[ {"property1" : "test1", "property2" : "test2", "property3" : "test3","property4" : "Epic","property5" : "HIGH" ,"property6" : "10.10"}]';
+              controller.processClipboardData();
+              System.assertEquals(controller.childScopes.size(), 1, 'should have 1 childscope added');
+              
               controller.clipboardData = '[ {"property1" : "test1", "property2" : "test2", "property3" : "test3"}]';
               controller.processClipboardData();
-              
-              System.assertEquals(controller.childScopes.size(), 1, 'should have 1 childscope added');
+              System.assertEquals(2,controller.childScopes.size(), 'should have 2 childscope added');
             
               Test.stopTest();
         }    
@@ -240,6 +257,7 @@ public class E2_AddNewScopeControllerTest {
     childSC.Presales_LOE__c = estimate1.Id;
     childSC.Parent_Scope__c = scope1.Id;
     childSC.Complexity__c = 'Medium';
+    childSC.Is_Favourite__c = true;
     insert childSC;  
       
     E2_Effort__c effort1 = E2_Test_Utils.insertEffort(true, childSC.Id);  

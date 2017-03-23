@@ -6,7 +6,10 @@
  * Created By: Arpita Bose (Appirio)
  * 
  * Date Modified      Modified By                  Description of the update
- * May 17, 2016       Rahul Jain                   Added Local constants, removed hardcoded strings from the methods.     
+ * May 17, 2016       Rahul Jain                   Added Local constants, removed hardcoded strings from the methods.   
+ * Dec 14, 2016       Vikash Goyal                 S-456925: Ability to mark an Estimate as Primary on Create estimate page.
+ * Feb 1st, 2017      Rohit Sharma                 S-456643 :Condition added on page re-direct to add 
+                                                   customerMode parameter in request.
 *  =====================================================================*/
 public class E2_AddEditEstimateController extends E2_Master{
   //declare variables
@@ -20,6 +23,8 @@ public class E2_AddEditEstimateController extends E2_Master{
   private static final string URL_VALUE_TRUE = 'true';
   public List<SelectOption> riskList {get;set;}
   public List<SelectOption> currencyList {get;set;}
+  private Boolean isNew{get;set;}
+  public Boolean isPrimary {get;set;}
  
   //constructor
   public E2_AddEditEstimateController(ApexPages.StandardController std) {    
@@ -29,7 +34,8 @@ public class E2_AddEditEstimateController extends E2_Master{
     this.isEdit = false;
     this.estimateDateScoped = system.today(); 
     this.std = std;
-    this.psr = new Presales_Request__c(); 
+    this.psr = new Presales_Request__c();
+    this.isPrimary = false;
      
   }
   //method to check message on the page
@@ -39,15 +45,19 @@ public class E2_AddEditEstimateController extends E2_Master{
 
   //page action method on the load of page
   public PageReference pageAction(){
+    PageReference page = super.validateForTimelineEstimate(this.estimate);
+    if(page <> NULL) return page;
     super.validateAccess(this.estimate);
     string psr_id = E2_Constants.BLANK;
     riskList = populateRiskPicklistValues();
     currencyList = getCurrencyValuesFromRateCard();
     if(this.estimate.id == null){
+      this.isNew = true;
       psr_id = ApexPages.currentPage().getParameters().get(URL_KEY_PSR_ID);
       // set the default currency iso code for this estimate
       this.estimate.CurrencyISOCode = E2_Constants.CURRENCY_ISO_CODE_USD;
     }else{
+      this.isNew = false;
       psr_id = this.estimate.Presales_Request__c;
     }
     
@@ -68,6 +78,8 @@ public class E2_AddEditEstimateController extends E2_Master{
             this.estimate.E2_Date_Scoped__c = system.today();
             // RS 13/10 I-239781 : make estimate primary in case of Ist estimate on psr
             if(psr.Presales_LOEs__r.size() == 0) this.estimate.Default__c = true;
+            this.estimate.E2_Timeline_Name__c = 'Timeline v1';
+            this.estimate.E2_Is_Active__c = true;
     }
     
     if(this.estimate.Id != null && psr.id <> null){
@@ -75,7 +87,9 @@ public class E2_AddEditEstimateController extends E2_Master{
       if(!estimateList.isEmpty()){
         estimate = estimateList[0];
       }      
-    }    
+    }
+    
+    isPrimary = estimate.Default__c;
     return null;
   }
 
@@ -83,9 +97,11 @@ public class E2_AddEditEstimateController extends E2_Master{
   public PageReference doSave() {   
     try {
       // insert / update estimate record into the database
-      upsert estimate;      
+      upsert estimate;
+      if(this.isNew) E2_Estimator_Manager.getEstimateRateCards(this.estimate.Id, this.estimate.CurrencyISOCode);
+      this.isNew = false;
     } catch (DMLException e) {
-      ApexPages.addMessage(new ApexPages.message(ApexPages.severity.ERROR,'Error creating new E2_estimate.'));         
+      ApexPages.addMessage(new ApexPages.message(ApexPages.severity.ERROR,'Error creating new E2_estimate.'+e.getMessage()));         
     }
     return null;
   }
@@ -98,6 +114,8 @@ public class E2_AddEditEstimateController extends E2_Master{
         PageReference pgEdit = Page.E2_AddEditEstimate;
         pgEdit.getParameters().put(E2_Constants.URL_KEY_ID, this.estimate.id);
         pgEdit.getParameters().put(URL_KEY_IS_SAVE, URL_VALUE_TRUE);
+        if(ApexPages.currentPage().getParameters().get(E2_Constants.PAGE_PARAMETER_CUSTOMERMODE) != null)  
+            pgEdit.getParameters().put(E2_Constants.PAGE_PARAMETER_CUSTOMERMODE,ApexPages.currentPage().getParameters().get(E2_Constants.PAGE_PARAMETER_CUSTOMERMODE));
         pgEdit.setRedirect(true); 
         return pgEdit;        
     }
@@ -131,7 +149,9 @@ public class E2_AddEditEstimateController extends E2_Master{
   public PageReference buildCapacity() {
     E2_CapacityController.reBuildCapacity(this.estimate);
     PageReference pg = Page.E2_Capacity;
-    pg.getParameters().put('id', this.estimate.id);    
+    pg.getParameters().put('id', this.estimate.id);  
+    if(ApexPages.currentPage().getParameters().get(E2_Constants.PAGE_PARAMETER_CUSTOMERMODE) != null)  
+            pg.getParameters().put(E2_Constants.PAGE_PARAMETER_CUSTOMERMODE,ApexPages.currentPage().getParameters().get(E2_Constants.PAGE_PARAMETER_CUSTOMERMODE));
     return pg; 
   }
   

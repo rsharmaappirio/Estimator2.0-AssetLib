@@ -4,6 +4,7 @@
  * Description: This webservice contains all the methods related to E2_Timeline page
  * Created Date: Aug 12, 2016
  * Created By: Rahul Jain (Appirio)
+ * 19 Oct 2016: Modified RS : S-455931 : UI/UX-Conditional highlight on the overridden rates cells
 *  =====================================================================*/
 global with sharing class E2_TimelineWS {
     
@@ -70,12 +71,14 @@ global with sharing class E2_TimelineWS {
         return E2_TimelineWSManager.reOrderResources(jsonstr);   
     }
       
-    webservice static string addRow(string estimateId, integer order, integer cost, integer rate, string role, string e2role, string skill, string rateCode, string estimateRateCardId){
+    webservice static string addRow(string estimateId, integer order, decimal cost, decimal rate, string role, string e2role, string skill, string rateCode, string estimateRateCardId){
       return E2_TimelineWSManager.addRow( estimateId,  order, cost,  rate,  role, e2role, skill, rateCode,  estimateRateCardId);
+      
     }
     
-    webservice static string updateRow(string estimateId, string rowId, string role, string e2role,  string skill, string rateCode, integer cost, integer rate, string estimateRateCardId){
+    webservice static string updateRow(string estimateId, string rowId, string role, string e2role,  string skill, string rateCode, decimal cost, decimal rate, string estimateRateCardId){
        return E2_TimelineWSManager.updateRow( estimateId,  rowId,  role, e2role, skill, rateCode,  cost,  rate,  estimateRateCardId);
+       
     }
     
     webservice static string deleteRow(string rowId){
@@ -134,15 +137,16 @@ global with sharing class E2_TimelineWS {
        webservice string id;
        webservice string resource;
        webservice string skill;
-       webservice integer rate;
+       webservice decimal rate;
        webservice integer order;
-       webservice integer cost;
+       webservice decimal cost;
        webservice List<E2_TimelineRowColumn> colRows;
        webservice string resourceRateCardRole;
        webservice string e2Resource;
        webservice string roleToDisplay;
+       webservice boolean isRateOverridden;
        
-       public E2_TimelineRow(string id, string resource, string skill, integer rate, integer order, integer cost, List<E2_TimelineRowColumn> colRows){
+       public E2_TimelineRow(string id, string resource, string skill, decimal rate, integer order, decimal cost, List<E2_TimelineRowColumn> colRows){
           this.id = id;
           this.resource = resource;
           this.skill = skill;
@@ -152,19 +156,24 @@ global with sharing class E2_TimelineWS {
           this.colRows = colRows;
        }
        
-       public E2_TimelineRow(string id, string resource, string resourceRateCardRole, string skill, integer rate, integer order, integer cost, List<E2_TimelineRowColumn> colRows){
+       public E2_TimelineRow(string id, string resource, string resourceRateCardRole, string skill, decimal rate, integer order, decimal cost, List<E2_TimelineRowColumn> colRows){
           this(id, resource, skill, rate, order, cost, colRows);
           this.resourceRateCardRole = resourceRateCardRole;
        }
        
-       public E2_TimelineRow(string id, string resource, string e2Resource, string resourceRateCardRole, string skill, integer rate, integer order, integer cost, List<E2_TimelineRowColumn> colRows){
+       public E2_TimelineRow(string id, string resource, string e2Resource, string resourceRateCardRole, string skill, decimal rate, integer order, decimal cost, List<E2_TimelineRowColumn> colRows){
           this(id, resource, resourceRateCardRole, skill, rate, order, cost, colRows);
           this.e2Resource = e2Resource;
        }
        
-       public E2_TimelineRow(string id, string resource, string e2Resource, string resourceRateCardRole, string skill, integer rate, integer order, integer cost, string roleToDisplay, List<E2_TimelineRowColumn> colRows){
+       public E2_TimelineRow(string id, string resource, string e2Resource, string resourceRateCardRole, string skill, decimal rate, integer order, decimal cost, string roleToDisplay, List<E2_TimelineRowColumn> colRows){
           this(id, resource, e2Resource, resourceRateCardRole, skill, rate, order, cost, colRows);
           this.roleToDisplay = roleToDisplay;
+       }
+       
+       public E2_TimelineRow(string id, string resource, string e2Resource, string resourceRateCardRole, string skill, decimal rate, integer order, decimal cost, string roleToDisplay, boolean isRateOverridden, List<E2_TimelineRowColumn> colRows){
+          this(id, resource, e2Resource, resourceRateCardRole, skill, rate, order, cost, roleToDisplay, colRows);
+          this.isRateOverridden = isRateOverridden;
        }
        
     }

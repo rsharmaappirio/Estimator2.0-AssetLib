@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GlobalPicklist xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Contains list of all the possible resource levels that will be used in Estimator 2.0, Resource Request, Assignments, Contact and  Rate Cards.This defined Role+level will be considered as a distinct resource since each of these resource role will have varying rates based on the level defined on them.</description>
+    <globalPicklistValues>
+        <fullName>Associate Consultant - Indy</fullName>
+        <default>false</default>
+    </globalPicklistValues>
+    <globalPicklistValues>
+        <fullName>Associate Consultant</fullName>
+        <default>false</default>
+    </globalPicklistValues>
+    <globalPicklistValues>
+        <fullName>Consultant</fullName>
+        <default>false</default>
+    </globalPicklistValues>
+    <globalPicklistValues>
+        <fullName>Senior Consultant</fullName>
+        <default>false</default>
+    </globalPicklistValues>
+    <globalPicklistValues>
+        <fullName>Principal Consultant</fullName>
+        <default>false</default>
+    </globalPicklistValues>
+    <globalPicklistValues>
+        <fullName>Managing Consultant</fullName>
+        <default>false</default>
+    </globalPicklistValues>
+    <masterLabel>Resource Level</masterLabel>
+    <sorted>false</sorted>
+</GlobalPicklist>

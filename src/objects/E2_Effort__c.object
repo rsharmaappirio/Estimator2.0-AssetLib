@@ -169,6 +169,18 @@ Effort Hrs - (Low% of Effort Hours)</description>
         <type>Picklist</type>
     </fields>
     <fields>
+        <fullName>Resource_Level__c</fullName>
+        <description>Contains list of all the possible resource levels that will be used in Estimator 2.0, Resource Request, Assignments, Contact and  Rate Cards.This defined Role+level will be considered as a distinct resource since each of these resource role will have varying rates based on the level defined on them.</description>
+        <externalId>false</externalId>
+        <globalPicklist>E2_Resource_Level</globalPicklist>
+        <inlineHelpText>Contains list of all the possible resource levels that will be used in Estimator 2.0, Resource Request, Assignments, Contact and  Rate Cards.This defined Role+level is a distinct resource since each of these roles will have varying rates based on level.</inlineHelpText>
+        <label>Resource Level</label>
+        <required>false</required>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Picklist</type>
+    </fields>
+    <fields>
         <fullName>Resource_Role__c</fullName>
         <description>Same picklist values as are available throughout the rest of our systems (Role/ResourceRole): Rate Card reference here https://appirio.my.salesforce.com/00N50000001v03g?setupid=CustomObjects</description>
         <externalId>false</externalId>

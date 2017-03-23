@@ -8,6 +8,8 @@
  * Date Modified      Modified By                  Description of the update
  * Nov 07, 2016       Jitendra Jangid              S-448268 : Cloned scope item on right click
  * Nov 22, 2016       Rohit Sharma                 I-244800:  E2_Estimator_WSManagerTest test class got failed while running test in prod.
+ * Dec 15, 2016       Jitendra Jangid              S-453054 : Set scope type for multiple scope items on scope tree.
+ * Feb 09, 2017       Jitendra Jangid              S-447325: Add multiplier on Scope
 *  =====================================================================*/
 @isTest(seeAllData=false)
 public class E2_Estimator_WSTest {
@@ -367,6 +369,172 @@ public class E2_Estimator_WSTest {
        }
     }
     
+// Start-> S-453054 : Set scope type for multiple scope items on scope tree.    
+    public static testMethod void testChangeScopeType(){
+        sysAdmin = getSysAdminUser();
+       
+       System.runAs(sysAdmin){
+           Test.startTest();
+           
+               parentSC = [SELECT Id FROM E2_Scope__c WHERE Parent_Scope__c = null AND RecordTypeId != :recTypeId AND Name='Parent_Scope_001'];
+               childSC = [SELECT Id  FROM E2_Scope__c WHERE Parent_Scope__c = :parentSC.Id];
+               
+               //+ve case: check response when valid json passes.                  
+               String jsonString='[{"scopeId":"'+parentSC.Id+'", "scopeType":"Epic"},{"scopeId":"'+childSC.Id+'", "scopeType":"Epic"}]';
+               String result=E2_Estimator_WS.changeScopeType(jsonString);
+              
+               parentSC = [SELECT Id,Scope_Item_Type__c FROM E2_Scope__c WHERE Parent_Scope__c = null AND RecordTypeId != :recTypeId AND Name='Parent_Scope_001'];
+               childSC = [SELECT Id,Scope_Item_Type__c FROM E2_Scope__c WHERE Parent_Scope__c = :parentSC.Id];
+               system.assertEquals('Epic', parentSC.Scope_Item_Type__c, 'Parent scope type has not updated.');
+               system.assertEquals('Epic', childSC.Scope_Item_Type__c, 'Child scope type has not updated.');
+          
+           Test.stopTest();
+       }
+    }
+    
+    public static testMethod void testChangeScopeActiveStatus(){
+      
+       sysAdmin = getSysAdminUser();
+       
+       System.runAs(sysAdmin){
+           Test.startTest();
+               estimate = [SELECT Id FROM CMC_Presales_LOE__c];
+               parentSC = [SELECT Id FROM E2_Scope__c WHERE Parent_Scope__c = null AND RecordTypeId != :recTypeId AND Name='Parent_Scope_001'];
+               childSC = [SELECT Id FROM E2_Scope__c WHERE Parent_Scope__c = :parentSC.Id];
+               //+ve case: check response when valid json passes.                  
+               String jsonString='[{"scopeId":"'+parentSC.Id+'", "activeStatus":false,"estimateId":"'+estimate.Id+'"},{"scopeId":"'+childSC.Id+'", "activeStatus":false,"estimateId":"'+estimate.Id+'"}]';
+               String result=E2_Estimator_WS.changeScopeActiveStatus(jsonString);
+              
+               parentSC = [SELECT Id,Is_Active__c FROM E2_Scope__c WHERE Parent_Scope__c = null AND RecordTypeId != :recTypeId AND Name='Parent_Scope_001'];
+               childSC = [SELECT Id, Is_Active__c FROM E2_Scope__c WHERE Parent_Scope__c = :parentSC.Id];
+               system.assert(parentSC.Is_Active__c == false, 'Parent scope status did not turn to false.');
+               system.assert(childSC.Is_Active__c == false, 'Child scope status did not turn to false.');
+          
+           Test.stopTest();
+       }
+  }
+  
+  public static testMethod void testChangeScopeComplexitys(){
+      
+       sysAdmin = getSysAdminUser();
+       
+       System.runAs(sysAdmin){
+           Test.startTest();
+           
+               estimate = [SELECT Id FROM CMC_Presales_LOE__c];
+               parentSC = [SELECT Id FROM E2_Scope__c WHERE Parent_Scope__c = null AND RecordTypeId != :recTypeId AND Name='Parent_Scope_001'];
+               childSC = [SELECT Id, Is_Active__c FROM E2_Scope__c WHERE Parent_Scope__c = :parentSC.Id];
+               //+ve case: check response when valid json passes.                  
+               String jsonString='[{"scopeId":"'+parentSC.Id+'", "scopeComplexity":"High","estimateId":"'+estimate.Id+'"},{"scopeId":"'+childSC.Id+'", "scopeComplexity":"High","estimateId":"'+estimate.Id+'"}]';
+               String result=E2_Estimator_WS.changeScopeComplexity(jsonString);
+              
+               parentSC = [SELECT Id,Complexity__c FROM E2_Scope__c WHERE Parent_Scope__c = null AND RecordTypeId != :recTypeId AND Name='Parent_Scope_001'];
+               childSC = [SELECT Id, Complexity__c FROM E2_Scope__c WHERE Parent_Scope__c = :parentSC.Id];
+               system.assert(parentSC.Complexity__c == 'High', 'Parent scope complexity did not turn to High.');
+               system.assert(childSC.Complexity__c == 'High', 'Child scope complexity did not turn to High.');
+               
+            Test.stopTest();
+       }
+  }
+
+ public static testMethod void testChangeScopeComplexityForScopeLibrary(){
+      
+       sysAdmin = getSysAdminUser();
+       
+       System.runAs(sysAdmin){
+           Test.startTest();
+           
+               scopeGroup = [SELECT Id, Name FROM E2_Scope_Group__c];
+               parentSC = [SELECT Id,Complexity__c FROM E2_Scope__c WHERE Parent_Scope__c = null AND RecordTypeId = :recTypeId AND Name='Scope_Group_Parent_Scope_001'];
+               childSC = [SELECT Id, Complexity__c FROM E2_Scope__c WHERE Parent_Scope__c = :parentSC.Id];
+               //+ve case: check response when valid json passes.                  
+               String jsonString='[{"scopeId":"'+parentSC.Id+'", "scopeComplexity":"High","scopeGroupId":"'+scopeGroup.Id+'"},{"scopeId":"'+childSC.Id+'", "scopeComplexity":"High","scopeGroupId":"'+scopeGroup.Id+'"}]';
+               String result=E2_Estimator_WS.changeScopeComplexityForScopeLibrary(jsonString);
+              
+               parentSC = [SELECT Id,Complexity__c FROM E2_Scope__c WHERE Parent_Scope__c = null AND RecordTypeId = :recTypeId AND Name='Scope_Group_Parent_Scope_001'];
+               childSC = [SELECT Id, Complexity__c FROM E2_Scope__c WHERE Parent_Scope__c = :parentSC.Id];
+               system.assert(parentSC.Complexity__c == 'High', 'Parent scope complexity did not turn to High.');
+               system.assert(childSC.Complexity__c == 'High', 'Child scope complexity did not turn to High.');
+              
+           Test.stopTest();
+       }
+  }
+  
+  public static testMethod void testChangeScopeActiveStatusForScopeLibrary(){
+      
+       sysAdmin = getSysAdminUser();
+       
+       System.runAs(sysAdmin){
+           Test.startTest();
+           
+               scopeGroup = [SELECT Id, Name FROM E2_Scope_Group__c];
+               parentSC = [SELECT Id,Is_Active__c FROM E2_Scope__c WHERE Parent_Scope__c = null AND RecordTypeId = :recTypeId AND Name='Scope_Group_Parent_Scope_001'];
+               childSC = [SELECT Id, Is_Active__c FROM E2_Scope__c WHERE Parent_Scope__c = :parentSC.Id];
+               //+ve case: check response when valid json passes.                  
+               String jsonString='[{"scopeId":"'+parentSC.Id+'", "activeStatus":false,"scopeGroupId":"'+scopeGroup.Id+'"},{"scopeId":"'+childSC.Id+'", "activeStatus":false,"scopeGroupId":"'+scopeGroup.Id+'"}]';
+               String result=E2_Estimator_WS.changeScopeActiveStatusForScopeLibrary(jsonString);
+              
+               parentSC = [SELECT Id,Is_Active__c FROM E2_Scope__c WHERE Parent_Scope__c = null AND RecordTypeId = :recTypeId AND Name='Scope_Group_Parent_Scope_001'];
+               childSC = [SELECT Id, Is_Active__c FROM E2_Scope__c WHERE Parent_Scope__c = :parentSC.Id];
+               system.assert(parentSC.Is_Active__c == false, 'Parent scope status did not turn to false.');
+               system.assert(childSC.Is_Active__c == false, 'Child scope status did not turn to false.');
+           Test.stopTest();
+       }
+  }
+// End-> S-453054 : Set scope type for multiple scope items on scope tree.   
+
+// Start ->  S-447325: Add multiplier on Scope
+// Changes: Added new test methods
+
+  public static testMethod void testRetrieveTreeContentOnScopeDetailSave(){
+         sysAdmin = getSysAdminUser();
+           
+           System.runAs(sysAdmin){
+               Test.startTest();
+                   estimate = [SELECT Id, Name FROM CMC_Presales_LOE__c];
+                   String scopes=E2_Estimator_WS.retrieveTreeContentOnScopeDetailSave(estimate.ID);
+                   system.assert(scopes!=null, 'Assert failed: few scope items attached with estimate but no scope item returned by method.');
+               Test.stopTest();
+           } 
+  }
+  
+  public static testMethod void testAddEffortMultiplier(){
+      sysAdmin = getSysAdminUser();
+       
+      System.runAs(sysAdmin){
+           Test.startTest();
+               estimate = [SELECT Id, Name FROM CMC_Presales_LOE__c];
+               parentSC = [SELECT Id,Presales_LOE__c FROM E2_Scope__c WHERE Parent_Scope__c = null AND RecordTypeId != :recTypeId AND Name='Parent_Scope_001'];
+               String selectedScope='[{"scopeId":"'+parentSC.Id+'", "estimateId":"'+parentSC.Presales_LOE__c+'","multiplier":"3"}]';
+               
+               String result=E2_Estimator_WS.addEffortMultiplier(selectedScope);
+               system.assert(result != null, 'Assert failed: unable to update multiplier.');
+               
+               
+               
+           Test.stopTest();
+     } 
+  }
+  public static testMethod void testAddEffortMultiplierOnScopeGroup(){
+      sysAdmin = getSysAdminUser();
+       
+      System.runAs(sysAdmin){
+           Test.startTest();
+               estimate = [SELECT Id, Name FROM CMC_Presales_LOE__c];
+               parentSC = [SELECT Id,Scope_Group__c FROM E2_Scope__c WHERE Parent_Scope__c = null AND RecordTypeId = :recTypeId AND Name='Scope_Group_Parent_Scope_001'];
+               String selectedScope='[{"scopeId":"'+parentSC.Id+'", "scopeGroupId":"'+parentSC.Scope_Group__c+'","multiplier":"3"}]';
+               
+               String result=E2_Estimator_WS.addEffortMultiplierOnScopeGroup(selectedScope);
+               system.assert(result != null, 'Assert failed: unable to update multiplier.');
+               
+           Test.stopTest();
+     } 
+  }
+// End ->  S-447325: Add multiplier on Scope
+
+
+
+
   private static User getSysAdminUser(){
       User admin=[Select Id from user where firstName='test user' AND lastname='Testing'];
       return admin;

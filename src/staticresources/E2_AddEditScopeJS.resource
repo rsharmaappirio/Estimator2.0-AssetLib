@@ -106,105 +106,29 @@ var jstree_options = {
             "icons": false,
             'responsive': true
         },
-        "multiple": false
+        "multiple": true
     },
     'checkbox': {
         'three_state': false,
         'cascade': ''
     },
+    "dnd" : {
+        "copy" : false
+    },
     "contextmenu": {
     	"select_node" : true,
         "items": function($node) {
             var tree = $(treeId).jstree(true);
-            return {
-                "Remove": {
-                    "separator_before": false,
-                    "separator_after": false,
-                    "label": "<span style='font-weight:bold'>Remove</span>",
-                    "action": function(obj) {
-
-                        var ans = confirm('Are you sure you want to delete selected scope?');
-                        if (ans === false) {
-                            return;
-                        }
-
-                        // THIS IS NEEDED TO ALLOW Jquery to read child nodes 
-                        AddEditScope.open_node($node);
-
-                        $(loadSpinner).show().css('height', $(document).outerHeight());
-                        AddEditScope.delete_scope_arr.push($node.id);
-                        // traverse all the child li elements (clild nodes to retrieve the sfdc scope ids)
-                        // push each id in array to be utilzied later to delete from db
-                        $('#' + $node.id).find('li').each(function(e) {
-                            AddEditScope.delete_scope_arr.push($(this).attr('id'));
-                        });
-                        // delete node and child nodes from UI  
-                        tree.delete_node($node);
-                        // delete scope and child scopes from db
-                        AddEditScope.delete_scope_async();
-
-                    }
-                },
-                
-                "Comment": {
-                    "separator_before": false,
-                    "separator_after": false,
-                    "label": "<span style='font-weight:bold'>Comment</span>",
-                    "action": function(obj) {
-                        ck_custom_editor.postComment($node);
-                    }
-                },
-                
-                "Add_from_Template": {
-                    "separator_before": false,
-                    "separator_after": false,
-                    "label": "<span style='font-weight:bold'>Add</span> from Library",
-                    "action": function(obj) {
-                        AddEditScope.ADD_FROM_TEMPLATE_PARENT_ID = $node.id;
-                        AddEditScope.showAddFromTemplateModal();
-                    }
-                },
-                
-                "Clone_self": {
-                    "separator_before": false,
-                    "separator_after": false,
-                    "label": "<span style='font-weight:bold'>Clone</span> (self only)",
-                    "action": function(obj) {
-                        AddEditScope.ADD_FROM_TEMPLATE_PARENT_ID = $node.id;
-                        AddEditScope.cloneScopeWithoutChild($node.id);
-                    }
-                },
-                "Clone_with_child": {
-                    "separator_before": false,
-                    "separator_after": false,
-                    "label": "<span style='font-weight:bold'>Clone</span> (with children)",
-                    "action": function(obj) {
-                        AddEditScope.ADD_FROM_TEMPLATE_PARENT_ID = $node.id;
-                        AddEditScope.cloneScopeWithChild($node.id);
-                    }
-                },
-                
-                
-                "Add_Edit_Child": {
-                    "separator_before": false,
-                    "separator_after": false,
-                    "label": "<span style='font-weight:bold'>Manage</span> Children",
-                    "action": function(obj) {
-                        $('#helpModal1').find('#theIframe1').attr('src', '/apex/E2_AddNewScope?is_Edit=true&estimate_id=' + estimateId + '&id=' + $node.id);
-                        $('.custom-new-header').html('Manage Children');
-                        $('#helpModal1').find('#addupdatescopebutton').html('Update');
-                        $('#helpModal1').show();
-                        $('#helpModal1').find('#theIframe1').closest('div.slds-modal__content').scrollTop(0);
-                        $('#helpBackdrop1').css({'height' : $(window.document).height()});
-                        $('#helpBackdrop1').show();
-
-                    }
-                }
-                
-                
-                
-                
-            };
+            
+            var selected_nodes_arr = $( treeId + ' li.jstree-node').
+                  filter(function() { return $(this).children('a.jstree-anchor.jstree-clicked').length != 0; }).
+                  map(function() { return this.id; }).get();
+      
+            if(selected_nodes_arr.length === 1){
+                return AddEditScope.contextmenuForSingleNodeSelects(tree, $node, selected_nodes_arr); 
+            }else if(selected_nodes_arr.length > 1){
+                return AddEditScope.contextmenuForMultipleNodeSelects(tree, $node, selected_nodes_arr);
+            }                                
         }
     }
 };
@@ -377,7 +301,26 @@ $(document).ready(function() {
         $(this).click(warning_event);
         $(this).click(handler);
     });
-    
+    $("a.highlight-scope-parent").on("click", function() {
+        $( "div.highlight-scope" ).toggle();
+        var selectedType = $("#scope_item_type").val();
+        selectedType = selectedType == "--None--" ? "" : selectedType;
+        var selectedComplexity = $("#scope_complexity").val();
+        selectedComplexity = selectedComplexity == "--None--" ? "" : selectedComplexity;
+        var shouldHaveQuestions = $("#scope_qa").is(':checked');
+        var shouldHaveAsset = $("#scope_asset").is(':checked');
+        if(selectedType == "" && selectedComplexity == "" && !shouldHaveQuestions && !shouldHaveAsset) {
+            $("#removefilter").hide();
+        }
+    });
+    $("#removefilter").on("click", function() {
+        $("#scope_item_type").val('--None--');
+        $("#scope_complexity").val('--None--');
+        $("#scope_qa").prop('checked', false);
+        $("#scope_asset").prop('checked', false);
+        scopeTreeFilter();
+        $(this).hide();
+    });
     
 });
 
@@ -402,12 +345,126 @@ var bindEvents = function(){
         AddEditScope.reparent_scope(data.node.id, data.parent);
     });
     
-    //EVENT: JSTREE NODE BEING SELECTED
-    $(treeId).bind("select_node.jstree", function (e, data) {
-          global_scopeId = data.node.id;
-          AddEditScope.edit_node(data.node, data.parent);   
-          tabpanel.showDetailTab();
+    $(treeId).on("open_node.jstree", function(e, data) {
+        scopeTreeFilter();
     });
+    
+    //EVENT: JSTREE NODE BEING SELECTED
+    AddEditScope.bindSelect_NodeEvent();
+ 
+    $("input[name=scope_filter]").on("change", function() {
+        scopeTreeFilter();
+    });
+    $("#scope_item_type").on("change", function() {
+        scopeTreeFilter();
+    });
+    $("#scope_complexity").on("change", function() {
+        scopeTreeFilter();
+    });
+}
+
+// RS : 12/12 Highlight scope javascript comment
+var scopeTreeFilter = function() {
+    var selectedType = $("#scope_item_type").val();
+    selectedType = selectedType == "--None--" ? "" : selectedType;
+    var selectedComplexity = $("#scope_complexity").val();
+    selectedComplexity = selectedComplexity == "--None--" ? "" : selectedComplexity;
+    var shouldHaveQuestions = $("#scope_qa").is(':checked');
+    var shouldHaveAsset = $("#scope_asset").is(':checked');
+    var $baseNode = $(treeId).jstree(true).get_node("#");
+    $.each($baseNode.children_d, function(indx, id) {
+        var $childnode = $(treeId).jstree(true).get_node(id);
+        var highlightNode = false;
+        if(selectedType != '' && selectedComplexity != '' && shouldHaveQuestions && shouldHaveAsset) {
+            
+            highlightNode = (selectedType == $childnode.original.scope_type && selectedComplexity == $childnode.original.complexity && 
+                            $childnode.original.hasQuestion == 'true' && $childnode.original.hasAsset == 'true');
+                            
+        } else if(selectedType != '' && selectedComplexity != '' && shouldHaveQuestions && !shouldHaveAsset) {
+            
+            highlightNode = (selectedType == $childnode.original.scope_type && selectedComplexity == $childnode.original.complexity && 
+                            $childnode.original.hasQuestion == 'true');
+                            
+        } else if(selectedType != '' && selectedComplexity != '' && !shouldHaveQuestions && shouldHaveAsset) {
+            
+            highlightNode = (selectedType == $childnode.original.scope_type && selectedComplexity == $childnode.original.complexity && 
+                            $childnode.original.hasAsset == 'true');
+                            
+        } else if(selectedType != '' && selectedComplexity != '' && !shouldHaveQuestions && !shouldHaveAsset) {
+            
+            highlightNode = (selectedType == $childnode.original.scope_type && selectedComplexity == $childnode.original.complexity);
+                            
+        } else if(selectedType != '' && selectedComplexity == '' && shouldHaveQuestions && shouldHaveAsset) {
+            
+            highlightNode = (selectedType == $childnode.original.scope_type && 
+                            $childnode.original.hasQuestion == 'true' && $childnode.original.hasAsset == 'true');
+                            
+        } else if(selectedType != '' && selectedComplexity == '' && !shouldHaveQuestions && shouldHaveAsset) {
+            
+            highlightNode = (selectedType == $childnode.original.scope_type && $childnode.original.hasAsset == 'true');
+                            
+        } else if(selectedType != '' && selectedComplexity == '' && shouldHaveQuestions && !shouldHaveAsset) {
+            
+            highlightNode = (selectedType == $childnode.original.scope_type && 
+                            $childnode.original.hasQuestion == 'true');
+                            
+        } else if(selectedType != '' && selectedComplexity == '' && !shouldHaveQuestions && !shouldHaveAsset) {
+            
+            highlightNode = (selectedType == $childnode.original.scope_type);
+                            
+        } else if(selectedType == '' && selectedComplexity != '' && shouldHaveQuestions && shouldHaveAsset) {
+            
+            highlightNode = (selectedComplexity == $childnode.original.complexity && 
+                            $childnode.original.hasQuestion == 'true' && $childnode.original.hasAsset == 'true');
+                            
+        } else if(selectedType == '' && selectedComplexity != '' && !shouldHaveQuestions && shouldHaveAsset) {
+            
+            highlightNode = (selectedComplexity == $childnode.original.complexity && 
+                            $childnode.original.hasAsset == 'true');
+                            
+        } else if(selectedType == '' && selectedComplexity != '' && shouldHaveQuestions && !shouldHaveAsset) {
+            
+            highlightNode = (selectedComplexity == $childnode.original.complexity && 
+                            $childnode.original.hasAsset == 'true');
+                            
+        } else if(selectedType == '' && selectedComplexity != '' && !shouldHaveQuestions && !shouldHaveAsset) {
+            
+            highlightNode = (selectedComplexity == $childnode.original.complexity);
+                            
+        } else if(selectedType == '' && selectedComplexity == '' && shouldHaveQuestions && shouldHaveAsset) {
+            
+            highlightNode = ($childnode.original.hasQuestion == 'true' && $childnode.original.hasAsset == 'true');
+                            
+        }  else if(selectedType == '' && selectedComplexity == '' && shouldHaveQuestions && !shouldHaveAsset) {
+            
+            highlightNode = ($childnode.original.hasQuestion == 'true');
+                            
+        }  else if(selectedType == '' && selectedComplexity == '' && !shouldHaveQuestions && shouldHaveAsset) {
+            
+            highlightNode = ($childnode.original.hasAsset == 'true');
+                            
+        } 
+        console.log($childnode.parent);
+        if(highlightNode) {
+            $("#"+ $childnode.original.id +" span#"+ $childnode.original.id +"_ATTR").addClass("highlight"); 
+            AddEditScope.open_parent_nodes($childnode.parent);
+        } else {
+            $("#"+ $childnode.original.id +" span#"+ $childnode.original.id +"_ATTR").removeClass("highlight");
+        }
+        });
+        if(selectedType == "" && selectedComplexity == "" && !shouldHaveQuestions && !shouldHaveAsset) {
+            $("#removefilter").hide();
+        } else {
+            $("#removefilter").show();
+        }
+}
+
+var resetScopefilters = function() {
+    $("#scope_item_type").val('--None--');
+    $("#scope_complexity").val('--None--');
+    $("#scope_qa").prop('checked', false);
+    $("#scope_asset").prop('checked', false);
+    $("#removefilter").hide();
 }
 
 
@@ -427,6 +484,648 @@ var AddEditScope = {
     SELECTED_NODE : '',
     UPDATE_DISPLAY_ORDER : false,
     OPEN_NODES : null,
+    open_parent_nodes: function(nodeId) {
+        if(nodeId != '#') {
+            var $parentNode = $(treeId).jstree(true).get_node(nodeId);
+            if($parentNode.state.opened == false) { 
+                    AddEditScope.open_node($parentNode);
+            }
+            AddEditScope.open_parent_nodes($parentNode.parent);
+        }
+    },
+    removeDuplicatesFromArray: function(num){
+          var x,  
+              len = num.length,  
+              out = [],  
+              obj = {};  
+           
+          for(x = 0; x < len; x++) {  
+            obj[num[x]]=0;  
+          }  
+          
+          for (x in obj) {  
+            out.push(x);  
+          }  
+          
+          return out;
+          
+    },
+    
+    contextmenuForSingleNodeSelects: function(tree, $node, selected_nodes_arr){
+        return {
+            "Remove": {
+                "separator_before": false,
+                "separator_after": false,
+                "label": "<span style='font-weight:bold'>Remove</span>",
+                "action": function(obj) {
+
+                    var ans = confirm('Are you sure you want to delete selected scope?');
+                    if (ans === false) {
+                        return;
+                    }
+
+                    // THIS IS NEEDED TO ALLOW Jquery to read child nodes 
+                    AddEditScope.open_node($node);
+
+                    $(loadSpinner).show().css('height', $(document).outerHeight());
+                    AddEditScope.delete_scope_arr.push($node.id);
+                    // traverse all the child li elements (clild nodes to retrieve the sfdc scope ids)
+                    // push each id in array to be utilzied later to delete from db
+                    $('#' + $node.id).find('li').each(function(e) {
+                        AddEditScope.delete_scope_arr.push($(this).attr('id'));
+                    });
+                    // delete node and child nodes from UI  
+                    tree.delete_node($node);
+                    // delete scope and child scopes from db
+                    AddEditScope.delete_scope_async();
+
+                }
+            },
+            
+            "Comment": {
+                "separator_before": false,
+                "separator_after": false,
+                "label": "<span style='font-weight:bold'>Comment</span>",
+                "action": function(obj) {
+                    ck_custom_editor.postComment($node);
+                }
+            },
+            
+            "Add_from_Template": {
+                "separator_before": false,
+                "separator_after": false,
+                "label": "<span style='font-weight:bold'>Add</span> from Library",
+                "action": function(obj) {
+                    AddEditScope.ADD_FROM_TEMPLATE_PARENT_ID = $node.id;
+                    AddEditScope.showAddFromTemplateModal();
+                }
+            },
+            
+            "Clone_self": {
+                "separator_before": false,
+                "separator_after": false,
+                "label": "<span style='font-weight:bold'>Clone</span> (self only)",
+                "action": function(obj) {
+                    AddEditScope.ADD_FROM_TEMPLATE_PARENT_ID = $node.id;
+                    AddEditScope.cloneScopeWithoutChild($node.id);
+                }
+            },
+            "Clone_with_child": {
+                "separator_before": false,
+                "separator_after": false,
+                "label": "<span style='font-weight:bold'>Clone</span> (with children)",
+                "action": function(obj) {
+                    AddEditScope.ADD_FROM_TEMPLATE_PARENT_ID = $node.id;
+                    AddEditScope.cloneScopeWithChild($node.id);
+                }
+            },
+            
+            
+            "Add_Edit_Child": {
+                "separator_before": false,
+                "separator_after": false,
+                "label": "<span style='font-weight:bold'>Manage</span> Children",
+                "action": function(obj) {
+                    $('#helpModal1').find('#theIframe1').attr('src', '/apex/E2_AddNewScope?is_Edit=true&estimate_id=' + estimateId + '&id=' + $node.id);
+                    $('.custom-new-header').html('Manage Children');
+                    $('#helpModal1').find('#addupdatescopebutton').html('Update');
+                    $('#helpModal1').show();
+                    $('#helpModal1').find('#theIframe1').closest('div.slds-modal__content').scrollTop(0);
+                    $('#helpBackdrop1').css({'height' : $(window.document).height()});
+                    $('#helpBackdrop1').show();
+
+                }
+            },
+            "Change_Type": {
+                "separator_before": false,
+                "separator_after": false,
+                "label": "<span style='font-weight:bold'>Change Type</span>",
+                "action": false,
+                "submenu" : {
+                    "Epic": {
+                                        "separator_before": false,
+                                        "separator_after": false,
+                                        "label": "<span style='font-weight:bold'>Epic</span>",
+                                        "action": function(obj) {
+                                            AddEditScope.updateScopeType(selected_nodes_arr, "Epic");
+                                        }
+                            },
+                     "Story": {
+                                        "separator_before": false,
+                                        "separator_after": false,
+                                        "label": "<span style='font-weight:bold'>Story</span>",
+                                        "action": function(obj) {
+                                            AddEditScope.updateScopeType(selected_nodes_arr, "Story");
+                                        }
+                            },
+                    "Component": {
+                                        "separator_before": false,
+                                        "separator_after": false,
+                                        "label": "<span style='font-weight:bold'>Component</span>",
+                                        "action": function(obj) {
+                                            AddEditScope.updateScopeType(selected_nodes_arr, "Component");
+                                        }
+                            },
+                    "Capability": {
+                                        "separator_before": false,
+                                        "separator_after": false,
+                                        "label": "<span style='font-weight:bold'>Capability</span>",
+                                        "action": function(obj) {
+                                            AddEditScope.updateScopeType(selected_nodes_arr, "Capability");
+                                        }
+                            },
+                }
+            },
+            "Change_Status":{
+                "separator_before": false,
+                "separator_after": false,
+                "label": "<span style='font-weight:bold'>Change Status</span>",
+                "action": false,
+                "submenu" : {
+                    "Mark_Active": {
+                        "separator_before": false,
+                        "separator_after": false,
+                        "label": "<span style='font-weight:bold'>Activate</span>",
+                        "action": function(obj) {
+                            AddEditScope.updateScopeStatus(selected_nodes_arr, true);
+                        }
+                    },
+                    "Mark_InActive": {
+                        "separator_before": false,
+                        "separator_after": false,
+                        "label": "<span style='font-weight:bold'>De-Activate</span>",
+                        "action": function(obj) {
+                            AddEditScope.updateScopeStatus(selected_nodes_arr, false);
+                        }
+                    }
+                }
+            },
+            "Change_Complexity":{
+                "separator_before": false,
+                "separator_after": false,
+                "label": "<span style='font-weight:bold'>Change Complexity</span>",
+                "action": false,
+                "submenu" : {
+                    "Low": {
+                        "separator_before": false,
+                        "separator_after": false,
+                        "label": "<span style='font-weight:bold'>Low</span>",
+                        "action": function(obj) {
+                            AddEditScope.updateScopeComplexity(selected_nodes_arr, 'Low');
+                        }
+                    },
+                    "Medium": {
+                        "separator_before": false,
+                        "separator_after": false,
+                        "label": "<span style='font-weight:bold'>Medium</span>",
+                        "action": function(obj) {
+                            AddEditScope.updateScopeComplexity(selected_nodes_arr, 'Medium');
+                        }
+                    },
+                    "High": {
+                        "separator_before": false,
+                        "separator_after": false,
+                        "label": "<span style='font-weight:bold'>High</span>",
+                        "action": function(obj) {
+                            AddEditScope.updateScopeComplexity(selected_nodes_arr, 'High');
+                        }
+                    }
+                }
+            }
+        };
+        
+    },
+    
+    contextmenuForMultipleNodeSelects: function(tree, $node, selected_nodes_arr){
+         return {
+            "Remove": {
+                "separator_before": false,
+                "separator_after": false,
+                "label": "<span style='font-weight:bold'>Remove</span>",
+                "action": function(obj) {
+                    
+                    var ans = confirm('Are you sure you want to delete selected scope?');
+                    if (ans === false) {
+                        return;
+                    }
+                    
+                    $(loadSpinner).show().css('height', $(document).outerHeight());
+                    
+                    for(var indx = 0; indx < selected_nodes_arr.length; indx++){
+                        //console.log(selected_nodes_arr[indx]);
+                        
+                        //add selected node ids in global array
+                        AddEditScope.delete_scope_arr.push(selected_nodes_arr[indx]);
+                        
+                        var $node = $(treeId).jstree().get_node(selected_nodes_arr[indx]);
+                        
+                        // THIS IS NEEDED TO ALLOW Jquery to read child nodes 
+                        AddEditScope.open_node($node);
+                        
+                        
+                        // traverse all the child li elements (clild nodes to retrieve the sfdc scope ids)
+                        // push each id in array to be utilzied later to delete from db
+                        $('#' + $node.id).find('li').each(function(e) {
+                            AddEditScope.delete_scope_arr.push($(this).attr('id'));
+                        });
+                        
+                         // delete node and child nodes from UI  
+                         tree.delete_node($node);
+                    }
+                    //console.log(AddEditScope.removeDuplicatesFromArray(AddEditScope.delete_scope_arr));
+                    //remove duplicates from array
+                    AddEditScope.delete_scope_arr = AddEditScope.removeDuplicatesFromArray(AddEditScope.delete_scope_arr);
+                    // delete scope and child scopes from db
+                    AddEditScope.delete_scope_async();
+
+                }
+            },
+            "Change_Status":{
+                "separator_before": false,
+                "separator_after": false,
+                "label": "<span style='font-weight:bold'>Change Status</span>",
+                "action": false,
+                "submenu" : {
+                    "Mark_Active": {
+                        "separator_before": false,
+                        "separator_after": false,
+                        "label": "<span style='font-weight:bold'>Activate</span>",
+                        "action": function(obj) {
+                            AddEditScope.updateScopeStatus(selected_nodes_arr, true);
+                        }
+                    },
+                    "Mark_InActive": {
+                        "separator_before": false,
+                        "separator_after": false,
+                        "label": "<span style='font-weight:bold'>De-Activate</span>",
+                        "action": function(obj) {
+                            AddEditScope.updateScopeStatus(selected_nodes_arr, false);
+                        }
+                    }
+                }
+            },
+            "Change_Type": {
+                "separator_before": false,
+                "separator_after": false,
+                "label": "<span style='font-weight:bold'>Change Type</span>",
+                "action": false,
+                "submenu" : {
+                    "Epic": {
+                                        "separator_before": false,
+                                        "separator_after": false,
+                                        "label": "<span style='font-weight:bold'>Epic</span>",
+                                        "action": function(obj) {
+                                            AddEditScope.updateScopeType(selected_nodes_arr, "Epic");
+                                        }
+                            },
+                     "Story": {
+                                        "separator_before": false,
+                                        "separator_after": false,
+                                        "label": "<span style='font-weight:bold'>Story</span>",
+                                        "action": function(obj) {
+                                            AddEditScope.updateScopeType(selected_nodes_arr, "Story");
+                                        }
+                            },
+                    "Component": {
+                                        "separator_before": false,
+                                        "separator_after": false,
+                                        "label": "<span style='font-weight:bold'>Component</span>",
+                                        "action": function(obj) {
+                                            AddEditScope.updateScopeType(selected_nodes_arr, "Component");
+                                        }
+                            },
+                    "Capability": {
+                                        "separator_before": false,
+                                        "separator_after": false,
+                                        "label": "<span style='font-weight:bold'>Capability</span>",
+                                        "action": function(obj) {
+                                            AddEditScope.updateScopeType(selected_nodes_arr, "Capability");
+                                        }
+                            },
+                }
+                
+            },
+            "Change_Complexity":{
+                "separator_before": false,
+                "separator_after": false,
+                "label": "<span style='font-weight:bold'>Change Complexity</span>",
+                "action": false,
+                "submenu" : {
+                    "Low": {
+                        "separator_before": false,
+                        "separator_after": false,
+                        "label": "<span style='font-weight:bold'>Low</span>",
+                        "action": function(obj) {
+                            AddEditScope.updateScopeComplexity(selected_nodes_arr, 'Low');
+                        }
+                    },
+                    "Medium": {
+                        "separator_before": false,
+                        "separator_after": false,
+                        "label": "<span style='font-weight:bold'>Medium</span>",
+                        "action": function(obj) {
+                            AddEditScope.updateScopeComplexity(selected_nodes_arr, 'Medium');
+                        }
+                    },
+                    "High": {
+                        "separator_before": false,
+                        "separator_after": false,
+                        "label": "<span style='font-weight:bold'>High</span>",
+                        "action": function(obj) {
+                            AddEditScope.updateScopeComplexity(selected_nodes_arr, 'High');
+                        }
+                    }
+                }
+            },
+            
+        };  
+    },
+    // RS : S-453054 12/12 : method create JSON 
+    updateScopeComplexity : function(selected_nodes_arr, scopeComplexity) {
+        $(loadSpinner).show();
+        var nodes_order_json = '[';
+        for(var indx = 0; indx < selected_nodes_arr.length; indx++){
+            nodes_order_json += '{"scopeId":"' + selected_nodes_arr[indx] + '", "scopeComplexity":"' + scopeComplexity + '", "estimateId":"' + estimateId + '"},';
+            var $node = $(treeId).jstree().get_node(selected_nodes_arr[indx]);
+            if($node.children_d.length > 0 && $node.state.opened == false) {            
+                 $.each($node.children_d, function(indx, id) {
+        		    nodes_order_json += '{"scopeId":"' + id + '", "scopeComplexity":"' + scopeComplexity + '", "estimateId":"' + estimateId + '"},';
+        	    });           
+            }
+            
+        }
+        nodes_order_json = nodes_order_json.slice(0, -1);
+        nodes_order_json += ']';
+                                            
+        sforce.apex.execute("E2_Estimator_WS", "changeScopeComplexity", {
+            selectedScopesJSON: nodes_order_json
+        }, AddEditScope.updateScopeComplexityCallback);
+    },
+    updateScopeComplexityCallback : {
+        onSuccess: function(result) {
+            result = (result.length > 0 ? result[0] : result);
+            console.log(result);
+            // check for failure message
+            if (result.indexOf('Fail') != -1) {
+                CustomAlert.showError(result);
+                $(loadSpinner).hide();
+                return;
+            }
+            result = JSON.parse(result);
+            // load all the parent nodes first
+            $.each(result, function(indx, scope) {
+                $("#"+ scope.scopeId + "_ATTR").replaceWith( scope.formatedScopeName );
+                var $node = $(treeId).jstree().get_node(scope.scopeId);
+                $node.text = scope.formatedScopeName;
+                $node.original.complexity = scope.scopeComplexity;
+                /////////AddEditScope.reload_Scope_frameId(scope.scopeId);
+                var frame_id = '#' + scope.scopeId + AddEditScope.ENDS_WITH;
+                var frame_id_standard = scope.scopeId + AddEditScope.ENDS_WITH;
+                  if($(frame_id).length){
+                    var frameWin = document.getElementById(frame_id_standard).contentWindow;   
+                    if(typeof frameWin != 'undefined' && typeof frameWin.EditScope != 'undefined' && typeof frameWin.EditScope.changeComplexityOnFly == 'function'){
+                        frameWin.EditScope.changeComplexityOnFly(scope.scopeComplexity);
+                    }else{
+                        $(frame_id).attr("src", function(){ return $(this).attr("src")});
+                    }
+                  }
+            });
+            resetScopefilters();
+            $(loadSpinner).hide();
+        },
+        onFailure: function(error) {
+            alert(error);
+            $(loadSpinner).hide();
+        }
+    },
+    updateScopeStatus : function(selected_nodes_arr, isActive) {
+        $(loadSpinner).show();
+        
+        var nodes_order_json = '[';
+        for(var indx = 0; indx < selected_nodes_arr.length; indx++){
+            nodes_order_json += '{"scopeId":"' + selected_nodes_arr[indx] + '", "activeStatus":' + isActive + ', "estimateId":"' + estimateId + '"},';
+            var $node = $(treeId).jstree().get_node(selected_nodes_arr[indx]);
+            if($node.children_d.length > 0 && $node.state.opened == false) {            
+                 $.each($node.children_d, function(indx, id) {
+        		    nodes_order_json += '{"scopeId":"' + id + '", "activeStatus":' + isActive + ', "estimateId":"' + estimateId + '"},';
+        	    });           
+            }
+        }
+        nodes_order_json = nodes_order_json.slice(0, -1);
+        nodes_order_json += ']';
+                                            
+        sforce.apex.execute("E2_Estimator_WS", "changeScopeActiveStatus", {
+            selectedScopesJSON: nodes_order_json
+        }, AddEditScope.updateScopeStatusCallback);
+    },
+     updateScopeStatusCallback : {
+        onSuccess: function(result) {
+            result = (result.length > 0 ? result[0] : result);
+            //console.log(result);
+            // check for failure message
+            if (result.indexOf('Fail') != -1) {
+                CustomAlert.showError(result);
+                $(loadSpinner).hide();
+                return;
+            }
+            result = JSON.parse(result);
+            // load all the parent nodes first
+            $.each(result, function(indx, scope) {
+                $("#"+ scope.scopeId + "_ATTR").replaceWith( scope.formatedScopeName );
+                var $node = $(treeId).jstree().get_node(scope.scopeId);
+                $node.text = scope.formatedScopeName;
+                var frame_id = '#' + scope.scopeId + AddEditScope.ENDS_WITH;
+                var frame_id_standard = scope.scopeId + AddEditScope.ENDS_WITH;
+                  if($(frame_id).length){
+                    var frameWin = document.getElementById(frame_id_standard).contentWindow;   
+                    if(typeof frameWin != 'undefined' && typeof frameWin.EditScope != 'undefined' && typeof frameWin.EditScope.changeStatusOnFly == 'function'){
+                        frameWin.EditScope.changeStatusOnFly(scope.activeStatus);
+                    }else{
+                        $(frame_id).attr("src", function(){ return $(this).attr("src")});
+                    }
+                  }
+            });
+            resetScopefilters();
+            $(loadSpinner).hide();
+        },
+        onFailure: function(error) {
+            alert(error);
+            $(loadSpinner).hide();
+        }
+    },
+    updateScopeType : function(selected_nodes_arr, scopeType) {
+        $(loadSpinner).show();
+        var nodes_order_json = '[';
+        for(var indx = 0; indx < selected_nodes_arr.length; indx++){
+            nodes_order_json += '{"scopeId":"' + selected_nodes_arr[indx] + '", "scopeType":"' + scopeType + '"},';
+        }
+        nodes_order_json = nodes_order_json.slice(0, -1);
+        nodes_order_json += ']';
+                                            
+        sforce.apex.execute("E2_Estimator_WS", "changeScopeType", {
+            selectedScopesJSON: nodes_order_json
+        }, AddEditScope.updateScopeTypeCallback);
+    },
+    updateScopeTypeCallback : {
+        onSuccess: function(result) {
+            result = (result.length > 0 ? result[0] : result);
+            console.log(result);
+            // check for failure message
+            if (result.indexOf('Fail') != -1) {
+                CustomAlert.showError(result);
+                $(loadSpinner).hide();
+                return;
+            }
+            result = JSON.parse(result);
+            // load all the parent nodes first
+            $.each(result, function(indx, scope) {
+                //AddEditScope.reload_Scope_frameId(scope.scopeId);
+                var $node = $(treeId).jstree().get_node(scope.scopeId);
+                $node.original.scope_type = scope.scopeType;
+                var frame_id = '#' + scope.scopeId + AddEditScope.ENDS_WITH;
+                var frame_id_standard = scope.scopeId + AddEditScope.ENDS_WITH;
+                  if($(frame_id).length){
+                    var frameWin = document.getElementById(frame_id_standard).contentWindow;   
+                    if(typeof frameWin != 'undefined' && typeof frameWin.EditScope != 'undefined' && typeof frameWin.EditScope.changeTypeOnFly == 'function'){
+                        frameWin.EditScope.changeTypeOnFly(scope.scopeType);
+                    }else{
+                        $(frame_id).attr("src", function(){ return $(this).attr("src")});
+                    }
+                  }
+            });
+            //resetScopefilters();
+            $(loadSpinner).hide();
+        },
+        onFailure: function(error) {
+            alert(error);
+            $(loadSpinner).hide();
+        }
+    },
+     addEffortMultiplier : function(scopeId, multiplier) {
+         if(multiplier == '') {
+             multiplier = 0;
+         }
+        $(loadSpinner).show();
+        var nodes_order_json = '[';
+        if(typeof scopeId != 'undefined' && scopeId != '') {
+            var $node = $(treeId).jstree().get_node(scopeId);
+            console.log($node);
+            if(typeof $node != 'undefined' && typeof $node != undefined && $node.children_d.length > 0) {            
+                 $.each($node.children_d, function(indx, id) {
+        		    nodes_order_json += '{"scopeId":"' + id + '",  "multiplier":"' + multiplier + '", "estimateId":"' + estimateId + '"},';
+        	    });           
+            }
+        }
+        if(nodes_order_json != '[') {
+            nodes_order_json = nodes_order_json.slice(0, -1);
+            nodes_order_json += ']';
+            sforce.apex.execute("E2_Estimator_WS", "addEffortMultiplier", {
+                selectedScopesJSON: nodes_order_json
+            }, AddEditScope.addEffortMultiplier_Callback);
+        }else {
+            $(loadSpinner).hide();
+        }
+    },
+     addEffortMultiplier_Callback : {
+        onSuccess: function(result) {
+            result = (result.length > 0 ? result[0] : result);
+            //console.log(result);
+            // check for failure message
+            if (result.indexOf('Fail') != -1) {
+                CustomAlert.showError(result);
+                $(loadSpinner).hide();
+                return;
+            }
+            AddEditScope.addEffortMultiplier_Success(result);
+            $(loadSpinner).hide();
+        },
+        onFailure: function(error) {
+            alert(error);
+            $(loadSpinner).hide();
+        }
+    },
+    addEffortMultiplierOnReprent : function(parentScopeId, childScopeId) {
+        var $node = $(treeId).jstree().get_node(parentScopeId);
+        if(typeof $node != 'undefined' && typeof $node.original != 'undefined') {
+            var multiplier = $node.original.multiplier == null || $node.original.multiplier == '' ? 1 :$node.original.multiplier; 
+            var nodes_order_json = '[';
+            nodes_order_json += '{"scopeId":"' + childScopeId + '", "multiplier":"' + multiplier + '", "estimateId":"' + estimateId + '"},';
+            var $childScope = $(treeId).jstree().get_node(childScopeId);
+            if($childScope.children_d.length > 0) {            
+                $.each($childScope.children_d, function(indx, id) {
+                    nodes_order_json += '{"scopeId":"' + id + '",  "multiplier":"' + multiplier + '", "estimateId":"' + estimateId + '"},';
+                });           
+            }
+            if(nodes_order_json != '[') {
+                nodes_order_json = nodes_order_json.slice(0, -1);
+                nodes_order_json += ']';
+                sforce.apex.execute("E2_Estimator_WS", "addEffortMultiplier", {
+                    selectedScopesJSON: nodes_order_json
+                }, AddEditScope.addEffortMultiplierOnReprent_callback);
+            }
+        }
+    },
+    addEffortMultiplierOnReprent_callback : {
+      onSuccess: function(result) {
+            result = (result.length > 0 ? result[0] : result);
+            //console.log(result);
+            // check for failure message
+            if (result.indexOf('Fail') != -1) {
+                CustomAlert.showError(result);
+                $(loadSpinner).hide();
+                return;
+            }
+            AddEditScope.addEffortMultiplier_Success(result);
+        },
+        onFailure: function(error) {
+            alert(error);
+            $(loadSpinner).hide();
+        }  
+    },
+    addEffortMultiplier_Success : function(result) {
+        result = JSON.parse(result);
+        // load all the parent nodes first
+        $.each(result, function(indx, scope) {
+            $("#"+ scope.scopeId + "_ATTR").replaceWith( scope.formatedScopeName );
+            var $node = $(treeId).jstree().get_node(scope.scopeId);
+            $node.text = scope.formatedScopeName;
+            if(typeof $node.original != 'undefined' && typeof $node.original.multiplier != 'undefined') {
+                $node.original.multiplier = scope.multiplier;
+                var frame_id = '#' + scope.scopeId + AddEditScope.ENDS_WITH;
+                var frame_id_standard = scope.scopeId + AddEditScope.ENDS_WITH;
+                if($(frame_id).length){
+                    var frameWin = document.getElementById(frame_id_standard).contentWindow;   
+                    if(typeof frameWin != 'undefined' && typeof frameWin.EditScope != 'undefined' && typeof frameWin.EditScope.updateEffortMultiplier == 'function'){
+                        frameWin.EditScope.updateEffortMultiplier(scope.multiplier);
+                    }else{
+                        $(frame_id).attr("src", function(){ return $(this).attr("src")});
+                    }
+                }
+            }
+        });
+        resetScopefilters();
+    },
+    bindSelect_NodeEvent: function(){
+        
+        //EVENT: JSTREE NODE BEING SELECTED
+        $(treeId).bind("select_node.jstree", function (e, data) {
+              var selected_nodes_arr = $( treeId + ' li.jstree-node').
+                      filter(function() { return $(this).children('a.jstree-anchor.jstree-clicked').length != 0; }).
+                      map(function() { return this.id; }).get();
+                      
+              //RJ: 09/12: Ensure that detail only gets loaded when there is only one
+              //           node selected; if multiple nodes are selected
+              //           we need not to load all the selected scopes detail screens
+              if(selected_nodes_arr.length === 1){
+                
+                global_scopeId = data.node.id;
+                AddEditScope.edit_node(data.node, data.parent);   
+                tabpanel.showDetailTab();
+              }
+        });
+        
+    },
+    
     // RS 11/22: S-452962 : method re-initiate JStree on cloning scope, 
     // add new scope or add from template. This method get all open nodes
     // in jstree in OPEN_NODES as array
@@ -643,7 +1342,6 @@ var AddEditScope = {
                   alert(result);
                 }
                 $(loadSpinner).hide();
-                
                 // remove references from js memory
                 for(var _a in AddEditScope.reparent_call_register){
                     global_scopeId = _a;
@@ -656,7 +1354,10 @@ var AddEditScope = {
                 return;
             }
             // if there is no failure; delete respective call registers
-            if (AddEditScope.reparent_call_register && AddEditScope.reparent_call_register[result]) delete AddEditScope.reparent_call_register[result];
+            if (AddEditScope.reparent_call_register && AddEditScope.reparent_call_register[result]) {
+                AddEditScope.addEffortMultiplierOnReprent(AddEditScope.reparent_call_register[result], result); 
+                delete AddEditScope.reparent_call_register[result];
+            }
             if (AddEditScope.reparent_call_register && JSON.stringify(AddEditScope.reparent_call_register) == '{}') {
            
                 // WHEN REPARENTING - EDIT SCOPE SCREEN NEED TO BE RELOADED WITH NEW PARENT
@@ -682,23 +1383,28 @@ var AddEditScope = {
         // create a json of new order of scopes in the tree hierarchy and send this json to the 
         // controller to update the position of all the scopes in the tree.
         var nodes_order_json = '[';
-        
-        $($(treeId).jstree(true).get_json('#', {flat:true})).each(function(index, value){
+          $($(treeId).jstree(true).get_json('#', {flat:true})).each(function(index, value){
             var position = $.inArray(value.id, $(treeId).jstree().get_node(value.parent).children);
             nodes_order_json += '{"scopeId":"' + value.id + '", "displayOrder":"' + position + '", "sequence":"' + index + '"},';
-        });
+          });
         
         nodes_order_json = nodes_order_json.slice(0, -1);
         nodes_order_json += ']';
-        
-        // invoke the webservice to update scopes display order 
-        sforce.apex.execute("E2_Estimator_WS", "updateScopesDisplayOrder", {
+        try {
+            JSON.parse(nodes_order_json);
+             // invoke the webservice to update scopes display order 
+            sforce.apex.execute("E2_Estimator_WS", "updateScopesDisplayOrder", {
                 scopeJsonStr: nodes_order_json
                 }, AddEditScope.updateScopeDisplayOrderCallback);
+        } catch (err) {
+            alert("Oops!!! There seems some issue in re-parenting scopes. Please refresh the page and try again!!!");
+            $(loadSpinner).hide();
+        }
     },
     
     updateScopeDisplayOrderCallback : {
         onSuccess: function(result) {
+            //alert('success' +result);
             result = (result.length > 0 ? result[0] : result);
             // check for failure message
             if (result.indexOf('Fail') != -1) {
@@ -827,6 +1533,7 @@ var AddEditScope = {
                 $(loadSpinner).hide();
             }
             AddEditScope.OPEN_NODES = null;
+            resetScopefilters();
         },
         onFailure: function(error) {
             alert(error);
@@ -1133,25 +1840,42 @@ var AddEditScope = {
               }         
               
               var ele = $(AddEditScope.selected_flag_element);
+              var flagValue = '';
               if(ele.hasClass("flagRed")){
                  ele.removeClass("flagRed");
                  ele.addClass("flagYellow");
+                 flagValue = 'Yellow'; 
               }
               else if(ele.hasClass("flagYellow")){
                  ele.removeClass("flagYellow");
                  ele.addClass("flagGreen");
+                 flagValue = 'Green';
               }
               else if(ele.hasClass("flagGreen")){
                  ele.removeClass("flagGreen");
                  ele.addClass("flagRed");
+                 flagValue = 'Red';
               }
               else {
                  ele.addClass("flagGreen");
+                 flagValue = 'Green';
               }
               
               // WHEN FLAGGING - EDIT SCOPE SCREEN NEED TO BE RELOADED WITH NEW PARENT - IF EXISTS
+              //var frame_id = '#' + result + AddEditScope.ENDS_WITH;
+              //if($(frame_id).length) $(frame_id).attr("src", function(){ return $(this).attr("src")});
+              
               var frame_id = '#' + result + AddEditScope.ENDS_WITH;
-              if($(frame_id).length) $(frame_id).attr("src", function(){ return $(this).attr("src")});
+              var frame_id_standard = result + AddEditScope.ENDS_WITH;
+              if($(frame_id).length){
+                var frameWin = document.getElementById(frame_id_standard).contentWindow;   
+                if(typeof frameWin != 'undefined' && typeof frameWin.flag_controller != 'undefined' && typeof frameWin.flag_controller.setFlagOnFly == 'function'){
+                    frameWin.flag_controller.setFlagOnFly(flagValue);
+                }else{
+                    $(frame_id).attr("src", function(){ return $(this).attr("src")});
+                }
+              } 
+              
               
               $(loadSpinner).hide();
         },
@@ -1367,5 +2091,3 @@ function hideSpinner() {
     $('#loadingSpinner').hide();
     return false;
 }
-
-

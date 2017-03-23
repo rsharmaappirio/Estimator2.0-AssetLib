@@ -1,0 +1,149 @@
+<apex:page standardcontroller="CMC_Presales_LOE__c"  extensions="E2_PresalesLOESummaryController" tabstyle="CMC_Presales_LOE__c"
+ action="{!pageAction}" showHeader="true" standardStylesheets="true" sidebar="false" 
+ applyHtmlTag="true" applyBodyTag="false">
+    <body class="slds-scope">
+    <!-- Lightning Desktop theme -->
+    <apex:variable var="uiTheme" value="lightningDesktop" 
+        rendered="{!$User.UIThemeDisplayed == 'Theme4d'}">
+        <link type="text/css" rel="stylesheet" href="{!URLFOR($Resource.E2_SLDS1, '/assets/styles/salesforce-lightning-design-system.min.css')}" />
+    </apex:variable>
+    <style>
+        body {
+            padding:0px!important;
+            margin:0px!important;
+        }
+        form {
+            width: 100%!important;
+            display : inline-flex!important;
+        }
+        .apexp{
+            width: 100%!important;
+        }
+    </style>
+    <apex:includeLightning />
+    <apex:form >
+    <apex:pageBlock mode="maindetail" id="pageBlock" title="">  
+            <apex:pageBlockSection title="Summary" columns="2">
+                <apex:pageBlockSectionItem helpText="{!$ObjectType.CMC_Presales_LOE__c.fields.Total_Fees__c.inlineHelpText}">
+                    <apex:outputLabel value="Total Fee" for="total_fee"/>
+                    <apex:outputText value="{0,number,###,###,##0.00}" id="total_fee">
+                        <apex:param value="{!estimateSummary.totalFee}" />
+                    </apex:outputText>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem helpText="{!$ObjectType.CMC_Presales_LOE__c.fields.Total_Resource_Hours__c.inlineHelpText}">
+                    <apex:outputLabel value="Total Resource Hours" for="totalResourceHours"/>
+                    <apex:outputText value="{0,number,###,###,##0.00}" id="totalResourceHours">
+                        <apex:param value="{!estimateSummary.totalResourceHours}" />
+                    </apex:outputText>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem helpText="{!$ObjectType.CMC_Presales_LOE__c.fields.Calculated_Costs__c.inlineHelpText}">
+                    <apex:outputLabel value="Calculated Cost" for="calculatedCost"/>
+                    <apex:outputText value="{0,number,###,###,##0.00}" id="calculatedCost">
+                        <apex:param value="{!estimateSummary.calculatedCost}" />
+                    </apex:outputText>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem helpText="{!$ObjectType.CMC_Presales_LOE__c.fields.Jaipur_Hours__c.inlineHelpText}">
+                    <apex:outputLabel value="% Jaipur Hours" for="jaipurHoursPct"/>
+                    <apex:outputText value="{0,number,###,###,##0.00%}" id="jaipurHoursPct">
+                        <apex:param value="{!estimateSummary.jaipurHoursPct}" />
+                    </apex:outputText>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem helpText="{!$ObjectType.CMC_Presales_LOE__c.fields.As_Sold_Margin__c.inlineHelpText}">
+                    <apex:outputLabel value="As Sold Margin" for="asSoldMargin"/>
+                    <apex:outputText value="{0,number,###,###,##0.00%}" id="asSoldMargin">
+                        <apex:param value="{!estimateSummary.asSoldMargin}" />
+                    </apex:outputText>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem helpText="{!$ObjectType.CMC_Presales_LOE__c.fields.Blended_Rate_Number__c.inlineHelpText}">
+                    <apex:outputLabel value="Blended Rate" for="blendedRate"/>
+                    <apex:outputText value="{0,number,###,###,##0.00}" id="blendedRate">
+                        <apex:param value="{!estimateSummary.blendedRate}" />
+                    </apex:outputText>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <label> </label>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem helpText="{!$ObjectType.CMC_Presales_LOE__c.fields.E2_Estimate_Total_Weeks__c.inlineHelpText}">
+                    <apex:outputLabel value="Number of Weeks" for="numberOfWeeks"/>
+                    <apex:outputText value="{0,number,###,###,##0.00}" id="numberOfWeeks">
+                        <apex:param value="{!estimateSummary.numberOfWeeks}" />
+                    </apex:outputText>
+                </apex:pageBlockSectionItem>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection title="Fixed Fee Detail" columns="2">
+                <apex:pageBlockSectionItem helpText="{!$ObjectType.CMC_Presales_LOE__c.fields.Fixed_Fee_Buffer__c.inlineHelpText}">
+                    <apex:outputLabel value="Fixed Fee Buffer %" for="fixedFeeBufferPct"/>
+                    <apex:outputText value="{0,number,###,###,##0.00%}" id="fixedFeeBufferPct">
+                        <apex:param value="{!estimateSummary.fixedFeeBufferPct}" />
+                    </apex:outputText>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem helpText="{!$ObjectType.CMC_Presales_LOE__c.fields.Fixed_Fee_Buffer_Amount__c.inlineHelpText}">
+                    <apex:outputLabel value="Fixed Fee Buffer Amount" for="fixedFeeBufferAmount"/>
+                    <apex:outputText value="{0,number,###,###,##0.00}" id="fixedFeeBufferAmount">
+                        <apex:param value="{!estimateSummary.fixedFeeBufferAmount}" />
+                    </apex:outputText>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem helpText="{!$ObjectType.CMC_Presales_LOE__c.fields.Fixed_Fee_Cost_Uplift_Percent__c.inlineHelpText}">
+                    <apex:outputLabel value="Fixed Fee Cost Uplift %" for="fixedFeeCostUpliftPct"/>
+                    <apex:outputText value="{0,number,###,###,##0.00%}" id="fixedFeeCostUpliftPct">
+                        <apex:param value="{!estimateSummary.fixedFeeCostUpliftPct}" />
+                    </apex:outputText>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem helpText="{!$ObjectType.CMC_Presales_LOE__c.fields.Fixed_Fee_Cost_Uplift__c.inlineHelpText}">
+                    <apex:outputLabel value="Fixed Fee Cost Uplift" for="fixedFeeCostUpliftAmount"/>
+                    <apex:outputText value="{0,number,###,###,##0.00}" id="fixedFeeCostUpliftAmount">
+                        <apex:param value="{!estimateSummary.fixedFeeCostUpliftAmount}" />
+                    </apex:outputText>
+                </apex:pageBlockSectionItem>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection title="T&M Detail" columns="2">
+                <apex:pageBlockSectionItem helpText="{!$ObjectType.CMC_Presales_LOE__c.fields.Service_Fees__c.inlineHelpText}">
+                    <apex:outputLabel value="Service Fees" for="serviceFee"/>
+                    <apex:outputText value="{0,number,###,###,##0.00}" id="serviceFee">
+                        <apex:param value="{!estimateSummary.serviceFee}" />
+                    </apex:outputText>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem helpText="{!$ObjectType.CMC_Presales_LOE__c.fields.Calculated_Margin__c.inlineHelpText}">
+                    <apex:outputLabel value="Calculated Margin" for="calculatedMargin"/>
+                    <apex:outputText value="{0,number,###,###,##0.00%}" id="calculatedMargin">
+                        <apex:param value="{!estimateSummary.calculatedMargin}" />
+                    </apex:outputText>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem helpText="{!$ObjectType.CMC_Presales_LOE__c.fields.Service_Costs__c.inlineHelpText}">
+                    <apex:outputLabel value="Service Costs" for="serviceCost"/>
+                    <apex:outputText value="{0,number,###,###,##0.00}" id="serviceCost">
+                        <apex:param value="{!estimateSummary.serviceCost}" />
+                    </apex:outputText>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem helpText="{!$ObjectType.CMC_Presales_LOE__c.fields.Discount_Percent__c.inlineHelpText}">
+                    <apex:outputLabel value="Discount %" for="discountPct"/>
+                    <apex:outputText value="{0,number,###,###,##0.00%}" id="discountPct">
+                        <apex:param value="{!estimateSummary.discountPct}" />
+                    </apex:outputText>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem helpText="{!$ObjectType.CMC_Presales_LOE__c.fields.Service_Margin__c.inlineHelpText}">
+                    <apex:outputLabel value="Service Margin" for="serviceMargin"/>
+                    <apex:outputText value="{0,number,###,###,##0.00%}" id="serviceMargin">
+                        <apex:param value="{!estimateSummary.serviceMargin}" />
+                    </apex:outputText>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem helpText="{!$ObjectType.CMC_Presales_LOE__c.fields.Discount_Amount__c.inlineHelpText}">
+                    <apex:outputLabel value="Discount Amount" for="discountAmount"/>
+                    <apex:outputText value="{0,number,###,###,##0.00}" id="discountAmount">
+                        <apex:param value="{!estimateSummary.discountAmount}" />
+                    </apex:outputText>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <label> </label>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem helpText="{!$ObjectType.CMC_Presales_LOE__c.fields.Pass_Through__c.inlineHelpText}">
+                    <apex:outputLabel value="Pass-Through" for="passThrough"/>
+                    <apex:outputText value="{0,number,###,###,##0.00}" id="passThrough">
+                        <apex:param value="{!estimateSummary.passThrough}" />
+                    </apex:outputText>
+                </apex:pageBlockSectionItem>
+            </apex:pageBlockSection>
+    </apex:pageBlock>
+    </apex:form>
+</body>
+</apex:page>

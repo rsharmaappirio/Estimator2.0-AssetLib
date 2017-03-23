@@ -1,0 +1,30 @@
+<apex:page standardController="Presales_Request__c" extensions="E2_RedirectToPrimaryTimelineController" action="{!pageAction}">
+    
+    <script>
+        var estimateId = '{!primaryEstimateId}';
+        var isE2Estimate = '{!isE2Estimate}';
+        
+        if(estimateId != null && estimateId.trim() != ''){
+            var url;
+            if(isE2Estimate == 'true'){
+                url = '/apex/E2_Timeline?id=' + estimateId;
+            }
+            else{
+                var host = "{!$Setup.CMC_URLs__c.Backend_Host__c}";
+                var estimateString = 'cmc-estimates';
+                var type = "{!primaryEstimateType}";
+                if(type == 'workday'){
+                    estimateString = "estimates"
+                }
+                url =  host + 'sfdc-login?sf-session-id={!$Api.Session_ID}&success-url=/cmc/wm/' + estimateString + '/index.html%23/' + estimateId + '/timeline';
+                //alert(url);
+            }
+            window.open(url, "_self", "width="+screen.availWidth+",height="+screen.availHeight);
+        }
+        else{
+            alert('No primary estimate defined for this presales request.');
+            window.history.back();
+        }
+    </script>
+
+</apex:page>

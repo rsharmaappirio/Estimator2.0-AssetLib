@@ -6,7 +6,10 @@
  * Created By: Rohit Sharma (Appirio)
  * 
  * Date Modified      Modified By                  Description of the update
-    
+ * Jan 25, 2017       Rohit Sharma                 S-453758 : Status field (Active,Inactive) for Derived Effort Template and related
+ *                                                 Added condition to add only active derived efforts template for selection
+ *                                                 If logged-in user is derived effort template manager, user can access all active/
+ *                                                 in-active derived effort templates.
 *  =====================================================================*/
 public with sharing class E2_SelectDerivedEffortTemplateController {
     
@@ -14,19 +17,23 @@ public with sharing class E2_SelectDerivedEffortTemplateController {
     public List<DerivedGroup> derivedGroups{get;set;}
     public E2_PaginationUtility effortPaging {get; set;}
     public Integer selectedPageNumber{get;set;}
-    
+    public boolean isTemplateManager{get;set;}
     //constructor 
     public E2_SelectDerivedEffortTemplateController() {
         selectedPageNumber = 1;
         derivedGroups = new List<DerivedGroup>();
         effortPaging = new E2_PaginationUtility();
         effortPaging.pageSize = 15;
+        this.isTemplateManager = false;
     }
     
     //page action method which is called on page load 
     public PageReference pageAction(){
+        // RS 25/01: S-453758 : check user access: if logged-in user is derived effort template manager
+        List <PermissionSetAssignment> permissionSetAssigneeList = [SELECT Id From PermissionSetAssignment Where PermissionSet.Name =: E2_CONSTANTS.DERIVED_EFFORT_TEMPLATE_MANAGER AND AssigneeId =: UserInfo.getUserId() LIMIT 1];
+        if(!permissionSetAssigneeList.isEmpty()) this.isTemplateManager = true;
         for(E2_Derived_Effort_Group__c dg : Database.query(E2_DataUtil.getDerivedEffortGroup(null))) {
-            derivedGroups.add(new DerivedGroup(dg));
+            if(dg.Is_Active__c || this.isTemplateManager)  derivedGroups.add(new DerivedGroup(dg));
         }
         List<Object> tempList = effortPaging.setPagination(derivedGroups);
         derivedGroups = getWrapperList(tempList);
@@ -47,10 +54,10 @@ public with sharing class E2_SelectDerivedEffortTemplateController {
         derivedGroups.clear();
         // check that if selected Group is not null/empty than retrieve all the derived efforts of selected group
         // else show blank;
-        if(!String.isBlank(searchGroup)){         
+        if(!String.isBlank(searchGroup)){
             for(E2_Derived_Effort_Group__c dg : Database.query(E2_DataUtil.getDerivedEffortGroup(searchGroup))) {
-                derivedGroups.add(new DerivedGroup(dg));
-            } 
+                if(dg.Is_Active__c || this.isTemplateManager)  derivedGroups.add(new DerivedGroup(dg));
+            }
             List<Object> tempList = effortPaging.setPagination(derivedGroups);
             derivedGroups = getWrapperList(tempList);        
         } else {

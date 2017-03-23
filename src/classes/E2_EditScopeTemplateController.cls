@@ -7,7 +7,8 @@
  * 
  * Date Modified      Modified By                  Description of the update
    October 19th,2016  Rohit Sharma                 I-241595 : Enhance the E2 code where algo has developed 
-                                                    around "Scope Template manager" permission set 
+                                                    around "Scope Template manager" permission set
+ * Jan 11, 2017       Vikash Goyal                 I-252391 : Delete exception on deleting efforts
 *  =====================================================================*/
 
 public with sharing class E2_EditScopeTemplateController {
@@ -17,7 +18,7 @@ public with sharing class E2_EditScopeTemplateController {
     public boolean is_View{get;set;}
     public string scopeGrpId{get;set;}
     public string dmlOperationMessage{get;set;}
-    
+    public Datetime lastModifiedDate{get;set;}
     public string assetsRecsJson {get;set;}
     public boolean showFavForSTMPermissionSet {get;set;}
     
@@ -48,6 +49,7 @@ public with sharing class E2_EditScopeTemplateController {
         }else{
             this.scope.LastModifiedBy = [SELECT Name,Id FROM User WHERE Id=:this.scope.LastModifiedById];
             scopeQuestionManager.scope = this.scope;
+            this.lastModifiedDate = this.scope.lastModifiedDate;
             populateViewRecords();
         }
         return null;
@@ -59,7 +61,7 @@ public with sharing class E2_EditScopeTemplateController {
         List<E2_Effort__c> masterScope_Efforts = new List<E2_Effort__c>();        
         List<E2_Scope__c> scopeListToDelete = new List<E2_Scope__c>();       
         List<E2_Effort__c> effortsToDelete = new List<E2_Effort__c>();
-                
+        this.childScope.multiplierUpdated = false;        
         Scope masterScope;
         ApexPages.Message msg;        
         Id recTypeId = E2_RecordTypeClass.getId(E2_Constants.E2_SCOPE_API_NAME, E2_Constants.SCOPE_RT_TEMPLATE);
@@ -88,6 +90,11 @@ public with sharing class E2_EditScopeTemplateController {
         
         try{ 
             if(!scopeListToUpsert.isEmpty()) upsert scopeListToUpsert;
+            
+            if(this.childScope.multiplier  != this.childScope.scope.Effort_Quantity__c) {
+                this.childScope.multiplier = this.childScope.scope.Effort_Quantity__c;
+                this.childScope.multiplierUpdated = true;
+            }
         }catch(Exception ex){
             Database.rollback(sp);
             resetChildScopesOnException();            
@@ -133,6 +140,16 @@ public with sharing class E2_EditScopeTemplateController {
         // Rohit - Set Current user details as last modified by user on scope 
         User modifiedBy = new User(Id = UserInfo.getUserId(),FirstName = UserInfo.getFirstName(),LastName = UserInfo.getLastName()); 
         this.scope.LastModifiedBy = modifiedBy;
+        this.lastModifiedDate = System.now();
+        // 01/11/2017 : VG : I-252391
+        if(msg == null){
+            // now since we got success from all the dml operations, lets remove the isDeleted efforts from the list
+            for(integer indx = (this.childScope.efforts.size() - 1); indx > -1; indx--){
+                Effort ef = this.childScope.efforts[indx];
+                if(ef.isDeleted == true) this.childScope.efforts.remove(indx);
+            }
+        }
+        
         return null;             
     }
     
@@ -188,6 +205,12 @@ public with sharing class E2_EditScopeTemplateController {
         return null;
     }
     
+    public Double offset{get{
+        TimeZone tz = UserInfo.getTimeZone();
+        //Milliseconds to Day
+        return tz.getOffset(DateTime.now()) / (1000 * 3600 * 24.0);
+    }}
+    
     //wrapper class for Scope
     public class Scope{
         public string key{get;set;}
@@ -199,6 +222,9 @@ public with sharing class E2_EditScopeTemplateController {
 
         public boolean isDeleted{get;set;}
         public string slider_state{get;set;}
+        
+        public decimal multiplier{get;set;}
+        public boolean multiplierUpdated {get;set;}
         
         public decimal getEffortsSize(){
             decimal hrs = 0;
@@ -229,6 +255,8 @@ public with sharing class E2_EditScopeTemplateController {
             }
             this.key = scope.id;
             this.scope = scope;
+            this.multiplier = scope.Effort_Quantity__c;
+            this.multiplierUpdated = false;
             for(E2_Effort__c effort : efforts){
                 if(effort.Source_Effort__c <> NULL) {
                     this.hasClonedEfforts = true;           

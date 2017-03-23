@@ -8,12 +8,19 @@
  * Date Modified      Modified By                  Description of the update
  * Apr 18th, 2016     Arpita                       T-494117
  * Nov 11th, 2016     Rohit Sharma                 S-447474 : Fixed fee calculation support
+ * Dec 8th, 2016      Rohit Sharma                 S-449145 :Ability to find the Scope by type, 
+ * Dec, 12th, 2016    Rohit Sharma                 S-437670 :Added couple of constants like SCOPE_TYPES, COMPLEXITIES etc 
+ * Jan 25, 2017       Rohit Sharma                 S-453758 : Added new constant permission set name : Derived_Effort_Template_Manager
+ * Feb 08, 2017       Rohit Sharma                 S-447325 : Add multiplier on Scope : new contants for multiplier badge.
 *  =====================================================================*/
 public class E2_Constants {
 
   public final static string ESTIMATE_KEYPREFIX = 'a0F';
   public final static string COMPONENT_KEYPREFIX = 'a01';
   public final static string SCOPE_KEYPREFIX = 'a0A';
+  
+  public final static Set<String> SCOPE_TYPES = new Set<String>{'capability', 'epic', 'story', 'component'};
+  public final static Set<String> SCOPE_COMPLEXITIES = new Set<String>{'high', 'medium', 'low'};
   
   public final static decimal DEFAULT_SCOPE_DISPLAY_ORDER = 10000;
   
@@ -50,6 +57,7 @@ public class E2_Constants {
   public final static string DML_OPERATION_MESSAGE_SUCCESS = 'Success';
   
   public final static string SEPARATOR = '|';
+  public final static string HYPHEN_SEPARATOR = ' - ';
   public final static string OPEN_BRACKET = '(';
   public final static string CLOSE_BRACKET = ')';
   public final static string SPACE = ' ';
@@ -69,11 +77,12 @@ public class E2_Constants {
   //public final static string NODE_DISPLAY_TEMPLATE = '<span><span>{SCOPE_NAME}</span>&nbsp;&nbsp;&nbsp;<span class="slds-badge slds-badge-custom">{COMPLEXITY}</span><span class="slds-badge slds-badge-custom">{TYPE}</span><span class="slds-badge slds-badge-custom">{EFFORT} hrs</span></span>';
   //public final static string NODE_DISPLAY_TEMPLATE = '<span><span{ADD_CLASS}>{SCOPE_NAME}</span>&nbsp;&nbsp;&nbsp;<span class="slds-badge slds-badge-custom">{EFFORT}</span>&nbsp;&nbsp;&nbsp;<span class="slds-badge slds-badge-custom flag flag{FLAG_COLOR}" onclick="AddEditScope.updateFlag(event, this);return false;">{SCOPE_FLAG}</span></span>';
   //public final static string NODE_DISPLAY_TEMPLATE_WITHOUT_EFFORTS = '<span><span{ADD_CLASS}>{SCOPE_NAME}</span>&nbsp;&nbsp;&nbsp;<span class="slds-badge slds-badge-custom flag flag{FLAG_COLOR}" onclick="AddEditScope.updateFlag(event, this);return false;">{SCOPE_FLAG}</span></span>';
-  public final static string NODE_DISPLAY_TEMPLATE = '<span><span{ADD_CLASS}>{SCOPE_NAME}</span>&nbsp;&nbsp;&nbsp;<span class="slds-badge slds-badge-custom">{EFFORT}</span></span>';
-  public final static string NODE_DISPLAY_TEMPLATE_WITHOUT_EFFORTS = '<span><span{ADD_CLASS}>{SCOPE_NAME}</span></span>';
-    public final static string NODE_DISPLAY_TEMPLATE_FLAG = '<span><span{ADD_CLASS}>{SCOPE_NAME}</span>&nbsp;&nbsp;&nbsp;<span class="slds-badge slds-badge-custom">{EFFORT}</span>&nbsp;<span class="slds-badge flag flag{FLAG_COLOR}" title="Set red/amber/green status of this scope item" onclick="AddEditScope&&AddEditScope.updateFlag(event, this);return false;"></span></span>';
-  public final static string NODE_DISPLAY_TEMPLATE_WITHOUT_EFFORTS_FLAG = '<span><span{ADD_CLASS}>{SCOPE_NAME}</span>&nbsp;<span class="slds-badge flag flag{FLAG_COLOR}" title="Set red/amber/green status of this scope item" onclick="AddEditScope&&AddEditScope.updateFlag(event, this);return false;"></span></span>';
+  public final static string NODE_DISPLAY_TEMPLATE = '<span id="{SCOPE_ID}_ATTR"><span{ADD_CLASS}>{SCOPE_NAME}</span>&nbsp;&nbsp;&nbsp;<span class="slds-badge slds-badge-custom">{EFFORT}</span></span>';
+  public final static string NODE_DISPLAY_TEMPLATE_WITHOUT_EFFORTS = '<span id="{SCOPE_ID}_ATTR"><span{ADD_CLASS}>{SCOPE_NAME}</span></span>';
+  public final static string NODE_DISPLAY_TEMPLATE_FLAG = '<span id="{SCOPE_ID}_ATTR"><span{ADD_CLASS}>{SCOPE_NAME}</span>&nbsp;&nbsp;&nbsp;<span class="slds-badge slds-badge-custom">{EFFORT}</span>&nbsp;<span class="slds-badge flag flag{FLAG_COLOR}" title="Set red/amber/green status of this scope item" onclick="AddEditScope&&AddEditScope.updateFlag(event, this);return false;"></span></span>';
+  public final static string NODE_DISPLAY_TEMPLATE_WITHOUT_EFFORTS_FLAG = '<span id="{SCOPE_ID}_ATTR"><span{ADD_CLASS}>{SCOPE_NAME}</span>&nbsp;<span class="slds-badge flag flag{FLAG_COLOR}" title="Set red/amber/green status of this scope item" onclick="AddEditScope&&AddEditScope.updateFlag(event, this);return false;"></span></span>';
   public final static string NODE_SCOPE_NAME_FORMAT = '{SCOPE_NAME}';
+  public final static string NODE_SCOPE_ID_FORMAT = '{SCOPE_ID}';
   public final static string NODE_SCOPE_FLAG_FORMAT = '{SCOPE_FLAG}';
   public final static string NODE_EFFORT_FORMAT = '{EFFORT}';
   public final static string NODE_COMPLEXITY_FORMAT = '{COMPLEXITY}';
@@ -110,12 +119,21 @@ public class E2_Constants {
   public final static Map<String, String> ROLE_RESOURCEROLE_MAP = new Map<String, String> { 'GS - Jaipur Delivery - Business Analyst' => 'Business Analyst - Jaipur',
                                                                                             'GS - Jaipur Delivery - Project Manager' => 'Project Manager - Jaipur',
                                                                                             'GS - Jaipur Delivery - Technical Lead' => 'Technical Lead - Jaipur',
-                                                                                            'GS - North America Delivery - Technical Consultant - Express' => 'Technical Consultant'
+                                                                                            'GS - North America Delivery - Technical Consultant - Express' => 'Technical Consultant',
+                                                                                            'North America - Global Services - Technical Consultant - Express' => 'Technical Consultant'
   };
   
   public final static String ESTIMATE_MODE_T_AND_M = 'tm';
   public final static String ESTIMATE_MODE_FIXED_FEE = 'fixed';
   public final static Decimal DEFAULT_FIXED_FEE_UPLIFT = 5;
+  
+  public final static String DERIVED_EFFORT_TEMPLATE_MANAGER = 'Derived_Effort_Template_Manager';
+  
+  public final static String PAGE_PARAMETER_CUSTOMERMODE = 'customerMode';
+  
+  // S-447325 : Effort badge Css constant
+  public final static String CSS_SLDS_BADGE_CUSTOM = 'slds-badge-custom';
+  public final static String CSS_SLDS_BADGE_EFFORT_MULTIPLIER = 'slds-badge-effort-multiplier';
   
   public void testConstantsMethod(){}
 }

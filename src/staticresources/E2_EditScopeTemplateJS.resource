@@ -2,7 +2,8 @@ var validations = {
 
 	load : function(){
 	    validations.applyNumericValidation();
-	    validations.applyTraverse();	    
+	    validations.applyTraverse();	  
+	    validations.scopeNameLengthcheck();
 	},
 	
 	
@@ -86,6 +87,24 @@ var validations = {
 		 }
        }
         
+	},
+	scopeNameLengthcheck : function() {
+	    $("input.scope_name").on("paste", function(e) {
+    	     var pastedData = '';
+    	     var clipboardData = e.originalEvent.clipboardData || window.clipboardData;
+             pastedData = clipboardData.getData('Text');  
+            if(pastedData.length > 80) {
+                alert("Scope Name should be less than 80 characters");
+                e.preventDefault();
+            } else if(pastedData != '') {
+                var value = $(this).val();
+                var newValue = value + pastedData;
+                if(newValue.length > 80) {
+                  alert("Scope Name should be less than 80 characters");
+                  e.preventDefault();  
+                } 
+            }
+        });
 	}
 
 
@@ -448,6 +467,7 @@ $( document ).ready(function() {
     hideSpinner();
     
     if(msg.toLowerCase() == 'success'){
+       if(multiplierUpdated == "true") parent&&parent.AddEditScope&&parent.AddEditScope.addEffortMultiplier&&parent.AddEditScope.addEffortMultiplier(scope_sfdc_id, effortQuantity);
        //parent&&parent.AddEditScope&&parent.AddEditScope.closeEditScopeModelPopup&&parent.AddEditScope.closeEditScopeModelPopup();
        if($("input[id$='dmlMessage']").length) $("input[id$='dmlMessage']").val('Fail');
        parent&&parent.AddEditScope&&parent.AddEditScope.updateChildScopeOnParentScopeEdit&&parent.AddEditScope.updateChildScopeOnParentScopeEdit(scope_sfdc_id, scope_sfdc_name, changeComplexity, scopeToActivate, scopeToDeactivate);
@@ -965,6 +985,29 @@ var tabpanel = {
 var EditScope = {
     ADD_BULK_EFFORTS_FRAME_ID : 'bulkEffortIframe',
     
+    changeComplexityOnFly: function(complexity){ 
+         if($("[id*=scope-complexity]").length)  $("[id*=scope-complexity]").val(complexity);
+    }, 
+    
+    changeTypeOnFly: function(type){
+        if($("[id*=scope-itemtype]").length) $("[id*=scope-itemtype]").val(type);
+    },
+    
+    changeStatusOnFly: function(status){
+        if($("[id*=scope-status]").length){
+            var chkBoxEle = $("[id*=scope-status]")[0];
+            if(status == true){
+                chkBoxEle.setAttribute("checked", "checked");
+                chkBoxEle.checked = true;
+            }
+            else{
+                chkBoxEle.setAttribute("checked", "");
+                chkBoxEle.checked = false;
+                chkBoxEle.removeAttribute("checked", "");
+            }
+        }
+    },
+    
     addEfforts: function() {
         var func = document.getElementById(EditScope.ADD_BULK_EFFORTS_FRAME_ID).contentWindow.prepareJson;
         if (typeof func != 'undefined') {
@@ -1002,5 +1045,9 @@ var EditScope = {
         if ($('#' + EditScope.ADD_BULK_EFFORTS_FRAME_ID).length) {
             $('#' + EditScope.ADD_BULK_EFFORTS_FRAME_ID).css('height', height + 'px');
         }
+    },
+    
+    updateEffortMultiplier : function(multiplier) {
+        $("input[Id$='scope-effortMultiplier']").val(multiplier);
     }
 }

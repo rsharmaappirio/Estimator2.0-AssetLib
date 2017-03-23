@@ -6,7 +6,8 @@
  * Created By: Rohit Sharma (Appirio)
  * 
  * Date Modified      Modified By                  Description of the update
-   May 17, 2016       Rahul Jain                   Removed hardcoding, added constants & comments. 
+   May 17, 2016       Rahul Jain                   Removed hardcoding, added constants & comments.
+   Jan 11, 2017       Vikash Goyal                 I-252391 : Delete exception on deleting efforts
 *  =====================================================================*/
 
 public with sharing class E2_EditScopeController {
@@ -19,6 +20,9 @@ public with sharing class E2_EditScopeController {
     public boolean is_Dirty{get;set;}
     public string assetsRecsJson {get;set;}
     public string effortsJson {get;set;}
+    public Datetime lastModifiedDate{get;set;}
+    public static final string DEFAULT_VALUE = 'None';
+
     @TestVisible private Map<String,E2_Favourite_Scope__c> favScopes;
     
     public E2_ScopeQuestionAnswerManager scopeQuestionManager{get;set;}
@@ -35,7 +39,6 @@ public with sharing class E2_EditScopeController {
        assetsRecsJson = '';
        effortsJson = '';
        scopeQuestionManager = new E2_ScopeQuestionAnswerManager();
-       
     }
 
     public PageReference pageAction(){
@@ -46,9 +49,10 @@ public with sharing class E2_EditScopeController {
             return null;            
         }else{
           this.scope.LastModifiedBy = [SELECT Name,Id FROM User WHERE Id=:this.scope.LastModifiedById];
+          this.lastModifiedDate = this.scope.lastModifiedDate;
         	getUserFavoriteScopes();
         	scopeQuestionManager.scope = this.scope;
-            populateViewRecords();            
+            populateViewRecords();   
         }
         return null;
     }
@@ -80,6 +84,7 @@ public with sharing class E2_EditScopeController {
         List<E2_Recommended_Asset__c> assetsToInsert = new List<E2_Recommended_Asset__c>();
         List<E2_Recommended_Asset__c> assetsToDelete = new List<E2_Recommended_Asset__c>();
         this.errorMessage = E2_Constants.BLANK;  
+        this.childScope.multiplierUpdated = false;
         Scope masterScope;
         Id recTypeId = E2_RecordTypeClass.getId(E2_Constants.E2_SCOPE_API_NAME, E2_Constants.SCOPE_RT_SCOPE);
         
@@ -98,7 +103,7 @@ public with sharing class E2_EditScopeController {
             }
         }
         // Create a savepoint 
-        Savepoint sp = Database.setSavepoint();             
+        Savepoint sp = Database.setSavepoint();    
         // mark scopes as favorites
         if(this.childScope.scope.Is_Favourite__c != this.childScope.isFavorite) {
             String uniqueKey = this.childScope.scope.Id + '-' + UserInfo.getUserId();
@@ -106,9 +111,6 @@ public with sharing class E2_EditScopeController {
 		      fscLstToInsert.add(getE2FavoriteScopeInstance(this.childScope.scope.Id, UserInfo.getUserId(), uniqueKey));
 		    }else if(this.childScope.scope.Is_Favourite__c == false && favScopes.containsKey(uniqueKey)){
 			  fscLstToDelete.add(favScopes.get(uniqueKey));
-			}
-			if(this.childScope.scope.CreatedById != UserInfo.getUserId()) {
-				this.childScope.scope.Is_Favourite__c = this.childScope.isFavorite;
 			}
         }
 		// scope to insert/update (Upsert)
@@ -124,7 +126,10 @@ public with sharing class E2_EditScopeController {
            if(!scopeListToUpsert.isEmpty()) upsert scopeListToUpsert;
            
 		        
-		       
+		  if(this.childScope.multiplier  != this.childScope.scope.Effort_Quantity__c) {
+                this.childScope.multiplier = this.childScope.scope.Effort_Quantity__c;
+                this.childScope.multiplierUpdated = true;
+            }
         }catch(Exception ex){
             Database.rollback(sp);
             resetChildScopesOnException();
@@ -163,9 +168,21 @@ public with sharing class E2_EditScopeController {
         // Rohit - Set Current user details as last modified by user on scope 
         User modifiedBy = new User(Id = UserInfo.getUserId(),FirstName = UserInfo.getFirstName(),LastName = UserInfo.getLastName()); 
         this.scope.LastModifiedBy = modifiedBy;
+        this.lastModifiedDate = System.now();
         getUserFavoriteScopes();
-        if(favScopes.containsKey(this.childScope.scope.Id + '-' + UserInfo.getUserId()))
+        
+        if(favScopes.containsKey(this.childScope.scope.Id + '-' + UserInfo.getUserId())){
         	this.childScope.scope.Is_Favourite__c = true;
+        }
+        this.childScope.isFavorite = this.childScope.scope.Is_Favourite__c;
+        // 01/11/2017 : VG : I-252391
+        if(this.errorMessage == E2_Constants.BLANK){
+            // now since we got success from all the dml operations, lets remove the isDeleted efforts from the list
+            for(integer indx = (this.childScope.efforts.size() - 1); indx > -1; indx--){
+                Effort ef = this.childScope.efforts[indx];
+                if(ef.isDeleted == true) this.childScope.efforts.remove(indx);
+            }
+        }
         return null;             
     }
     //reset child scopes 
@@ -194,7 +211,10 @@ public with sharing class E2_EditScopeController {
                this.childScope = new Scope(scope, scope.Efforts__r);
                if(favScopes.containsKey(this.childScope.scope.Id + '-' + UserInfo.getUserId()))
                	this.childScope.scope.Is_Favourite__c = true;
+               else
+                this.childScope.scope.Is_Favourite__c = false;
         }
+        this.childScope.isFavorite = this.childScope.scope.Is_Favourite__c;
         scopeQuestionManager.retriveScopeQuestion();
     }
     
@@ -226,6 +246,13 @@ public with sharing class E2_EditScopeController {
         }
         return null;
     }
+    
+    public Double offset{get{
+        TimeZone tz = UserInfo.getTimeZone();
+        //Milliseconds to Day
+        return tz.getOffset(DateTime.now()) / (1000 * 3600 * 24.0);
+    }}
+    
     //wrapper class for Scope
     public class Scope{
         public string key{get;set;}
@@ -237,6 +264,8 @@ public with sharing class E2_EditScopeController {
 
         public boolean isDeleted{get;set;}
         public string slider_state{get;set;}
+        public decimal multiplier{get;set;}
+        public boolean multiplierUpdated {get;set;}
         
         public decimal getEffortsSize(){
         	decimal hrs = 0;
@@ -271,6 +300,8 @@ public with sharing class E2_EditScopeController {
             this.key = scope.id;
             this.scope = scope;
             this.isFavorite = scope.Is_Favourite__c;
+            this.multiplier = scope.Effort_Quantity__c;
+            this.multiplierUpdated = false;
             for(E2_Effort__c effort : efforts){
                 if(effort.Source_Effort__c <> NULL) {
 		          	this.hasClonedEfforts = true;          	

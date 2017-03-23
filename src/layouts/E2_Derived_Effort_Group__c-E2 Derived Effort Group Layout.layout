@@ -14,6 +14,10 @@
                 <behavior>Required</behavior>
                 <field>Description__c</field>
             </layoutItems>
+            <layoutItems>
+                <behavior>Edit</behavior>
+                <field>Is_Active__c</field>
+            </layoutItems>
         </layoutColumns>
         <layoutColumns>
             <layoutItems>
@@ -86,6 +90,8 @@
         <fields>To_Phase__c</fields>
         <fields>Of_Role__c</fields>
         <fields>Role__c</fields>
+        <fields>Level__c</fields>
+        <fields>Of_Level__c</fields>
         <fields>UniqueKey__c</fields>
         <relatedList>E2_Derived_Effort__c.Derived_Effort_Group__c</relatedList>
     </relatedLists>

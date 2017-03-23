@@ -8,6 +8,8 @@
  * Date Modified      Modified By                  Description of the update
  * Nov 22, 2016       Jitendra Jangid              S-454105 :  Web service E2_Clone_Estimate_WS
  * Nov 24, 2016       Jitendra Jangid              Added new test methods[testCloneMilestoneWeeks()  and testcloneResourceWeeks()] and updated existing test methods[testCloneEstimateMilestone() and testCloneEstimateTimeline()] corresponding to changes noted in main class.
+ * Feb 20, 2017       Jitendra Jangid              S-404442: Create multiple timelines on an estimate.
+ * Feb 28, 2017       Jitendra Jangid              S-404442: Create multiple timelines on an estimate.[Changes all test methods since formal parameters of methods got changed.]    
 *  =====================================================================*/
 
 @isTest
@@ -32,8 +34,9 @@ private class E2_Clone_Estimate_WSTest{
        
        System.runAs(sysAdmin){
            Test.startTest();
-           estimate = [SELECT Id, Name FROM CMC_Presales_LOE__c];
-            string newEstimateId = E2_Clone_Estimate_WS.cloneEstimate(estimate.Id);
+           
+            String wrapperJSON=getEstimateWrapper();
+            string newEstimateId = E2_Clone_Estimate_WS.cloneEstimate(wrapperJSON);
             System.assert(newEstimateId.indexOf('Failed: ') == -1, 'Unit test failed: an error encountered while cloning estimate.');
           
            Test.stopTest();
@@ -47,14 +50,17 @@ private class E2_Clone_Estimate_WSTest{
        System.runAs(sysAdmin){
            Test.startTest();
            Presales_Request__c psr = [Select ID from Presales_Request__c];
-           estimate = [SELECT Id, Name FROM CMC_Presales_LOE__c];
+          
+           String wrapperJSON=getEstimateWrapper();
            
-           string newEstimateId = E2_Clone_Estimate_WS.cloneEstimate(estimate.Id);
+           wrapperJSON = E2_Clone_Estimate_WS.cloneEstimate(wrapperJSON);
            
-           string returnMessage = E2_Clone_Estimate_WS.cloneEstimateScopes(estimate.Id , newEstimateId);
+           string scopeWrapperMapping = E2_Clone_Estimate_WS.cloneEstimateScopes(wrapperJSON);
+           scopeWrapperMapping=scopeWrapperMapping.replaceFirst('ScopeMapping','');
            //System.assertEquals(returnMessage, 'success', 'Unit test failed: an error enclountered while cloning scopes.');
-           returnMessage=E2_Clone_Estimate_WS.reParentClonedScopes(returnMessage, newEstimateId);
-           System.assert(returnMessage.equalsIgnoreCase('success'),'An error encountered while clonging milestone weeks. ');
+           //   returnMessage=E2_Clone_Estimate_WS.reParentClonedScopes(returnMessage, newEstimateId);
+           String returnMessage=E2_Clone_Estimate_WS.reParentClonedScopes(scopeWrapperMapping);
+           System.assert(!returnMessage.containsIgnoreCase('Failed'),'An error encountered while clonging milestone weeks.');
           
            Test.stopTest();
        }
@@ -66,11 +72,12 @@ private class E2_Clone_Estimate_WSTest{
        
        System.runAs(sysAdmin){
            Test.startTest();
-           estimate = [SELECT Id, Name FROM CMC_Presales_LOE__c];
-           string newEstimateId = E2_Clone_Estimate_WS.cloneEstimate(estimate.Id);
-           
-           String returnMessage = E2_Clone_Estimate_WS.cloneEstimateCapacity(estimate.Id , newEstimateId);
-           System.assertEquals(returnMessage, 'success', 'Unit test failed: an error encountered while cloning capacity.');
+            String wrapperJSON=getEstimateWrapper();
+            wrapperJSON = E2_Clone_Estimate_WS.cloneEstimate(wrapperJSON);
+          
+        //   String returnMessage = E2_Clone_Estimate_WS.cloneEstimateCapacity(estimate.Id , newEstimateId);
+           String returnMessage = E2_Clone_Estimate_WS.cloneEstimateCapacity(wrapperJSON);
+           System.assert(!returnMessage.containsIgnoreCase('Failed'), 'Unit test failed: an error encountered while cloning capacity.'+returnMessage);
            
            
            Test.stopTest();
@@ -83,10 +90,11 @@ private class E2_Clone_Estimate_WSTest{
        
        System.runAs(sysAdmin){
            Test.startTest();
-           estimate = [SELECT Id, Name FROM CMC_Presales_LOE__c];
-           string newEstimateId = E2_Clone_Estimate_WS.cloneEstimate(estimate.Id);
+           String wrapperJSON=getEstimateWrapper();
+           wrapperJSON= E2_Clone_Estimate_WS.cloneEstimate(wrapperJSON);
            
-           String returnMessage = E2_Clone_Estimate_WS.cloneEstimateMilestone(estimate.Id , newEstimateId);
+           //String returnMessage = E2_Clone_Estimate_WS.cloneEstimateMilestone(estimate.Id , newEstimateId);
+           String returnMessage = E2_Clone_Estimate_WS.cloneEstimateMilestone(wrapperJSON);
            System.assert(!returnMessage.equalsIgnoreCase('success') && !returnMessage.startsWith('Failed'), 'An error encountered while cloning estimate milestone.');
           
            Test.stopTest();
@@ -99,12 +107,22 @@ private class E2_Clone_Estimate_WSTest{
        
        System.runAs(sysAdmin){
            Test.startTest();
-           estimate = [SELECT Id, Name FROM CMC_Presales_LOE__c];
-           string newEstimateId = E2_Clone_Estimate_WS.cloneEstimate(estimate.Id);
-           String milestoneWeekJSON = E2_Clone_Estimate_WSManager.cloneEstimateMilestone(estimate.Id , newEstimateId);
+          
+           String wrapperJSON=getEstimateWrapper();
+           wrapperJSON = E2_Clone_Estimate_WS.cloneEstimate(wrapperJSON);
+           E2_Clone_Estimate_WSManager.EstimateWrapper wrapper=(E2_Clone_Estimate_WSManager.EstimateWrapper)JSON.deserialize(wrapperJSON,E2_Clone_Estimate_WSManager.EstimateWrapper.class);
+           wrapper.partialClone=true;
+           wrapper.estimateIsActive=true;
+           wrapperJSON=JSON.serialize(wrapper);
+         
+           //String milestoneWeekJSON = E2_Clone_Estimate_WSManager.cloneEstimateMilestone(estimate.Id , newEstimateId);
+           String milestoneWeekJSON = E2_Clone_Estimate_WSManager.cloneEstimateMilestone(wrapperJSON);
+           milestoneWeekJSON=milestoneWeekJSON.replaceFirst('milestonemapping','');
+            //System.assert(true == false, 'JSON: '+milestoneWeekJSON);
            
-           String returnMessage = E2_Clone_Estimate_WS.cloneMilestoneWeeks(milestoneWeekJSON , newEstimateId);
-           System.assert(returnMessage.equalsIgnoreCase('success'), 'An error encountered while cloning milestone weeks.');
+           //String returnMessage = E2_Clone_Estimate_WS.cloneMilestoneWeeks(milestoneWeekJSON , newEstimateId);
+           String returnMessage = E2_Clone_Estimate_WS.cloneMilestoneWeeks(milestoneWeekJSON);
+           System.assert(!returnMessage.containsIgnoreCase('Failed'), 'An error encountered while cloning milestone weeks.');
           
            Test.stopTest();
        }
@@ -118,11 +136,16 @@ private class E2_Clone_Estimate_WSTest{
        
        System.runAs(sysAdmin){
            Test.startTest();
-           estimate = [SELECT Id, Name FROM CMC_Presales_LOE__c];
-           string newEstimateId = E2_Clone_Estimate_WS.cloneEstimate(estimate.Id);
-           
-           String returnMessage = E2_Clone_Estimate_WS.cloneEstimateTimeline(estimate.Id , newEstimateId);
-           System.assert(!returnMessage.equalsIgnoreCase('success') && !returnMessage.startsWith('Failed'), 'An error encountered while cloning timeline.');
+           String wrapperJSON=getEstimateWrapper();
+           wrapperJSON = E2_Clone_Estimate_WS.cloneEstimate(wrapperJSON);
+          
+           E2_Clone_Estimate_WSManager.EstimateWrapper wrapper=(E2_Clone_Estimate_WSManager.EstimateWrapper)JSON.deserialize(wrapperJSON,E2_Clone_Estimate_WSManager.EstimateWrapper.class);
+           wrapper.partialClone=true;
+           wrapper.estimateIsActive=true;
+           wrapperJSON=JSON.serialize(wrapper);
+           //String returnMessage = E2_Clone_Estimate_WS.cloneEstimateTimeline(estimate.Id , newEstimateId);
+           String returnMessage = E2_Clone_Estimate_WS.cloneEstimateTimeline(wrapperJSON);
+           System.assert(!returnMessage.equalsIgnoreCase('success') && !returnMessage.startsWith('Failed'), 'An error encountered while cloning timeline.'+returnMessage);
            
            Test.stopTest();
        }
@@ -134,39 +157,45 @@ private class E2_Clone_Estimate_WSTest{
        
        System.runAs(sysAdmin){
            Test.startTest();
-           estimate = [SELECT Id, Name FROM CMC_Presales_LOE__c];
+           String wrapperJSON=getEstimateWrapper();
            List<CMC_Estimate_Resource_Week__c> lsResourceWeek=[Select Estimate_Resource__r.ID,Estimate_Resource__r.Estimate__c,
                                                                Estimate_Week__r.ID,Estimate_Week__r.Estimate__c 
                                                                FROM CMC_Estimate_Resource_Week__c];
-           List<E2_Clone_Estimate_WSManager.TimelineWrapper> lsTimelineWrapper=new List<E2_Clone_Estimate_WSManager.TimelineWrapper>();
+           List<E2_Clone_Estimate_WSManager.EstimateWrapper> lsTimelineWrapper=new List<E2_Clone_Estimate_WSManager.EstimateWrapper>();
            
-           string newEstimateId = E2_Clone_Estimate_WS.cloneEstimate(estimate.Id);
+           wrapperJSON = E2_Clone_Estimate_WS.cloneEstimate(wrapperJSON);
+           
+           E2_Clone_Estimate_WSManager.EstimateWrapper wrapper=(E2_Clone_Estimate_WSManager.EstimateWrapper)JSON.deserialize(wrapperJSON,E2_Clone_Estimate_WSManager.EstimateWrapper.class);
+        //   String newEstimateId=wrapper.newEstimateId;
            
            for(CMC_Estimate_Resource_Week__c rWeek: lsResourceWeek){
                 CMC_Estimate_Resource__c estimateResource=rWeek.Estimate_Resource__r;
                 CMC_Estimate_Resource__c clonedEstimateResource=estimateResource.clone(false, true, false, false);
-                clonedEstimateResource.Estimate__c=newEstimateId;
+                clonedEstimateResource.Estimate__c=wrapper.newEstimateId;
                 insert clonedEstimateResource;
                 CMC_Estimate_Week__c estimateWeek=rWeek.Estimate_Week__r;
                 CMC_Estimate_Week__c clonedEstimateWeek=estimateWeek.clone(false, true, false, false);
-                clonedEstimateWeek.Estimate__c=newEstimateId;
+                clonedEstimateWeek.Estimate__c=wrapper.newEstimateId;
                 insert clonedEstimateWeek;
-                E2_Clone_Estimate_WSManager.TimelineWrapper resource=new E2_Clone_Estimate_WSManager.TimelineWrapper();
+                E2_Clone_Estimate_WSManager.EstimateWrapper resource=new E2_Clone_Estimate_WSManager.EstimateWrapper();
                 resource.key=rWeek.Estimate_Resource__r.ID;
                 resource.value=clonedEstimateResource.id;
                 resource.isWeek=false;
-                E2_Clone_Estimate_WSManager.TimelineWrapper week=new E2_Clone_Estimate_WSManager.TimelineWrapper();
+                resource.cloneFrom=wrapper.cloneFrom;
+                E2_Clone_Estimate_WSManager.EstimateWrapper week=new E2_Clone_Estimate_WSManager.EstimateWrapper();
                 week.key=rWeek.Estimate_Week__r.ID;
                 week.value=clonedEstimateWeek.id;
                 week.isWeek=true;
+                week.cloneFrom=wrapper.cloneFrom;
                 lsTimelineWrapper.add(resource);
                 lsTimelineWrapper.add(week);
           }
           String jsonResourceWeek=JSON.serialize(lsTimelineWrapper);
            
            
-           String returnMessage = E2_Clone_Estimate_WS.cloneResourceWeeks(jsonResourceWeek, newEstimateId);
-           System.assert(returnMessage.equalsIgnoreCase('success'), 'An error encountered while cloning resource weeks.');
+           //String returnMessage = E2_Clone_Estimate_WS.cloneResourceWeeks(jsonResourceWeek, newEstimateId);
+           String returnMessage = E2_Clone_Estimate_WS.cloneResourceWeeks(jsonResourceWeek);
+           System.assert(!returnMessage.containsIgnoreCase('Failed'), 'An error encountered while cloning resource weeks.');
            
            Test.stopTest();
        }
@@ -180,17 +209,50 @@ private class E2_Clone_Estimate_WSTest{
        
        System.runAs(sysAdmin){
            Test.startTest();
-           estimate = [SELECT Id, Name FROM CMC_Presales_LOE__c];
-       
-           string newEstimateId = E2_Clone_Estimate_WS.cloneEstimate(estimate.Id);
-           
+           String wrapperJSON=getEstimateWrapper();
+           wrapperJSON = E2_Clone_Estimate_WS.cloneEstimate(wrapperJSON);
+           E2_Clone_Estimate_WSManager.EstimateWrapper wrapper=(E2_Clone_Estimate_WSManager.EstimateWrapper)JSON.deserialize(wrapperJSON,E2_Clone_Estimate_WSManager.EstimateWrapper.class);
+           String newEstimateId=wrapper.newEstimateId;
            String returnMessage = E2_Clone_Estimate_WS.deleteEstimate(newEstimateId);
-           System.assertEquals(returnMessage, 'success', 'Unit test failed: an error encountered while deleting estimate.');
+           System.assertEquals(returnMessage, 'success', 'An error encountered while deleting estimate.');
           
            Test.stopTest();
        }
     }
+    
+    // Added new test method to cover all methods releated to the timeline[Jitendra Jangid: 20th Feb, 2017]
+    public static testmethod void testMultiTimelineMethods(){
+       
+       sysAdmin = getSysAdminUser();
+       
+       System.runAs(sysAdmin){
+           Test.startTest();
+           estimate = [SELECT Id, Name,CurrencyIsoCode FROM CMC_Presales_LOE__c];
+           String timelineJSON='[{"cloneFrom":"'+estimate.ID+'","currencyISOCode":"'+estimate.CurrencyIsoCode+'","isWeek":true,"isNewTimeline":false}]';
+           timelineJSON=E2_Clone_Estimate_WS.createNewTimeline(timelineJSON);
+           timelineJSON=E2_Clone_Estimate_WS.cloneTimelineRateCards(timelineJSON);
+           list<E2_Clone_Estimate_WSManager.EstimateWrapper> mappingList = (list<E2_Clone_Estimate_WSManager.EstimateWrapper>)JSON.deserialize(timelineJSON, list<E2_Clone_Estimate_WSManager.EstimateWrapper>.class);
+           system.assert(mappingList.get(0).newTimelineId != null, 'Assert Failed: New estimate has not been created.');  
+           
+           String result=E2_Clone_Estimate_WS.cloneTimelineVersion(timelineJSON);
+           system.assert(!result.contains('failed'), 'Assert Failed: an error received in response of cloneTimelineVersion method calling.');  
+           
+           result=E2_Clone_Estimate_WS.cloneResourceWeeksTimelineVersion(timelineJSON);
+           system.assert(!result.contains('failed'), 'Assert Failed: an error received in response of cloneResourceWeeksTimelineVersion method calling.');  
+           
+           Test.stopTest();
+       }
+   } 
 	
+	
+  private static String getEstimateWrapper(){
+      estimate = [SELECT Id, Name FROM CMC_Presales_LOE__c];
+      E2_Clone_Estimate_WSManager.EstimateWrapper wrapper=new E2_Clone_Estimate_WSManager.EstimateWrapper();
+      wrapper.cloneFrom=estimate.Id;
+      
+      return JSON.serialize(wrapper);
+      
+  }	
   private static User getSysAdminUser(){
       User admin=[Select Id from user where firstName='test user' AND lastname='Testing'];
       return admin;

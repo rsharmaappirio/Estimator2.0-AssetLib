@@ -1,0 +1,1027 @@
+<!--=====================================================================
+ * Appirio, Inc
+ * Name: E2_Timeline
+ * Description: visualforce page for the resource timeline functionalty in estimator 2.0!
+ * Created Date: Aug 15th, 2016
+ * Created By: Rahul Jain (Appirio)
+ * 
+ * Date Modified      Modified By                  Description of the update
+*  =====================================================================
+-->
+<apex:page standardController="E2_Milestone_Library__c" extensions="E2_MilestoneTemplateController" action="{!pageAction}" 
+   showHeader="false" standardStylesheets="false" sidebar="false" applyHtmlTag="false" applyBodyTag="false">
+<html>
+    <head>
+        <title>Milestone Schedule | {!template.Name}</title>
+        <link type="text/css" rel="stylesheet" href="{!URLFOR($Resource.E2_SLDS1, '/assets/styles/salesforce-lightning-design-system.min.css')}" />
+        <apex:includeScript value="../../soap/ajax/36.0/connection.js" />
+        <apex:includeScript value="../../soap/ajax/15.0/apex.js" />
+        
+        <apex:stylesheet value="{!$Resource.E2_SlickGrid}/slick.grid.css" />
+        <apex:stylesheet value="{!$Resource.E2_SlickGrid}/css/smoothness/jquery-ui-1.8.24.custom.css" />
+        <apex:stylesheet value="{!$Resource.E2_SlickGrid}/slick-default-theme.css" />
+        <apex:stylesheet value="{!$Resource.E2_SlickGrid}/plugins/slick.headermenu.css" />
+        <apex:stylesheet value="{!$Resource.E2_SlickGrid}/controls/slick.pager.css" />
+        <apex:stylesheet value="{!$Resource.E2_SlickGrid}/controls/slick.columnpicker.css" />
+        
+        <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/lib/firebugx.js"></script>
+        <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/lib/jquery-1.7.min.js"></script>
+        <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/lib/jquery-ui-1.8.24.custom.min.js"></script>
+        <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/lib/jquery.event.drag-2.2.js"></script>
+        <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/lib/jquery.event.drop-2.2.js"></script>
+        <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/lib/jquery.mousewheel.js"></script>
+        <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/slick.core.js"></script>
+        <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/plugins/slick.autotooltips.js"></script>
+        <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/plugins/slick.cellrangedecorator.js"></script>
+        <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/plugins/slick.cellcopymanager.js"></script>
+        <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/plugins/slick.rowselectionmodel.js"></script>
+        <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/plugins/slick.rowmovemanager.js"></script>
+        <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/plugins/slick.headermenu.js"></script>
+        <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/slick.dataview.js"></script>
+        <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/controls/slick.pager.js"></script>
+        <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/controls/slick.columnpicker.js"></script>
+        <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/slick.formatters.js"></script>
+        <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/slick.editors.js"></script>
+        <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/slick.grid.new.js"></script>
+        <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/lib/js/require.js"></script>
+        <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/lib/js/underscore.js"></script>
+        
+        <script type="text/javascript">
+            requirejs.config({
+                            baseUrl: '{!$Resource.E2_SlickGrid}/lib/js'  //give the location of the folder which contains require, excel-builder, etc
+                        });
+        </script>
+        <script>sforce.connection.sessionId='{!GETSESSIONID()}';</script>
+        <script type="text/javascript" src="{!$Resource.E2_MilestoneTemplateJS}"></script>
+        
+        <script type="text/javascript">
+                var templateId = '{!template.id}';
+                var template_name = '{!JSENCODE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(template.name,' ','_'),',',''),';',''),'#',''))}';
+        </script>
+        <style rel="stylesheet" type="text/css">
+                .slick-row.selected {
+                    background: #0070d2 none repeat scroll 0 0;
+                    z-index: 10;
+                }
+                a.delete_button, a.delete_button:hover, a.delete_button:active, a.delete_button:focus{
+                    background: transparent url({!$Resource.E2_SLDS1}/assets/icons/utility/delete_60.png) no-repeat scroll center center / 15px 15px;
+                    height: 15px;
+                    width: 15px;
+                    display:block;
+                    text-decoration: none;
+                    outline: none; 
+                }
+                a.push_button{
+                    background: transparent url({!$Resource.E2_SLDS1}/assets/icons/utility/push_60.png) no-repeat scroll center center / 15px 15px;
+                    height: 15px;
+                    width: 15px;
+                    display:block;
+                }
+                a.replace_button{
+                    
+                    background: transparent url({!$Resource.E2_SLDS1}/assets/icons/utility/replace_60.png) no-repeat scroll center center / 15px 15px;
+                    height: 15px;
+                    width: 15px;
+                    display:block;
+                }
+                a.setup_button, a.setup_button:hover, a.setup_button:active, a.setup_button:focus{
+                    
+                    background: transparent url({!$Resource.E2_SLDS1}/assets/icons/utility/setup_60.png) no-repeat scroll center center / 15px 15px;
+                    height: 15px;
+                    width: 15px;
+                    display:block;
+                    text-decoration: none;
+                    outline: none; 
+                }
+                
+                a.excel_button, a.excel_button:hover, a.excel_button:active, a.excel_button:focus{
+                    background: transparent url({!$Resource.E2_SLDS1}/assets/icons/doctype/excel_60.png) no-repeat scroll center center / 25px 25px;
+                    height: 25px;
+                    width: 25px;
+                    display:block;
+                    text-decoration: none;
+                    outline: none; 
+                }
+                
+                a.delete_button_big, a.delete_button_big:hover, a.delete_button_big:active, a.delete_button_big:focus{
+                    background: transparent url({!$Resource.E2_SLDS1}/assets/icons/utility/delete_60.png) no-repeat scroll center center / 25px 25px;
+                    height: 25px;
+                    width: 25px;
+                    display:block;
+                    text-decoration: none;
+                    outline: none; 
+                }
+                
+            
+                /**.reallyHidden { display: none !important;}**/
+                .Fixed-Header-Style{font-weight:bold;}
+                .custom-cell{text-align:center;}
+                .milestone1{text-align:center;font-weight:bold;}
+                .milestone2{text-align:right;font-weight:bold;}
+                .custom-fix-row{
+                    background-color: #eee!important;
+                    border-color: #ccc!important;
+                    border-style: solid!important;
+                }
+                .cell-story {
+                    white-space: normal !important;
+                    line-height: 19px !important;
+                }
+                
+                .loading-indicator {
+                    display: inline-block;
+                    padding: 12px;
+                    background: white;
+                    -opacity: 0.5;
+                    color: black;
+                    font-weight: bold;
+                    z-index: 9999;
+                    border: 1px solid red;
+                    -moz-border-radius: 10px;
+                    -webkit-border-radius: 10px;
+                    -moz-box-shadow: 0 0 5px red;
+                    -webkit-box-shadow: 0px 0px 5px red;
+                    -text-shadow: 1px 1px 1px white;
+                }
+                
+                .loading-indicator label {
+                    padding-left: 20px;
+                    background: url('{!$Resource.E2_SlickGrid}/images/ajax-loader-small.gif') no-repeat center left;
+                }
+                
+                .dropdown {
+                    position: fixed;
+                }
+                
+                .slick-cell.copied {
+                    background: blue;
+                    background: rgba(0, 0, 255, 0.2);
+                    -webkit-transition: 0.5s background;
+                }
+                
+                .slds *,
+                .slds *::after,
+                .slds *::before {
+                    box-sizing: inherit!important;
+                }
+                
+                .slick-header-column.ui-state-default {
+                    height:22px!important;
+                }
+                
+                #myGrid {
+                    background: white;
+                    outline: 0;
+                    border: 1px solid gray;
+                    font:inherit;
+                }
+                
+                #myGridHead {
+                    background: white;
+                    outline: 0;
+                    border: 1px solid gray;
+                }
+                
+                .grid-header {
+                    border: 1px solid gray;
+                    border-bottom: 0;
+                    border-top: 0;
+                    background: url('{!$Resource.E2_SlickGrid}/images/header-bg.gif') repeat-x center top;
+                    color: black;
+                    height: 24px;
+                    line-height: 24px;
+                }
+                
+                .grid-header label {
+                    display: inline-block;
+                    font-weight: bold;
+                    margin: auto auto auto 6px;
+                }
+                
+                .grid-header .ui-icon {
+                    margin: 4px 4px auto 6px;
+                    background-color: transparent;
+                    border-color: transparent;
+                }
+                
+                .grid-header .ui-icon.ui-state-hover {
+                    background-color: white;
+                }
+                
+                .grid-header #txtSearch {
+                    margin: 0 4px 0 4px;
+                    padding: 2px 2px;
+                    -moz-border-radius: 2px;
+                    -webkit-border-radius: 2px;
+                    border: 1px solid silver;
+                }
+                
+                .options-panel {
+                    -moz-border-radius: 6px;
+                    -webkit-border-radius: 6px;
+                    border: 1px solid silver;
+                    background: #f0f0f0;
+                    padding: 4px;
+                    margin-bottom: 20px;
+                    width: 320px;
+                    position: absolute;
+                    top: 0px;
+                    left: 650px;
+                }
+                /* Individual cell styles */
+                
+                .slick-cell{
+                    white-space: normal;
+                    font-size:8pt;
+                }
+                
+                
+                .slick-cell.task-name {
+                    font-weight: bold;
+                    text-align: right;
+                }
+                
+                .slick-cell.task-percent {
+                    text-align: right;
+                }
+                
+                .slick-cell.cell-move-handle {
+                    font-weight: bold;
+                    text-align: right;
+                    border-right: solid gray;
+                    background: #efefef;
+                    cursor: move;
+                }
+                
+                .cell-move-handle:hover {
+                    background: #b6b9bd;
+                }
+                
+                .slick-row.selected .cell-move-handle {
+                    background: #D5DC8D;
+                }
+                
+                .slick-row .cell-actions {
+                    text-align: left;
+                }
+                
+                .slick-row.complete {
+                    background-color: #DFD;
+                    color: #555;
+                }
+                
+                .percent-complete-bar {
+                    display: inline-block;
+                    height: 6px;
+                    -moz-border-radius: 3px;
+                    -webkit-border-radius: 3px;
+                }
+                /* Slick.Editors.Text, Slick.Editors.Date */
+                
+                input.editor-text {
+                    width: 100%;
+                    height: 100%;
+                    border: 0;
+                    margin: 0;
+                    background: transparent;
+                    outline: 0;
+                    padding: 0;
+                }
+                
+                /** SLDS STYLE OF FOCUS ON INPUT
+                input.editor-text:active, input.editor-text:focus {
+                    background-color: #fff;
+                    border-color: #1589ee;
+                    box-shadow: 0 0 3px #0070d2;
+                    outline: 0 none;
+                }
+                **/
+                
+                .ui-datepicker-trigger {
+                    margin-top: 2px;
+                    padding: 0;
+                    vertical-align: top;
+                }
+                
+                /* Slick.Editors.PercentComplete */
+                input.editor-percentcomplete {
+                    width: 100%;
+                    height: 100%;
+                    border: 0;
+                    margin: 0;
+                    background: transparent;
+                    outline: 0;
+                    padding: 0;
+                    float: left;
+                }
+                
+                .editor-percentcomplete-picker {
+                    position: relative;
+                    display: inline-block;
+                    width: 16px;
+                    height: 100%;
+                    background: url("{!$Resource.E2_SlickGrid}/images/pencil.gif") no-repeat center center;
+                    overflow: visible;
+                    z-index: 1000;
+                    float: right;
+                }
+                
+                .editor-percentcomplete-helper {
+                    border: 0 solid gray;
+                    position: absolute;
+                    top: -2px;
+                    left: -9px;
+                    background: url("{!$Resource.E2_SlickGrid}/images/editor-helper-bg.gif") no-repeat top left;
+                    padding-left: 9px;
+                    width: 120px;
+                    height: 182px;
+                    /**display: none;**/ /** remove this because we need to show autofill widget on keyboard key movement **/
+                    overflow: visible;
+                }
+                
+                .editor-percentcomplete-wrapper {
+                    background: #d8dde6;
+                    padding: 4px;
+                    width: 100%;
+                    height: 180px;
+                    border: 1px solid gray;
+                    border-left: 0;
+                }
+                
+                .editor-percentcomplete-buttons {
+                    float: left;
+                }
+                
+                .editor-percentcomplete-buttons button {
+                    width: 100%;
+                }
+                
+                .editor-percentcomplete-slider {
+                    float: left;
+                }
+                
+                .editor-percentcomplete-picker:hover .editor-percentcomplete-helper {
+                    display: block;
+                }
+                
+                .editor-percentcomplete-helper:hover {
+                    display: block;
+                }
+                
+                /** Editor AutoFill **/
+                 /* Slick.Editors.AutoFill */
+                input.editor-autofill {
+                    width: 100%;
+                    height: 100%;
+                    border: 0;
+                    margin: 0;
+                    background: transparent;
+                    outline: 0;
+                    padding: 0;
+                    float: left;
+                }
+                
+                .editor-autofill-picker {
+                    position: relative;
+                    display: inline-block;
+                    width: 100%;
+                    height: 100%;
+                    /**background: url("{!$Resource.E2_SlickGrid}/images/pencil.gif") no-repeat center center;**/
+                    overflow: visible;
+                    z-index: 1000;
+                    float: right;
+                }
+                .editor-autofill-picker1 {
+                    position: relative;
+                    display: inline-block;
+                    width: 16px;
+                    height: 100%;
+                    overflow: visible;
+                    z-index: 1000;
+                    float: right;
+                }
+                .editor-autofill-helper {
+                    border: 0 solid gray;
+                    position: absolute;
+                    top: -2px;
+                    left: -9px;
+                    /**left: -9px;**/
+                    /**background: url("{!$Resource.E2_SlickGrid}/images/editor-helper-bg.gif") no-repeat top left;**/
+                    padding-left: 9px;
+                    width: 451px;
+                    height: 80px;
+                    /**display: none;**/ /** remove this because we need to show autofill widget on keyboard key movement **/
+                    overflow: visible;
+                }
+                
+                .editor-autofill-wrapper {
+                    background: beige;
+                    padding: 20px 8px;
+                    width: 100%;
+                    height: 24px;
+                    border: 1px solid gray;
+                    border-left: 0;
+                }
+                
+                .editor-autofill-buttons {
+                    float: right;
+                }
+                
+                .editor-autofill-buttons button {
+                    width: 80px;
+                }
+                
+                .editor-autofill-slider {
+                    float: left;
+                    width:100%;
+                }
+                
+                .editor-autofill-slider label {
+                    position: absolute;
+                    width: 20px;
+                    margin-left: -10px;
+                    text-align: center;
+                    margin-top: 20px;
+                    
+                }
+                
+                .editor-autofill-picker:hover .editor-autofill-helper {
+                    display: block;
+                }
+                
+                .editor-autofill-helper:hover {
+                    display: block;
+                }
+                
+                
+                /* Slick.Editors.YesNoSelect */
+                
+                select.editor-yesno {
+                    width: 100%;
+                    margin: 0;
+                    vertical-align: middle;
+                }
+                /* Slick.Editors.Checkbox */
+                
+                input.editor-checkbox {
+                    margin: 0;
+                    height: 100%;
+                    padding: 0;
+                    border: 0;
+                }
+                
+                .cell-effort-driven {
+                    text-align: center;
+                }
+                
+                .cell-reorder {
+                    cursor: move;
+                    background: url("{!$Resource.E2_SlickGrid}/images/drag-handle.png") no-repeat center center;
+                }
+                
+                .cell-selection {
+                    border-right-color: silver;
+                    border-right-style: solid;
+                    background: #f5f5f5;
+                    color: gray;
+                    text-align: right;
+                    font-size: 10px;
+                }
+                
+                .slick-row.selected .cell-selection {
+                    background-color: transparent;
+                    /* show default selected row background */
+                }
+                
+                .slick-group-header-columns {
+                    position: relative;
+                    white-space: nowrap;
+                    cursor: default;
+                    overflow: hidden;
+                }
+                
+                .slick-group-header-columns .slick-header-column {
+                    padding-left: 0px;
+                    padding-right: 0px;
+                }
+                
+                .slick-group-header-columns .slick-column-name {
+                    text-align: center;
+                }
+                
+                .cell-title {
+                    font-weight: bold;
+                }
+                
+                .cell-effort-driven {
+                    text-align: center;
+                }
+                
+                .cell-selection {
+                    border-right-color: silver;
+                    border-right-style: solid;
+                    background: #f5f5f5;
+                    color: gray;
+                    text-align: right;
+                    font-size: 10px;
+                }
+                
+                .slick-row.selected .cell-selection {
+                    background-color: transparent;
+                    /* show default selected row background */
+                }
+                
+                table thead tr th.slds-th {
+                    background-color: #005fb2;
+                    color: #fff;
+                    font-weight: bold !important;
+                }
+                
+                table tbody tr td.slds-td {
+                    background-color: #CCCCCC;
+                    font-weight: bold;
+                }
+                /**
+     * Style the drop-down menu here since the plugin stylesheet mostly contains structural CSS.
+     */
+                
+                .slick-header-menu {
+                    border: 1px solid #718BB7;
+                    background: #f0f0f0;
+                    padding: 2px;
+                    -moz-box-shadow: 2px 2px 2px silver;
+                    -webkit-box-shadow: 2px 2px 2px silver;
+                    min-width: 100px;
+                    z-index: 20;
+                }
+                
+                .slick-header-menuitem {
+                    padding: 2px 4px;
+                    border: 1px solid transparent;
+                    border-radius: 3px;
+                }
+                
+                .slick-header-menuitem:hover {
+                    border-color: silver;
+                    background: white;
+                }
+                
+                .slick-header-menuitem-disabled {
+                    border-color: transparent !important;
+                    background: inherit !important;
+                }
+                
+                .icon-help {
+                    background-image: url({!$Resource.E2_SlickGrid}/images/help.png);
+                }
+                
+                .slick-cell.editable {
+                    background-color: #fff;
+                    border-radius: 4px;
+                    color: #16325c;
+                    transition: border 0.1s linear 0s, background-color 0.1s linear 0s;
+                }
+                
+                
+                .slds-calculated-cell { 
+                    text-align: center!important;
+                    background-color: #0070d2;
+                    color: #fff!important;
+                }
+                
+                 /**body {width:100%; height:100%; overflow:auto; margin:0; }**/
+                 /**html {width:100%; height:100%; overflow:auto; }**/
+                 
+                 .totals {
+                    font-weight: bold;
+                    color: gray;
+                    font-style: italic;
+                  }
+                  .noneline-bottom
+                  {
+                      border-bottom:0;
+                  }
+                  
+                  .strategy_phase_cell{
+                      color: #fff;
+                      background-color: rgb(51, 62, 72);
+                      font-style: italic;
+                  }
+                  
+                  .plan_phase_cell{
+                      color: #fff;
+                      background-color: rgb(240, 109, 30);
+                      font-style: italic;
+                  }
+                  
+                  .architect_phase_cell{
+                      color: #fff;
+                      background-color: rgb(96, 131, 175);
+                      font-style: italic;
+                  }
+                  
+                  .build_phase_cell{
+                      color: #fff;
+                      background-color: rgb(135, 189, 67);
+                      font-style: italic;
+                  }
+                  
+                  .test_phase_cell{
+                      color: #fff;
+                      background-color: rgb(32, 40, 48);
+                      font-style: italic;
+                  }
+                  
+                  .deploy_thrive_phase_cell{
+                      color: #fff;
+                      background-color: rgb(163, 9, 58);
+                      font-style: italic;
+                  }
+                  span.overview-label{
+                      font-weight:bold;
+                      line-height:20px;
+                  }
+                  #overview-table tbody tr td{
+                        background: #e0e5ee none repeat scroll 0 0;
+                        border: 1px solid #ccc;
+                        color: #16325c;
+                        padding: 1px;
+                  }
+                  .slds .slds-tabs--default__link {
+                     height:35px!important;   
+                  }
+                  
+                  
+                   .noneline-bottom{
+                          border-right:0;
+                      }
+                      
+                      
+                   .cell-title {
+                      font-weight: bold;
+                    }
+                
+                    #contextMenu {
+                      background: #e1efc7;
+                      border: 1px solid gray;
+                      padding: 2px;
+                      display: inline-block;
+                      min-width: 155px;
+                      -moz-box-shadow: 2px 2px 2px silver;
+                      -webkit-box-shadow: 2px 2px 2px silver;
+                      z-index: 99999;
+                      max-width: 205px;
+                    }
+                
+                    #contextMenu li {
+                      padding: 4px 4px 4px 14px;
+                      list-style: none;
+                      cursor: pointer;
+                      /**background: url("{!$Resource.E2_SlickGrid}/images/arrow_right_peppermint.png") no-repeat center left;**/
+                      width:28px;
+                      height:28px;
+                      float:left;
+                      border-color: #ccc;
+                      border-style: solid;
+                      border-width: 1px;
+                    }
+                
+                    #contextMenu li:hover {
+                      background-color: white;
+                    } 
+                    
+                    .slick-cell.selected {
+                        background-color: beige !important;
+                        color: #000000 !important;
+                        /**border-style: dashed;**/
+                    }
+                    
+                    .slds *::-moz-selection {
+                        background: #3297fd none repeat scroll 0 0;
+                        color: #ffffff;
+                        text-shadow: none;
+                    }
+                    .slds *,
+                .slds *::after,
+                .slds *::before {
+                    box-sizing: inherit!important;
+                }
+            </style>
+    </head>
+    <body>
+        <div class="slds">
+             <!-- PRIMARY CONTENT WRAPPER -->
+             <div class="myapp">
+                
+                <!-- BODY -->
+                <div>
+                    <apex:form >
+                <apex:pageMessages />
+                
+                <div id="manage_timeline_div">
+                        
+                                <div class="slds-grid"> <!--style="width:48%;"-->
+                                 <!--div class="slds-col--padded">       
+                                      <div class="slds-form-element">
+                                         <div class="slds-form-element__control">
+                                             <label class="slds-form-element__label" for="text-input-1">Start Date<abbr class="slds-required" title="required">*</abbr></label>
+                                            <input type="text" class="slds-input" id="datepicker" style="width:90%" />
+                                         </div>
+                                      </div>
+                                  </div-->
+                                  <div id="build_div" class="slds-col--padded" style="display:none;"> 
+                                      <table>
+                                        <tbody>
+                                            <tr><td>
+                                                <div class="slds-form-element">
+                                                 <div class="slds-form-element__control">
+                                                     <label class="slds-form-element__label" for="text-input-2">No. of weeks<abbr class="slds-required" title="required">*</abbr></label>
+                                                     <select id="no_of_weeks" class="slds-select" style="width:90%"> 
+                                                         <option value="1">1</option>
+                                                        <option value="2">2</option>
+                                                        <option value="3">3</option>
+                                                        <option value="4">4</option>
+                                                        <option value="5">5</option>
+                                                        <option value="6">6</option>
+                                                        <option value="7">7</option>
+                                                        <option value="8">8</option>
+                                                        <option value="9">9</option>
+                                                        <option value="10">10</option>
+                                                        <option value="11">11</option>
+                                                        <option value="12">12</option>
+                                                        <option value="13">13</option>
+                                                        <option value="14">14</option>
+                                                        <option value="15">15</option>
+                                                        <option value="16">16</option>
+                                                        <option value="17">17</option>
+                                                        <option value="18">18</option>
+                                                        <option value="19">19</option>
+                                                        <option value="20">20</option>
+                                                        <option value="21">21</option>
+                                                        <option value="22">22</option>
+                                                        <option value="23">23</option>
+                                                        <option value="24">24</option>
+                                                        <option value="25">25</option>
+                                                        <option value="26">26</option>
+                                                        <option value="27">27</option>
+                                                        <option value="28">28</option>
+                                                        <option value="29">29</option>
+                                                        <option value="30">30</option>
+                                                        <option value="31">31</option>
+                                                        <option value="32">32</option>
+                                                        <option value="33">33</option>
+                                                        <option value="34">34</option>
+                                                        <option value="35">35</option>
+                                                        <option value="36">36</option>
+                                                        <option value="37">37</option>
+                                                        <option value="38">38</option>
+                                                        <option value="39">39</option>
+                                                        <option value="40">40</option>
+                                                        <option value="41">41</option>
+                                                        <option value="42">42</option>
+                                                        <option value="43">43</option>
+                                                        <option value="44">44</option>
+                                                        <option value="45">45</option>
+                                                        <option value="46">46</option>
+                                                        <option value="47">47</option>
+                                                        <option value="48">48</option>
+                                                        <option value="49">49</option>
+                                                        <option value="50">50</option>
+                                                        <option value="51">51</option>
+                                                        <option value="52">52</option>
+                                                        <option value="53">53</option>
+                                                        <option value="54">54</option>
+                                                        <option value="55">55</option>
+                                                        <option value="56">56</option>
+                                                        <option value="57">57</option>
+                                                        <option value="58">58</option>
+                                                        <option value="59">59</option>
+                                                        <option value="60">60</option>
+                                                        <option value="61">61</option>
+                                                        <option value="62">62</option>
+                                                        <option value="63">63</option>
+                                                        <option value="64">64</option>
+                                                        <option value="65">65</option>
+                                                        <option value="66">66</option>
+                                                        <option value="67">67</option>
+                                                        <option value="68">68</option>
+                                                        <option value="69">69</option>
+                                                        <option value="70">70</option>
+                                                        <option value="71">71</option>
+                                                        <option value="72">72</option>
+                                                        <option value="73">73</option>
+                                                        <option value="74">74</option>
+                                                        <option value="75">75</option>
+                                                        <option value="76">76</option>
+                                                        <option value="77">77</option>
+                                                        <option value="78">78</option>
+                                                        <option value="79">79</option>
+                                                        <option value="80">80</option>
+                                                        <option value="81">81</option>
+                                                        <option value="82">82</option>
+                                                        <option value="83">83</option>
+                                                        <option value="84">84</option>
+                                                        <option value="85">85</option>
+                                                        <option value="86">86</option>
+                                                        <option value="87">87</option>
+                                                        <option value="88">88</option>
+                                                        <option value="89">89</option>
+                                                        <option value="90">90</option>
+                                                        <option value="91">91</option>
+                                                        <option value="92">92</option>
+                                                        <option value="93">93</option>
+                                                        <option value="94">94</option>
+                                                        <option value="95">95</option>
+                                                        <option value="96">96</option>
+                                                        <option value="97">97</option>
+                                                        <option value="98">98</option>
+                                                        <option value="99">99</option>
+                                                        <option value="100">100</option>
+                                                        <option value="101">101</option>
+                                                        <option value="102">102</option>
+                                                        <option value="103">103</option>
+                                                        <option value="104">104</option>
+                                                        <option value="105">105</option>
+                                                        <option value="106">106</option>
+                                                        <option value="107">107</option>
+                                                        <option value="108">108</option>
+                                                        <option value="109">109</option>
+                                                        <option value="110">110</option>
+                                                        <option value="111">111</option>
+                                                        <option value="112">112</option>
+                                                        <option value="113">113</option>
+                                                        <option value="114">114</option>
+                                                        <option value="115">115</option>
+                                                        <option value="116">116</option>
+                                                        <option value="117">117</option>
+                                                        <option value="118">118</option>
+                                                        <option value="119">119</option>
+                                                        <option value="120">120</option>
+                                                        <option value="121">121</option>
+                                                        <option value="122">122</option>
+                                                        <option value="123">123</option>
+                                                        <option value="124">124</option>
+                                                        <option value="125">125</option>
+                                                        <option value="126">126</option>
+                                                        <option value="127">127</option>
+                                                        <option value="128">128</option>
+                                                        <option value="129">129</option>
+                                                        <option value="130">130</option>
+                                                        <option value="131">131</option>
+                                                        <option value="132">132</option>
+                                                        <option value="133">133</option>
+                                                        <option value="134">134</option>
+                                                        <option value="135">135</option>
+                                                        <option value="136">136</option>
+                                                        <option value="137">137</option>
+                                                        <option value="138">138</option>
+                                                        <option value="139">139</option>
+                                                        <option value="140">140</option>
+                                                        <option value="141">141</option>
+                                                        <option value="142">142</option>
+                                                        <option value="143">143</option>
+                                                        <option value="144">144</option>
+                                                        <option value="145">145</option>
+                                                        <option value="146">146</option>
+                                                        <option value="147">147</option>
+                                                        <option value="148">148</option>
+                                                        <option value="149">149</option>
+                                                        <option value="150">150</option>
+                                                     </select> 
+                                                 </div>
+                                              </div>
+                                            </td><td style="vertical-align:bottom">
+                                                <input type="submit" onclick="return Milestone.build();" class="slds-button slds-button--neutral slds-button--brand save-button-custom" title="Build" value="Build"/>
+                                            </td></tr>
+                                        </tbody>    
+                                      </table>
+                                  </div>
+                                </div>  
+                               <br/>    
+                               <a id='downloadLink'></a>
+                               <!--a id="" href="javascript:void(0);" onclick="return Milestone.downloadExcel_Click();">Download Grid (XLSX)</a-->
+                               <a id="" href="javascript:void(0);" class="excel_button" style=" padding-bottom: 2px;display:inline-block;" title="Download grid in Excel format" onclick="return Milestone.downloadExcel_Click();">&nbsp;</a>
+                               <a id="" href="javascript:void(0);" class="delete_button_big" style=" padding-bottom: 2px;display:inline-block;" title="Remove all Rows in grid" onclick="return Milestone.deleteAllRows();">&nbsp;</a> 
+                               <!--input type="submit" onclick="return Timeline.downloadExcel_Click();" class="slds-button slds-button--neutral slds-button--brand save-button-custom" title="Download Excel" value="Download Excel"/-->
+                               
+                               <div style="position:relative">
+                                    <div>
+                                        <div id="myGrid" style="width:99%;min-height:450px"></div>
+                                    </div>
+                                </div>
+                                   
+                        </div>
+                
+                 
+                
+                
+                <div id="loadingSpinner" class="slds-spinner_container" style="display: none !important;">
+                    <div class="slds-spinner--brand slds-spinner slds-spinner--large" aria-hidden="false" role="alert">
+                       <div class="slds-spinner__dot-a"></div>
+                       <div class="slds-spinner__dot-b"></div>
+                    </div>
+                 </div>
+                
+                <div class="slds-notify_container" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+                    style = "display:none;">
+                    <div class="slds-notify slds-notify--toast slds-theme--success" id="sldsalertdiv" role="alert">
+                       <span class="slds-assistive-text">Success</span>
+                       <button class="slds-button slds-button--icon-inverse slds-notify__close">
+                          <svg aria-hidden="true" class="slds-button__icon slds-button__icon--large">
+                             <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!$Resource.E2_SLDS1}/assets/icons/utility-sprite/svg/symbols.svg#close"></use>
+                          </svg>
+                          <span class="slds-assistive-text">Close</span>
+                       </button>
+                       <div class="notify__content slds-grid">
+                          <svg aria-hidden="true" class="slds-icon slds-icon--small slds-m-right--small slds-col slds-no-flex">
+                             <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!$Resource.E2_SLDS1}/assets/icons/utility-sprite/svg/symbols.svg#notification"></use>
+                          </svg>
+                          <div class="slds-col slds-align-middle">
+                             <h2 class="slds-text-heading--small "></h2>
+                          </div>
+                       </div>
+                    </div>
+                 </div>
+                
+                <br/>
+                
+                <ul id="contextMenu" style="display:none;position:absolute">
+                  <span><button id="merge_btn" onclick="return false;" data="MERGE">Merge</button></span>    
+                  <span><button id="unmerge_btn" onclick="return false;" data="UNMERGE">UnMerge</button></span>
+                  <span><button id="clear_btn" onclick="return false;" data="CLEAR">Clear</button></span>
+                  <br/>
+                  <b>Apply Background:</b>
+                  <br/>
+                  <li title="Default Color" style="background-color:transparent;border-color:black;" data="">&nbsp;</li>
+                  <li style="background-color: #9B4175;border-color:#9B4175;" data="#9B4175">&nbsp;</li>
+                  
+                  
+                  <li style="background-color: #8db3e2;border-color:#8db3e2;" data="#8db3e2">&nbsp;</li>
+                  <li style="background-color: #f79646;border-color:#f79646;" data="#f79646">&nbsp;</li>
+                  <li style="background-color: #1f497d;border-color:#1f497d;" data="#1f497d">&nbsp;</li>
+                  <li style="background-color: #9bbb59;border-color:#9bbb59;" data="#9bbb59">&nbsp;</li>
+                  <li style="background-color: #f7ffa9;border-color:#f7ffa9;" data="#f7ffa9">&nbsp;</li>
+                  <li style="background-color: #c0504d;border-color:#c0504d;" data="#c0504d">&nbsp;</li>
+                  
+                  
+                  
+                  <li style="background-color: #556B2F;border-color:#556B2F; " data="#556B2F">&nbsp;</li>
+                  <li style="background-color: #773242;border-color:#773242; " data="#773242">&nbsp;</li>
+                  <li style="background-color: #808000;border-color:#808000; " data="#808000">&nbsp;</li>
+                  
+                  
+                  <li style="background-color: #291E48;border-color:#291E48; " data="#291E48">&nbsp;</li>
+                  <li style="background-color: #9E4252;border-color:#9E4252; " data="#9E4252">&nbsp;</li>
+                  <li style="background-color: #5C2F6F;border-color:#5C2F6F; " data="#5C2F6F">&nbsp;</li>
+                  <li style="background-color: #52a0c7;border-color:#52a0c7; " data="#52a0c7">&nbsp;</li>
+                  <li style="background-color: #8B0000;border-color:#8B0000; " data="#8B0000">&nbsp;</li>
+                  <li style="background-color: #306A73;border-color:#306A73; " data="#306A73">&nbsp;</li>
+                  <li style="background-color: #110E20;border-color:#110E20; " data="#110E20">&nbsp;</li>
+                  <li style="background-color: #483D8B;border-color:#483D8B; " data="#483D8B">&nbsp;</li>
+                  
+                  
+                  
+                  
+                  <li style="background-color: #2E8B57;border-color:#2E8B57; " data="#2E8B57">&nbsp;</li>
+                  <li style="background-color: #00CCCC;border-color:#00CCCC; " data="#00CCCC">&nbsp;</li>
+                  <li style="background-color: #4169E1;border-color:#4169E1; " data="#4169E1">&nbsp;</li>
+                  <li style="background-color: #A0522D;border-color:#A0522D; " data="#A0522D">&nbsp;</li>
+                  <li style="background-color: #b8a9c9;border-color:#b8a9c9; " data="#b8a9c9">&nbsp;</li>
+                  <li style="background-color: #663399;border-color:#663399; " data="#663399">&nbsp;</li>
+                  <li style="background-color: #000080;border-color:#000080; " data="#000080">&nbsp;</li>
+                  <li style="background-color: #FF6347;border-color:#FF6347; " data="#FF6347">&nbsp;</li>
+                  <li style="background-color: #8a8a5c;border-color:#8a8a5c; " data="#8a8a5c">&nbsp;</li>
+                  <li style="background-color: #EE82EE;border-color:#EE82EE; " data="#EE82EE">&nbsp;</li>
+                  <li style="background-color: #D2B48C;border-color:#D2B48C; " data="#D2B48C">&nbsp;</li>
+                 
+                  
+                </ul>
+                
+                <!-- PLEASE DONOT REMOVE: This section is important while using standard controller -->
+                <input type="hidden" value="{!E2_Milestone_Library__c.Name}" />
+            </apex:form>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>    
+    
+    <!--apex:composition template="E2_Template">
+        <apex:define name="body">
+             <div xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+            <div class="slds-page-header" role="banner">
+            </div>
+            </div>
+            
+            
+            
+        </apex:define>
+        <apex:define name="footer">
+        </apex:define>
+
+        <apex:define name="javascript">
+            
+            
+        </apex:define>
+    </apex:composition-->
+</apex:page>

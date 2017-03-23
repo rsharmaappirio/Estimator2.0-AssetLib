@@ -9,1036 +9,101 @@
  * 17 Oct 2016        Rohit Sharma                 I-239841 : Condition added to save Phase on copy paste
  * 02 Nov 2016        Rohit Sharma                 I-?????? : Modified the rate card margin and rate margin calculation on this page
                                                               to allow zero values for bill rate and cost rate fields in the rate card. 
+ * Dec 26, 2016       Rahul Jain                   Added Resource Level field in the table of manage rate card tab
+ * Feb 1st, 2017      Rohit Sharma                 S-456643 : New output link added on page to allow user to view timeline in customer mode
 *  =====================================================================
 -->
 <apex:page standardController="CMC_Presales_LOE__c" extensions="E2_TimelineController" action="{!pageAction}" 
-   showHeader="false" standardStylesheets="true" sidebar="false" applyHtmlTag="false" applyBodyTag="false">
-    <apex:stylesheet value="{!$Resource.E2_SlickGrid}/slick.grid.css" />
-    <apex:stylesheet value="{!$Resource.E2_SlickGrid}/css/smoothness/jquery-ui-1.8.24.custom.css" />
-    <apex:stylesheet value="{!$Resource.E2_SlickGrid}/slick-default-theme.css" />
-    <apex:stylesheet value="{!$Resource.E2_SlickGrid}/plugins/slick.headermenu.css" />
-    <apex:stylesheet value="{!$Resource.E2_SlickGrid}/controls/slick.pager.css" />
-    <apex:stylesheet value="{!$Resource.E2_SlickGrid}/controls/slick.columnpicker.css" />
-    
-    <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/lib/firebugx.js"></script>
-    <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/lib/jquery-1.7.min.js"></script>
-    <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/lib/jquery-ui-1.8.24.custom.min.js"></script>
-    <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/lib/jquery.event.drag-2.2.js"></script>
-    <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/lib/jquery.event.drop-2.2.js"></script>
-    <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/lib/jquery.mousewheel.js"></script>
-    <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/slick.core.js"></script>
-    <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/plugins/slick.autotooltips.js"></script>
-    <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/plugins/slick.cellrangedecorator.js"></script>
-    <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/plugins/slick.cellcopymanager.js"></script>
-    <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/plugins/slick.rowselectionmodel.js"></script>
-    <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/plugins/slick.rowmovemanager.js"></script>
-    <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/plugins/slick.headermenu.js"></script>
-    <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/slick.dataview.js"></script>
-    <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/controls/slick.pager.js"></script>
-    <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/controls/slick.columnpicker.js"></script>
-    <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/slick.formatters.js"></script>
-    <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/slick.editors.js"></script>
-    <!--script type="text/javascript" src="{!$Resource.E2_SlickGrid}/slick.grid.js"></script-->
-    <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/slick.grid.new.js"></script>
-    <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/lib/js/require.js"></script>
-    <script type="text/javascript" src="{!$Resource.E2_SlickGrid}/lib/js/underscore.js"></script>
-    
-    <script type="text/javascript">
-        requirejs.config({
-                        baseUrl: '{!$Resource.E2_SlickGrid}/lib/js'  //give the location of the folder which contains require, excel-builder, etc
-                    });
-    </script>
-    <script type="text/javascript" src="{!$Resource.E2_TimelineJS}"></script>
-    
+   showHeader="false" standardStylesheets="false" sidebar="false" applyHtmlTag="false" applyBodyTag="false">
     <apex:composition template="E2_Template">
-        <apex:define name="title">Timeline</apex:define>
+        <apex:define name="title">Timeline | {!estimate.Name}</apex:define>
         <apex:define name="header">
             <c:E2_PermissionMessage rendered="{!NOT(isEditable)}" />
             <c:E2_Header psr_id="{!psrId}" step="7" />
         </apex:define>
         <apex:define name="body">
-            <style rel="stylesheet" type="text/css">
-            
-                /*** STYLE TO SUPPORT RESOURCE LABEL INFO TEXT ***/
-                span.add-resource-label{
-                    color:#999999;font-style: italic;font-weight:normal;
-                    font-size:14px;
-                }
-            
-                ::-webkit-input-placeholder { /* Chrome/Opera/Safari */
-                  color:#999999;font-style: italic;
-                }
-                ::-moz-placeholder { /* Firefox 19+ */
-                  color:#999999;font-style: italic;
-                }
-                :-ms-input-placeholder { /* IE 10+ */
-                  color:#999999;font-style: italic;
-                }
-                :-moz-placeholder { /* Firefox 18- */
-                  color:#999999;font-style: italic;
-                }
-                /***END: STYLE TO SUPPORT RESOURCE LABEL INFO TEXT ***/
-            
-                div.info_icon{
-                    background: transparent url({!$Resource.E2_SLDS1}/assets/icons/utility/info_60.png) no-repeat scroll center right / 15px 15px;
-                    
-                }
-            
-                a.delete_button, a.delete_button:hover, a.delete_button:active, a.delete_button:focus{
-                    background: transparent url({!$Resource.E2_SLDS1}/assets/icons/utility/delete_60.png) no-repeat scroll center center / 15px 15px;
-                    height: 15px;
-                    width: 15px;
-                    display:block;
-                    text-decoration: none;
-                    outline: none; 
-                }
-                
-                a.push_button{
-                    background: transparent url({!$Resource.E2_SLDS1}/assets/icons/utility/push_60.png) no-repeat scroll center center / 15px 15px;
-                    height: 15px;
-                    width: 15px;
-                    display:block;
-                }
-                a.replace_button{
-                    
-                    background: transparent url({!$Resource.E2_SLDS1}/assets/icons/utility/replace_60.png) no-repeat scroll center center / 15px 15px;
-                    height: 15px;
-                    width: 15px;
-                    display:block;
-                }
-                a.setup_button, a.setup_button:hover, a.setup_button:active, a.setup_button:focus{
-                    
-                    background: transparent url({!$Resource.E2_SLDS1}/assets/icons/utility/setup_60.png) no-repeat scroll center center / 15px 15px;
-                    height: 15px;
-                    width: 15px;
-                    display:block;
-                    text-decoration: none;
-                    outline: none; 
-                }
-                
-                a.excel_button, a.excel_button:hover, a.excel_button:active, a.excel_button:focus{
-                    background: transparent url({!$Resource.E2_SLDS1}/assets/icons/doctype/excel_60.png) no-repeat scroll center center / 25px 25px;
-                    height: 25px;
-                    width: 25px;
-                    display:block;
-                    text-decoration: none;
-                    outline: none; 
-                }
-                
-                a.question_button, a.question_button:hover, a.question_button:active, a.question_button:focus{
-                    
-                    background: transparent url({!$Resource.E2_SLDS1}/assets/icons/utility/question_60.png) no-repeat scroll center center / 12px 12px;
-                    height: 12px;
-                    width: 12px;
-                    display: inline-block;
-                    text-decoration: none;
-                    outline: none; 
-                }
-                
-                
-                /**.reallyHidden { display: none !important;}**/
-                .Fixed-Header-Style{font-weight:bold;}
-                
-                .hours-cell-style-text-center{text-align:center;}
-                
-                .custom-fix-row{
-                    background-color: #eee!important;
-                    border-color: #ccc!important;
-                    border-style: solid!important;
-                }
-                .cell-story {
-                    white-space: normal !important;
-                    line-height: 19px !important;
-                }
-                
-                .loading-indicator {
-                    display: inline-block;
-                    padding: 12px;
-                    background: white;
-                    -opacity: 0.5;
-                    color: black;
-                    font-weight: bold;
-                    z-index: 9999;
-                    border: 1px solid red;
-                    -moz-border-radius: 10px;
-                    -webkit-border-radius: 10px;
-                    -moz-box-shadow: 0 0 5px red;
-                    -webkit-box-shadow: 0px 0px 5px red;
-                    -text-shadow: 1px 1px 1px white;
-                }
-                
-                .loading-indicator label {
-                    padding-left: 20px;
-                    background: url('{!$Resource.E2_SlickGrid}/images/ajax-loader-small.gif') no-repeat center left;
-                }
-                
-                .dropdown {
-                    position: fixed;
-                }
-                
-                .slick-cell.copied {
-                    background: blue;
-                    background: rgba(0, 0, 255, 0.2);
-                    -webkit-transition: 0.5s background;
-                }
-                
-                .slds *,
-                .slds *::after,
-                .slds *::before {
-                    box-sizing: inherit!important;
-                }
-                
-                .slick-header-column.ui-state-default {
-                    /** height:22px!important;**/
-                }
-                
-                #myGrid {
-                    background: white;
-                    outline: 0;
-                    border: 1px solid gray;
-                    font:inherit;
-                }
-                
-                #myGridHead {
-                    background: white;
-                    outline: 0;
-                    border: 1px solid gray;
-                }
-                
-                .grid-header {
-                    border: 1px solid gray;
-                    border-bottom: 0;
-                    border-top: 0;
-                    background: url('{!$Resource.E2_SlickGrid}/images/header-bg.gif') repeat-x center top;
-                    color: black;
-                    height: 24px;
-                    line-height: 24px;
-                }
-                
-                .grid-header label {
-                    display: inline-block;
-                    font-weight: bold;
-                    margin: auto auto auto 6px;
-                }
-                
-                .grid-header .ui-icon {
-                    margin: 4px 4px auto 6px;
-                    background-color: transparent;
-                    border-color: transparent;
-                }
-                
-                .grid-header .ui-icon.ui-state-hover {
-                    background-color: white;
-                }
-                
-                .grid-header #txtSearch {
-                    margin: 0 4px 0 4px;
-                    padding: 2px 2px;
-                    -moz-border-radius: 2px;
-                    -webkit-border-radius: 2px;
-                    border: 1px solid silver;
-                }
-                
-                .options-panel {
-                    -moz-border-radius: 6px;
-                    -webkit-border-radius: 6px;
-                    border: 1px solid silver;
-                    background: #f0f0f0;
-                    padding: 4px;
-                    margin-bottom: 20px;
-                    width: 320px;
-                    position: absolute;
-                    top: 0px;
-                    left: 650px;
-                }
-                /* Individual cell styles */
-                
-                .slick-cell.task-name {
-                    font-weight: bold;
-                    text-align: right;
-                }
-                
-                .slick-cell.task-percent {
-                    text-align: right;
-                }
-                
-                .slick-cell.cell-move-handle {
-                    font-weight: bold;
-                    text-align: right;
-                    border-right: solid gray;
-                    background: #efefef;
-                    cursor: move;
-                }
-                
-                .cell-move-handle:hover {
-                    background: #b6b9bd;
-                }
-                
-                .slick-row.selected .cell-move-handle {
-                    background: #D5DC8D;
-                }
-                
-                .slick-row .cell-actions {
-                    text-align: left;
-                }
-                
-                .slick-row.complete {
-                    background-color: #DFD;
-                    color: #555;
-                }
-                
-                .percent-complete-bar {
-                    display: inline-block;
-                    height: 6px;
-                    -moz-border-radius: 3px;
-                    -webkit-border-radius: 3px;
-                }
-                /* Slick.Editors.Text, Slick.Editors.Date */
-                
-                input.editor-text {
-                    width: 100%;
-                    height: 100%;
-                    border: 0;
-                    margin: 0;
-                    background: transparent;
-                    outline: 0;
-                    padding: 0;
-                    text-align: inherit;
-                }
-                
-                /** SLDS STYLE OF FOCUS ON INPUT
-                input.editor-text:active, input.editor-text:focus {
-                    background-color: #fff;
-                    border-color: #1589ee;
-                    box-shadow: 0 0 3px #0070d2;
-                    outline: 0 none;
-                }
-                **/
-                
-                .ui-datepicker-trigger {
-                    margin-top: 2px;
-                    padding: 0;
-                    vertical-align: top;
-                }
-                
-                /* Slick.Editors.PercentComplete */
-                input.editor-percentcomplete {
-                    width: 100%;
-                    height: 100%;
-                    border: 0;
-                    margin: 0;
-                    background: transparent;
-                    outline: 0;
-                    padding: 0;
-                    float: left;
-                }
-                
-                .editor-percentcomplete-picker {
-                    position: relative;
-                    display: inline-block;
-                    width: 16px;
-                    height: 100%;
-                    background: url("{!$Resource.E2_SlickGrid}/images/pencil.gif") no-repeat center center;
-                    overflow: visible;
-                    z-index: 1000;
-                    float: right;
-                }
-                
-                .editor-percentcomplete-helper {
-                    border: 0 solid gray;
-                    position: absolute;
-                    top: -2px;
-                    left: -9px;
-                    background: url("{!$Resource.E2_SlickGrid}/images/editor-helper-bg.gif") no-repeat top left;
-                    padding-left: 9px;
-                    width: 120px;
-                    height: 182px;
-                    /**display: none;**/ /** remove this because we need to show autofill widget on keyboard key movement **/
-                    overflow: visible;
-                }
-                
-                .editor-percentcomplete-wrapper {
-                    background: #d8dde6;
-                    padding: 4px;
-                    width: 100%;
-                    height: 180px;
-                    border: 1px solid gray;
-                    border-left: 0;
-                }
-                
-                .editor-percentcomplete-buttons {
-                    float: left;
-                }
-                
-                .editor-percentcomplete-buttons button {
-                    width: 100%;
-                }
-                
-                .editor-percentcomplete-slider {
-                    float: left;
-                }
-                
-                .editor-percentcomplete-picker:hover .editor-percentcomplete-helper {
-                    display: block;
-                }
-                
-                .editor-percentcomplete-helper:hover {
-                    display: block;
-                }
-                
-                /** Editor AutoFill **/
-                 /* Slick.Editors.AutoFill */
-                input.editor-autofill {
-                    width: 100%;
-                    height: 100%;
-                    border: 0;
-                    margin: 0;
-                    background: transparent;
-                    outline: 0;
-                    padding: 0;
-                    float: left;
-                }
-                
-                .editor-autofill-picker {
-                    position: relative;
-                    display: inline-block;
-                    width: 100%;
-                    height: 100%;
-                    /**background: url("{!$Resource.E2_SlickGrid}/images/pencil.gif") no-repeat center center;**/
-                    overflow: visible;
-                    z-index: 1000;
-                    float: right;
-                }
-                .editor-autofill-picker1 {
-                    position: relative;
-                    display: inline-block;
-                    width: 16px;
-                    height: 100%;
-                    overflow: visible;
-                    z-index: 1000;
-                    float: right;
-                }
-                .editor-autofill-helper {
-                    border: 0 solid gray;
-                    position: absolute;
-                    top: -2px;
-                    left: -9px;
-                    /**left: -9px;**/
-                    /**background: url("{!$Resource.E2_SlickGrid}/images/editor-helper-bg.gif") no-repeat top left;**/
-                    padding-left: 9px;
-                    width: 451px;
-                    height: 80px;
-                    /**display: none;**/ /** remove this because we need to show autofill widget on keyboard key movement **/
-                    overflow: visible;
-                }
-                
-                .editor-autofill-wrapper {
-                    /**background: beige;**/
-                    background:#fafafa;
-                    padding: 20px 20px;
-                    width: 100%;
-                    height: 24px;
-                    border: 1px solid gray;
-                    border-left: 0;
-                }
-                
-                .editor-autofill-buttons {
-                    float: right;
-                }
-                
-                .editor-autofill-buttons button {
-                    width: 80px;
-                }
-                
-                .editor-autofill-slider {
-                    float: left;
-                    width:100%;
-                }
-                
-                .editor-autofill-slider label {
-                    position: absolute;
-                    width: 20px;
-                    margin-left: -10px;
-                    text-align: center;
-                    margin-top: 20px;
-                    
-                }
-                
-                .editor-autofill-picker:hover .editor-autofill-helper {
-                    display: block;
-                }
-                
-                .editor-autofill-helper:hover {
-                    display: block;
-                }
-                
-                
-                /* Slick.Editors.YesNoSelect */
-                
-                select.editor-yesno {
-                    width: 100%;
-                    margin: 0;
-                    vertical-align: middle;
-                }
-                /* Slick.Editors.Checkbox */
-                
-                input.editor-checkbox {
-                    margin: 0;
-                    height: 100%;
-                    padding: 0;
-                    border: 0;
-                }
-                
-                .cell-effort-driven {
-                    text-align: center;
-                }
-                
-                .cell-reorder {
-                    cursor: move;
-                    background: url("{!$Resource.E2_SlickGrid}/images/drag-handle.png") no-repeat center center;
-                }
-                
-                .cell-selection {
-                    border-right-color: silver;
-                    border-right-style: solid;
-                    background: #f5f5f5;
-                    color: gray;
-                    text-align: right;
-                    font-size: 10px;
-                }
-                
-                .slick-row.selected .cell-selection {
-                    background-color: transparent;
-                    /* show default selected row background */
-                }
-                
-                .slick-group-header-columns {
-                    position: relative;
-                    white-space: nowrap;
-                    cursor: default;
-                    overflow: hidden;
-                }
-                
-                .slick-group-header-columns .slick-header-column {
-                    padding-left: 0px;
-                    padding-right: 0px;
-                }
-                
-                .slick-group-header-columns .slick-column-name {
-                    text-align: center;
-                }
-                
-                .cell-title {
-                    font-weight: bold;
-                }
-                
-                .cell-effort-driven {
-                    text-align: center;
-                }
-                
-                .cell-selection {
-                    border-right-color: silver;
-                    border-right-style: solid;
-                    background: #f5f5f5;
-                    color: gray;
-                    text-align: right;
-                    font-size: 10px;
-                }
-                
-                .slick-row.selected .cell-selection {
-                    background-color: transparent;
-                    /* show default selected row background */
-                }
-                
-                table thead tr th.slds-th {
-                    background-color: #005fb2;
-                    color: #fff;
-                    font-weight: bold !important;
-                }
-                
-                table tbody tr td.slds-td {
-                    background-color: #CCCCCC;
-                    font-weight: bold;
-                }
-                /**
-     * Style the drop-down menu here since the plugin stylesheet mostly contains structural CSS.
-     */
-                
-                .slick-header-menu {
-                    border: 1px solid #718BB7;
-                    background: #f0f0f0;
-                    padding: 2px;
-                    -moz-box-shadow: 2px 2px 2px silver;
-                    -webkit-box-shadow: 2px 2px 2px silver;
-                    min-width: 100px;
-                    z-index: 20;
-                }
-                
-                .slick-header-menuitem {
-                    padding: 2px 4px;
-                    border: 1px solid transparent;
-                    border-radius: 3px;
-                }
-                
-                .slick-header-menuitem:hover {
-                    border-color: silver;
-                    background: white;
-                }
-                
-                .slick-header-menuitem-disabled {
-                    border-color: transparent !important;
-                    background: inherit !important;
-                }
-                
-                .icon-help {
-                    background-image: url({!$Resource.E2_SlickGrid}/images/help.png);
-                }
-                
-                .slick-cell.editable {
-                    background-color: #fff;
-                    border-radius: 4px;
-                    color: #16325c;
-                    transition: border 0.1s linear 0s, background-color 0.1s linear 0s;
-                }
-                
-                
-                .slds-calculated-cell { 
-                    text-align: center!important;
-                    background-color: #666666!important;
-                    color: #fff!important;
-                }
-                
-                .slds-milestones-cell { 
-                    text-align: center!important;
-                    background-color: #aaaaaa!important;
-                    color: #fff!important;
-                }
-                
-                .slds-capacityperphase-cell { 
-                    text-align: center!important;
-                    color: #fff!important;
-                }
-                .slds-capacityperphase-cell div { 
-                    background-color: #000080;
-                }
-                .slds-hoursperphase-cell { 
-                    text-align: center!important;
-                    background-color: #0070d2!important;
-                    color: #fff!important;
-                }
-                .slds-hoursperphase-cell div {
-                    background-color: #0070d2;
-                }
-                .slds-totalhrsperweek-cell { 
-                    text-align: center!important;
-                    background-color: #bacde3!important;
-                    color: #fff!important;
-                }
-                .slds-totalhrsperweek-cell div { 
-                    background-color: #bacde3;
-                }
-                .slds-totalhrsperweek-cell-sum {
-                    text-align: center; 
-                    background-color: #000000!important;
-                    color: #ffffff;
-                    font-weight: bold;
-                }
-                .slds-weekname-cell { 
-                    text-align: center!important;
-                    background-color: #666666!important;
-                    color: #fff!important;
-                }
-                .slds-total-cell { 
-                    text-align: center!important;
-                    background-color: #666666!important;
-                    color: #fff!important;
-                }
-                .slds-weekname-cell div {
-                    background-color: #666666;
-                }
-                
-                 /**body {width:100%; height:100%; overflow:auto; margin:0; }**/
-                 /**html {width:100%; height:100%; overflow:auto; }**/
-                 
-                 .totals {
-                    font-weight: bold;
-                    color: gray;
-                    font-style: italic;
-                  }
-                  .noneline-bottom
-                  {
-                      border-bottom:0;
-                  }
-                  
-                  .strategy_phase_cell{
-                      color: #fff;
-                      background-color: rgb(51, 62, 72);
-                      font-style: italic;
-                  }
-                  
-                  .plan_phase_cell{
-                      color: #fff;
-                      background-color: rgb(240, 109, 30);
-                      font-style: italic;
-                  }
-                  
-                  .architect_phase_cell{
-                      color: #fff;
-                      background-color: rgb(96, 131, 175);
-                      font-style: italic;
-                  }
-                  
-                  .build_phase_cell{
-                      color: #fff;
-                      background-color: rgb(135, 189, 67);
-                      font-style: italic;
-                  }
-                  
-                  .test_phase_cell{
-                      color: #fff;
-                      background-color: rgb(32, 40, 48);
-                      font-style: italic;
-                  }
-                  
-                  .deploy_thrive_phase_cell{
-                      color: #fff;
-                      background-color: rgb(163, 9, 58);
-                      font-style: italic;
-                  }
-                  span.overview-label{
-                      font-weight:bold;
-                      line-height:20px;
-                  }
-                  #overview-table tbody tr td{
-                        background: #e0e5ee none repeat scroll 0 0;
-                        border: 1px solid #ccc;
-                        color: #16325c;
-                        padding: 1px;
-                  }
-                  .slds .slds-tabs--default__link {
-                     height:35px!important;   
-                  }
-                  
-                  
-                   .noneline-bottom{
-                          border-right:0;
-                      }
-                      
-                      
-                   .cell-title {
-                      font-weight: bold;
-                    }
-                
-                    #contextMenu {
-                      background: #e1efc7;
-                      border: 1px solid gray;
-                      padding: 2px;
-                      display: inline-block;
-                      min-width: 155px;
-                      -moz-box-shadow: 2px 2px 2px silver;
-                      -webkit-box-shadow: 2px 2px 2px silver;
-                      z-index: 99999;
-                      max-width: 175px;
-                    }
-                    
-                    #phaseContextMenu {
-                      background: #e1efc7;
-                      border: 1px solid gray;
-                      padding: 2px;
-                      display: inline-block;
-                      min-width: 140px;
-                      -moz-box-shadow: 2px 2px 2px silver;
-                      -webkit-box-shadow: 2px 2px 2px silver;
-                      z-index: 99999;
-                      max-width: 180px;
-                    }
-                
-                    #contextMenu li, #phaseContextMenu li {
-                      padding: 4px 4px 4px 14px;
-                      list-style: none;
-                      cursor: pointer;
-                      /**background: url("{!$Resource.E2_SlickGrid}/images/arrow_right_peppermint.png") no-repeat center left;**/
-                      width:10px;
-                      height:10px;
-                      float:left;
-                      border-color: #ccc;
-                      border-style: solid;
-                      border-width: 1px;
-                    }
-                
-                    #contextMenu li:hover, #phaseContextMenu li:hover {
-                      background-color: white;
-                    } 
-                    
-                    .slick-cell.selected {
-                        background-color: beige !important;
-                        color: #000000 !important;
-                        /**border-style: dashed;**/
-                    }
-                    
-                    .header .sign:after{
-                      content:"+";
-                      display:inline-block;      
-                    }
-                    .header.expand .sign:after{
-                      content:"-";
-                    }
-                    
-                    .slds *::-moz-selection {
-                        background: #3297fd none repeat scroll 0 0;
-                        color: #ffffff;
-                        text-shadow: none;
-                    }
-                    ::selection {
-                        background: #3297fd!important;
-                        color: #ffffff!important;
-                        text-shadow: none;
-                    }
-                    tr.jaipurrow{
-                        background-color:#f5ffbf;
-                    }
-                    tr .estimate-summary {
-                        padding-top : 5px!important;
-                        padding-bottom : 5px!important;
-                    }
-                    .estimate-summary .button {
-                        min-height : 21px!important;
-                        line-height: 18px!important;
-                    }
-            </style>
+            <div xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+            <div class="slds-page-header" role="banner">
+               <div class="slds-grid">
+                  <div class="slds-col slds-has-flexi-truncate">
+                     <div class="slds-media">
+                        <div class="slds-media__figure slds-icon slds-icon--large slds-icon-standard-note">
+                                <apex:image value="{!URLFOR($Resource.E2_SLDS1, '/assets/icons/standard/note_60.png')}" width="48" height="48"/>
+                        </div>
+                        <div class="slds-media__body">
+                           <p class="slds-text-heading--label">Resource Timeline</p>
+                           <div class="slds-grid">
+                              <h1 class="slds-page-header__title slds-m-right--small slds-truncate slds-align-middle" title="{!estimate.name}">{!estimate.name}</h1>
+                              <div class="slds-media__figure slds-icon slds-icon-standard-user" style="height:20px;width:20px;margin-top: 5px;">
+                                <a href="javascript:void(0);" onclick="$('.custom_header').slideToggle('slow');"><apex:image value="{!URLFOR($Resource.E2_SLDS1, '/assets/icons/action/more_60.png')}" width="20" height="20"/></a>
+                              </div>
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+                  <div class="slds-col slds-no-flex slds-align-bottom">
+                     <div class="slds-button-group" role="group" >
+                         <apex:outputLink value="/apex/E2_Timeline?id={!$CurrentPage.parameters.id}&customerMode=true" rendered="{!$CurrentPage.parameters.customerMode == null}">Presentation mode</apex:outputLink>
+                         <apex:outputLink value="/apex/E2_Timeline?id={!$CurrentPage.parameters.id}" rendered="{!$CurrentPage.parameters.customerMode != null}">Edit mode</apex:outputLink>
+                      </div>
+                  </div>
+               </div>
+               <ul class="slds-grid slds-page-header__detail-row custom_header" style="display:none;margin-right: -10px;margin-left: -10px;">
+                  <li class="slds-col--padded slds-size--1-of-2">
+                     <p class="slds-text-heading--label slds-truncate" title="Description">Description</p>
+                     <p class="slds-text-body--regular" title="{!estimate.Description__c}">
+                        {!estimate.Description__c}
+                     </p>
+                     <p class="slds-text-heading--label slds-truncate" title="Version Notes">Version Notes        
+                     </p>
+                     <p class="slds-text-body--regular" title="{!estimate.E2_Version_Notes__c}">
+                        {!estimate.E2_Version_Notes__c}
+                     </p>
+                  </li>
+                  <li class="slds-col--padded slds-size--1-of-2">
+                     <p class="slds-text-heading--label slds-truncate" title="Presales Request">Presales Request</p>
+                     <p class="slds-text-heading--label">
+                        <apex:outputField value="{!estimate.Presales_Request__c}"/>
+                     </p>
+                      <p class="slds-text-heading--label slds-truncate" title="Opportunity">Opportunity</p>
+                      <p><apex:outputLink value="/{!estimate.Presales_Request__r.Opportunity__c}">{!estimate.Presales_Request__r.Opportunity_Name__c}</apex:outputLink> </p>
+                      <p class="slds-text-heading--label slds-truncate" title="Account">Account</p>
+                     <p><apex:outputLink value="/{!estimate.Presales_Request__r.Opportunity__r.AccountId}">{!estimate.Account_Name__c}</apex:outputLink></p>
+                  </li>
+               </ul>
+            </div>
+            </div>
             <apex:form >
-                <apex:pageMessages />
-                <apex:actionfunction name="updateEstimateRateCards" action="{!updateEstimateRateCards}" oncomplete="Timeline.updateEstimateRateCards_complete();" rerender="ratecard_table"/>
-                <apex:actionfunction name="refreshRateCardRatesAndCost" action="{!refreshRateCardRatesAndCost}" oncomplete="Timeline.refreshRateCardRatesAndCost_complete();" rerender="ratecard_table"/>
-                <apex:actionfunction name="refreshOverviewPanel" action="{!refreshOverviewPanel}" rerender="overview_panel"/>
-                <apex:actionfunction name="changeDiscount" action="{!changeDiscount}" rerender="overview_panel"/>
-                <apex:actionfunction name="changeFixedFee" action="{!changeFixedFee}" rerender="overview_panel"/>
-                <apex:actionFunction name="changeEstimateMode" oncomplete="loadSpinner.hide();" action="{!changeEstimateMode}" rerender="overview_panel">
-                    <apex:param name="firstParam" assignTo="{!estimate_Mode}" value="" />
+                <apex:pageMessages id="pageMessage"/>
+                <apex:actionfunction name="refreshTimelineEstimates" action="{!refreshTimelineEstimates}" oncomplete="TimelineSummary.refreshTimelineEstimates_Complete('{!newTimelineId}');return false;" rerender="multipleTimeline,multipleTimelineMenu,timelinesummary">
+                    <apex:param name="firstParam" assignTo="{!newTimelineId}" value="" />
                 </apex:actionFunction>
-                <apex:actionfunction name="changeDiscountAmount" action="{!changeDiscountAmount}" rerender="overview_panel"/>
-                
-                
+                <apex:actionfunction name="updateTimelineStatus" action="{!updateTimelineStatus}" oncomplete="TimelineSummary.updateTimelineStatus_Complete('{!newTimelineId}');return false;" rerender="multipleTimeline,multipleTimelineMenu,pageMessage,timelinesummary">
+                    <apex:param name="fParam" assignTo="{!newTimelineId}" value="" />
+                    <apex:param name="sParam" assignTo="{!timelineStatusActive}" value="" />
+                </apex:actionFunction>
+                <apex:actionfunction name="updateTimelineName" action="{!updateTimelineName}" oncomplete="loadingSpinner.hide();TimelineSummary.updateTimelineNameInIFrame('{!newTimelineId}');return false;" rerender="timelinesummary">
+                    <apex:param name="fParam" assignTo="{!newTimelineId}" value="" />
+                    <apex:param name="sParam" assignTo="{!timelineName}" value="" />
+                </apex:actionFunction>
+                <apex:actionFunction name="rerenderTimelineSummary" rerender="timelinesummary" />
                 <div id="tabpanel">
                     <ul class="slds-tabs--default__nav" role="tablist">
-                        <li class="slds-tabs--default__item slds-text-heading--label slds-active" title="Manage Timeline" role="presentation">
-                            <a class="slds-tabs--default__link" href="javascript:void(0);" role="tab" tabindex="-1" aria-selected="true" aria-controls="tab-default-1" id="tab-default-1__item">Timeline&nbsp;</a>
-                        </li>
-                        <li class="slds-tabs--default__item slds-text-heading--label " title="Manage Ratecard" role="presentation">
-                            <a class="slds-tabs--default__link" href="javascript:void(0);" role="tab" tabindex="0" aria-selected="false" aria-controls="tab-default-2" id="tab-default-2__item">Manage Ratecard&nbsp;</a>
+                        <li class="slds-tabs--default__item slds-text-heading--label slds-active" title="Timeline Summary" role="presentation">
+                            <a class="slds-tabs--default__link" href="javascript:void(0);" role="tab" tabindex="-1" aria-selected="true" aria-controls="tab-default-1" id="tab-default-1__item">Timeline Summary&nbsp;</a>
                         </li>
                         <li class="slds-tabs--default__item slds-text-heading--label " title="Weeks Required" role="presentation">
-                            <a class="slds-tabs--default__link" href="javascript:void(0);" role="tab" tabindex="0" aria-selected="false" aria-controls="tab-default-3" id="tab-default-3__item">Weeks Required&nbsp;</a>
+                            <a class="slds-tabs--default__link" href="javascript:void(0);" role="tab" tabindex="0" aria-selected="false" aria-controls="tab-default-2" id="tab-default-2__item">Weeks Required&nbsp;</a>
                         </li> 
                     </ul>
                     <div id="tab-default-1" style="padding:0px" class="slds-tabs--default__content slds-show paddingTopZero" role="tabpanel" aria-labelledby="tab-default-1__item">
-                        <div id="manage_timeline_div">
-                        
-                                <div class="slds-grid"> <!--style="width:48%;"-->
-                                 <div class="slds-col--padded">       
-                                      <div class="slds-form-element">
-                                         <div class="slds-form-element__control">
-                                             <label class="slds-form-element__label" for="text-input-1">Start Date<abbr class="slds-required" title="required">*</abbr></label>
-                                            <input type="text" class="slds-input" id="datepicker" style="width:90%" />
-                                         </div>
-                                      </div>
-                                  </div>
-                                  <div id="build_div" class="slds-col--padded" style="display:none;"> 
-                                      <table>
-                                        <tbody>
-                                            <tr><td>
-                                                <div class="slds-form-element">
-                                                 <div class="slds-form-element__control">
-                                                     <label class="slds-form-element__label" for="text-input-2">No. of weeks<abbr class="slds-required" title="required">*</abbr></label>
-                                                     <select id="no_of_weeks" class="slds-select" style="width:90%"> 
-                                                         <option value="1">1</option>
-                                                         <option value="2">2</option>
-                                                         <option value="3">3</option>
-                                                         <option value="4">4</option>
-                                                          <option value="5">5</option>
-                                                          <option value="10">10</option>
-                                                          <option value="20">20</option>
-                                                          <option value="30">30</option>
-                                                          <option value="40">40</option>
-                                                          <option value="50">50</option>
-                                                          <option value="60">60</option>
-                                                          <option value="70">70</option>
-                                                          <option value="80">80</option>
-                                                          <option value="90">90</option>
-                                                          <option value="100">100</option>
-                                                     </select> 
-                                                 </div>
-                                              </div>
-                                            </td><td style="vertical-align:bottom">
-                                                <input type="submit" onclick="return Timeline.build();" class="slds-button slds-button--neutral slds-button--brand save-button-custom" title="Build" value="Build"/>
-                                            </td></tr>
-                                        </tbody>    
-                                      </table>
-                                      
-                                      
-                                  </div>
-                                  <div id="overview_div" class="slds-col--padded" style="width:80%"> 
-                                    <apex:outputpanel id="overview_panel">
-                                        <table style="width:100%" id="overview-table">
-                                            <thead>
-                                                <tr>
-                                                    <th colspan="3">
-                                                        <div class="slds-grid estimate-summary">
-                                                            <div class="slds-col slds-has-flexi-truncate">
-                                                                <div class="slds-button-group" role="group" >
-                                                                    <apex:commandButton styleClass="slds-button slds-button--neutral button {!IF(estimate.Mode__c != 'fixed','slds-button--brand','')}" title="T & M" value="T & M" onclick="loadSpinner.show();changeEstimateMode('tm');return false;"/>
-                                                                    <apex:commandButton styleClass="slds-button slds-button--neutral button {!IF(estimate.Mode__c == 'fixed','slds-button--brand','')}" title="Fixed Fee" value="Fixed Fee" onclick="loadSpinner.show();changeEstimateMode('fixed');return false;"/>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                     </th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <tr>
-                                                    <td style="vertical-align:top;">&nbsp;<span class="overview-label">As Sold Margin:</span><br/>&nbsp;<apex:outputfield value="{!estimate.As_Sold_Margin__c}"/></td> 
-                                                    <td style="vertical-align:top;">&nbsp;<span class="overview-label">Services Fees:</span><br/>&nbsp;<apex:outputfield value="{!estimate.Service_Fees__c}"/></td>
-                                                    <td style="vertical-align:top;">&nbsp;<span class="overview-label">Services Cost:</span><br/>&nbsp;<apex:outputfield value="{!estimate.Service_Costs__c}"/></td>
-                                                    <td style="vertical-align:top;">&nbsp;<span class="overview-label">Services Margin:</span><br/>&nbsp;<apex:outputfield value="{!estimate.Service_Margin__c}"/></td>
-                                                    <td style="vertical-align:top;"><apex:outputText rendered="{!estimate.Mode__c != 'fixed'}">&nbsp;<span class="overview-label">Offshore Blend:</span><br/>&nbsp;<apex:outputfield value="{!estimate.Offshore_Blend__c}"/></apex:outputText></td>
-                                                </tr>
-                                                <apex:outputText rendered="{!estimate.Mode__c == 'fixed'}">
-                                                <tr>
-                                                    <td style="vertical-align:top;">&nbsp;<span class="overview-label">Fixed Fee Cost Uplift:</span><br/>&nbsp;<apex:outputfield value="{!estimate.Fixed_Fee_Cost_Uplift_Percent__c}"/></td>
-                                                    <td style="vertical-align:top;">&nbsp;<span class="overview-label">Fixed Fee Cost Uplift Amt:</span><br/>&nbsp;{!CMC_Presales_LOE__c.CurrencyIsoCode}&nbsp;<apex:outputfield value="{!estimate.Fixed_Fee_Cost_Uplift__c}"/></td>
-                                                    <td style="vertical-align:top;">&nbsp;<span class="overview-label">Services Uplifted Costs:</span><br/>&nbsp;{!CMC_Presales_LOE__c.CurrencyIsoCode}&nbsp;<apex:outputfield value="{!estimate.Services_Uplifted_Costs__c}"/></td>
-                                                    <td style="vertical-align:top;"><apex:outputText rendered="{!estimate.Mode__c == 'fixed'}">&nbsp;<span class="overview-label">Fixed Fee Buffer:</span><br/>&nbsp;<apex:inputfield onchange="changeFixedFee();return false;" styleClass="slds-input" style="line-height: 20px;min-height: 20px;width: 40px;" value="{!estimate.Fixed_Fee_Buffer__c}"/>%</apex:outputText></td>
-                                                    <td style="vertical-align:top;"><apex:outputText rendered="{!estimate.Mode__c == 'fixed'}">&nbsp;<span class="overview-label">Fixed Fee Buffer Amt:</span><br/>&nbsp;{!CMC_Presales_LOE__c.CurrencyIsoCode}&nbsp;<apex:outputfield value="{!estimate.Fixed_Fee_Buffer_Amount__c}"/></apex:outputText></td>
-                                                </tr>
-                                                </apex:outputText>
-                                                <tr>
-                                                    <td style="vertical-align:top;">&nbsp;<span class="overview-label">Calculated Fees:</span><br/>&nbsp;{!CMC_Presales_LOE__c.CurrencyIsoCode}&nbsp;<apex:outputfield value="{!estimate.Calculated_Fees__c}"/></td>
-                                                    <td style="vertical-align:top;">&nbsp;<span class="overview-label">Calculated Costs:</span><br/>&nbsp;{!CMC_Presales_LOE__c.CurrencyIsoCode}&nbsp;<apex:outputfield value="{!estimate.Calculated_Costs__c}"/></td>
-                                                    <td style="vertical-align:top;">&nbsp;<span class="overview-label">Calculated Margin:</span><br/>&nbsp;<apex:outputfield value="{!estimate.Calculated_Margin__c}"/></td>
-                                                    <td style="vertical-align:top;">&nbsp;<span class="overview-label">Discount:</span><br/>&nbsp;<apex:inputfield onchange="changeDiscount();return false;" styleClass="slds-input" style="line-height: 20px;min-height: 20px;width: 40px;" value="{!estimate.Discount_Percent__c}"/>%</td>
-                                                    <td style="vertical-align:top;">&nbsp;<span class="overview-label">Discount Amt:</span><br/>&nbsp;{!CMC_Presales_LOE__c.CurrencyIsoCode}&nbsp;<!--apex:outputfield value="{!estimate.Discount_Amount__c}"/--><apex:inputText onchange="changeDiscountAmount();return false;" styleClass="slds-input mandate-numeric-estimate" style="line-height: 20px;min-height: 20px;width: 80px;" value="{!discountAmount}"/></td>
-                                                    
-                                                </tr>
-                                                <tr>
-                                               
-                                                    <td style="vertical-align:top;">&nbsp;<span class="overview-label">Total Hours:</span><br/>&nbsp;<apex:outputfield value="{!estimate.Total_Resource_Hours__c}"/></td>
-                                                    <td style="vertical-align:top;">&nbsp;<span class="overview-label">Number Of Weeks:</span><br/>&nbsp;<apex:outputfield value="{!estimate.E2_Estimate_Total_Weeks__c}"/></td>
-                                                    <td style="vertical-align:top;">&nbsp;<span class="overview-label">Blended (List) Rate:</span><br/>&nbsp;{!CMC_Presales_LOE__c.CurrencyIsoCode}&nbsp;<apex:outputfield value="{!estimate.Blended_Rate_Number__c}"/></td>
-                                                    <td style="vertical-align:top;">&nbsp;<span class="overview-label">Total Fees:</span><br/>&nbsp;{!CMC_Presales_LOE__c.CurrencyIsoCode}&nbsp;<apex:outputfield value="{!estimate.Total_Fees__c}"/></td>
-                                                    <td style="vertical-align:top;">&nbsp;<span class="overview-label">Total:</span><br/>&nbsp;{!CMC_Presales_LOE__c.CurrencyIsoCode}&nbsp;<apex:outputfield value="{!estimate.Final_Total__c}"/></td>
-                                               
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </apex:outputpanel>
-                                  </div>
-                                </div>  
-                                
-                               <a id='downloadLink'></a>
-                               <div><span style="display:inline-block;vertical-align: bottom;">Download as&nbsp;</span><a id="" href="javascript:void(0);" class="excel_button" style=" padding-bottom: 2px;display:inline-block;" title="Download Grid in Excel Format" onclick="return Timeline.downloadExcel_Click();">&nbsp;</a>
-                                <span style="display: inline-block;float: right;padding-right: 14px;padding-top: 10px;">CURRENCY:&nbsp;<span style="color: blue;font-weight:bold">{!CMC_Presales_LOE__c.CurrencyIsoCode}</span></span>
-                               </div>
-                               <!--input type="submit" onclick="return Timeline.downloadExcel_Click();" class="slds-button slds-button--neutral slds-button--brand save-button-custom" title="Download Excel" value="Download Excel"/-->
-                               
-                               <div style="position:relative">
-                                    <div>
-                                        <div id="myGrid" style="width:99%;min-height:450px"></div>
-                                    </div>
-                                </div>
-                                   
-                        </div>
+                        <apex:outputPanel id="timelinesummary">
+                            <c:E2_TimelineSummary estimate="{!estimate.Id}"/>
+                        </apex:outputPanel>
                     </div>
                     <div id="tab-default-2" style="padding:0px" class="slds-tabs--default__content slds-hide paddingTopZero" role="tabpanel" aria-labelledby="tab-default-2__item">
-                         <apex:outputPanel layout="block" id="ratecard_table">
-                                     <div class="slds-modal__footer">
-                                             <div class="slds-col slds-no-flex slds-align-bottom">
-                                                <div class="" role="group">
-                                                    <apex:commandButton onclick="return Timeline.updateEstimateRateCards();" styleClass="slds-button slds-button--neutral slds-button--brand save-button-custom buttonSaveCustom" title="Save" value="Save" action="{!updateEstimateRateCards}" />
-                                                    
-                                                    <apex:commandButton onclick="return Timeline.refreshRateCardRatesAndCost();" styleClass="slds-button slds-button--neutral slds-button--brand save-button-custom" title="Refresh Rates & Cost" value="Refresh Rates & Cost" action="{!refreshRateCardRatesAndCost}" rendered="{!$Setup.E2_System_setting__c.Refresh_Ratacard__c}"/>
-                                                </div>
-                                            </div>
-                                    </div> 
-                                     <table id="manageratecardtable" class="slds-table slds-table--bordered slds-table--cell-buffer slds-table--col-bordered slds-no-row-hover">
-                                        <thead>
-                                           <tr class="slds-text-heading--label">
-                                              <th class="slds-is-sortable" scope="col">
-                                                 <div class="slds-truncate">Region</div>
-                                              </th>
-                                              <th class="slds-is-sortable" scope="col">
-                                                 <div class="slds-truncate">Role</div>
-                                              </th>
-                                              <th class="slds-is-sortable" scope="col">
-                                                 <div class="slds-truncate">Rate Card</div>
-                                              </th>
-                                              <th class="slds-is-sortable" scope="col">
-                                                 <div class="slds-truncate">Rate</div>
-                                              </th>
-                                              <th class="slds-is-sortable" scope="col">
-                                                 <div class="slds-truncate">Resource Cost</div>
-                                              </th>
-                                              <th class="slds-is-sortable" scope="col">
-                                                 <div class="slds-truncate">Rate Card Margin</div>
-                                              </th>
-                                              <th class="slds-is-sortable" scope="col">
-                                                 <div class="slds-truncate">Rate Margin</div>
-                                              </th>
-                                              <th class="slds-cell-shrink"></th>
-                                           </tr>
-                                        </thead>
-                                        <tbody>
-                                            
-                                            <apex:variable var="rcID" value="" />
-                                            <apex:repeat value="{!estimateRateCards}" var="estimateratecard">
-                                                 <apex:outputText rendered="{!!(rcID == estimateratecard.Practice__c)}">
-                                                     <tr childCss="child_{!SUBSTITUTE(estimateratecard.Practice__c, " ", "")}" class="header expand header_{!SUBSTITUTE(estimateratecard.Practice__c, " ", "")}"><td colspan="8" style="text-transform: uppercase;cursor:pointer;background-color:#eeeeee;color:#000000;font-weight:bold;font-style:italic;"><span class="sign"></span> &nbsp; Practice: {!estimateratecard.Practice__c} &nbsp; </td></tr>
-                                                 </apex:outputText>
-                                                 <tr class="slds-hint-parent child_{!SUBSTITUTE(estimateratecard.Practice__c, " ", "")} {!IF(CONTAINS(estimateratecard.Region__c, 'Jaipur'), 'jaipurrow', '')}">
-                                                    <td class="slds-truncate " data-label="Region">
-                                                      <apex:outputfield value="{!estimateratecard.Region__c}"/>
-                                                    </td>
-                                                    <td class="slds-truncate " data-label="Role" style="font-weight:bold;">
-                                                        <apex:outputfield value="{!estimateratecard.Resource_Role__c}"/>&nbsp;<a tabindex="-1" href="javascript:void(0);" class="question_button" title="{!IF(estimateratecard.Rate_Card__r.Description__c = NULL, 'No details available', estimateratecard.Rate_Card__r.Description__c)}">&nbsp;</a>
-                                                    </td>
-                                                    <td class="slds-truncate " data-label="Rate Card">
-                                                         <apex:outputfield value="{!estimateratecard.Bill_Rate__c}"/>
-                                                    </td>
-                                                    <td class="slds-truncate " data-label="Rate">
-                                                        <apex:inputfield style="width:30%" styleClass="slds-input discountRateTextBox mandate-numeric-estimate" value="{!estimateratecard.Discounted_Rate__c}" html-maxlength="6"/>
-                                                    </td>
-                                                    <td class="slds-truncate " data-label="Resource Cost">
-                                                        <apex:outputfield value="{!estimateratecard.Resource_Cost__c}"/>
-                                                    </td>
-                                                     <td class="slds-truncate " data-label="Rate Card Margin">
-                                                        <apex:outputtext value="{!ROUND(IF(estimateratecard.Bill_Rate__c == 0, 0, 1) - (IF(estimateratecard.Resource_Cost__c == 0, 0, estimateratecard.Resource_Cost__c)/IF(estimateratecard.Bill_Rate__c == 0, 1, estimateratecard.Bill_Rate__c)), 2)}"/>
-                                                    </td>
-                                                   
-                                                    <td class="slds-truncate " data-label="Rate Margin">
-                                                        <apex:outputtext value="{!ROUND(IF(estimateratecard.Discounted_Rate__c == 0, 0, 1) - (IF(estimateratecard.Resource_Cost__c == 0, 0, estimateratecard.Resource_Cost__c)/IF(estimateratecard.Discounted_Rate__c == 0, 1, estimateratecard.Discounted_Rate__c)), 2)}"/>
-                                                    </td>
-                                                    
-                                                    <td class="slds-cell-shrink" data-label="Actions">
-                                                    </td>
-                                                 </tr>
-                                                 
-                                                 <apex:variable var="rcID" value="{!estimateratecard.Practice__c}" />
-                                             </apex:repeat>
-                                             
-                                        </tbody>
-                                    </table>
-                                    <div class="slds-modal__footer page-footer">
-                                             <div class="slds-col slds-no-flex slds-align-bottom">
-                                                <div class="" role="group">
-                                                    <apex:commandButton onclick="return Timeline.updateEstimateRateCards();" styleClass="slds-button slds-button--neutral slds-button--brand save-button-custom" title="Save" value="Save" action="{!updateEstimateRateCards}" />
-                                                </div>
-                                            </div>
-                                    </div>
-                          </apex:outputPanel>             
-                    </div>
-                    
-                    <div id="tab-default-3" style="padding:0px" class="slds-tabs--default__content slds-hide paddingTopZero" role="tabpanel" aria-labelledby="tab-default-3__item">
-                          <!-- CALCULATE REQUIRED WEEKS --> 
-                            <div class="slds-page-header" role="banner" style="background: #16325c;color:#ffffff;padding-top: 7px;padding-bottom: 7px;">
+                        <!-- CALCULATE REQUIRED WEEKS --> 
+                        <div class="slds-page-header" role="banner" style="background: #16325c;color:#ffffff;padding-top: 7px;padding-bottom: 7px;">
                                                     <div class="slds-media">
                                                         <div class="slds-media__figure slds-icon slds-icon--small">
                                                             <apex:image value="{!URLFOR($Resource.E2_SLDS1, '/assets/icons/standard/note_60.png')}" width="48" height="48"/>
@@ -1048,8 +113,8 @@
                                                         </div>
                                                     </div>
                                                 </div>
-                          <div id="timelineSummary" style="height:400px">
-                              <div id="summarySection" style="width:50%;float:left;">
+                        <div id="timelineDevCapacity" style="height:400px">
+                            <div id="summarySection" style="width:50%;float:left;">
                                  <table id="summaryTable" class="slds-table slds-table--bordered slds-table--cell-buffer slds-table--col-bordered slds-no-row-hover">
                                     <thead>
                                      <tr class="slds-text-heading--label"><th>Project Phase</th><th>Hours</th><th>Weeks</th></tr>
@@ -1058,24 +123,21 @@
                                     </tbody>
                                  </table>   
                               </div>
-                              <div id="editableHoursWeekSection" style="width:20%;float:left;">
+                            <div id="editableHoursWeekSection" style="width:20%;float:left;">
                                    <table id="editHoursTable" class="slds-table slds-table--bordered slds-table--cell-buffer slds-table--col-bordered slds-no-row-hover" 
                                     style="border-collapse: collapse;border-color: black;border-style: solid;border-width: 1px;">
                                     <thead>
                                      <tr class="slds-text-heading--label"><th></th><th>Hours</th><th></th></tr>
                                     </thead>
                                     <tbody>
-                                       <tr><td>Dev</td><td><input class="slds slds-input mandate-numeric" style="width:30px" id="devhoursperday" onchange="TimelineSummary.onChange_InputDevHoursPerWeek();" type="text" value="{!IF(CMC_Presales_LOE__c.E2_Dev_hours_per_day__c == NULL, 0, CMC_Presales_LOE__c.E2_Dev_hours_per_day__c)}"/></td><td>per Day</td></tr>
+                                       <tr><td>Dev</td><td><input class="slds slds-input mandate-numeric" style="width:50px" id="devhoursperday" onchange="TimelineDevCapacity.onChange_InputDevHoursPerWeek();" type="text" value="{!IF(CMC_Presales_LOE__c.E2_Dev_hours_per_day__c == NULL, 0, CMC_Presales_LOE__c.E2_Dev_hours_per_day__c)}"/></td><td>per Day</td></tr>
                                        <tr><td></td><td><div id="hoursperweekdiv"></div></td><td>per Week</td></tr>
                                     </tbody>
                                    </table>         
                               </div>
-                           </div>
+                         </div>
                     </div>
-                    
-                </div> 
-                
-                
+                </div>
                 <div id="loadingSpinner" class="slds-spinner_container" style="display: none !important;">
                     <div class="slds-spinner--brand slds-spinner slds-spinner--large" aria-hidden="false" role="alert">
                        <div class="slds-spinner__dot-a"></div>
@@ -1106,60 +168,87 @@
                 
                 <br/>
                 
-                <ul id="phaseContextMenu" style="display:none;position:absolute">
-                  <span><button id="merge_btn" onclick="return false;" data="MERGE">Merge</button></span>    
-                  <span><button id="unmerge_btn" onclick="return false;" data="UNMERGE">UnMerge</button></span>
-                  <span><button id="clear_btn" onclick="return false;" data="CLEAR">Clear</button></span>
-                  <br/>
-                  <b>Apply Phase:</b>
-                </ul>
-                
-                <ul id="contextMenu" style="display:none;position:absolute">
-                  <span><button id="merge_btn" onclick="return false;" data="MERGE">Merge</button></span>    
-                  <span><button id="unmerge_btn" onclick="return false;" data="UNMERGE">UnMerge</button></span>
-                  <span><button id="clear_btn" onclick="return false;" data="CLEAR">Clear</button></span>
-                  <br/>
-                  <b>Apply Background:</b><br/>
-                  <li title="Default Color" style="background-color:transparent;border-color:black;" data="">&nbsp;</li>
-                  <li style="background-color: #9B4175;border-color:#9B4175;" data="#9B4175">&nbsp;</li>
+            
+            <footer class="slds-utility-bar_container" role="footer" aria-label="Utility Bar">
+              <h2 class="slds-assistive-text">Multiple Timeline Bar</h2>
+              <apex:outputPanel id="multipleTimeline">
+              <ul class="slds-utility-bar" style="overflow-y:scroll;border-top:1px solid #0070d2">
+                    <li class="slds-utility-bar__item" style="margin-left : 5px!important;">
+                      <button class="slds-button slds-action-label_button slds-timelines" onclick="return false;">Timelines</button>
+                    </li>
+                    <li class="slds-utility-bar__item">
+                      <button class="slds-button slds-utility-bar__action slds-button--add" id="addNew_button" title="Add new" onclick="ClonePresalesLOE.createNewTimeline('{!estimate.id}');return false;"></button>
+                    </li>
+                    <li class="slds-utility-bar__item custom-positioner-menu-list">
+                      <button class="slds-button slds-utility-bar__action slds-button--list" title="Timelines" onclick="TimelineSummary.showhideTimelines(this);return false;"></button>
+                    </li>
+                 <apex:variable var="index" value="{!1}"/>
+                 <apex:variable var="activeTimeline" value="{!0}"/>
+                <apex:repeat value="{!timelineEstimates}" var="timelineEstimate">
+                    <apex:variable var="timelineName" value="{!IF(ISBLANK(timelineEstimate.timelineName),'Timeline version ',timelineEstimate.timelineName)}{!IF(ISBLANK(timelineEstimate.timelineName),index,'')}" />
+                    <li class="slds-utility-bar__item" style="{!IF(index == 1,'margin-left : 5px!important;','')}">
+                        <button class="slds-button slds-utility-bar__action{!IF(NOT(timelineEstimate.isActive),' slds-timeline_inActive','')}{!IF(timelineEstimate.estimateId == estimate.id,' slds_primary_timline','')}" timelineId="{!timelineEstimate.estimateId}" isActive="{!timelineEstimate.isActive}" isTimelineSpecific="{!timelineEstimate.isTimelineSpecific}" name="bar_action" id="Timeline_version_{!index}" title="{!timelineName}" style="white-space:nowrap;">{!IF(ISBLANK(timelineEstimate.timelineName),'v',timelineEstimate.timelineName)}{!IF(ISBLANK(timelineEstimate.timelineName),index,'')}</button>
+                        <input type="text" class="slds-utility-panel_input" timelineId="{!timelineEstimate.estimateId}" isActive="{!timelineEstimate.isActive}" isTimelineSpecific="{!timelineEstimate.isTimelineSpecific}" id="Timeline_version_{!index}_text" title="{!timelineName}" value="{!timelineName}" name="timelinename_text" maxlength="80" spellcheck="false"/>
+                    </li>
+                      <apex:variable var="index" value="{!index+1}"/>
+                      <apex:outputText rendered="{!timelineEstimate.isActive}"><apex:variable var="activeTimeline" value="{!activeTimeline+1}"/></apex:outputText>
+                </apex:repeat>
+              </ul>
+              <input type="hidden" value="{!activeTimeline}" id="activeTimelineCount"/>
+              </apex:outputPanel>
+              <div class="slds-utility-panel slds-grid slds-grid--vertical" id="timeline_panel" role="dialog" aria-labelledby="panel-heading-01" style="left:0px;">
+                <div class="slds-utility-panel__header slds-grid slds-shrink-none">
+                  <div class="slds-media slds-media--center">
+                    <div class="slds-media__body">
+                      <h2 id="timeline_heading" style="font-weight:bold;"></h2>({!estimate.name})
+                    </div>
+                    &nbsp;
+                    <div class="slds-col slds-no-flex slds-align-bottom">
+                     <div class="slds-button-group" role="group" >
+                         
+                      </div>
+                  </div>
+                  </div>
+                  <div class="slds-col--bump-left">
+                    <button id="deactivate_button" class="slds-button slds-button--neutral  slds-utility-bar-button display-none" title="De-activate" type="button" timelineId="" onclick="TimelineSummary.updateTimelieState(this,false);">De-activate</button>
+                    <button id="activate_button" class="slds-button slds-button--neutral  slds-utility-bar-button display-none" title="Activate" type="button" timelineId="" onclick="TimelineSummary.updateTimelieState(this,true);">Activate</button>
+                    <button id="clone_button" class="slds-button slds-button--neutral  slds-utility-bar-button" title="Clone" type="button" timelineId="" onclick="ClonePresalesLOE.cloneNewTimeline(this);">Clone</button>
+                    <button id="delete_button" class="slds-button slds-button--neutral  slds-utility-bar-button" title="Delete" type="button" timelineId="" isActive="" onclick="ClonePresalesLOE.deleteTimeline(this);">Delete</button>
+                    <button class="slds-button slds-button--icon slds-button--minimize" title="Minimize Panel" type="button" onclick="TimelineSummary.minimizeTimeline();return false;"></button>
+                  </div>
+                </div>
+                <div class="slds-utility-panel__body" id="timeline_div">
                   
-                  
-                  <li style="background-color: #556B2F;border-color:#556B2F; " data="#556B2F">&nbsp;</li>
-                  <li style="background-color: #773242;border-color:#773242; " data="#773242">&nbsp;</li>
-                  <li style="background-color: #808000;border-color:#808000; " data="#808000">&nbsp;</li>
-                  
-                  
-                  <li style="background-color: #291E48;border-color:#291E48; " data="#291E48">&nbsp;</li>
-                  <li style="background-color: #9E4252;border-color:#9E4252; " data="#9E4252">&nbsp;</li>
-                  <li style="background-color: #5C2F6F;border-color:#5C2F6F; " data="#5C2F6F">&nbsp;</li>
-                  <li style="background-color: #52a0c7;border-color:#52a0c7; " data="#52a0c7">&nbsp;</li>
-                  <li style="background-color: #8B0000;border-color:#8B0000; " data="#8B0000">&nbsp;</li>
-                  <li style="background-color: #306A73;border-color:#306A73; " data="#306A73">&nbsp;</li>
-                  <li style="background-color: #110E20;border-color:#110E20; " data="#110E20">&nbsp;</li>
-                  <li style="background-color: #483D8B;border-color:#483D8B; " data="#483D8B">&nbsp;</li>
-                  
-                  
-                  
-                  
-                  <li style="background-color: #2E8B57;border-color:#2E8B57; " data="#2E8B57">&nbsp;</li>
-                  <li style="background-color: #00CCCC;border-color:#00CCCC; " data="#00CCCC">&nbsp;</li>
-                  <li style="background-color: #4169E1;border-color:#4169E1; " data="#4169E1">&nbsp;</li>
-                  <li style="background-color: #A0522D;border-color:#A0522D; " data="#A0522D">&nbsp;</li>
-                  <li style="background-color: #b8a9c9;border-color:#b8a9c9; " data="#b8a9c9">&nbsp;</li>
-                  <li style="background-color: #663399;border-color:#663399; " data="#663399">&nbsp;</li>
-                  <li style="background-color: #000080;border-color:#000080; " data="#000080">&nbsp;</li>
-                  <li style="background-color: #FF6347;border-color:#FF6347; " data="#FF6347">&nbsp;</li>
-                  <li style="background-color: #8a8a5c;border-color:#8a8a5c; " data="#8a8a5c">&nbsp;</li>
-                  <li style="background-color: #EE82EE;border-color:#EE82EE; " data="#EE82EE">&nbsp;</li>
-                  <li style="background-color: #D2B48C;border-color:#D2B48C; " data="#D2B48C">&nbsp;</li>
-                 
-                  
-                </ul>
-                
+                </div>
+              </div>
+            </footer>
+            <apex:outputPanel id="multipleTimelineMenu">
+            <div class="slds-timeline_menu">
+                <apex:variable var="index" value="{!1}"/> 
+                <apex:repeat value="{!timelineEstimates}" var="timelineEstimate">
+                    <apex:variable var="timelineName" value="{!IF(ISBLANK(timelineEstimate.timelineName),'Timeline version ',timelineEstimate.timelineName)}{!IF(ISBLANK(timelineEstimate.timelineName),index,'')}" />
+                    <div class="menu" timelineId="{!timelineEstimate.estimateId}" name="{!timelineEstimate.estimateId}" isActive="{!timelineEstimate.isActive}" isTimelineSpecific="{!timelineEstimate.isTimelineSpecific}" id="Timeline_version_{!index}_div" title="{!timelineName}">
+                        <div class="menu_checkbox"></div>
+                        <div class="timeline_name">{!timelineName}</div>
+                        </div>
+                      <apex:variable var="index" value="{!index+1}"/>
+                </apex:repeat>
+            </div>
+            <input id="timelinecount" value="{!index}" type="hidden"/>
+            </apex:outputPanel>
+            <div id="loadingCloneSpinner" class="slds-spinner_container" style="display: none !important;">
+            <div class="slds-spinner--brand slds-spinner slds-spinner--large" aria-hidden="false" role="alert" style="top: 35.4%;">
+               <div class="slds-spinner__dot-a"></div>
+               <div class="slds-spinner__dot-b"></div>
+            </div>
+            <div id="spinnerProcess" style="position: absolute;top: 34%;left: 53%;font-size: 18px;">Processing</div>
+         </div>
+         
                 <!-- PLEASE DONOT REMOVE: This section is important while using standard controller -->
                 <input type="hidden" value="{!CMC_Presales_LOE__c.Name}" />
                 <input type="hidden" value="{!CMC_Presales_LOE__c.Presales_Request__c}" />
                 <input type="hidden" value="{!CMC_Presales_LOE__c.Presales_Request__r.Opportunity__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.Presales_Request__r.Opportunity_Name__c}"/>
                 <input type="hidden" value="{!CMC_Presales_LOE__c.Presales_Request__r.Opportunity__r.AccountId}" />
                 <input type="hidden" value="{!CMC_Presales_LOE__c.Type__c}" />
                 <input type="hidden" value="{!CMC_Presales_LOE__c.Account_Executive__c}" />
@@ -1176,7 +265,6 @@
                 <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Reviewer__c}" />
                 <input type="hidden" value="{!CMC_Presales_LOE__c.E2_SA__c}" />
                 <input type="hidden" value="{!CMC_Presales_LOE__c.E2_AE__c}" />
-                <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Is_Primary__c}" />
                 <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Total_Hrs__c}" />
                 <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Derived_Effort_Template__c}" />
                 <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Last_Build_Datetime__c}" />
@@ -1209,21 +297,192 @@
                 <input type="hidden" value="{!CMC_Presales_LOE__c.Discount__c}" />
                 <input type="hidden" value="{!CMC_Presales_LOE__c.Total_Resource_Hours__c}" />
                 <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Estimate_Total_Weeks__c}" />
-               
-               
-            </apex:form>
+                <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Is_Active__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Is_specific_to_timeline__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Parent_Estimate__c}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.CreatedDate}" />
+                <input type="hidden" value="{!CMC_Presales_LOE__c.E2_Timeline_Name__c}"/>
+         </apex:form>
         </apex:define>
         <apex:define name="footer">
+            <style>
+                .slds-timeline_inActive {
+                    color : rgba(22, 50, 92, 0.21)!important;
+                }
+                .slds-timelines {
+                    cursor: default!important;
+                    border-right: 1px dotted gray!important;
+                }
+                .slds-timelines::hover {
+                    color:black!important;
+                }
+                table tbody tr td input[type="text"], table tbody tr td select{
+                  width:80%;
+                }
+                .slds .slds-table td, .slds .slds-table th {
+                    white-space : normal;
+                }
+                .slds-table--bordered tbody td, .slds-table--bordered tbody th {
+                   border-top: 1px solid #d8dde6!important;
+                }
+                .errorBody{
+                  border-color: red;
+                }
+                .slds-hint-parent .phasetd {
+                    white-space: normal!important;
+                    vertical-align: top!important;
+                }
+                .slds-button--minimize {
+                    background: url({!$Resource.E2_SLDS1}/assets/icons/utility/minimize_window_60.png) no-repeat scroll center center / 16px 16px!important;
+                    width: 36px;
+                    height:36px;
+                }
+                .slds-utility-panel {
+                    width:100%!important;
+                    min-height:80%;
+                    /**height:93%!important;**/
+                }
+                .slds-utility-bar__item {
+                    margin-left : 0px!important;
+                }
+                .footer-div {
+                    display:none;
+                }
+                .slds-button--add {
+                    background: url({!$Resource.E2_SLDS1}/assets/icons/utility/add_60.png) no-repeat scroll center center / 12px 12px!important;
+                    width: 25px;
+                    
+                }
+                .slds-notify_container .message {
+                    background-color: transparent;
+                    border-style: none;
+                    color: #fff;
+                    font-size: 15px;
+                    font-weight: normal;
+                    margin-top: -2%;
+                }
+                .slds-notify_container .message .messageText, .slds-notify_container .message .messageText span h4 {
+                    color:#fff;
+                }
+                .slds-notify_container .message .messageTable ul{
+                    color:#fff;
+                }
+                .slds-notify_container .message .messageText span h4{
+                    display:inline;
+                }
+                .slds-notify_container .msgIcon{
+                    display:none;
+                }
+                .slds-action-label_button {
+                    position: relative;
+                    padding: 0 .75rem;
+                    border-radius: 0;
+                    border: 0;
+                    color: #16325c;
+                }
+                .copy_button {
+                    background: url({!$Resource.E2_SLDS1}/assets/icons/utility/copy_60.png) no-repeat scroll center center / 16px 16px!important;
+                    height: 25px;
+                    width: 25px;
+                }
+                .display-none {
+                    display:none;
+                }
+                .slds-utility-bar-button {
+                    line-height :1.5rem!important;
+                    font-weight :normal!important;
+                }
+                .slds_primary_timline {
+                    border-bottom: 2px solid #009688!important;
+                }
+                .slds-utility-panel__header {
+                    padding-bottom : 0px!important;
+                    padding-top : 0px!important;
+                }
+                .slds-utility-panel_input {
+                    border: 1px solid red!important;
+                    display: none;
+                    padding: 0 1rem 0 .75rem;
+                    background-color: #fff;
+                    color: #16325c;
+                    border: 1px solid #d8dde6;
+                    border-radius: .25rem;
+                    width: 100%;
+                    transition: border .1s linear,
+                    background-color .1s linear;
+                    min-width: 150px;
+                }
+                .slds-timeline_menu {
+                    user-select: none;
+                    height: 150px;
+                    overflow-y: auto;
+                    visibility: visible;
+                    z-index: 10000;
+                    border-radius: 0;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                    transition: opacity 0.218s;
+                    background: #fff;
+                    border: 1px solid rgba(0,0,0,.2);
+                    cursor: default;
+                    font-size: 13px;
+                    margin: 0;
+                    outline: none;
+                    padding: 6px 0;
+                    /**bottom: 35px;
+                    left : 130px;**/
+                    position: absolute;
+                    display: none;
+                }
+                .slds-button--list {
+                    background: url({!$Resource.E2_SLDS1}/assets/icons/utility/list_60.png) no-repeat scroll center center / 12px 12px!important;
+                    width: 25px;
+                    
+                }
+                .menu {
+                    user-select: none;
+                    position: relative;
+                    color: #333;
+                    cursor: pointer;
+                    list-style: none;
+                    margin: 0;
+                    padding: 3px 1em 3px 2em;
+                    white-space: nowrap;
+                    min-width:150px;
+                }
+                .menu_checkbox {
+                    background: url({!$Resource.E2_SLDS1}/assets/icons/utility/check_60.png) no-repeat scroll center center / 12px 12px!important;
+                    height: 21px;
+                    left: 3px;
+                    position: absolute;
+                    right: auto;
+                    top: 3px;
+                    vertical-align: middle;
+                    width: 21px;
+                    display: none;
+                }
+                .menu:hover {
+                    background-color: #eee;
+                    
+                }
+                .slds-utility-bar {
+                    height: auto!important;
+                }
+                
+                .slds-utility-panel__header {
+                  border-bottom-width:0px;   
+                }
+                </style>
         </apex:define>
 
         <apex:define name="javascript">
             <script type="text/javascript">
                 var estimateId = '{!estimate.id}';
+                var estimate_name = '{!JSENCODE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(estimate.name,' ','_'),',',''),';',''),'#',''))}';
                 var currency_code = '{!CMC_Presales_LOE__c.CurrencyIsoCode}';
-                var renderOptions_Phases = {!renderOptions_PhasesJSON};
                 var capacityNeeds_JSON = {!capacityNeeds_JSON};
+                var customerMode = '{!$CurrentPage.parameters.customerMode}';
             </script>
-            
+            <script type="text/javascript" src="{!$Resource.E2_TimelineJS}"></script>
         </apex:define>
     </apex:composition>
 </apex:page>

@@ -10,11 +10,13 @@ public class E2_MasterTest {
         estimate = E2_DataUtil.getEstimateDetailOnId([SELECT Id FROM CMC_Presales_LOE__c][0].Id)[0]; 
         User sysAdmin = E2_Test_Utils.insertUser(E2_Constants.PROFILE_SYS_ADMIN, true);
         psr =  [SELECT Id, Description__c, Name,Account_Name__c, Opportunity__r.Account.Id,Opportunity__c FROM Presales_Request__c];
+        CMC_Presales_LOE__c estimate1 = [SELECT Id, E2_Parent_Estimate__c, CurrencyIsoCode FROM CMC_Presales_LOE__c WHERE Name = 'For Timeline'];
         System.runAs(sysAdmin){
             //start test
             Test.startTest();
             PageReference pageRef = Page.E2_AddEditEstimate;
             Test.setCurrentPage(pageRef);
+            
             ApexPages.currentPage().getParameters().put('psr_id', psr.Id);          
             ApexPages.StandardController stdController = new ApexPages.StandardController(new CMC_Presales_LOE__c());
             E2_AddEditEstimateController controller = new E2_AddEditEstimateController(stdController);
@@ -27,6 +29,10 @@ public class E2_MasterTest {
             System.assertNotEquals(controller.psrId, null, 'psrid is not null');
             
             //validateAccess
+            stdController = new ApexPages.StandardController(estimate1);
+            controller = new E2_AddEditEstimateController(stdController);
+            PageReference pageRedirect = controller.pageAction();
+            System.assertNotEquals(pageRedirect, null, 'Is parent estimate');
             
             Test.stopTest();
         }    
@@ -66,5 +72,14 @@ public class E2_MasterTest {
     scope1.recordTypeId = recTypeId1;
     scope1.Presales_LOE__c = estimate1.id;  
     insert scope1;
+    
+    CMC_Presales_LOE__c estimate2 = E2_Test_Utils.insertEstimate(psr.id, false); 
+	estimate2.Name = 'For Timeline';
+	estimate2.E2_SA__c = null;
+	estimate2.default__c = false;
+	estimate2.E2_Parent_Estimate__c=estimate1.ID;
+	estimate2.E2_Is_Active__c=true;
+	estimate2.E2_Is_specific_to_timeline__c=true;
+    insert estimate2;
   }
 }

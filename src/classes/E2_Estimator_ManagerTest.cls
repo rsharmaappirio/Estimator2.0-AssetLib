@@ -1,3 +1,14 @@
+/**=====================================================================
+ * Appirio, Inc
+ * Name: E2_Estimator_ManagerTest
+ * Description: This class includes all test methods need to run unit test over E2_Estimator_Manager class.
+ * Created Date: July 7th, 2016
+ * Created By: 
+ * 
+ * Date Modified      Modified By                  Description of the update
+ * Jan 10, 2017       Jitendra Jangid              S-459273 : Adding workday ratecard with resource levels.
+*  =====================================================================*/
+
 @isTest(seeAllData=false)
 public class E2_Estimator_ManagerTest {
     public static pse__Rate_Card__c rateCard;
@@ -15,6 +26,10 @@ public class E2_Estimator_ManagerTest {
                                     E2_DataUtil.getDerivedEffort(estimate.E2_Derived_Effort_Template__c);
             E2_Estimator_Manager.generateDerivedHours(estimate.Id, derivedEffortsTemplate);
             List<E2_Estimate_Rate_Card__c> lstRateCard = E2_Estimator_Manager.getEstimateRateCards(estimate.Id, E2_Constants.CURRENCY_ISO_CODE_USD) ;
+            
+//          Start[S-459273 : Adding workday ratecard with resource levels.]
+            E2_Estimator_Manager.populateRateCard(lstRateCard.get(0));
+//          End[S-459273 : Adding workday ratecard with resource levels.]
         Test.stopTest();  
      }
   }
@@ -59,6 +74,9 @@ public class E2_Estimator_ManagerTest {
     insert skill; 
     E2_Effort__c effort1 = E2_Test_Utils.insertEffort(false, scopeLst[0].Id);
     effort1.Speciality__c = skill.Id;
+//  Start[S-459273 : Adding workday ratecard with resource levels.]
+    effort1.Resource_Level__c='Senior Consultant';
+//  End[S-459273 : Adding workday ratecard with resource levels.]
     E2_Effort__c effort2 = E2_Test_Utils.insertEffort(false, scopeLst[1].Id);
     E2_Effort__c effort3 = E2_Test_Utils.insertEffort(false, scopeLst[2].Id);
     E2_Effort__c effort4 = E2_Test_Utils.insertEffort(false, scopeLst[3].Id);

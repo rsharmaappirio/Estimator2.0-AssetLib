@@ -12,7 +12,7 @@ IF(
  Direct_High_Hrs__c,
 IF(
  ISPICKVAL(Complexity__c, &apos;Low&apos;),
-Direct_Low_Hrs__c, 0)))</formula>
+Direct_Low_Hrs__c, 0))) *  IF(Effort_Quantity__c &gt; 0,Effort_Quantity__c, 1)</formula>
         <name>E2 Populate LOE on Complexity</name>
         <notifyAssignee>false</notifyAssignee>
         <operation>Formula</operation>
